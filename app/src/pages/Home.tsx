@@ -6,6 +6,7 @@ import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
+import { profileName, useProfiles } from "../state/profiles";
 
 type Entry = LibraryEntry & { id: string };
 type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
@@ -21,6 +22,8 @@ export function Home() {
   const [form, setForm] = useState<Form>(null);
   const [status, setStatus] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
+  // Nombre actual (de su perfil) de quien creó cada votación.
+  const profiles = useProfiles(Object.values(cache).flatMap(p => (p && p.ownerUid !== user.uid ? [p.ownerUid] : [])));
 
   useEffect(() => {
     if (!lib) return;
@@ -118,7 +121,7 @@ export function Home() {
     const owner = (p?.ownerUid || null) === user.uid || e.role === "owner";
     const meta = [
       p ? pollMeta(p) : type?.name || "",
-      owner ? "creada por ti" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
+      owner ? "creada por ti" : `de ${p ? profileName(p.ownerUid, profiles, user, p.ownerName || e.ownerName || "alguien") : e.ownerName || "alguien"}`,
     ].filter(Boolean).join(" · ");
     const open = expanded === e.id;
     return (

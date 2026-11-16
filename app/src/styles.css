@@ -626,9 +626,20 @@ select.input{cursor:pointer}
   padding:10px 14px;
   font-weight:600;
   font-size:.9rem;
-  margin:14px 0 0;
+  line-height:1.4;
+  margin:20px 0 0;
 }
-.poll-sub{color:var(--muted);font-size:.95rem;margin:14px 0 8px;line-height:1.5}
+/* Cómo se vota, periodo/privacidad y leyenda: bloques separados para que no se amontonen en el móvil */
+.poll-info{display:flex;flex-direction:column;gap:8px;margin:20px 0 18px}
+.poll-sub{color:var(--ink);font-size:.95rem;margin:0;line-height:1.5}
+.poll-note{color:var(--muted);font-size:.88rem;margin:0;line-height:1.5}
+.poll-info .legend{
+  margin:8px 0 0;
+  padding:10px 14px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+}
 .legend{
   display:flex;
   flex-wrap:wrap;

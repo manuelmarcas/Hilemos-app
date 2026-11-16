@@ -1,10 +1,10 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
 import { useRef, useState } from "react";
-import { plural } from "../lib/model";
 import { errMsg, imageToAvatar } from "../lib/util";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
+import { forgetProfile } from "../state/profiles";
 import { Avatar } from "../components/Avatar";
 
 const THEMES: [ThemePref, string, string, string][] = [
@@ -14,7 +14,7 @@ const THEMES: [ThemePref, string, string, string][] = [
 ];
 
 export function Profile() {
-  const { store, user, updateUser, library } = useSession();
+  const { store, user, updateUser } = useSession();
   const { toast } = useUi();
   const [name, setName] = useState(user.name || "");
   const [photo, setPhoto] = useState(user.photo || "");
@@ -31,19 +31,11 @@ export function Profile() {
     setBusy(true);
     setStatus("");
     try {
+      // Solo el perfil: todas las votaciones muestran el nombre y la imagen que haya en él.
       await store.saveProfile(user.uid, { name: n, photo, updatedAt: Date.now() });
+      forgetProfile(user.uid);
       updateUser({ name: n, photo });
-
-      // Llevar el cambio a todas las votaciones en las que participa.
-      const polls = library.data?.polls || {};
-      const ids = Object.keys(polls);
-      const jobs: Promise<unknown>[] = ids.map(id => store.updateParticipant(id, user.uid, { name: n, photo }));
-      ids.filter(id => polls[id].role === "owner").forEach(id => {
-        jobs.push(store.updatePoll(id, { ownerName: n }));
-        jobs.push(store.saveLibraryEntry(user.uid, id, { ownerName: n }));
-      });
-      await Promise.allSettled(jobs);
-      toast(ids.length ? `Perfil guardado y actualizado en ${plural(ids.length, ["votación", "votaciones"])}` : "Perfil guardado");
+      toast("Perfil guardado");
     } catch (e) {
       setStatus("No se pudo guardar el perfil. " + errMsg(e));
     }

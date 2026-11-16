@@ -10,6 +10,7 @@ import { cls, errMsg, pollUrl } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
+import { profileName, useProfiles, withProfiles } from "../state/profiles";
 import { Avatar } from "../components/Avatar";
 
 export function PollPage({ id }: { id: string }) {
@@ -25,6 +26,8 @@ export function PollPage({ id }: { id: string }) {
   const [openVoters, setOpenVoters] = useState<Set<string>>(() => new Set()); // "más votadas" con quién las votó
   const joined = useRef(false);
   const lib = library.data;
+  // Nombre e imagen actuales de cada participante y del creador (de su perfil, no del voto).
+  const profiles = useProfiles([...Object.keys(votes), ...(poll ? [poll.ownerUid] : [])]);
 
   useEffect(() => store.watchPoll(id,
     p => { setPoll(p); setPollLoaded(true); },
@@ -70,8 +73,10 @@ export function PollPage({ id }: { id: string }) {
   }
 
   const t = TYPE[poll.type];
-  const T = tally(poll, votes);
-  const TB = tiebreakTally(poll, votes);
+  const shown = withProfiles(votes, profiles, user);
+  const T = tally(poll, shown);
+  const TB = tiebreakTally(poll, shown);
+  const ownerName = profileName(poll.ownerUid, profiles, user, poll.ownerName || "alguien");
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
@@ -212,7 +217,7 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · 👥 {plural(T.people.length, ["participante", "participantes"])}
+            {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : ownerName} · 👥 {plural(T.people.length, ["participante", "participantes"])}
           </div>
           <div className="mode-line">
             <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>
@@ -240,12 +245,15 @@ export function PollPage({ id }: { id: string }) {
           🔒 Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
         </div>
       )}
-      <p className="poll-sub">
-        {instructions(poll, T)} {pollRange(poll)} {poll.anonymous
-          ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."
-          : "Los demás participantes pueden ver qué ha votado cada uno."}
-      </p>
-      <div className="legend"><Legend poll={poll} T={T} /></div>
+      <div className="poll-info">
+        {!poll.closed && <p className="poll-sub">{instructions(poll, T)}</p>}
+        <p className="poll-note">
+          {pollRange(poll)} {poll.anonymous
+            ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."
+            : "Los demás participantes pueden ver qué ha votado cada uno."}
+        </p>
+        <div className="legend"><Legend poll={poll} T={T} /></div>
+      </div>
       <div className="status" id="poll-status" role="alert">{status}</div>
       {TB && (
         <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} isOwner={isOwner} byUid={byUid}
@@ -281,8 +289,8 @@ export function PollPage({ id }: { id: string }) {
 
 // ---------- Textos ----------
 
+// Cómo se vota (con la votación cerrada no se muestra: ya lo dice el aviso rojo).
 function instructions(poll: Poll, T: Tally) {
-  if (poll.closed) return "La votación está cerrada; estos son los resultados.";
   switch (poll.type) {
     case "days":
       return T.opts.length === 1

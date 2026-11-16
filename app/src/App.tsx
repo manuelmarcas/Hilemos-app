@@ -45,9 +45,13 @@ export function App() {
       const mine = ++seq;
       if (!authUser) { setUser(null); return; }
       // El perfil (nombre e imagen elegidos por el usuario) tiene prioridad sobre los datos de Google.
-      let profile = null;
-      try { profile = await store.getProfile(authUser.uid); } catch { /* sin perfil: datos de Google */ }
+      let profile = null, readOk = false;
+      try { profile = await store.getProfile(authUser.uid); readOk = true; } catch { /* sin perfil: datos de Google */ }
       if (mine !== seq) return; // ha cambiado la sesión mientras tanto
+      // Primera vez: se crea el perfil con los datos de Google, para que los demás vean su nombre e imagen.
+      if (readOk && !profile) {
+        store.saveProfile(authUser.uid, { name: authUser.name, photo: authUser.photo, updatedAt: Date.now() }).catch(() => {});
+      }
       setUser({
         ...authUser,
         googlePhoto: authUser.photo,
