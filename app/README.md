@@ -58,7 +58,7 @@ para leer lo mínimo:
   escrituras, y es algo raro). En el voto va una miniatura de 64 px (`thumb`), no la imagen de perfil completa.
 - **Caché local (IndexedDB)**: al volver a una votación en menos de 30 min solo se cobran los documentos cambiados.
 - **"Mis votaciones"** lee cada votación una vez por sesión (`pollCache`); la pantalla de la votación la mantiene al día.
-- **`openedAt`** (orden de "Mis votaciones") se reescribe como mucho cada 10 min por votación, no en cada visita.
+- **Abrir una votación no escribe nada** en el menú del usuario, salvo la primera vez o si cambia su título.
 - **Borrar una votación** se hace en lotes (`writeBatch`).
 
 Límite conocido: si alguien quita una votación de su menú y luego cambia su nombre, en esa votación seguirá el anterior.

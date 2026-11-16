@@ -56,7 +56,7 @@ export function Home() {
   const groups = sortedGroups(lib.groups);
   const all: Entry[] = Object.entries(lib.polls)
     .map(([id, e]) => ({ id, ...e }))
-    .sort((a, b) => (b.openedAt || b.addedAt || 0) - (a.openedAt || a.addedAt || 0));
+    .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)); // como el menú lateral: las añadidas más recientemente primero
   const inGroup = (gid: string | null) => all.filter(e => (gid ? e.groupId === gid : !e.groupId || !lib.groups[e.groupId]));
 
   const run = async (fn: () => Promise<unknown>) => {

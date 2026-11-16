@@ -221,7 +221,7 @@ export function Create() {
       const id = await store.createPoll(poll);
       await store.saveLibraryEntry(user.uid, id, {
         title: poll.title, type: poll.type, role: "owner", ownerName: poll.ownerName,
-        groupId: gid, addedAt: createdAt, openedAt: createdAt,
+        groupId: gid, addedAt: createdAt,
       });
       setLastGroup(gid || "");
       toast("¡Votación creada! Compártela con el botón «Compartir».");

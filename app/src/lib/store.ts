@@ -5,7 +5,7 @@
 // Colecciones:
 //   polls/{pollId}                     la votación (ver model.ts)
 //   polls/{pollId}/votes/{uid}         participante: { name, photo, picks?, seenAt, updatedAt }
-//   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt, openedAt }
+//   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt }
 //   users/{uid}/groups/{groupId}       grupos del usuario: { name, createdAt }
 //   users/{uid}                        perfil: { name, photo, updatedAt }
 

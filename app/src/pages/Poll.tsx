@@ -12,9 +12,6 @@ import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { Avatar } from "../components/Avatar";
 
-// Cada cuánto se actualiza "abierta por última vez" en el menú del usuario.
-const OPENED_EVERY = 10 * 60_000;
-
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
@@ -60,19 +57,15 @@ export function PollPage({ id }: { id: string }) {
       title: poll.title, type: poll.type, ownerName: poll.ownerName || "",
       role: poll.ownerUid === user.uid ? "owner" as const : "participant" as const,
     };
-    const now = Date.now();
     if (!entry) {
-      store.saveLibraryEntry(user.uid, id, { ...base, groupId: null, addedAt: now, openedAt: now })
+      store.saveLibraryEntry(user.uid, id, { ...base, groupId: null, addedAt: Date.now() })
         .then(() => { if (poll.ownerUid !== user.uid) toast("Votación añadida a tu menú"); })
         .catch(e => setStatus(errMsg(e)));
       return;
     }
-    // Ya estaba en el menú: solo se escribe si algo ha cambiado o si hace más de 10 min que se abrió
-    // (openedAt ordena "Mis votaciones"; no hace falta reescribirlo en cada visita).
+    // Ya estaba en el menú: solo se escribe si ha cambiado algo de lo que se muestra en él.
     const changed = (Object.keys(base) as (keyof typeof base)[]).some(k => (entry[k] ?? "") !== base[k]);
-    if (changed || now - (entry.openedAt || 0) > OPENED_EVERY) {
-      store.saveLibraryEntry(user.uid, id, { ...base, openedAt: now }).catch(e => setStatus(errMsg(e)));
-    }
+    if (changed) store.saveLibraryEntry(user.uid, id, base).catch(e => setStatus(errMsg(e)));
   }, [pollLoaded, votesLoaded, lib, poll, votes, id, store, user, toast]);
 
   if (fatal) {
@@ -232,23 +225,20 @@ export function PollPage({ id }: { id: string }) {
           </div>
           <div className="mode-line">
             <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>
-            {isOwner && !poll.anonymous && <button className="link-btn" onClick={makeAnon}>Hacer anónima</button>}
           </div>
-          <h1>{poll.title}</h1>
+          <div className="title-row">
+            <h1>{poll.title}</h1>
+            {isOwner && (
+              <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
+                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={remove} />
+            )}
+          </div>
           {poll.description && <p className="desc">{poll.description}</p>}
-        </div>
-        <div className={`poll-actions ${isOwner ? "owner" : ""}`}>
-          <button className="btn primary" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
-            <span aria-hidden="true">🔗</span> Compartir
-          </button>
-          {isOwner && <>
-            <button className="btn" onClick={closeOrReopen}>
-              {poll.closed
-                ? <><span aria-hidden="true">🔓</span> Reabrir</>
-                : <><span aria-hidden="true">🔒</span> Cerrar<span className="lbl-long"> votación</span></>}
+          <div className="poll-actions">
+            <button className="btn primary" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
+              <span aria-hidden="true">🔗</span> Compartir
             </button>
-            <button className="btn danger" onClick={remove}><span aria-hidden="true">🗑️</span> Eliminar</button>
-          </>}
+          </div>
         </div>
       </div>
       {poll.closed && (
@@ -295,6 +285,62 @@ export function PollPage({ id }: { id: string }) {
         </div>
       </section>
     </>
+  );
+}
+
+// ---------- Menú ⋯ del creador: cerrar/reabrir, hacer anónima y eliminar ----------
+
+function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete }: {
+  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const items = () => [...(wrap.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') || [])];
+    items()[0]?.focus();
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); setOpen(false); btn.current?.focus(); return; }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      const list = items();
+      const i = list.indexOf(document.activeElement as HTMLElement);
+      list[(i + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length]?.focus();
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+
+  const pick = (fn: () => void) => () => { setOpen(false); fn(); };
+
+  return (
+    <div className="pm" ref={wrap}>
+      <button ref={btn} className="pm-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Opciones de la votación"
+        title="Opciones de la votación" onClick={() => setOpen(o => !o)}>⋯</button>
+      {open && (
+        <div className="pm-menu" role="menu" aria-label="Opciones de la votación">
+          <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
+            <span aria-hidden="true">{closed ? "🔓" : "🔒"}</span>{closed ? "Reabrir votación" : "Cerrar votación"}
+          </button>
+          {!anonymous && (
+            <button role="menuitem" className="pm-item" onClick={pick(onAnon)}>
+              <span aria-hidden="true">🕶️</span>Hacer anónima
+            </button>
+          )}
+          <div className="pm-sep" role="separator" />
+          <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
+            <span aria-hidden="true">🗑️</span>Eliminar votación
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

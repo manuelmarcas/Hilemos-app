@@ -59,7 +59,6 @@ export interface LibraryEntry {
   ownerName?: string;
   groupId?: string | null;
   addedAt?: number;
-  openedAt?: number;
 }
 
 export interface Group {
