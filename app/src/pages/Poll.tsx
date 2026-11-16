@@ -10,11 +10,13 @@ import { cls, errMsg, pollUrl } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
-import { profileName, useProfiles, withProfiles } from "../state/profiles";
 import { Avatar } from "../components/Avatar";
 
+// Cada cuánto se actualiza "abierta por última vez" en el menú del usuario.
+const OPENED_EVERY = 10 * 60_000;
+
 export function PollPage({ id }: { id: string }) {
-  const { store, user, library } = useSession();
+  const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [pollLoaded, setPollLoaded] = useState(false);
@@ -26,12 +28,10 @@ export function PollPage({ id }: { id: string }) {
   const [openVoters, setOpenVoters] = useState<Set<string>>(() => new Set()); // "más votadas" con quién las votó
   const joined = useRef(false);
   const lib = library.data;
-  // Nombre e imagen actuales de cada participante y del creador (de su perfil, no del voto).
-  const profiles = useProfiles([...Object.keys(votes), ...(poll ? [poll.ownerUid] : [])]);
 
   useEffect(() => store.watchPoll(id,
-    p => { setPoll(p); setPollLoaded(true); },
-    e => setFatal(errMsg(e))), [store, id]);
+    p => { setPoll(p); setPollLoaded(true); pollCache.set(id, p); },
+    e => setFatal(errMsg(e))), [store, id, pollCache]);
   useEffect(() => store.watchVotes(id,
     v => { setVotes(v); setVotesLoaded(true); },
     e => setStatus(errMsg(e))), [store, id]);
@@ -50,18 +50,29 @@ export function PollPage({ id }: { id: string }) {
       return;
     }
     joined.current = true;
+    // Nombre y miniatura se copian en el voto; solo se reescriben si han cambiado.
     const me = votes[user.uid];
-    if (!me || me.name !== user.name || me.photo !== user.photo) {
-      store.joinPoll(id, user).catch(e => setStatus("No se pudo registrar tu participación. " + errMsg(e)));
+    if (!me || me.name !== user.name || (me.photo || "") !== user.thumb) {
+      store.joinPoll(id, { uid: user.uid, name: user.name, photo: user.thumb })
+        .catch(e => setStatus("No se pudo registrar tu participación. " + errMsg(e)));
     }
     const base = {
-      title: poll.title, type: poll.type, ownerName: poll.ownerName || "", openedAt: Date.now(),
+      title: poll.title, type: poll.type, ownerName: poll.ownerName || "",
       role: poll.ownerUid === user.uid ? "owner" as const : "participant" as const,
     };
-    const isNew = !entry;
-    store.saveLibraryEntry(user.uid, id, isNew ? { ...base, groupId: null, addedAt: Date.now() } : base)
-      .then(() => { if (isNew && poll.ownerUid !== user.uid) toast("Votación añadida a tu menú"); })
-      .catch(e => setStatus(errMsg(e)));
+    const now = Date.now();
+    if (!entry) {
+      store.saveLibraryEntry(user.uid, id, { ...base, groupId: null, addedAt: now, openedAt: now })
+        .then(() => { if (poll.ownerUid !== user.uid) toast("Votación añadida a tu menú"); })
+        .catch(e => setStatus(errMsg(e)));
+      return;
+    }
+    // Ya estaba en el menú: solo se escribe si algo ha cambiado o si hace más de 10 min que se abrió
+    // (openedAt ordena "Mis votaciones"; no hace falta reescribirlo en cada visita).
+    const changed = (Object.keys(base) as (keyof typeof base)[]).some(k => (entry[k] ?? "") !== base[k]);
+    if (changed || now - (entry.openedAt || 0) > OPENED_EVERY) {
+      store.saveLibraryEntry(user.uid, id, { ...base, openedAt: now }).catch(e => setStatus(errMsg(e)));
+    }
   }, [pollLoaded, votesLoaded, lib, poll, votes, id, store, user, toast]);
 
   if (fatal) {
@@ -73,10 +84,10 @@ export function PollPage({ id }: { id: string }) {
   }
 
   const t = TYPE[poll.type];
-  const shown = withProfiles(votes, profiles, user);
+  // Uno mismo se ve siempre con su nombre e imagen actuales (los de los demás vienen copiados en su voto).
+  const shown: Votes = votes[user.uid] ? { ...votes, [user.uid]: { ...votes[user.uid], name: user.name, photo: user.photo } } : votes;
   const T = tally(poll, shown);
   const TB = tiebreakTally(poll, shown);
-  const ownerName = profileName(poll.ownerUid, profiles, user, poll.ownerName || "alguien");
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
@@ -99,7 +110,7 @@ export function PollPage({ id }: { id: string }) {
     if (!poll || poll.closed) return;
     const picks = new Set((votes[user.uid]?.picks || []).filter(p => T.valid.has(p)));
     picks.has(u) ? picks.delete(u) : picks.add(u);
-    const data = { name: user.name, photo: user.photo, picks: [...picks].sort(), updatedAt: Date.now() };
+    const data = { name: user.name, photo: user.thumb, picks: [...picks].sort(), updatedAt: Date.now() };
     optimistic(data, () => store.saveVote(id, user.uid, data), "No se pudo guardar el voto. ");
   }
 
@@ -108,7 +119,7 @@ export function PollPage({ id }: { id: string }) {
     if (!tb || tb.done) return;
     const cur = votes[user.uid]?.tb;
     const next = cur?.id === tb.id && cur.pick === u ? null : { id: tb.id, pick: u }; // pulsar la elegida la quita
-    optimistic({ tb: next }, () => store.saveTiebreakVote(id, user.uid, { name: user.name, photo: user.photo, tb: next }),
+    optimistic({ tb: next }, () => store.saveTiebreakVote(id, user.uid, { name: user.name, photo: user.thumb, tb: next }),
       "No se pudo guardar el voto del desempate. ");
   }
 
@@ -217,7 +228,7 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : ownerName} · 👥 {plural(T.people.length, ["participante", "participantes"])}
+            {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · 👥 {plural(T.people.length, ["participante", "participantes"])}
           </div>
           <div className="mode-line">
             <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>

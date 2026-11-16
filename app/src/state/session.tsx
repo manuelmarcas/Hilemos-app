@@ -1,6 +1,6 @@
 // Sesión: almacén de datos, usuario, su colección (votaciones y grupos) y preferencias de navegación.
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Library, Store, User } from "../lib/types";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { Library, Poll, Store, User } from "../lib/types";
 
 export interface LibraryState {
   data: Library | null;
@@ -12,8 +12,13 @@ interface SessionApi {
   demo: boolean;
   user: User;
   /** Cambia nombre/foto del usuario tras guardar el perfil. */
-  updateUser: (patch: Partial<Pick<User, "name" | "photo">>) => void;
+  updateUser: (patch: Partial<Pick<User, "name" | "photo" | "thumb">>) => void;
   library: LibraryState;
+  /**
+   * Votaciones ya leídas en esta sesión (null = ya no existe). "Mis votaciones" solo pide las que no están;
+   * la pantalla de cada votación la mantiene al día, porque la escucha en directo.
+   */
+  pollCache: Map<string, Poll | null>;
   /** Último grupo elegido (para preseleccionarlo al crear una votación). */
   lastGroup: string;
   setLastGroup: (g: string) => void;
@@ -41,14 +46,15 @@ export function SessionProvider({ store, demo, user, updateUser, children }: {
   const [library, setLibrary] = useState<LibraryState>({ data: null, error: null });
   const [lastGroup, setLastGroup] = useState("");
   const [homeFilter, setHomeFilter] = useState("all");
+  const pollCache = useRef(new Map<string, Poll | null>()).current;
 
   // Una única suscripción a la colección, compartida por el menú lateral y las pantallas.
   useEffect(() => store.watchLibrary(user.uid,
     data => setLibrary({ data, error: null }),
     error => setLibrary(l => ({ ...l, error }))), [store, user.uid]);
 
-  const api = useMemo(() => ({ store, demo, user, updateUser, library, lastGroup, setLastGroup, homeFilter, setHomeFilter }),
-    [store, demo, user, updateUser, library, lastGroup, homeFilter]);
+  const api = useMemo(() => ({ store, demo, user, updateUser, library, pollCache, lastGroup, setLastGroup, homeFilter, setHomeFilter }),
+    [store, demo, user, updateUser, library, pollCache, lastGroup, homeFilter]);
 
   return <SessionContext.Provider value={api}>{children}</SessionContext.Provider>;
 }

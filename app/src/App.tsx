@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { firebaseConfig } from "./lib/config";
 import { createDemoStore, createFirebaseStore } from "./lib/store";
 import type { Store, User } from "./lib/types";
+import { makeThumb } from "./lib/util";
 import { SessionProvider } from "./state/session";
 import { Gate } from "./components/Gate";
 import { Shell } from "./components/Shell";
@@ -45,23 +46,23 @@ export function App() {
       const mine = ++seq;
       if (!authUser) { setUser(null); return; }
       // El perfil (nombre e imagen elegidos por el usuario) tiene prioridad sobre los datos de Google.
-      let profile = null, readOk = false;
-      try { profile = await store.getProfile(authUser.uid); readOk = true; } catch { /* sin perfil: datos de Google */ }
+      let profile = null;
+      try { profile = await store.getProfile(authUser.uid); } catch { /* sin perfil: datos de Google */ }
+      const photo = typeof profile?.photo === "string" ? profile.photo : authUser.photo;
+      // Miniatura para los votos (los perfiles guardados antes de existir `thumb` no la tienen).
+      const thumb = typeof profile?.thumb === "string" ? profile.thumb : await makeThumb(photo).catch(() => "");
       if (mine !== seq) return; // ha cambiado la sesión mientras tanto
-      // Primera vez: se crea el perfil con los datos de Google, para que los demás vean su nombre e imagen.
-      if (readOk && !profile) {
-        store.saveProfile(authUser.uid, { name: authUser.name, photo: authUser.photo, updatedAt: Date.now() }).catch(() => {});
-      }
       setUser({
         ...authUser,
         googlePhoto: authUser.photo,
         name: profile?.name || authUser.name,
-        photo: typeof profile?.photo === "string" ? profile.photo : authUser.photo,
+        photo,
+        thumb,
       });
     });
   }, [store]);
 
-  const updateUser = useCallback((patch: Partial<Pick<User, "name" | "photo">>) => {
+  const updateUser = useCallback((patch: Partial<Pick<User, "name" | "photo" | "thumb">>) => {
     setUser(u => (u ? { ...u, ...patch } : u));
   }, []);
 

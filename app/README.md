@@ -48,6 +48,21 @@ src/lib/config.ts          Configuración de Firebase
 - Firebase se carga aparte (import dinámico): el modo demo no lo descarga.
 - `base: "./"` en Vite: la compilación usa rutas relativas y funciona en una subcarpeta o dentro de Capacitor.
 
+## Eficiencia en Firestore
+
+Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado
+para leer lo mínimo:
+
+- **Nombre y miniatura copiados en cada voto** (`polls/{id}/votes/{uid}`): abrir una votación no lee el perfil de
+  cada participante. Al cambiar el perfil se actualiza la copia en las votaciones del menú del usuario (pocas
+  escrituras, y es algo raro). En el voto va una miniatura de 64 px (`thumb`), no la imagen de perfil completa.
+- **Caché local (IndexedDB)**: al volver a una votación en menos de 30 min solo se cobran los documentos cambiados.
+- **"Mis votaciones"** lee cada votación una vez por sesión (`pollCache`); la pantalla de la votación la mantiene al día.
+- **`openedAt`** (orden de "Mis votaciones") se reescribe como mucho cada 10 min por votación, no en cada visita.
+- **Borrar una votación** se hace en lotes (`writeBatch`).
+
+Límite conocido: si alguien quita una votación de su menú y luego cambia su nombre, en esa votación seguirá el anterior.
+
 ## Pendiente para Capacitor
 
 - Login con Google nativo (`signInWithPopup` no funciona dentro del WebView): `@capacitor-firebase/authentication`.

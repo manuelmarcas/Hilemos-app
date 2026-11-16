@@ -22,7 +22,12 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   ]);
   const app = initializeApp(config);
   const auth = A.getAuth(app);
-  const db = F.getFirestore(app);
+  // Caché local (IndexedDB): al volver a escuchar una votación o la colección, Firestore solo cobra los
+  // documentos que han cambiado (si han pasado menos de 30 min). También abre más rápido y funciona sin conexión.
+  // Si el navegador no la permite (p. ej. modo privado), Firestore sigue funcionando solo en memoria.
+  const db = F.initializeFirestore(app, {
+    localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }),
+  });
   const provider = new A.GoogleAuthProvider();
 
   const toUser = (u: import("firebase/auth").User | null): AuthUser | null =>
@@ -53,17 +58,25 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async getPoll(id) { return withId(await F.getDoc(pollRef(id))); },
     updatePoll: (id, patch) => F.updateDoc(pollRef(id), patch),
     async deletePoll(id, uid) {
-      // Primero los votos (las reglas consultan la votación para permitirlo) y luego la votación.
+      // Primero los votos, en lotes (las reglas consultan la votación para permitirlo, así que aún debe existir),
+      // y luego la votación y su entrada en la colección del creador, juntas.
       const snap = await F.getDocs(votesCol(id));
-      await Promise.all(snap.docs.map(d => F.deleteDoc(d.ref)));
-      await F.deleteDoc(pollRef(id));
-      await F.deleteDoc(F.doc(libCol(uid), id));
+      for (let i = 0; i < snap.docs.length; i += 450) {
+        const batch = F.writeBatch(db);
+        snap.docs.slice(i, i + 450).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+      const batch = F.writeBatch(db);
+      batch.delete(pollRef(id));
+      batch.delete(F.doc(libCol(uid), id));
+      await batch.commit();
     },
     watchPoll: (id, cb, onErr) => F.onSnapshot(pollRef(id), s => cb(withId(s)), onErr),
 
     // ----- Participantes y votos -----
     watchVotes: (id, cb, onErr) => F.onSnapshot(votesCol(id), snap => cb(toMap<Vote>(snap)), onErr),
-    // Registra al usuario como participante sin tocar sus votos.
+    // Registra al usuario como participante sin tocar sus votos (nombre y miniatura copiados en el voto:
+    // así abrir una votación no tiene que leer el perfil de cada participante).
     joinPoll: (id, user) => F.setDoc(F.doc(votesCol(id), user.uid),
       { name: user.name, photo: user.photo, seenAt: Date.now() }, { merge: true }),
     saveVote: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),

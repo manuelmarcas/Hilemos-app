@@ -98,14 +98,7 @@ service cloud.firestore {
       }
     }
 
-    // ---------- Perfil público (users/{uid}): nombre visible e imagen ----------
-    // Lo lee cualquiera con sesión: así todas las votaciones muestran el nombre y la imagen actuales de cada
-    // participante. Solo contiene name, photo y updatedAt. Lo escribe únicamente su dueño (regla de abajo).
-    match /users/{uid} {
-      allow read: if signedIn();
-    }
-
-    // ---------- Datos privados de cada usuario: perfil, sus votaciones y sus grupos ----------
+    // ---------- Datos privados de cada usuario: perfil (users/{uid}), sus votaciones y sus grupos ----------
     match /users/{uid}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }

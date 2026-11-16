@@ -68,6 +68,25 @@ export async function imageToAvatar(file: File, size = 128) {
   return c.toDataURL("image/jpeg", 0.85);
 }
 
+// Miniatura de la imagen de perfil para copiarla en los votos: si es una imagen en base64 se reduce
+// (unos 2 KB); si es una URL de Google ya es ligera y se deja igual.
+export async function makeThumb(photo: string | undefined, size = 64) {
+  const src = safePhoto(photo);
+  if (!src.startsWith("data:")) return src;
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("No se pudo leer la imagen."));
+    i.src = src;
+  });
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d")!;
+  g.imageSmoothingQuality = "high";
+  g.drawImage(img, 0, 0, size, size);
+  return c.toDataURL("image/jpeg", 0.8);
+}
+
 // Grupos del usuario ordenados por nombre: [{ id, name }].
 export const sortedGroups = (groups: Record<string, Group> | null | undefined) => Object.entries(groups || {})
   .map(([id, g]) => ({ id, name: g.name || "Sin nombre" }))

@@ -72,9 +72,11 @@ export interface Library {
   groups: Record<string, Group>;
 }
 
+/** Documento `users/{uid}` (privado). */
 export interface Profile {
   name?: string;
-  photo?: string;
+  photo?: string;  // imagen de perfil (128 px en base64, URL de Google o vacía)
+  thumb?: string;  // miniatura que se copia en los votos (64 px), para que pesen poco
   updatedAt?: number;
 }
 
@@ -88,6 +90,14 @@ export interface AuthUser {
 /** Usuario de la app: datos de sesión + perfil elegido por él. */
 export interface User extends AuthUser {
   googlePhoto: string;
+  thumb: string; // miniatura de `photo`: es la que se guarda en cada voto
+}
+
+/** Lo que se copia del usuario en cada voto (nombre y miniatura). */
+export interface Participant {
+  uid: string;
+  name: string;
+  photo: string;
 }
 
 export type Unsubscribe = () => void;
@@ -106,7 +116,7 @@ export interface Store {
   watchPoll(id: string, cb: (p: Poll | null) => void, onErr?: ErrorCb): Unsubscribe;
 
   watchVotes(id: string, cb: (v: Votes) => void, onErr?: ErrorCb): Unsubscribe;
-  joinPoll(id: string, user: AuthUser): Promise<void>;
+  joinPoll(id: string, user: Participant): Promise<void>;
   saveVote(id: string, uid: string, data: Vote): Promise<void>;
   saveTiebreakVote(id: string, uid: string, data: Vote): Promise<void>;
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;

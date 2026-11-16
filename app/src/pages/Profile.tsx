@@ -1,10 +1,9 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
 import { useRef, useState } from "react";
-import { errMsg, imageToAvatar } from "../lib/util";
+import { errMsg, imageToAvatar, makeThumb } from "../lib/util";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
-import { forgetProfile } from "../state/profiles";
 import { Avatar } from "../components/Avatar";
 
 const THEMES: [ThemePref, string, string, string][] = [
@@ -14,7 +13,7 @@ const THEMES: [ThemePref, string, string, string][] = [
 ];
 
 export function Profile() {
-  const { store, user, updateUser } = useSession();
+  const { store, user, updateUser, library } = useSession();
   const { toast } = useUi();
   const [name, setName] = useState(user.name || "");
   const [photo, setPhoto] = useState(user.photo || "");
@@ -31,10 +30,25 @@ export function Profile() {
     setBusy(true);
     setStatus("");
     try {
-      // Solo el perfil: todas las votaciones muestran el nombre y la imagen que haya en él.
-      await store.saveProfile(user.uid, { name: n, photo, updatedAt: Date.now() });
-      forgetProfile(user.uid);
-      updateUser({ name: n, photo });
+      const thumb = await makeThumb(photo);
+      await store.saveProfile(user.uid, { name: n, photo, thumb, updatedAt: Date.now() });
+      updateUser({ name: n, photo, thumb });
+
+      // El nombre y la miniatura van copiados en cada voto (así abrir una votación no lee perfiles):
+      // si han cambiado, se actualizan en las votaciones del menú. Es raro, y cuesta una escritura por votación.
+      const polls = library.data?.polls || {};
+      const ids = Object.keys(polls);
+      const jobs: Promise<unknown>[] = [];
+      if (n !== user.name || thumb !== user.thumb) {
+        ids.forEach(id => jobs.push(store.updateParticipant(id, user.uid, { name: n, photo: thumb })));
+      }
+      if (n !== user.name) {
+        ids.filter(id => polls[id].role === "owner").forEach(id => {
+          jobs.push(store.updatePoll(id, { ownerName: n }));
+          jobs.push(store.saveLibraryEntry(user.uid, id, { ownerName: n }));
+        });
+      }
+      await Promise.allSettled(jobs);
       toast("Perfil guardado");
     } catch (e) {
       setStatus("No se pudo guardar el perfil. " + errMsg(e));

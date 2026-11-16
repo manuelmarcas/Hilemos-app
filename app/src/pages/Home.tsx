@@ -6,24 +6,21 @@ import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
-import { profileName, useProfiles } from "../state/profiles";
 
 type Entry = LibraryEntry & { id: string };
 type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
 
 export function Home() {
-  const { store, user, library, homeFilter, setHomeFilter, setLastGroup } = useSession();
+  const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
   const { toast, confirm, share } = useUi();
   const lib = library.data;
-  // Datos de cada votación (o null si ya no existe). Se vuelven a pedir cada vez que se entra.
-  const [cache, setCache] = useState<Record<string, Poll | null>>({});
-  const requested = useRef(new Set<string>()); // se piden una sola vez por visita
+  // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
+  const [cache, setCache] = useState<Record<string, Poll | null>>(() => Object.fromEntries(pollCache));
+  const requested = useRef(new Set<string>(pollCache.keys()));
   const [expanded, setExpanded] = useState<string | null>(null); // votación con el menú ⋯ abierto
   const [form, setForm] = useState<Form>(null);
   const [status, setStatus] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
-  // Nombre actual (de su perfil) de quien creó cada votación.
-  const profiles = useProfiles(Object.values(cache).flatMap(p => (p && p.ownerUid !== user.uid ? [p.ownerUid] : [])));
 
   useEffect(() => {
     if (!lib) return;
@@ -31,10 +28,10 @@ export function Home() {
       if (requested.current.has(id)) continue;
       requested.current.add(id);
       store.getPoll(id)
-        .then(p => setCache(c => ({ ...c, [id]: p })))
+        .then(p => { pollCache.set(id, p); setCache(c => ({ ...c, [id]: p })); })
         .catch(() => { /* sin datos: se muestra lo guardado en la colección */ });
     }
-  }, [lib, store]);
+  }, [lib, store, pollCache]);
 
   const formMode = form?.mode;
   useEffect(() => { if (formMode) nameRef.current?.focus(); }, [formMode]);
@@ -121,7 +118,7 @@ export function Home() {
     const owner = (p?.ownerUid || null) === user.uid || e.role === "owner";
     const meta = [
       p ? pollMeta(p) : type?.name || "",
-      owner ? "creada por ti" : `de ${p ? profileName(p.ownerUid, profiles, user, p.ownerName || e.ownerName || "alguien") : e.ownerName || "alguien"}`,
+      owner ? "creada por ti" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
     ].filter(Boolean).join(" · ");
     const open = expanded === e.id;
     return (
