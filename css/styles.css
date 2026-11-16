@@ -498,8 +498,8 @@ select.input{cursor:pointer}
 /* ---------- Votación ---------- */
 .poll-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}
 .poll-title{min-width:0;flex:1 1 320px}
-.kicker{font-size:.82rem;color:var(--muted);font-weight:600;margin-bottom:4px;line-height:1.4}
-.poll-head h1{font-size:1.6rem;margin:0;color:var(--green-dark);overflow-wrap:anywhere}
+.kicker{font-size:.82rem;color:var(--muted);font-weight:600;margin-bottom:8px;line-height:1.4}
+.poll-head h1{font-size:1.6rem;margin:0;line-height:1.2;color:var(--green-dark);overflow-wrap:anywhere}
 .desc{margin:6px 0 0;line-height:1.5;white-space:pre-line}
 .poll-actions{display:flex;flex-wrap:wrap;gap:8px}
 @container view (max-width:559.98px){
@@ -1045,7 +1045,7 @@ emoji-picker{
 .emoji-panel.sheet emoji-picker{--num-columns:8;--emoji-size:1.6rem}
 
 /* ---------- Votos visibles / anónimos ---------- */
-.mode-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 6px}
+.mode-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 16px}
 .mode-pill{
   display:inline-flex;
   align-items:center;
