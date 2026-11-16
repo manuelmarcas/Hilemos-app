@@ -24,11 +24,14 @@ export interface PollData {
   type: PollType;
   months: string[];
   slots: string[];
+  /** Franjas periódicas (mismas horas en todos los días). Vacío con `hourList`. */
   hours?: string[];
   /** Duración de cada franja (min). 0 con `hourList`. */
   hourStep?: number;
-  /** Horas sueltas elegidas a mano (15:00, 15:30, 18:00…) en vez de franjas periódicas: se votan instantes, sin duración. */
+  /** Horas sueltas elegidas a mano en vez de franjas periódicas: se votan instantes, sin duración. */
   hourList?: boolean;
+  /** Con `hourList`: horas sueltas de cada día (pueden ser distintas entre días). Clave = día de `slots`. */
+  hoursByDay?: Record<string, string[]>;
   options?: PollOption[];
   anonymous?: boolean;
   tiebreak?: Tiebreak | null;

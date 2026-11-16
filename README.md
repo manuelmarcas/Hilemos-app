@@ -21,8 +21,8 @@ ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en e
      Hay atajos (todos, ninguno, lunes a viernes, fines de semana) y, en ordenador, Mayús + clic marca un rango.
   5. En las de **días**: de 1 a 4 opciones por día (p. ej. comida y cena), cada una con su nombre y su icono.
      El icono se ve en el calendario y el nombre en la leyenda.
-  6. En las de **horas**: rango horario (desde/hasta) y duración de cada franja (30 min, 1 h, 2 h),
-     que se repite en cada día elegido.
+  6. En las de **horas**: franjas periódicas (rango desde/hasta y duración, repetidas en cada día) u horas
+     sueltas elegidas día por día, que pueden ser distintas entre un día y otro.
 - **Votar** pulsando en el calendario, con el contador en cada casilla, el borde verde en lo más votado,
   el resumen de "opciones más votadas" y la tabla por participante, igual que en el original.
 - **Mis votaciones**: cada usuario tiene su colección (las que ha creado y aquellas en las que ha entrado)

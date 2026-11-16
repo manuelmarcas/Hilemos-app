@@ -2,7 +2,7 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import * as D from "../lib/dates";
 import {
-  TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural,
+  TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
   MAX_PEOPLE, MAX_EMAILS, PEOPLE_FILTER_FROM, isRestricted, memberStatus, acceptedVotes, hasLimit, isFull, parseEmails,
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
@@ -973,6 +973,8 @@ function BoardMonths({ poll, T, mine, canVote, onVote }: BoardProps) {
 
 function BoardHours({ poll, T, mine, canVote, onVote }: BoardProps) {
   const days = poll.slots;
+  // Con horas sueltas, cada día puede tener sus propias horas: las filas son la unión de todas.
+  const rows = poll.hourList ? [...new Set(days.flatMap(d => hoursForDay(poll, d)))].sort() : (poll.hours || []);
   return (
     <div className="hours-card">
       <div className="hours-wrap">
@@ -993,15 +995,17 @@ function BoardHours({ poll, T, mine, canVote, onVote }: BoardProps) {
             </tr>
           </thead>
           <tbody>
-            {(poll.hours || []).map(h => (
+            {rows.map(h => (
               <tr key={h}>
                 <th scope="row">{h}</th>
                 {days.map(d => {
+                  const has = !poll.hourList || hoursForDay(poll, d).includes(h);
                   const s = `${d}T${h}`, u = unitKey(s, "v");
                   return (
                     <td key={d}>
-                      <VoteBtn base="hcell" u={u} T={T} mine={mine} enabled={canVote} label={slotLabel(poll, s)} onVote={onVote}>
-                        <Count T={T} u={u} />
+                      <VoteBtn base={cls("hcell", !has && "off")} u={u} T={T} mine={mine} enabled={has && canVote}
+                        label={slotLabel(poll, s)} onVote={onVote}>
+                        {has && <Count T={T} u={u} />}
                       </VoteBtn>
                     </td>
                   );

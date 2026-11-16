@@ -7,6 +7,10 @@ enlaces ya compartidos siguen funcionando.
 
 Se publica en una sola dirección, <https://votaciones-9bc95.web.app>, con `npm run deploy`.
 
+El diseño (color, tipografía, espaciado, estados…) está documentado en [`design-system/README.md`](design-system/README.md),
+con los valores exactos en [`design-system/tokens.json`](design-system/tokens.json); la fuente real de verdad
+del código es [`src/styles.css`](src/styles.css).
+
 ## Comandos
 
 ```bash
@@ -66,8 +70,10 @@ Al crear una votación de horas se alterna entre dos modos:
 
 - **Franjas periódicas**: desde, hasta y cada cuánto (30 min, 1 h o 2 h). Cada casilla es una franja con duración
   (`hours` + `hourStep`).
-- **Horas sueltas**: se añaden a mano las horas concretas (15:00, 15:30, 18:00, 19:30…), hasta 48 por día. Se
-  guardan en `hours` con `hourList: true` y `hourStep: 0`; se votan instantes, sin hora de fin.
+- **Horas sueltas**: una fila por día elegido, cada una con su propio desplegable (horas de media en media,
+  00:00 a 23:30) para añadir las horas de ese día; pueden ser distintas entre días (p. ej. 18:00 y 18:30 un día,
+  19:00 otro), hasta 48 por día. Se guardan en `hoursByDay` (día → horas) con `hourList: true` y `hourStep: 0`;
+  se votan instantes, sin hora de fin.
 
 En «Opciones de cada día», los nombres sugeridos (Comida, Cena…) son solo un ejemplo en el campo (placeholder):
 hay que escribir el nombre. El icono sí se propone, y se puede cambiar.

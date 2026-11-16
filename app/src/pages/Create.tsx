@@ -23,8 +23,7 @@ interface Opt { name: string; icon: string; touched: boolean } // touched = icon
 const applyPresets = (opts: Opt[], count: number) =>
   opts.map((o, i) => (!o.touched && PRESETS[count][i] ? { ...o, icon: PRESETS[count][i][1] } : o));
 
-const HOUR = /^([01]\d|2[0-3]):[0-5]\d$/;
-const MAX_HOURS = 48; // horas sueltas por día
+const MAX_HOURS = 48; // horas sueltas, como mucho por día (son todas las medias horas del día)
 
 const toggled = (set: Set<string>, k: string) => {
   const next = new Set(set);
@@ -81,9 +80,7 @@ export function Create() {
   const [to, setTo] = useState("21:00");
   const [step, setStep] = useState(60);
   const [hourMode, setHourMode] = useState<"range" | "list">("range");
-  const [hourList, setHourList] = useState<string[]>([]); // horas sueltas, ordenadas
-  const [newHour, setNewHour] = useState("");
-  const [hourError, setHourError] = useState("");
+  const [hoursByDay, setHoursByDay] = useState<Record<string, string[]>>({}); // horas sueltas, por día
   const [groupId, setGroupId] = useState(lastGroup || "");
   const [newGroup, setNewGroup] = useState("");
   const [anonymous, setAnonymous] = useState(false);
@@ -110,16 +107,20 @@ export function Create() {
   const today = D.todayKey();
   const hourSlots = D.hourRange(from, to, step);
   const isList = hourMode === "list";
-  const pollHours = isList ? hourList : hourSlots;
+  const sortedHourDays = [...days].sort();
+  const listHoursCount = sortedHourDays.reduce((a, d) => a + (hoursByDay[d]?.length || 0), 0);
 
-  function addHour() {
-    const h = newHour.trim();
-    if (!HOUR.test(h)) { setHourError("Elige una hora válida (por ejemplo, 15:30)."); return; }
-    if (hourList.includes(h)) { setHourError(`Las ${h} ya están en la lista.`); return; }
-    if (hourList.length >= MAX_HOURS) { setHourError(`Como mucho ${MAX_HOURS} horas.`); return; }
-    setHourList(l => [...l, h].sort());
-    setHourError("");
-    setNewHour("");
+  function addDayHour(day: string, h: string) {
+    if (!h) return;
+    setHoursByDay(m => {
+      const cur = m[day] || [];
+      if (cur.includes(h) || cur.length >= MAX_HOURS) return m;
+      return { ...m, [day]: [...cur, h].sort() };
+    });
+  }
+
+  function removeDayHour(day: string, h: string) {
+    setHoursByDay(m => ({ ...m, [day]: (m[day] || []).filter(x => x !== h) }));
   }
 
   function selectableDays() {
@@ -203,7 +204,10 @@ export function Create() {
       }
     }
     if (type === "hours" && !isList && !hourSlots.length) return ["El rango de horas no contiene ninguna franja.", "#sec-hours"];
-    if (type === "hours" && isList && !hourList.length) return ["Añade al menos una hora.", "#f-hour"];
+    if (type === "hours" && isList) {
+      const missing = sortedHourDays.find(d => !(hoursByDay[d]?.length));
+      if (missing) return [`Añade al menos una hora para el ${D.cap(D.fmtDayShort(missing))}.`, "#sec-hours"];
+    }
     if (access === "emails") {
       if (parsed.invalid.length) return [`Revisa ${parsed.invalid.length === 1 ? "este correo" : "estos correos"}: ${parsed.invalid.slice(0, 3).join(", ")}${parsed.invalid.length > 3 ? "…" : ""}`, "#f-emails"];
       if (!parsed.emails.length) return ["Escribe al menos un correo que pueda entrar.", "#f-emails"];
@@ -243,9 +247,11 @@ export function Create() {
       type,
       months: sortedMonths,
       slots: type === "months" ? sortedMonths : type === "weeks" ? [...weeks].sort() : [...days].sort(),
-      hours: type === "hours" ? pollHours : [],
+      hours: type === "hours" && !isList ? hourSlots : [],
       hourStep: type === "hours" && !isList ? step : 0,
-      ...(type === "hours" && isList ? { hourList: true } : {}),
+      ...(type === "hours" && isList
+        ? { hourList: true, hoursByDay: Object.fromEntries(sortedHourDays.map(d => [d, hoursByDay[d] || []])) }
+        : {}),
       options: type === "days"
         ? opts.slice(0, count).map((o, i) => ({ id: `o${i + 1}`, name: o.name.trim(), icon: o.icon }))
         : [],
@@ -311,7 +317,9 @@ export function Create() {
   else if (type === "weeks") summaryParts.push(plural(weeks.size, ["semana", "semanas"]));
   else summaryParts.push(plural(days.size, ["día", "días"]));
   if (type === "days") summaryParts.push(plural(count, ["opción", "opciones"]) + " por día");
-  if (type === "hours") summaryParts.push(plural(pollHours.length, isList ? ["hora", "horas"] : ["franja", "franjas"]) + " por día");
+  if (type === "hours") summaryParts.push(isList
+    ? plural(listHoursCount, ["hora", "horas"]) + " en total"
+    : plural(hourSlots.length, ["franja", "franjas"]) + " por día");
   summaryParts.push(anonymous ? "anónima" : "votos visibles");
   if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
   if (access === "approval") summaryParts.push("con aprobación");
@@ -523,28 +531,41 @@ export function Create() {
           </div>
           <p className="hint">
             {isList
-              ? "Añade las horas concretas que se podrán votar (por ejemplo, 15:00, 15:30, 18:00 y 19:30). Se repetirán en cada uno de los días elegidos."
+              ? "Elige, para cada día, las horas concretas que se podrán votar. Pueden ser distintas en cada día (por ejemplo, 18:00 y 18:30 uno y 19:00 otro)."
               : "Las mismas franjas se repetirán en cada uno de los días elegidos."}
           </p>
           <div id="s-hours">
             {visible.hours && isList && <>
-              <div className="hour-add">
-                <input id="f-hour" className="input" type="time" step={300} value={newHour} aria-label="Hora"
-                  onChange={e => { setNewHour(e.target.value); setHourError(""); }}
-                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addHour(); } }} />
-                <button type="button" className="btn" id="f-hour-add" onClick={addHour}>＋ Añadir</button>
-              </div>
-              {hourError && <p className="status" role="alert">{hourError}</p>}
-              <div className="hour-chips">
-                {hourList.length
-                  ? hourList.map(h => (
-                    <span key={h} className="tag">{h}
-                      <button type="button" aria-label={`Quitar las ${h}`} onClick={() => setHourList(l => l.filter(x => x !== h))}>×</button>
-                    </span>
-                  ))
-                  : <span className="muted">Todavía no hay ninguna hora.</span>}
-              </div>
-              <p className="hint hint-after">{plural(hourList.length, ["hora", "horas"])} por día.</p>
+              {!sortedHourDays.length
+                ? <div className="empty-box">Primero elige los días en el paso «{numbers.slots}. Días».</div>
+                : <div className="hour-day-rows">
+                  {sortedHourDays.map(d => {
+                    const chosen = hoursByDay[d] || [];
+                    return (
+                      <div key={d} className="hour-day-row">
+                        <div className="hour-day-head">
+                          <span className="hour-day-label">{D.cap(D.fmtDayShort(d))}</span>
+                          <select className="input" aria-label={`Añadir hora para ${D.fmtDayShort(d)}`} value=""
+                            disabled={chosen.length >= MAX_HOURS}
+                            onChange={e => addDayHour(d, e.target.value)}>
+                            <option value="">＋ Añadir hora…</option>
+                            {starts.filter(h => !chosen.includes(h)).map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="hour-chips">
+                          {chosen.length
+                            ? chosen.map(h => (
+                              <span key={h} className="tag">{h}
+                                <button type="button" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
+                              </span>
+                            ))
+                            : <span className="muted">Todavía no hay ninguna hora.</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>}
+              <p className="hint hint-after">{plural(listHoursCount, ["hora", "horas"])} en total.</p>
             </>}
             {visible.hours && !isList && <>
               <div className="hours-form">

@@ -62,9 +62,15 @@ export const unitKey = (slot: string, opt: string) => `${slot}|${opt}`;
 
 export const pollOptions = (poll: PollData) => (poll.type === "days" && poll.options?.length ? poll.options : SINGLE);
 
+/** Horas votables de un día: por día si es `hourList` (con reserva para votaciones antiguas sin `hoursByDay`), o las franjas periódicas. */
+export function hoursForDay(poll: PollData, day: string): string[] {
+  if (poll.hourList) return poll.hoursByDay?.[day] ?? poll.hours ?? [];
+  return poll.hours || [];
+}
+
 // Claves de cada casilla votable (sin la opción).
 export function slotKeys(poll: PollData) {
-  if (poll.type === "hours") return poll.slots.flatMap(d => (poll.hours || []).map(h => `${d}T${h}`));
+  if (poll.type === "hours") return poll.slots.flatMap(d => hoursForDay(poll, d).map(h => `${d}T${h}`));
   return poll.slots;
 }
 
@@ -206,7 +212,12 @@ export function pollMeta(poll: PollData) {
   const parts = [t.name];
   if (poll.type === "hours") {
     parts.push(plural(poll.slots.length, ["día", "días"]));
-    parts.push(plural(poll.hours?.length || 0, poll.hourList ? ["hora", "horas"] : ["franja", "franjas"]) + " por día");
+    if (poll.hourList) {
+      const total = poll.slots.reduce((a, d) => a + hoursForDay(poll, d).length, 0);
+      parts.push(plural(total, ["hora", "horas"]) + " en total");
+    } else {
+      parts.push(plural(poll.hours?.length || 0, ["franja", "franjas"]) + " por día");
+    }
   } else {
     parts.push(plural(poll.slots.length, t.unit));
   }
