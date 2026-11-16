@@ -1,11 +1,15 @@
 # 🗳️ Votaciones
 
-App web para crear votaciones de fechas y compartirlas con un grupo. Es la evolución de
+App para crear votaciones de fechas y compartirlas con un grupo. Es la evolución de
 [votaciones](https://github.com/manuelmarcas/votaciones) (la votación de comida/cena de Navidad),
 pero todo es configurable.
 
-> **Versión 2 en React:** la carpeta [`app/`](app/) contiene la misma aplicación migrada a React + Vite + TypeScript,
-> preparada para convertirla en app móvil con Capacitor. Ver [`app/README.md`](app/README.md).
+**Dirección única: <https://votaciones-9bc95.web.app>** (Firebase Hosting). Es la única que se publica.
+La antigua de GitHub Pages (`manuelmarcas.github.io/votaciones-app`) solo redirige allí, conservando la votación
+del enlace, para que los enlaces ya compartidos sigan funcionando.
+
+El código está en [`app/`](app/) (React + Vite + TypeScript, preparado para la app móvil con Capacitor):
+ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en el historial de git.
 
 ## Qué se puede hacer
 
@@ -50,75 +54,40 @@ pero todo es configurable.
 - El creador puede **cerrar/reabrir** la votación (cerrada ya no admite cambios) y **eliminarla**;
   cerrar y eliminar piden confirmación.
 
-## Probarla en local (modo demo, sin Firebase)
+## Publicar
 
-Al ser módulos ES, hay que servirla por HTTP (no vale abrir el archivo con doble clic):
+Siempre en la misma dirección (el canal *live* de Firebase Hosting). No se usan canales de vista previa:
+caducan y cambian de dirección.
 
-```bash
-python -m http.server 8000
-```
+1. **Reglas de Firestore** (solo si cambia [`firestore.rules`](firestore.rules)), antes que la web:
+   desde la raíz del repo, `app/node_modules/.bin/firebase deploy --only firestore:rules` (usa `firebase.json`
+   y `.firebaserc` de la raíz), o pegarlas en
+   *Firebase Console › Firestore Database › Reglas*. Incluyen también la regla de `/votes` de la votación de
+   Navidad original.
+2. **Web**: `cd app && npm run deploy` (compila y publica en <https://votaciones-9bc95.web.app>).
 
-y abre <http://localhost:8000/?demo>. En modo demo los datos se guardan en el `localStorage` del navegador
-y te pide solo un nombre. Para simular a varias personas, abre otra pestaña y entra con otro nombre.
-
-Sin `?demo`, usa Firebase (login con Google) con el proyecto configurado en `js/config.js`.
-
-## Ponerla en marcha con Firebase
-
-`js/config.js` ya apunta al mismo proyecto de Firebase que el original (`votaciones-9bc95`).
-
-1. **Reglas de Firestore**: la app usa colecciones nuevas (`polls` y `users`), así que hay que publicar
-   las reglas de [`firestore.rules`](firestore.rules) en *Firebase Console › Firestore Database › Reglas*.
-   Cada vez que cambie este archivo hay que volver a publicarlo.
-   El archivo incluye también la regla de `/votes` para que la votación de Navidad original siga funcionando;
-   si tus reglas actuales para `/votes` son distintas, conserva las tuyas y añade el resto.
-2. **Authentication**: el proveedor de Google ya está activado. Si publicas la app en un dominio nuevo,
-   añádelo en *Authentication › Configuración › Dominios autorizados* (`localhost` ya viene incluido).
-3. **Publicarla**: es una web estática sin compilación. Por ejemplo, con GitHub Pages:
-   sube el repositorio y activa *Settings › Pages › Deploy from a branch* (`main`, carpeta raíz).
+Si se publica en otro dominio, hay que añadirlo en *Authentication › Configuración › Dominios autorizados*.
 
 ## Estructura
 
 ```
-index.html            Contenedor: login, barra superior y vista
-css/styles.css        Estilos (misma paleta que el original)
-js/app.js             Arranque, sesión y rutas (#/, #/nueva, #/v/<id>, #/perfil)
-js/home.js            "Mis votaciones" con grupos
-js/sidebar.js         Menú lateral (navegar y organizar)
-js/library.js         Suscripción compartida a la colección del usuario
-js/create.js          Asistente de nueva votación
-js/poll.js            Calendario, votos, resumen y participantes
-js/profile.js         Perfil: nombre visible, imagen y preferencias
-js/theme.js           Tema claro/oscuro (automático o elegido)
-js/emoji.js           Selector de emojis (emoji-picker-element, se carga al abrirlo)
-js/share.js           Diálogo de compartir y QR
-js/model.js           Modelo de la votación y recuentos
-js/dates.js           Utilidades de fechas (semanas ISO, rangos, formatos)
-js/store.js           Datos: Firebase o modo demo (misma interfaz)
-js/config.js          Configuración de Firebase
-js/vendor/qrcode.js   qrcode-generator 1.4.4 (MIT, Kazuhiko Arase)
-firestore.rules       Reglas de seguridad
+app/              La aplicación (ver app/README.md)
+firestore.rules   Reglas de seguridad de Firestore
+firebase.json     Configuración de Firebase para publicar las reglas (la del hosting está en app/)
+index.html        Redirección de GitHub Pages a la dirección única
 ```
 
 ## Modelo de datos (Firestore)
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `createdAt`, `closed` |
-| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `seenAt`, `updatedAt` |
-| `users/{uid}` | Perfil: `name` (nombre visible), `photo` (imagen reducida en base64, URL de Google o vacía), `updatedAt` |
-| `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `groupId`, `addedAt`, `openedAt` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
+| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `seenAt`, `updatedAt` |
+| `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `hideRemoveWarning`, `updatedAt` |
+| `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |
 | `users/{uid}/groups/{groupId}` | Grupos privados del usuario: `name`, `createdAt` |
-
-La imagen de perfil se reduce en el navegador a 128×128 px (unos pocos KB) y se guarda en Firestore,
-así que no hace falta Firebase Storage (que en proyectos nuevos exige el plan de pago).
 
 Cualquier usuario con sesión puede abrir una votación si tiene el enlace; solo el creador puede cerrarla o
 borrarla; cada uno solo puede modificar su propio voto; y la colección/grupos de cada usuario es privada.
-
-## Librerías externas
-
-- [Firebase](https://firebase.google.com/) 10.12.2 (desde `gstatic.com`).
-- [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4, MIT, incluida en `js/vendor/`.
-- [emoji-picker-element](https://github.com/nolanlawson/emoji-picker-element) 1.29.1, Apache-2.0, y sus datos
-  en español (`emoji-picker-element-data` 1.8.0), desde jsDelivr. Solo se descargan al abrir el selector de emojis.
+En las votaciones con aprobación o solo con correos, los votos solo los ven el creador y los aceptados.

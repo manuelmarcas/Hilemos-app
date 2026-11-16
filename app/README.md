@@ -1,11 +1,11 @@
 # Votaciones 2.0 (React + Vite + TypeScript)
 
 Migración de la web de la carpeta raíz a React, como paso previo a la app móvil con Capacitor.
-Hace lo mismo que la web original, con el mismo diseño (`src/styles.css` es una copia de `css/styles.css`),
+Hace lo mismo que la primera versión (sin React, ya retirada), con el mismo diseño,
 los mismos datos de Firebase y las mismas rutas (`#/`, `#/nueva`, `#/perfil`, `#/v/<id>`), así que los
 enlaces ya compartidos siguen funcionando.
 
-La web original (raíz del repo) no se ha tocado y sigue siendo la publicada hasta que se sustituya.
+Se publica en una sola dirección, <https://votaciones-9bc95.web.app>, con `npm run deploy`.
 
 ## Comandos
 
@@ -26,7 +26,7 @@ Con `?demo` en la URL funciona sin Firebase (datos en `localStorage`; cada pesta
 index.html                 Contenedor (fuentes y tema antes de pintar)
 src/main.tsx               Arranque de React
 src/App.tsx                Almacén de datos, sesión y elección entre login y app
-src/styles.css             Estilos (copia de css/styles.css)
+src/styles.css             Estilos
 src/state/ui.tsx           Avisos, confirmaciones, compartir y selector de emojis (contexto)
 src/state/session.tsx      Usuario, colección (votaciones y grupos) y filtros (contexto)
 src/state/route.ts         Rutas con #
