@@ -1,16 +1,16 @@
 :root{
   /* Design system «Votaciones»: los nombres y valores son los de tokens.json */
-  --bg:#fbf7ef;
+  --bg:#f6f4f7;
   --card:#ffffff;
-  --soft:#f4efe2;
-  --hover:#f5f1e6;
-  --line:#e4ddcd;
-  --line-strong:#cfc5ad;
+  --soft:#eeeaef;
+  --hover:#f2eff3;
+  --line:#e2dde4;
+  --line-strong:#c9c1cc;
   --ink:#2a1f27;
   --muted:#6b5e66;
   --brand:#5e2a59;
   --brand-strong:#451d42;
-  --brand-soft:#f3e8f1;
+  --brand-soft:#ebdfea;
   --on-brand:#ffffff;
   --best:#1e7a45;
   --best-soft:#e5f2ea;
@@ -38,6 +38,94 @@
   --opacity-disabled:.55;
   /* «La más votada»: anillo verde con un hueco claro, visible sobre cualquier color de opción */
   --best-ring:inset 0 0 0 2px var(--best), inset 0 0 0 4px var(--card);
+  /* Solo de la app: brillo del fondo, botón de Google y avatares sin foto */
+  --glow-a:#fbf9fc;
+  --glow-b:#eee8f0;
+  --google-bg:#ffffff;
+  --google-ink:#3c4043;
+  --google-line:#d7d7d7;
+  --av-bg:42% 86%;
+  --av-ink:45% 26%;
+  color-scheme:light;
+}
+/* Modo oscuro: el sistema decide si no hay elección (data-theme), y data-theme manda si la hay */
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+  --bg:#1b1619;
+  --card:#251f23;
+  --soft:#30282e;
+  --hover:#2c252a;
+  --line:#463b42;
+  --line-strong:#5a4d55;
+  --ink:#f3ebe8;
+  --muted:#b6a8b0;
+  --brand:#dca6d2;
+  --brand-strong:#efcbe7;
+  --brand-soft:#3f2a3b;
+  --on-brand:#1b1619;
+  --best:#5ec98c;
+  --best-soft:#1b3426;
+  --on-best:#0f2418;
+  --tie:#e0b84a;
+  --tie-soft:#3a2f12;
+  --tie-ink:#f0d27a;
+  --danger:#f0897c;
+  --danger-soft:#3d2323;
+  --on-danger:#1b1619;
+  --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
+  --c1:#8b9be3; --c1-ink:#141a33; --c1-edge:#7586d4;
+  --c2:#5cbcae; --c2-ink:#0d2522; --c2-edge:#4ea89b;
+  --c3:#ee8a6a; --c3-ink:#2d0f09; --c3-edge:#da785a;
+  --shadow:0 10px 30px -18px rgba(0,0,0,.7);
+  --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
+  --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
+  --glow-a:#251c22;
+  --glow-b:#1f1a1e;
+  --google-bg:#131314;
+  --google-ink:#e3e3e3;
+  --google-line:#8e918f;
+  --av-bg:28% 30%;
+  --av-ink:60% 88%;
+  color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1619;
+  --card:#251f23;
+  --soft:#30282e;
+  --hover:#2c252a;
+  --line:#463b42;
+  --line-strong:#5a4d55;
+  --ink:#f3ebe8;
+  --muted:#b6a8b0;
+  --brand:#dca6d2;
+  --brand-strong:#efcbe7;
+  --brand-soft:#3f2a3b;
+  --on-brand:#1b1619;
+  --best:#5ec98c;
+  --best-soft:#1b3426;
+  --on-best:#0f2418;
+  --tie:#e0b84a;
+  --tie-soft:#3a2f12;
+  --tie-ink:#f0d27a;
+  --danger:#f0897c;
+  --danger-soft:#3d2323;
+  --on-danger:#1b1619;
+  --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
+  --c1:#8b9be3; --c1-ink:#141a33; --c1-edge:#7586d4;
+  --c2:#5cbcae; --c2-ink:#0d2522; --c2-edge:#4ea89b;
+  --c3:#ee8a6a; --c3-ink:#2d0f09; --c3-edge:#da785a;
+  --shadow:0 10px 30px -18px rgba(0,0,0,.7);
+  --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
+  --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
+  --glow-a:#251c22;
+  --glow-b:#1f1a1e;
+  --google-bg:#131314;
+  --google-ink:#e3e3e3;
+  --google-line:#8e918f;
+  --av-bg:28% 30%;
+  --av-ink:60% 88%;
+  color-scheme:dark;
 }
 *{box-sizing:border-box}
 [hidden]{display:none !important}
@@ -46,8 +134,8 @@ body{
   margin:0;
   font-family:var(--font-sans);
   background:
-    radial-gradient(circle at 10% 0%, #fdf0e4 0, transparent 45%),
-    radial-gradient(circle at 90% 10%, #f3e8f1 0, transparent 45%),
+    radial-gradient(circle at 10% 0%, var(--glow-a) 0, transparent 45%),
+    radial-gradient(circle at 90% 10%, var(--glow-b) 0, transparent 45%),
     var(--bg);
   background-attachment:fixed;
   color:var(--ink);
@@ -115,11 +203,11 @@ button,input,select,textarea{font:inherit}
   width:100%;
   padding:13px 18px;
   border-radius:10px;
-  border:1px solid #d7d7d7;
-  background:var(--card);
+  border:1px solid var(--google-line);
+  background:var(--google-bg);
   font-size:1rem;
   font-weight:600;
-  color:#3c4043;
+  color:var(--google-ink);
   cursor:pointer;
   transition:box-shadow .15s, transform .05s;
 }
@@ -451,7 +539,7 @@ select.input{cursor:pointer}
 .pweek .wnum,.wrow .wnum{font-size:.7rem;color:var(--muted);font-weight:700;text-align:left}
 .pweek .wd.out,.wrow .wd.out{opacity:.4}
 .pweek.on{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
-.pweek.on .wnum{color:rgba(255,255,255,.8)}
+.pweek.on .wnum{color:var(--on-brand);opacity:.8}
 .pweek:disabled{opacity:.35;cursor:default;background:var(--soft)}
 
 .seg{display:flex;align-items:center;gap:6px;margin-bottom:14px}
@@ -509,7 +597,7 @@ select.input{cursor:pointer}
   align-items:center;
   gap:8px 16px;
   padding:12px 14px;
-  background:rgba(255,255,255,.94);
+  background:color-mix(in srgb, var(--card) 94%, transparent);
   backdrop-filter:blur(6px);
   border:1px solid var(--line);
   border-radius:var(--radius);
@@ -929,7 +1017,7 @@ body.with-sidebar .sidebar{display:flex}
 }
 .sb-row:hover .sb-more,.sb-ghead:hover .sb-more,.sb-more:focus-visible,.sb-more[aria-expanded="true"]{opacity:1}
 @media (hover:none){.sb-more{opacity:1}}
-.sb-more:hover,.sb-more[aria-expanded="true"]{background:rgba(0,0,0,.06);color:var(--ink)}
+.sb-more:hover,.sb-more[aria-expanded="true"]{background:var(--hover);color:var(--ink)}
 .sb-menu{
   display:grid;
   margin:2px 4px 8px 22px;
@@ -978,8 +1066,8 @@ body.with-sidebar .sidebar{display:flex}
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:hsl(var(--h) 42% 86%);
-  color:hsl(var(--h) 45% 26%);
+  background:hsl(var(--h) var(--av-bg));
+  color:hsl(var(--h) var(--av-ink));
   font-weight:800;
   font-size:calc(var(--s) * .44);
   line-height:1;
@@ -1084,6 +1172,9 @@ emoji-picker{
 .mode-line .link-btn{font-size:.8rem}
 .badge.anon{background:var(--soft);color:var(--ink)}
 .privacy{display:grid;grid-template-columns:1fr;gap:10px}
+.theme-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.theme-pick .type-card{min-width:0}
+.pref-label{margin:0 0 8px;font-size:.92rem;font-weight:700;color:var(--ink)}
 @container view (min-width:560px){.privacy{grid-template-columns:1fr 1fr}}
 
 .table-hint{font-size:.82rem;color:var(--muted);margin:0 0 6px}

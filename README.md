@@ -27,6 +27,7 @@ pero todo es configurable.
   (todos los emojis de Unicode, como WhatsApp) con categorías, búsqueda en español, tonos de piel y recientes.
 - **Perfil**: cada usuario elige el nombre que ven los demás y su imagen (subida desde el dispositivo, la de Google
   o ninguna, y entonces se muestra su inicial). El cambio se aplica a todas las votaciones en las que participa.
+- **Modo oscuro**: en «Tu perfil → Preferencias», tema Automático (como el dispositivo), Claro u Oscuro. Se recuerda en cada dispositivo.
 - **Compartir** con enlace, **código QR** (también descargable en PNG), WhatsApp, Telegram, correo
   o el menú de compartir del móvil.
 - Quien abre el enlace e inicia sesión **queda como participante** (aparece en la tabla aunque aún no haya votado)
@@ -84,7 +85,8 @@ js/sidebar.js         Menú lateral (navegar y organizar)
 js/library.js         Suscripción compartida a la colección del usuario
 js/create.js          Asistente de nueva votación
 js/poll.js            Calendario, votos, resumen y participantes
-js/profile.js         Perfil: nombre visible e imagen
+js/profile.js         Perfil: nombre visible, imagen y preferencias
+js/theme.js           Tema claro/oscuro (automático o elegido)
 js/emoji.js           Selector de emojis (emoji-picker-element, se carga al abrirlo)
 js/share.js           Diálogo de compartir y QR
 js/model.js           Modelo de la votación y recuentos

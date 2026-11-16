@@ -2,6 +2,7 @@
 // español, tonos de piel y "usados recientemente". Usa emoji-picker-element (Apache-2.0),
 // que se carga la primera vez que se abre y luego queda en la caché del navegador.
 
+import { isDark } from "./theme.js";
 const LIB = "https://cdn.jsdelivr.net/npm/emoji-picker-element@1.29.1";
 const DATA = "https://cdn.jsdelivr.net/npm/emoji-picker-element-data@1.8.0/es/cldr/data.json";
 
@@ -83,7 +84,7 @@ export async function openEmojiPicker(anchor, onPick, { keepOpen = false } = {})
     const { Picker, i18n } = await loadLib();
     if (panel !== myPanel) return; // se cerró mientras cargaba
     const picker = new Picker({ locale: "es", dataSource: DATA, i18n });
-    picker.classList.add("light");
+    picker.classList.add(isDark() ? "dark" : "light");
     picker.addEventListener("emoji-click", e => {
       const cb = current?.onPick;
       if (!current?.keepOpen) closeEmojiPicker();

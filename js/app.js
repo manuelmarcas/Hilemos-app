@@ -1,3 +1,4 @@
+import { initTheme } from "./theme.js";
 import { firebaseConfig } from "./config.js";
 import { createFirebaseStore, createDemoStore } from "./store.js";
 import { renderHome } from "./home.js";
@@ -7,6 +8,8 @@ import { renderProfile } from "./profile.js";
 import { createLibrary } from "./library.js";
 import { createSidebar } from "./sidebar.js";
 import { $, esc, errMsg, avatarHTML } from "./ui.js";
+
+initTheme();
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo") || !firebaseConfig?.apiKey;

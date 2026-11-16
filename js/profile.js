@@ -1,6 +1,7 @@
 // Pantalla "Tu perfil": nombre visible e imagen de perfil.
 import { plural } from "./model.js";
 import { $, esc, toast, errMsg, avatarHTML, imageToAvatar } from "./ui.js";
+import { getThemePref, setThemePref } from "./theme.js";
 
 export function renderProfile(view, ctx) {
   const { store, user } = ctx;
@@ -34,11 +35,33 @@ export function renderProfile(view, ctx) {
         <button class="btn primary big" id="pf-save">Guardar cambios</button>
         <div class="status" id="pf-status" role="alert"></div>
       </div>
+      <section class="step" id="pf-prefs">
+        <h2>Preferencias</h2>
+        <h3 class="pref-label" id="pf-theme-label">Tema</h3>
+        <div class="theme-pick" id="pf-theme" role="group" aria-labelledby="pf-theme-label"></div>
+        <p class="hint hint-after">Se aplica al momento y se recuerda en este dispositivo.</p>
+      </section>
     </div>`;
 
   const q = sel => $(sel, view);
   const drawAvatar = () => { q("#pf-avatar").innerHTML = avatarHTML(st.name, st.photo, 96, user.uid); };
   drawAvatar();
+
+  const THEMES = [
+    ["auto", "🌗", "Automático", "Como tu dispositivo"],
+    ["light", "☀️", "Claro", "Fondo claro"],
+    ["dark", "🌙", "Oscuro", "Fondo oscuro"],
+  ];
+  const drawThemes = () => {
+    const cur = getThemePref();
+    q("#pf-theme").innerHTML = THEMES.map(([id, icon, name, desc]) => `
+      <button type="button" class="type-card ${cur === id ? "on" : ""}" data-theme-pref="${id}" aria-pressed="${cur === id}">
+        <span class="type-icon" aria-hidden="true">${icon}</span>
+        <span class="type-name">${name}</span>
+        <span class="type-desc">${desc}</span>
+      </button>`).join("");
+  };
+  drawThemes();
 
   async function save() {
     if (st.busy) return;
@@ -76,6 +99,7 @@ export function renderProfile(view, ctx) {
   view.onclick = e => {
     const b = e.target.closest("button");
     if (!b || b.disabled) return;
+    if (b.dataset.themePref) { setThemePref(b.dataset.themePref); drawThemes(); return; }
     const act = b.dataset.act;
     if (act === "upload") q("#pf-file").click();
     else if (act === "google") { st.photo = user.googlePhoto; drawAvatar(); }
