@@ -1,8 +1,8 @@
 // Pantalla "Nueva votación".
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
-import { TYPES, TYPE, MAX_OPTIONS, plural } from "../lib/model";
-import type { PollData, PollType } from "../lib/types";
+import { TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, parseEmails, plural } from "../lib/model";
+import type { PollAccess, PollData, PollType } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
@@ -79,6 +79,9 @@ export function Create() {
   const [groupId, setGroupId] = useState(lastGroup || "");
   const [newGroup, setNewGroup] = useState("");
   const [anonymous, setAnonymous] = useState(false);
+  const [access, setAccess] = useState<"open" | "approval" | "emails">("open");
+  const [emailsText, setEmailsText] = useState("");
+  const [maxText, setMaxText] = useState(""); // vacío = el tope general (MAX_PEOPLE)
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const last = useRef<string | null>(null); // última casilla pulsada (para rangos con Mayús)
@@ -179,8 +182,23 @@ export function Create() {
       }
     }
     if (type === "hours" && !hourSlots.length) return ["El rango de horas no contiene ninguna franja.", "#sec-hours"];
+    if (access === "emails") {
+      if (parsed.invalid.length) return [`Revisa ${parsed.invalid.length === 1 ? "este correo" : "estos correos"}: ${parsed.invalid.slice(0, 3).join(", ")}${parsed.invalid.length > 3 ? "…" : ""}`, "#f-emails"];
+      if (!parsed.emails.length) return ["Escribe al menos un correo que pueda entrar.", "#f-emails"];
+      if (parsed.emails.length > MAX_EMAILS) return [`Como mucho ${MAX_EMAILS} correos.`, "#f-emails"];
+    }
+    if (maxText.trim() && maxPeople === null) return [`El máximo de personas debe ser un número entre 2 y ${MAX_PEOPLE}.`, "#f-max"];
     return null;
   }
+
+  // Quién puede unirse: correos leídos del texto y tope de personas (null = vacío o no válido).
+  const parsed = parseEmails(emailsText);
+  const maxPeople = (() => {
+    const t = maxText.trim();
+    if (!t) return null;
+    const n = Number(t);
+    return Number.isInteger(n) && n >= 2 && n <= MAX_PEOPLE ? n : null;
+  })();
 
   async function submit() {
     if (busy) return;
@@ -209,6 +227,10 @@ export function Create() {
         ? opts.slice(0, count).map((o, i) => ({ id: `o${i + 1}`, name: o.name.trim(), icon: o.icon }))
         : [],
       anonymous,
+      maxPeople: maxPeople ?? MAX_PEOPLE,
+      members: 0,
+      approval: access === "approval",
+      emailsOnly: access === "emails",
       ownerUid: user.uid,
       ownerName: user.name,
       createdAt,
@@ -218,7 +240,8 @@ export function Create() {
     try {
       let gid: string | null = validGroupId || null;
       if (gid === "__new") gid = await store.createGroup(user.uid, newGroup.trim());
-      const id = await store.createPoll(poll);
+      const acc: PollAccess | null = access === "emails" ? { emails: parsed.emails } : null;
+      const id = await store.createPoll(poll, acc);
       await store.saveLibraryEntry(user.uid, id, {
         title: poll.title, type: poll.type, role: "owner", ownerName: poll.ownerName,
         groupId: gid, addedAt: createdAt,
@@ -242,6 +265,7 @@ export function Create() {
     opts: type === "days",
     hours: type === "hours",
     privacy: true,
+    access: true,
   };
   const numbers: Partial<Record<keyof typeof visible, number>> = {};
   let n = 0;
@@ -266,6 +290,9 @@ export function Create() {
   if (type === "days") summaryParts.push(plural(count, ["opción", "opciones"]) + " por día");
   if (type === "hours") summaryParts.push(plural(hourSlots.length, ["franja", "franjas"]) + " por día");
   summaryParts.push(anonymous ? "anónima" : "votos visibles");
+  if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
+  if (access === "approval") summaryParts.push("con aprobación");
+  summaryParts.push(`máx. ${maxPeople ?? MAX_PEOPLE} personas`);
 
   const starts: string[] = [], ends: string[] = [];
   for (let t = 0; t < 1440; t += 30) starts.push(D.hhmm(t));
@@ -496,6 +523,34 @@ export function Create() {
           <div className="privacy" id="s-privacy">
             {typeCard(!anonymous, "👁️", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
             {typeCard(anonymous, "🕶️", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
+          </div>
+        </section>
+
+        <section className="step" id="sec-access">
+          <h2><span className="num">{numbers.access}</span>¿Quién puede unirse?</h2>
+          <div className="access-pick" id="s-access">
+            {typeCard(access === "open", "🔗", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
+            {typeCard(access === "approval", "✋", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
+            {typeCard(access === "emails", "✉️", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
+          </div>
+          {access === "emails" && (
+            <div className="access-emails">
+              <label className="field-label" htmlFor="f-emails">Correos que pueden entrar</label>
+              <textarea id="f-emails" className="input" rows={3} value={emailsText} onChange={e => setEmailsText(e.target.value)}
+                placeholder="ana@gmail.com, carlos@gmail.com…" autoComplete="off" spellCheck={false} />
+              <p className="hint">
+                Sepáralos con comas, espacios o saltos de línea. Tú siempre puedes entrar.
+                {parsed.emails.length > 0 && <> <strong>{plural(parsed.emails.length, ["correo válido", "correos válidos"])}</strong>.</>}
+                {parsed.invalid.length > 0 && <span className="warn"> No son correos: {parsed.invalid.slice(0, 3).join(", ")}{parsed.invalid.length > 3 ? "…" : ""}.</span>}
+                {store.mode === "demo" && <> En el modo demo, el correo de cada persona es su nombre@demo.test (por ejemplo, ana@demo.test).</>}
+              </p>
+            </div>
+          )}
+          <div className="access-max">
+            <label className="field-label" htmlFor="f-max">Máximo de personas <span className="muted">(contándote a ti)</span></label>
+            <input id="f-max" className="input small" type="number" inputMode="numeric" min={2} max={MAX_PEOPLE}
+              value={maxText} onChange={e => setMaxText(e.target.value)} placeholder={String(MAX_PEOPLE)} />
+            <p className="hint">Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación.</p>
           </div>
         </section>
 

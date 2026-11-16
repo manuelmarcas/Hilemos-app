@@ -3,9 +3,10 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural,
+  MAX_PEOPLE, MAX_EMAILS, PEOPLE_FILTER_FROM, isRestricted, memberStatus, acceptedVotes, hasLimit, isFull, parseEmails,
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
-import type { Poll, Vote, Votes } from "../lib/types";
+import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
 import { cls, errMsg, pollUrl } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
@@ -24,51 +25,98 @@ export function PollPage({ id }: { id: string }) {
   const [fatal, setFatal] = useState("");
   const [openPeople, setOpenPeople] = useState<Set<string>>(() => new Set()); // participantes con sus votos desplegados
   const [openVoters, setOpenVoters] = useState<Set<string>>(() => new Set()); // "más votadas" con quién las votó
+  // Votaciones restringidas: quien no está aceptado solo puede leer su propio voto.
+  const [myVote, setMyVote] = useState<Vote | null>(null);
+  const [myLoaded, setMyLoaded] = useState(false);
+  const [blocked, setBlocked] = useState<"" | "full" | "noaccess">("");
+  const [accessOpen, setAccessOpen] = useState(false);
+  // Buscador y filtro de la tabla de participantes (cuando hay muchos).
+  const [peopleQuery, setPeopleQuery] = useState("");
+  const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
+  const [peopleAll, setPeopleAll] = useState(false);
   const joined = useRef(false);
   const lib = library.data;
+
+  const ownOnly = !!poll && isRestricted(poll) && poll.ownerUid !== user.uid;
+  const canReadAll = !!poll && (!ownOnly || (!!myVote && memberStatus(myVote) === "accepted"));
 
   useEffect(() => store.watchPoll(id,
     p => { setPoll(p); setPollLoaded(true); pollCache.set(id, p); },
     e => setFatal(errMsg(e))), [store, id, pollCache]);
-  useEffect(() => store.watchVotes(id,
-    v => { setVotes(v); setVotesLoaded(true); },
-    e => setStatus(errMsg(e))), [store, id]);
+  useEffect(() => {
+    if (!canReadAll) return;
+    return store.watchVotes(id,
+      v => { setVotes(v); setVotesLoaded(true); },
+      e => setStatus(errMsg(e)));
+  }, [store, id, canReadAll]);
+  useEffect(() => {
+    if (!ownOnly) return;
+    return store.watchVote(id, user.uid,
+      v => { setMyVote(v); setMyLoaded(true); },
+      e => setStatus(errMsg(e)));
+  }, [store, id, user.uid, ownOnly]);
   useEffect(() => { if (library.error) setStatus(errMsg(library.error)); }, [library.error]);
+  // Completa: en cuanto quede una plaza libre se vuelve a intentar entrar.
+  useEffect(() => {
+    if (blocked === "full" && poll && !isFull(poll)) { joined.current = false; setBlocked(""); }
+  }, [blocked, poll]);
+  const retryJoin = () => { joined.current = false; setBlocked(""); };
 
   // Al entrar: el usuario queda como participante y la votación pasa a su colección.
   useEffect(() => {
-    if (!pollLoaded || !votesLoaded || !lib) return;
+    if (!pollLoaded || !lib) return;
     const entry = lib.polls[id];
     if (!poll) {
       // Ya no existe: sale de la lista (y su grupo, si se queda vacío).
       if (entry) store.removeLibraryEntry(user.uid, id, groupToDrop(lib, id)).catch(() => {});
       return;
     }
+    if (blocked || !(ownOnly ? myLoaded : votesLoaded)) return;
     if (joined.current) {
       if (entry && entry.title !== poll.title) store.saveLibraryEntry(user.uid, id, { title: poll.title }).catch(() => {});
       return;
     }
     joined.current = true;
-    // Nombre y miniatura se copian en el voto; solo se reescriben si han cambiado.
-    const me = votes[user.uid];
-    if (!me || me.name !== user.name || (me.photo || "") !== user.thumb) {
-      store.joinPoll(id, { uid: user.uid, name: user.name, photo: user.thumb })
-        .catch(e => setStatus("No se pudo registrar tu participación. " + errMsg(e)));
-    }
-    const base = {
-      title: poll.title, type: poll.type, ownerName: poll.ownerName || "",
-      role: poll.ownerUid === user.uid ? "owner" as const : "participant" as const,
+    const isOwner = poll.ownerUid === user.uid;
+    const me = ownOnly ? myVote : votes[user.uid];
+    const participant = { uid: user.uid, name: user.name, photo: user.thumb };
+
+    const addToMenu = () => {
+      const base = {
+        title: poll.title, type: poll.type, ownerName: poll.ownerName || "",
+        role: isOwner ? "owner" as const : "participant" as const,
+      };
+      if (!entry) {
+        store.saveLibraryEntry(user.uid, id, { ...base, groupId: null, addedAt: Date.now() })
+          .then(() => { if (!isOwner) toast("Votación añadida a tu menú"); })
+          .catch(e => setStatus(errMsg(e)));
+        return;
+      }
+      // Ya estaba en el menú: solo se escribe si ha cambiado algo de lo que se muestra en él.
+      const changed = (Object.keys(base) as (keyof typeof base)[]).some(k => (entry[k] ?? "") !== base[k]);
+      if (changed) store.saveLibraryEntry(user.uid, id, base).catch(e => setStatus(errMsg(e)));
     };
-    if (!entry) {
-      store.saveLibraryEntry(user.uid, id, { ...base, groupId: null, addedAt: Date.now() })
-        .then(() => { if (poll.ownerUid !== user.uid) toast("Votación añadida a tu menú"); })
-        .catch(e => setStatus(errMsg(e)));
+
+    if (!me) {
+      // Primera vez: se comprueba la plaza (y las reglas, los correos permitidos) antes de añadirla al menú.
+      if (isFull(poll) && !isOwner) { setBlocked("full"); return; }
+      store.joinPoll(id, participant, { isNew: true, counted: hasLimit(poll), pending: !!poll.approval && !isOwner })
+        .then(addToMenu)
+        .catch(e => {
+          if ((e as { code?: string })?.code === "permission-denied" && !isOwner) {
+            setBlocked(poll.emailsOnly ? "noaccess" : "full");
+          } else {
+            setStatus("No se pudo registrar tu participación. " + errMsg(e));
+          }
+        });
       return;
     }
-    // Ya estaba en el menú: solo se escribe si ha cambiado algo de lo que se muestra en él.
-    const changed = (Object.keys(base) as (keyof typeof base)[]).some(k => (entry[k] ?? "") !== base[k]);
-    if (changed) store.saveLibraryEntry(user.uid, id, base).catch(e => setStatus(errMsg(e)));
-  }, [pollLoaded, votesLoaded, lib, poll, votes, id, store, user, toast]);
+    // Nombre y miniatura se copian en el voto; solo se reescriben si han cambiado.
+    if (me.name !== user.name || (me.photo || "") !== user.thumb) {
+      store.joinPoll(id, participant).catch(e => setStatus("No se pudo registrar tu participación. " + errMsg(e)));
+    }
+    addToMenu();
+  }, [pollLoaded, votesLoaded, myLoaded, ownOnly, blocked, lib, poll, votes, myVote, id, store, user, toast]);
 
   if (fatal) {
     return <><div className="empty-box error">{fatal}</div><p><a href="#/">← Volver a mis votaciones</a></p></>;
@@ -78,11 +126,21 @@ export function PollPage({ id }: { id: string }) {
     return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/">← Volver a mis votaciones</a></p></>;
   }
 
+  if (blocked) return <BlockedView poll={poll} kind={blocked} email={user.email} onRetry={retryJoin} />;
+  if (ownOnly && !canReadAll) {
+    if (!myLoaded || !myVote) return <div className="loading">Cargando votación…</div>;
+    return <WaitingView poll={poll} status={memberStatus(myVote)} />;
+  }
+
   const t = TYPE[poll.type];
   // Uno mismo se ve siempre con su nombre e imagen actuales (los de los demás vienen copiados en su voto).
   const shown: Votes = votes[user.uid] ? { ...votes, [user.uid]: { ...votes[user.uid], name: user.name, photo: user.photo } } : votes;
-  const T = tally(poll, shown);
-  const TB = tiebreakTally(poll, shown);
+  // Pendientes y rechazados no cuentan en recuentos, ranking ni tabla.
+  const accepted = acceptedVotes(shown);
+  const T = tally(poll, accepted);
+  const TB = tiebreakTally(poll, accepted);
+  const requests = Object.entries(votes).filter(([, v]) => v?.status).map(([uid, v]) => ({ uid, ...v }))
+    .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
@@ -198,6 +256,11 @@ export function PollPage({ id }: { id: string }) {
     toast("La votación ahora es anónima");
   });
 
+  const setMember = (uid: string, to: MemberStatus, from: MemberStatus) => act(async () => {
+    await store.setMemberStatus(id, uid, to, { from, counted: hasLimit(poll) });
+    toast(to === "accepted" ? "Aceptado: ya puede votar" : to === "rejected" ? "Solicitud rechazada" : "Solicitud pendiente");
+  });
+
   const remove = () => act(async () => {
     if (!(await confirm({
       title: `¿Eliminar «${poll.title}»?`,
@@ -224,15 +287,19 @@ export function PollPage({ id }: { id: string }) {
         <div className="poll-title">
           <div className="kicker">
             {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · 👥 {plural(T.people.length, ["participante", "participantes"])}
+            {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
           <div className="mode-line">
             <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>
+            {poll.emailsOnly && <span className="mode-pill anon">✉️ Solo invitados</span>}
+            {poll.approval && <span className="mode-pill anon">✋ Con aprobación</span>}
           </div>
           <div className="title-row">
             <h1>{poll.title}</h1>
             {isOwner && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
-                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={remove} />
+                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={remove}
+                onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
             )}
           </div>
           {poll.description && <p className="desc">{poll.description}</p>}
@@ -243,6 +310,8 @@ export function PollPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
+      {isOwner && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
+      {isOwner && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (
         <div className="closed-banner">
           🔒 Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
@@ -282,9 +351,14 @@ export function PollPage({ id }: { id: string }) {
       <section className="results">
         <h2>👥 Participantes <span className="muted">({T.people.length})</span></h2>
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
-        <div className="table-wrap">
-          <PeopleTable poll={poll} T={T} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)} />
-        </div>
+        <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
+          all={peopleAll} setAll={setPeopleAll}>
+          {people => (
+            <div className="table-wrap">
+              <PeopleTable poll={poll} T={T} people={people} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)} />
+            </div>
+          )}
+        </PeopleList>
       </section>
     </>
   );
@@ -292,8 +366,9 @@ export function PollPage({ id }: { id: string }) {
 
 // ---------- Menú ⋯ del creador: cerrar/reabrir, hacer anónima y eliminar ----------
 
-function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete }: {
+function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onAccess }: {
   closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
+  onAccess?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -331,6 +406,11 @@ function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete }: {
           <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
             <span aria-hidden="true">{closed ? "🔓" : "🔒"}</span>{closed ? "Reabrir votación" : "Cerrar votación"}
           </button>
+          {onAccess && (
+            <button role="menuitem" className="pm-item" onClick={pick(onAccess)}>
+              <span aria-hidden="true">⚙️</span>Acceso y plazas
+            </button>
+          )}
           {!anonymous && (
             <button role="menuitem" className="pm-item" onClick={pick(onAnon)}>
               <span aria-hidden="true">🕶️</span>Hacer anónima
@@ -521,8 +601,8 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
   </>;
 }
 
-function PeopleTable({ poll, T, me, openPeople, onToggle }: {
-  poll: Poll; T: Tally; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
+function PeopleTable({ poll, T, people, me, openPeople, onToggle }: {
+  poll: Poll; T: Tally; people: Person[]; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
 }) {
   const anon = !!poll.anonymous;
   const multi = poll.type === "days" && !anon;
@@ -538,7 +618,7 @@ function PeopleTable({ poll, T, me, openPeople, onToggle }: {
         </tr>
       </thead>
       <tbody>
-        {T.people.length ? T.people.map(p => {
+        {people.length ? people.map(p => {
           const who = <>
             <Avatar name={p.name} photo={p.photo} size={26} seed={p.uid} />
             <span>
@@ -573,10 +653,214 @@ function PeopleTable({ poll, T, me, openPeople, onToggle }: {
               {open && <tr className="pv-row"><td colSpan={cols}><PersonVotes poll={poll} T={T} picks={p.picks} /></td></tr>}
             </Fragment>
           );
-        }) : <tr><td colSpan={cols}>Todavía no ha entrado nadie.</td></tr>}
+        }) : <tr><td colSpan={cols}>{T.people.length ? "Nadie coincide con la búsqueda." : "Todavía no ha entrado nadie."}</td></tr>}
       </tbody>
     </table>
   );
+}
+
+// ---------- Quién puede unirse ----------
+
+type PeopleFilter = "all" | "voted" | "novote";
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/** Con muchos participantes: buscador, filtro (han votado / sin votar) y lista recortada con «Ver todos». */
+function PeopleList({ T, query, setQuery, filter, setFilter, all, setAll, children }: {
+  T: Tally; query: string; setQuery: (q: string) => void; filter: PeopleFilter; setFilter: (f: PeopleFilter) => void;
+  all: boolean; setAll: (a: boolean) => void; children: (people: Person[]) => ReactNode;
+}) {
+  const many = T.people.length >= PEOPLE_FILTER_FROM;
+  if (!many) return <>{children(T.people)}</>;
+  const q = norm(query.trim());
+  const voted = T.people.filter(p => p.total > 0).length;
+  const filtered = T.people.filter(p =>
+    (filter === "all" || (filter === "voted") === p.total > 0) && (!q || norm(p.name).includes(q)));
+  const cut = !all && !q && filtered.length > PEOPLE_FILTER_FROM;
+  const chips: [PeopleFilter, string, number][] = [
+    ["all", "Todos", T.people.length], ["voted", "Han votado", voted], ["novote", "Sin votar", T.people.length - voted],
+  ];
+  return <>
+    <div className="people-tools">
+      <input className="input small people-search" type="search" placeholder="Buscar participante…" aria-label="Buscar participante"
+        value={query} onChange={e => setQuery(e.target.value)} />
+      <div className="people-chips" role="group" aria-label="Filtrar participantes">
+        {chips.map(([k, label, n]) => (
+          <button key={k} type="button" className={`chip ${filter === k ? "on" : ""}`} aria-pressed={filter === k} onClick={() => setFilter(k)}>
+            {label} <span className="n">{n}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+    {children(cut ? filtered.slice(0, PEOPLE_FILTER_FROM) : filtered)}
+    {cut && <button type="button" className="link-btn people-more" onClick={() => setAll(true)}>Ver los {filtered.length}</button>}
+    {all && !q && filtered.length > PEOPLE_FILTER_FROM && (
+      <button type="button" className="link-btn people-more" onClick={() => setAll(false)}>Ver menos</button>
+    )}
+  </>;
+}
+
+/** Solicitudes pendientes (y rechazadas, para poder readmitirlas). Solo las ve el creador. */
+function Requests({ poll, requests, onSet }: {
+  poll: Poll; requests: (Vote & { uid: string })[]; onSet: (uid: string, to: MemberStatus, from: MemberStatus) => void;
+}) {
+  const pending = requests.filter(r => r.status === "pending");
+  const rejected = requests.filter(r => r.status === "rejected");
+  const [showRejected, setShowRejected] = useState(false);
+  const full = isFull(poll);
+  return (
+    <section className="requests">
+      <div className="rq-head">
+        <h2>✋ Solicitudes {pending.length > 0 && <span className="rq-count">{pending.length}</span>}</h2>
+        {rejected.length > 0 && (
+          <button type="button" className="link-btn" aria-expanded={showRejected} onClick={() => setShowRejected(v => !v)}>
+            {showRejected ? "Ocultar rechazadas" : `Ver rechazadas (${rejected.length})`}
+          </button>
+        )}
+      </div>
+      {pending.length > 0
+        ? <p className="rq-sub">Estas personas han abierto el enlace. No pueden votar ni ver los resultados hasta que las aceptes.</p>
+        : <p className="rq-sub">No hay solicitudes pendientes.</p>}
+      <ul className="rq-list">
+        {pending.map(r => (
+          <li key={r.uid} className="rq-row">
+            <span className="person"><Avatar name={r.name || "Alguien"} photo={r.photo || ""} size={30} seed={r.uid} />{r.name || "Alguien"}</span>
+            <span className="rq-actions">
+              <button type="button" className="btn small primary" onClick={() => onSet(r.uid, "accepted", "pending")}>Aceptar</button>
+              <button type="button" className="btn small danger" onClick={() => onSet(r.uid, "rejected", "pending")}>Rechazar</button>
+            </span>
+          </li>
+        ))}
+        {showRejected && rejected.map(r => (
+          <li key={r.uid} className="rq-row rejected">
+            <span className="person"><Avatar name={r.name || "Alguien"} photo={r.photo || ""} size={30} seed={r.uid} />{r.name || "Alguien"}
+              <span className="muted"> · rechazada</span></span>
+            <span className="rq-actions">
+              <button type="button" className="btn small" disabled={full} title={full ? "No quedan plazas" : undefined}
+                onClick={() => onSet(r.uid, "accepted", "rejected")}>Aceptar</button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** Ajustes del creador: plazas y, en las privadas, correos permitidos. */
+function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void }) {
+  const { store } = useSession();
+  const { toast } = useUi();
+  const members = poll.members || 0;
+  const [maxText, setMaxText] = useState(String(poll.maxPeople ?? MAX_PEOPLE));
+  const [emailsText, setEmailsText] = useState("");
+  const [loaded, setLoaded] = useState(!poll.emailsOnly);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    if (!poll.emailsOnly) return;
+    store.getAccess(poll.id)
+      .then(a => { setEmailsText((a?.emails || []).join("\n")); setLoaded(true); })
+      .catch(e => { setErr("No se pudieron leer los correos. " + errMsg(e)); setLoaded(true); });
+  }, [store, poll.id, poll.emailsOnly]);
+
+  const parsed = parseEmails(emailsText);
+  const min = Math.max(2, members);
+  async function save() {
+    const n = Number(maxText.trim());
+    if (!Number.isInteger(n) || n < min || n > MAX_PEOPLE) {
+      setErr(`El máximo debe estar entre ${min} y ${MAX_PEOPLE}${members > 2 ? ` (ya hay ${members} personas dentro)` : ""}.`);
+      return;
+    }
+    if (poll.emailsOnly) {
+      if (parsed.invalid.length) { setErr("Revisa estos correos: " + parsed.invalid.slice(0, 3).join(", ")); return; }
+      if (!parsed.emails.length) { setErr("Deja al menos un correo."); return; }
+      if (parsed.emails.length > MAX_EMAILS) { setErr(`Como mucho ${MAX_EMAILS} correos.`); return; }
+    }
+    setBusy(true);
+    setErr("");
+    try {
+      if (n !== poll.maxPeople) await store.updatePoll(poll.id, { maxPeople: n });
+      if (poll.emailsOnly) await store.setAccess(poll.id, { emails: parsed.emails });
+      toast("Acceso guardado");
+      onClose();
+    } catch (e) {
+      setErr("No se pudo guardar. " + errMsg(e));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="access-panel" aria-label="Acceso y plazas">
+      <h2>⚙️ Acceso y plazas</h2>
+      <label className="field-label" htmlFor="ap-max">Máximo de personas <span className="muted">(ahora hay {members})</span></label>
+      <input id="ap-max" className="input small" type="number" inputMode="numeric" min={min} max={MAX_PEOPLE}
+        value={maxText} onChange={e => setMaxText(e.target.value)} />
+      {poll.emailsOnly && (
+        <>
+          <label className="field-label" htmlFor="ap-emails">Correos que pueden entrar</label>
+          <textarea id="ap-emails" className="input" rows={4} value={emailsText} disabled={!loaded}
+            onChange={e => setEmailsText(e.target.value)} spellCheck={false} />
+          <p className="hint">Quitar un correo no echa a quien ya ha entrado: solo impide que entren nuevas personas con él.</p>
+        </>
+      )}
+      <div className="status" role="alert">{err}</div>
+      <div className="ap-actions">
+        <button type="button" className="btn primary" disabled={busy || !loaded} onClick={save}>{busy ? "Guardando…" : "Guardar"}</button>
+        <button type="button" className="btn" onClick={onClose}>Cancelar</button>
+      </div>
+    </section>
+  );
+}
+
+function AccessHead({ poll }: { poll: Poll }) {
+  const t = TYPE[poll.type];
+  return (
+    <div className="poll-head">
+      <div className="poll-title">
+        <div className="kicker">{t.icon} Votación por {t.name.toLowerCase()} · creada por {poll.ownerName || "alguien"}</div>
+        <div className="title-row"><h1>{poll.title}</h1></div>
+        {poll.description && <p className="desc">{poll.description}</p>}
+      </div>
+    </div>
+  );
+}
+
+/** Quien ha pedido entrar en una votación con aprobación y aún no está aceptado. */
+function WaitingView({ poll, status }: { poll: Poll; status: MemberStatus }) {
+  const owner = poll.ownerName || "Quien la creó";
+  return <>
+    <AccessHead poll={poll} />
+    <div className={`gate-note ${status}`} role="status">
+      {status === "rejected" ? <>
+        <h2>🚫 No te han aceptado</h2>
+        <p>{owner} no ha aceptado tu solicitud para esta votación, así que no puedes votar ni ver los resultados.</p>
+      </> : <>
+        <h2>⏳ Pendiente de aprobación</h2>
+        <p>{owner} tiene que aceptarte para que puedas votar y ver los resultados. La votación ya está en tu menú: cuando te acepte, se abrirá aquí sola.</p>
+      </>}
+    </div>
+    <p className="poll-note">{pollRange(poll)}</p>
+    <p><a href="#/">← Volver a mis votaciones</a></p>
+  </>;
+}
+
+/** No se puede entrar: votación privada sin invitación o completa. */
+function BlockedView({ poll, kind, email, onRetry }: { poll: Poll; kind: "full" | "noaccess"; email: string; onRetry: () => void }) {
+  const owner = poll.ownerName || "quien la creó";
+  return <>
+    <AccessHead poll={poll} />
+    <div className="gate-note blocked" role="status">
+      {kind === "noaccess" ? <>
+        <h2>✉️ Votación privada</h2>
+        <p>Solo pueden entrar las personas invitadas por {owner}. Has entrado como <strong>{email || "una cuenta sin correo"}</strong>: si te invitó con otro correo, entra con esa cuenta o pídele que añada este.</p>
+        <button type="button" className="btn small gate-retry" onClick={onRetry}>Volver a intentarlo</button>
+      </> : <>
+        <h2>👥 Votación completa</h2>
+        <p>Ya hay {poll.maxPeople} personas, {poll.maxPeople === MAX_PEOPLE ? "el máximo de cualquier votación" : `el máximo que ha puesto ${owner}`}. Si alguien deja sitio, podrás entrar.</p>
+      </>}
+    </div>
+    <p><a href="#/">← Volver a mis votaciones</a></p>
+  </>;
 }
 
 // ---------- Tableros ----------

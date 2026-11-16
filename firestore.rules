@@ -22,7 +22,15 @@ service cloud.firestore {
 
     // ---------- Votaciones ----------
     match /polls/{pollId} {
-      // Cualquiera con sesión iniciada puede abrir una votación si tiene el enlace.
+      function pollPath() {
+        return /databases/$(database)/documents/polls/$(pollId);
+      }
+      function myVotePath() {
+        return /databases/$(database)/documents/polls/$(pollId)/votes/$(request.auth.uid);
+      }
+
+      // Cualquiera con sesión iniciada puede abrir una votación si tiene el enlace
+      // (para saber si puede entrar). Los votos de las restringidas se protegen abajo.
       allow read: if signedIn();
 
       allow create: if signedIn()
@@ -37,45 +45,152 @@ service cloud.firestore {
         && request.resource.data.options is list
         && request.resource.data.options.size() <= 4
         && (!('anonymous' in request.resource.data) || request.resource.data.anonymous is bool)
+        && (!('approval' in request.resource.data) || request.resource.data.approval is bool)
+        && (!('emailsOnly' in request.resource.data) || request.resource.data.emailsOnly is bool)
+        // Tope de personas (las votaciones antiguas no lo tienen): entre 2 y 150, y el contador empieza en 0.
+        && (!('maxPeople' in request.resource.data)
+            || (request.resource.data.maxPeople is int
+                && request.resource.data.maxPeople >= 2
+                && request.resource.data.maxPeople <= 150
+                && request.resource.data.get('members', -1) == 0))
+        && (!('members' in request.resource.data) || 'maxPeople' in request.resource.data)
         && request.resource.data.closed == false;
 
-      // El creador solo puede cerrar/reabrir, cambiar título o descripción, actualizar su nombre visible
-      // y hacerla anónima (nunca al revés, para no destapar votos hechos como anónimos).
-      allow update: if signedIn()
-        && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak'])
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['anonymous'])
-            || request.resource.data.anonymous == true)
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['tiebreak'])
-            || request.resource.data.tiebreak == null
-            || (request.resource.data.tiebreak.id is number
-                && request.resource.data.tiebreak.candidates is list
-                && request.resource.data.tiebreak.candidates.size() >= 2
-                && request.resource.data.tiebreak.candidates.size() <= 50));
+      allow update: if signedIn() && (ownerUpdate() || joinCount() || leaveCount());
+
+      // El creador solo puede cerrar/reabrir, cambiar título o descripción, actualizar su nombre visible,
+      // hacerla anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate,
+      // el tope de personas y el contador (al aceptar o rechazar solicitudes).
+      function ownerUpdate() {
+        let d = request.resource.data;
+        let keys = d.diff(resource.data).affectedKeys();
+        return resource.data.ownerUid == request.auth.uid
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members'])
+          && (!keys.hasAny(['anonymous']) || d.anonymous == true)
+          && (!keys.hasAny(['tiebreak'])
+              || d.tiebreak == null
+              || (d.tiebreak.id is number
+                  && d.tiebreak.candidates is list
+                  && d.tiebreak.candidates.size() >= 2
+                  && d.tiebreak.candidates.size() <= 50))
+          && (!keys.hasAny(['maxPeople', 'members'])
+              || ('maxPeople' in resource.data
+                  && d.maxPeople is int && d.maxPeople >= 2 && d.maxPeople <= 150
+                  && d.members is int && d.members >= 0 && d.members <= d.maxPeople));
+      }
+
+      // Cualquiera puede sumar 1 al contador al entrar (a la vez que crea su voto) y restar 1 al salir.
+      function counterOnly() {
+        return 'maxPeople' in resource.data
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']);
+      }
+      function joinCount() {
+        return counterOnly()
+          && request.resource.data.members == resource.data.get('members', 0) + 1
+          && request.resource.data.members <= resource.data.maxPeople
+          && !exists(myVotePath())
+          && existsAfter(myVotePath());
+      }
+      function leaveCount() {
+        return counterOnly()
+          && request.resource.data.members == resource.data.get('members', 0) - 1
+          && exists(myVotePath())
+          && !existsAfter(myVotePath());
+      }
 
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
+      // Correos permitidos de una votación privada: solo los ve y cambia el creador.
+      match /private/{doc} {
+        allow read: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
+        allow create: if signedIn() && getAfter(pollPath()).data.ownerUid == request.auth.uid && validAccess();
+        allow update: if signedIn() && pollData(pollId).ownerUid == request.auth.uid && validAccess();
+        allow delete: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
+
+        function validAccess() {
+          return doc == 'access'
+            && request.resource.data.keys().hasOnly(['emails'])
+            && request.resource.data.emails is list
+            && request.resource.data.emails.size() <= 150;
+        }
+      }
+
       // Participantes: un documento por persona (su id es su uid).
       match /votes/{uid} {
-        allow read: if signedIn();
+        // En las votaciones restringidas (con aprobación o solo con correos), los votos solo los ven el creador
+        // y los participantes aceptados; quien está pendiente solo puede leer su propio documento.
+        allow get: if signedIn() && (request.auth.uid == uid || canSeeVotes());
+        allow list: if signedIn() && canSeeVotes();
 
-        // Con la votación cerrada se puede entrar como participante, pero no cambiar los votos.
+        function canSeeVotes() {
+          let p = pollData(pollId);
+          return !(p.get('approval', false) || p.get('emailsOnly', false))
+            || p.ownerUid == request.auth.uid
+            || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null);
+        }
+
+        // Entrar. Con la votación cerrada se puede entrar como participante, pero no votar.
         allow create: if signedIn()
           && request.auth.uid == uid
           && validVote()
           && validTiebreakVote(null)
-          && (pollData(pollId).get('closed', false) == false || !('picks' in request.resource.data));
+          && (pollData(pollId).get('closed', false) == false || !('picks' in request.resource.data))
+          && canJoin()
+          && countedJoin();
 
-        allow update: if signedIn()
-          && request.auth.uid == uid
-          && validVote()
-          && validTiebreakVote(resource.data.get('tb', null))
-          && (pollData(pollId).get('closed', false) == false
-              || request.resource.data.get('picks', []) == resource.data.get('picks', []));
+        // Quién puede entrar: el creador siempre; si es privada, solo los correos permitidos (cuenta verificada);
+        // si es con aprobación, se entra como pendiente.
+        function canJoin() {
+          let p = pollData(pollId);
+          let d = request.resource.data;
+          return (p.ownerUid == request.auth.uid && !('status' in d))
+            || ((!p.get('emailsOnly', false)
+                 || (request.auth.token.email_verified == true
+                     && request.auth.token.email.lower()
+                        in get(/databases/$(database)/documents/polls/$(pollId)/private/access).data.emails))
+                && (p.get('approval', false) ? d.get('status', null) == 'pending' : !('status' in d)));
+        }
 
-        // Cada uno puede borrar su participación; el creador puede borrar todas (al eliminar la votación).
+        // Con tope, el contador de la votación tiene que subir 1 en la misma escritura (y no pasar del tope).
+        function countedJoin() {
+          let p = pollData(pollId);
+          return !('maxPeople' in p)
+            || (getAfter(pollPath()).data.members == p.get('members', 0) + 1
+                && getAfter(pollPath()).data.members <= p.maxPeople);
+        }
+
+        allow update: if signedIn() && (selfUpdate() || ownerSetsStatus());
+
+        // Cada uno cambia su nombre, foto y votos, pero no su estado; pendiente o rechazado no puede votar.
+        function selfUpdate() {
+          let d = request.resource.data;
+          let old = resource.data;
+          return request.auth.uid == uid
+            && validVote()
+            && validTiebreakVote(old.get('tb', null))
+            && (pollData(pollId).get('closed', false) == false || d.get('picks', []) == old.get('picks', []))
+            && d.get('status', null) == old.get('status', null)
+            && (old.get('status', null) == null
+                || (d.get('picks', []) == old.get('picks', []) && d.get('tb', null) == old.get('tb', null)));
+        }
+
+        // El creador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona.
+        function ownerSetsStatus() {
+          let d = request.resource.data;
+          return pollData(pollId).ownerUid == request.auth.uid
+            && request.auth.uid != uid
+            && d.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && (!('status' in d) || d.status in ['pending', 'rejected']);
+        }
+
+        // Cada uno puede salir (restando 1 al contador si lo hay), salvo si le han rechazado;
+        // el creador puede borrar todas (al eliminar la votación).
         allow delete: if signedIn()
-          && (request.auth.uid == uid || pollData(pollId).ownerUid == request.auth.uid);
+          && ((request.auth.uid == uid
+               && resource.data.get('status', null) != 'rejected'
+               && (!('maxPeople' in pollData(pollId))
+                   || getAfter(pollPath()).data.members == pollData(pollId).get('members', 0) - 1))
+              || pollData(pollId).ownerUid == request.auth.uid);
 
         function validVote() {
           let d = request.resource.data;

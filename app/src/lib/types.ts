@@ -33,6 +33,20 @@ export interface PollData {
   ownerName?: string;
   createdAt?: number;
   closed?: boolean;
+  // ----- Quién puede unirse (votaciones creadas desde que existe esta opción) -----
+  /** Tope de personas, contando al creador (como mucho MAX_PEOPLE). Si falta, la votación es antigua y no tiene tope. */
+  maxPeople?: number;
+  /** Personas dentro (aceptadas o pendientes), contando al creador. Las reglas obligan a sumar/restar 1 al entrar/salir. */
+  members?: number;
+  /** Quien entra queda pendiente hasta que el creador le acepte. */
+  approval?: boolean;
+  /** Solo pueden entrar los correos de `polls/{id}/private/access` (que solo lee el creador). */
+  emailsOnly?: boolean;
+}
+
+/** Documento `polls/{id}/private/access`: correos permitidos (en minúsculas). Solo lo lee y escribe el creador. */
+export interface PollAccess {
+  emails: string[];
 }
 
 export interface Poll extends PollData {
@@ -47,7 +61,11 @@ export interface Vote {
   tb?: { id: number; pick: string } | null;
   seenAt?: number;
   updatedAt?: number;
+  /** Solo en votaciones con aprobación: pendiente o rechazado. Sin campo = aceptado. */
+  status?: "pending" | "rejected";
 }
+
+export type MemberStatus = "accepted" | "pending" | "rejected";
 
 export type Votes = Record<string, Vote>;
 
@@ -86,6 +104,8 @@ export interface AuthUser {
   uid: string;
   name: string;
   photo: string;
+  /** Correo de la cuenta (en minúsculas), para las votaciones solo con correos permitidos. */
+  email: string;
 }
 
 /** Usuario de la app: datos de sesión + perfil elegido por él. */
@@ -111,7 +131,11 @@ export interface Store {
   signIn(opts?: { name: string }): Promise<unknown>;
   signOut(): Promise<void>;
 
-  createPoll(data: PollData): Promise<string>;
+  /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */
+  createPoll(data: PollData, access?: PollAccess | null): Promise<string>;
+  /** Correos permitidos (solo el creador puede leerlos). */
+  getAccess(id: string): Promise<PollAccess | null>;
+  setAccess(id: string, access: PollAccess): Promise<void>;
   getPoll(id: string): Promise<Poll | null>;
   updatePoll(id: string, patch: Partial<PollData>): Promise<void>;
   /** Borra la votación para todos. `dropGroupId`: grupo que queda vacío y se borra a la vez. */
@@ -119,7 +143,15 @@ export interface Store {
   watchPoll(id: string, cb: (p: Poll | null) => void, onErr?: ErrorCb): Unsubscribe;
 
   watchVotes(id: string, cb: (v: Votes) => void, onErr?: ErrorCb): Unsubscribe;
-  joinPoll(id: string, user: Participant): Promise<void>;
+  /** Solo el voto propio: lo que puede leer quien aún no ha sido aceptado en una votación restringida. */
+  watchVote(id: string, uid: string, cb: (v: Vote | null) => void, onErr?: ErrorCb): Unsubscribe;
+  /**
+   * Registra al usuario como participante sin tocar sus votos. Si es nuevo en una votación con tope (`counted`),
+   * entra a la vez que se suma 1 al contador de la votación. `pending`: entra pendiente de aprobación.
+   */
+  joinPoll(id: string, user: Participant, opts?: { isNew?: boolean; counted?: boolean; pending?: boolean }): Promise<void>;
+  /** El creador acepta, rechaza o vuelve a dejar pendiente a alguien (y ajusta el contador si hace falta). */
+  setMemberStatus(id: string, uid: string, status: MemberStatus, opts: { from: MemberStatus; counted: boolean }): Promise<void>;
   saveVote(id: string, uid: string, data: Vote): Promise<void>;
   saveTiebreakVote(id: string, uid: string, data: Vote): Promise<void>;
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;

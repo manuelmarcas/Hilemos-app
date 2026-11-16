@@ -4,14 +4,15 @@
 //
 // Colecciones:
 //   polls/{pollId}                     la votación (ver model.ts)
-//   polls/{pollId}/votes/{uid}         participante: { name, photo, picks?, seenAt, updatedAt }
+//   polls/{pollId}/votes/{uid}         participante: { name, photo, picks?, seenAt, updatedAt, status? }
+//   polls/{pollId}/private/access      correos permitidos (solo el creador): { emails }
 //   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt, archived }
 //   users/{uid}/groups/{groupId}       grupos del usuario: { name, createdAt }
 //   users/{uid}                        perfil: { name, photo, updatedAt }
 
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
-import type { AuthUser, Group, Library, LibraryEntry, Poll, PollData, Profile, Store, Vote, Votes } from "./types";
+import type { AuthUser, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
 export async function createFirebaseStore(config: FirebaseOptions): Promise<Store> {
   // Firebase se carga aparte: el modo demo no lo descarga.
@@ -31,9 +32,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   const provider = new A.GoogleAuthProvider();
 
   const toUser = (u: import("firebase/auth").User | null): AuthUser | null =>
-    u && { uid: u.uid, name: u.displayName || "Alguien", photo: u.photoURL || "" };
+    u && { uid: u.uid, name: u.displayName || "Alguien", photo: u.photoURL || "", email: (u.email || "").toLowerCase() };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
+  const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
   const libCol = (uid: string) => F.collection(db, "users", uid, "polls");
   const groupsCol = (uid: string) => F.collection(db, "users", uid, "groups");
   const withId = (s: DocumentSnapshot<DocumentData>): Poll | null =>
@@ -51,10 +53,20 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     signOut: () => A.signOut(auth),
 
     // ----- Votaciones -----
-    async createPoll(data) {
-      const ref = await F.addDoc(F.collection(db, "polls"), data);
+    async createPoll(data, access) {
+      // La votación y sus correos permitidos se guardan juntos (las reglas comprueban que es del mismo creador).
+      const ref = F.doc(F.collection(db, "polls"));
+      const batch = F.writeBatch(db);
+      batch.set(ref, data);
+      if (access) batch.set(accessRef(ref.id), access);
+      await batch.commit();
       return ref.id;
     },
+    async getAccess(id) {
+      const s = await F.getDoc(accessRef(id));
+      return s.exists() ? (s.data() as PollAccess) : null;
+    },
+    setAccess: (id, access) => F.setDoc(accessRef(id), access),
     async getPoll(id) { return withId(await F.getDoc(pollRef(id))); },
     updatePoll: (id, patch) => F.updateDoc(pollRef(id), patch),
     async deletePoll(id, uid, dropGroupId) {
@@ -67,6 +79,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
         await batch.commit();
       }
       const batch = F.writeBatch(db);
+      batch.delete(accessRef(id));
       batch.delete(pollRef(id));
       batch.delete(F.doc(libCol(uid), id));
       if (dropGroupId) batch.delete(F.doc(groupsCol(uid), dropGroupId));
@@ -78,8 +91,26 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     watchVotes: (id, cb, onErr) => F.onSnapshot(votesCol(id), snap => cb(toMap<Vote>(snap)), onErr),
     // Registra al usuario como participante sin tocar sus votos (nombre y miniatura copiados en el voto:
     // así abrir una votación no tiene que leer el perfil de cada participante).
-    joinPoll: (id, user) => F.setDoc(F.doc(votesCol(id), user.uid),
-      { name: user.name, photo: user.photo, seenAt: Date.now() }, { merge: true }),
+    watchVote: (id, uid, cb, onErr) => F.onSnapshot(F.doc(votesCol(id), uid),
+      s => cb(s.exists() ? (s.data() as Vote) : null), onErr),
+    async joinPoll(id, user, opts = {}) {
+      const ref = F.doc(votesCol(id), user.uid);
+      const base: Vote = { name: user.name, photo: user.photo, seenAt: Date.now() };
+      if (!opts.isNew) return F.setDoc(ref, base, { merge: true });
+      // Entrar por primera vez: con tope, el voto y el contador de la votación cambian juntos (lo exigen las reglas).
+      const batch = F.writeBatch(db);
+      batch.set(ref, opts.pending ? { ...base, status: "pending" } : base);
+      if (opts.counted) batch.update(pollRef(id), { members: F.increment(1) });
+      await batch.commit();
+    },
+    async setMemberStatus(id, uid, status, { from, counted }) {
+      const batch = F.writeBatch(db);
+      batch.update(F.doc(votesCol(id), uid), { status: status === "accepted" ? F.deleteField() : status });
+      // Los rechazados no ocupan plaza: al rechazar se resta 1 y al readmitir se vuelve a sumar.
+      const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
+      if (counted && delta) batch.update(pollRef(id), { members: F.increment(delta) });
+      await batch.commit();
+    },
     saveVote: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),
     // Voto del desempate (la votación principal está cerrada, pero el desempate no).
     saveTiebreakVote: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),
@@ -134,6 +165,7 @@ interface DemoDb {
   polls: Record<string, PollData>;
   votes: Record<string, Votes>;
   users: Record<string, DemoUserData>;
+  access?: Record<string, PollAccess>;
 }
 
 export function createDemoStore(): Store {
@@ -173,6 +205,8 @@ export function createDemoStore(): Store {
   };
   const slug = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "anon";
+  // Sesiones demo guardadas antes de existir el correo.
+  if (user && !user.email) user = { ...user, email: slug(user.name) + "@demo.test" };
 
   return {
     mode: "demo",
@@ -183,16 +217,30 @@ export function createDemoStore(): Store {
     },
     async signIn(opts) {
       const name = opts?.name || "Alguien";
-      setUser({ uid: "demo-" + slug(name), name, photo: "" });
+      // En el modo demo el correo de cada persona es "<nombre>@demo.test" (para probar las votaciones privadas).
+      setUser({ uid: "demo-" + slug(name), name, photo: "", email: slug(name) + "@demo.test" });
     },
     async signOut() { setUser(null); },
 
-    async createPoll(data) {
+    async createPoll(data, access) {
       const db = load();
       const id = rid();
       db.polls[id] = clone(data);
+      if (access) (db.access ||= {})[id] = clone(access);
       write(db);
       return id;
+    },
+    async getAccess(id) {
+      const db = load();
+      if (db.polls[id]?.ownerUid !== user?.uid) throw fail("permission-denied");
+      const a = db.access?.[id];
+      return a ? clone(a) : null;
+    },
+    async setAccess(id, access) {
+      const db = load();
+      if (db.polls[id]?.ownerUid !== user?.uid) throw fail("permission-denied");
+      (db.access ||= {})[id] = clone(access);
+      write(db);
     },
     async getPoll(id) { const p = load().polls[id]; return p ? { id, ...clone(p) } : null; },
     async updatePoll(id, patch) {
@@ -205,6 +253,7 @@ export function createDemoStore(): Store {
       const db = load();
       delete db.polls[id];
       delete db.votes[id];
+      if (db.access) delete db.access[id];
       delete lib(db, uid).polls[id];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);
@@ -212,11 +261,37 @@ export function createDemoStore(): Store {
     watchPoll: (id, cb) => watch(() => { const p = load().polls[id]; cb(p ? { id, ...clone(p) } : null); }),
 
     watchVotes: (id, cb) => watch(() => cb(clone(load().votes[id] || {}))),
-    async joinPoll(id, u) {
+    watchVote: (id, uid, cb) => watch(() => { const v = load().votes[id]?.[uid]; cb(v ? clone(v) : null); }),
+    async joinPoll(id, u, opts = {}) {
+      // Las mismas comprobaciones que hacen las reglas de Firestore.
       const db = load();
-      if (!db.polls[id]) throw fail("not-found");
+      const p = db.polls[id];
+      if (!p) throw fail("not-found");
       const votes = (db.votes[id] ||= {});
-      votes[u.uid] = { ...(votes[u.uid] || {}), name: u.name, photo: u.photo, seenAt: Date.now() };
+      const base: Vote = { name: u.name, photo: u.photo, seenAt: Date.now() };
+      if (opts.isNew && !votes[u.uid]) {
+        const owner = p.ownerUid === u.uid;
+        if (p.emailsOnly && !owner && !(db.access?.[id]?.emails || []).includes(user?.email || "")) throw fail("permission-denied");
+        if (p.approval && !owner && !opts.pending) throw fail("permission-denied");
+        if (typeof p.maxPeople === "number") {
+          if ((p.members || 0) >= p.maxPeople) throw fail("permission-denied");
+          p.members = (p.members || 0) + 1;
+        }
+        votes[u.uid] = opts.pending ? { ...base, status: "pending" } : base;
+      } else {
+        votes[u.uid] = { ...(votes[u.uid] || {}), ...base };
+      }
+      write(db);
+    },
+    async setMemberStatus(id, uid, status, { from, counted }) {
+      const db = load();
+      const p = db.polls[id];
+      const v = db.votes[id]?.[uid];
+      if (!p || !v) throw fail("not-found");
+      if (p.ownerUid !== user?.uid) throw fail("permission-denied");
+      if (status === "accepted") delete v.status; else v.status = status;
+      const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
+      if (counted && delta) p.members = (p.members || 0) + delta;
       write(db);
     },
     async saveVote(id, uid, data) {
@@ -224,6 +299,7 @@ export function createDemoStore(): Store {
       if (!db.polls[id]) throw fail("not-found");
       if (db.polls[id].closed) throw fail("permission-denied");
       const votes = (db.votes[id] ||= {});
+      if (votes[uid]?.status) throw fail("permission-denied"); // pendiente o rechazado: no puede votar
       votes[uid] = { ...(votes[uid] || {}), ...clone(data) };
       write(db);
     },

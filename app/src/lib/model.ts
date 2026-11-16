@@ -4,7 +4,7 @@
 // Voto `polls/{id}/votes/{uid}`: { name, photo, picks: ["<slot>|<opción>", ...], tb: { id, pick } }
 
 import * as D from "./dates";
-import type { Poll, PollData, PollOption, PollType, Votes } from "./types";
+import type { MemberStatus, Poll, PollData, PollOption, PollType, Vote, Votes } from "./types";
 
 export interface TypeInfo {
   id: PollType;
@@ -24,6 +24,37 @@ export const TYPE = Object.fromEntries(TYPES.map(t => [t.id, t])) as Record<Poll
 
 export const MAX_OPTIONS = 4;
 export const TOP_N = 5; // opciones que se muestran en "más votadas"
+
+// ----- Quién puede unirse -----
+/** Tope de personas por votación (para que no se colapse), contando al creador. */
+export const MAX_PEOPLE = 150;
+/** Desde cuántos participantes aparecen el buscador y los filtros de la tabla. */
+export const PEOPLE_FILTER_FROM = 10;
+/** Correos permitidos como mucho en una votación privada. */
+export const MAX_EMAILS = MAX_PEOPLE;
+
+/** En una votación restringida, quien no está aceptado no puede ver los votos de los demás. */
+export const isRestricted = (p: PollData) => !!(p.approval || p.emailsOnly);
+export const memberStatus = (v?: Vote | null): MemberStatus =>
+  v?.status === "pending" ? "pending" : v?.status === "rejected" ? "rejected" : "accepted";
+/** Solo cuentan (recuentos, ranking y tabla) los participantes aceptados. */
+export const acceptedVotes = (votes: Votes): Votes =>
+  Object.fromEntries(Object.entries(votes).filter(([, v]) => !v?.status));
+export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
+export const isFull = (p: PollData) => hasLimit(p) && (p.members || 0) >= (p.maxPeople as number);
+
+const EMAIL = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
+/** Lee una lista de correos separados por comas, espacios, punto y coma o saltos de línea. */
+export function parseEmails(text: string): { emails: string[]; invalid: string[] } {
+  const emails: string[] = [], invalid: string[] = [];
+  for (const raw of text.split(/[\s,;]+/)) {
+    const e = raw.trim().replace(/^<|>$/g, "").toLowerCase();
+    if (!e) continue;
+    if (!EMAIL.test(e)) invalid.push(raw.trim());
+    else if (!emails.includes(e)) emails.push(e);
+  }
+  return { emails, invalid };
+}
 const SINGLE: PollOption[] = [{ id: "v", name: "Votos", icon: "" }];
 
 export const plural = (n: number, [one, many]: readonly [string, string]) => `${n} ${n === 1 ? one : many}`;

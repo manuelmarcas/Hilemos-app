@@ -60,6 +60,33 @@ src/lib/config.ts          Configuración de Firebase
 - Las acciones se aplican al momento y muestran un aviso con **cuenta atrás de 5 s y «Deshacer»**, que las revierte
   (incluido el grupo borrado). Así no se pierden si se cierra la app durante la cuenta atrás.
 
+## Quién puede unirse
+
+Al crear una votación se elige el acceso (no se puede cambiar después) y, opcionalmente, un máximo de personas:
+
+- **Cualquiera con el enlace**: como siempre.
+- **Con tu aprobación** (`approval: true`): quien abre el enlace entra **pendiente** (`status: "pending"` en su
+  voto). Ve el título y un aviso, pero no puede votar ni ver los votos. El creador ve la caja «✋ Solicitudes» y
+  acepta (se borra `status`) o rechaza (`status: "rejected"`, se puede readmitir después).
+- **Solo estos correos** (`emailsOnly: true`): solo entran las cuentas de Google de la lista. La lista se guarda
+  aparte, en `polls/{id}/private/access` (`{ emails }`, en minúsculas), que solo puede leer el creador; así nadie
+  ve los correos de los demás. El creador la cambia en ⋯ → «Acceso y plazas».
+- **Máximo de personas** (`maxPeople`, contando al creador): si no se indica, el tope es **150** (`MAX_PEOPLE`),
+  para que ninguna votación crezca sin límite. `members` cuenta a los que están dentro (aceptados y pendientes;
+  los rechazados liberan su plaza). Al entrar por primera vez, el voto y `members + 1` se escriben en el mismo
+  lote, y las reglas lo exigen, así que el tope no se puede saltar desde fuera de la app. El creador puede subir o
+  bajar el máximo (nunca por debajo de los que ya están) en ⋯ → «Acceso y plazas».
+- Las votaciones creadas antes de esto no tienen `maxPeople` ni contador y siguen funcionando igual.
+
+En las restringidas (con aprobación o con correos), las reglas solo dejan leer los votos al creador y a los
+aceptados; quien está pendiente solo lee su propio documento (`watchVote`). Pendientes y rechazados no cuentan en
+recuentos, ranking ni tabla.
+
+**Participantes**: desde 10 (`PEOPLE_FILTER_FROM`) aparecen un buscador (sin tener en cuenta tildes) y los filtros
+«Todos · Han votado · Sin votar», y la tabla muestra 10 filas con «Ver los N».
+
+En el modo demo, el correo de cada persona es `<nombre>@demo.test` (p. ej. `ana@demo.test`).
+
 ## Eficiencia en Firestore
 
 Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado
