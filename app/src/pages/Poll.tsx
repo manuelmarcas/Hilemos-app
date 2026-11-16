@@ -10,6 +10,7 @@ import { cls, errMsg, pollUrl } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
+import { groupToDrop } from "../state/listActions";
 import { Avatar } from "../components/Avatar";
 
 export function PollPage({ id }: { id: string }) {
@@ -39,7 +40,8 @@ export function PollPage({ id }: { id: string }) {
     if (!pollLoaded || !votesLoaded || !lib) return;
     const entry = lib.polls[id];
     if (!poll) {
-      if (entry) store.removeLibraryEntry(user.uid, id).catch(() => {});
+      // Ya no existe: sale de la lista (y su grupo, si se queda vacío).
+      if (entry) store.removeLibraryEntry(user.uid, id, groupToDrop(lib, id)).catch(() => {});
       return;
     }
     if (joined.current) {
@@ -203,7 +205,7 @@ export function PollPage({ id }: { id: string }) {
       confirmLabel: "Eliminar",
       danger: true,
     }))) return;
-    await store.deletePoll(id, user.uid);
+    await store.deletePoll(id, user.uid, groupToDrop(lib, id));
     toast("Votación eliminada");
     navigate("/");
   });

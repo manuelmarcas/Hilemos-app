@@ -12,7 +12,7 @@ interface SessionApi {
   demo: boolean;
   user: User;
   /** Cambia nombre/foto del usuario tras guardar el perfil. */
-  updateUser: (patch: Partial<Pick<User, "name" | "photo" | "thumb">>) => void;
+  updateUser: (patch: Partial<Omit<User, "uid">>) => void;
   library: LibraryState;
   /**
    * Votaciones ya leídas en esta sesión (null = ya no existe). "Mis votaciones" solo pide las que no están;

@@ -58,11 +58,12 @@ export function App() {
         name: profile?.name || authUser.name,
         photo,
         thumb,
+        hideRemoveWarning: !!profile?.hideRemoveWarning,
       });
     });
   }, [store]);
 
-  const updateUser = useCallback((patch: Partial<Pick<User, "name" | "photo" | "thumb">>) => {
+  const updateUser = useCallback((patch: Partial<Omit<User, "uid">>) => {
     setUser(u => (u ? { ...u, ...patch } : u));
   }, []);
 

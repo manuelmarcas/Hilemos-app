@@ -1,12 +1,17 @@
-// Interfaz común a todas las pantallas: avisos (toast), confirmaciones, compartir y selector de emojis.
+// Interfaz común a todas las pantallas: avisos (toast), confirmaciones, deshacer, compartir y selector de emojis.
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
-import { ConfirmDialog, type ConfirmOptions } from "../components/ConfirmDialog";
+import { ConfirmDialog, type ConfirmOptions, type ConfirmResult } from "../components/ConfirmDialog";
 import { ShareDialog, type ShareTarget } from "../components/ShareDialog";
 import { EmojiPanel, type EmojiRequest } from "../components/EmojiPanel";
+import { UndoStack, type UndoItem } from "../components/UndoStack";
 
 interface UiApi {
   toast: (msg: string) => void;
   confirm: (opts: ConfirmOptions) => Promise<boolean>;
+  /** Como `confirm`, pero devuelve también si se marcó la casilla (`opts.checkbox`). */
+  confirmWithCheck: (opts: ConfirmOptions) => Promise<ConfirmResult>;
+  /** Aviso con cuenta atrás y botón "Deshacer" (la acción ya está hecha; `onUndo` la revierte). */
+  undoable: (opts: { text: string; onUndo: () => void; seconds?: number }) => void;
   share: (target: ShareTarget) => void;
   /** Abre el selector junto a `anchor`; si ya estaba abierto ahí, lo cierra. */
   openEmoji: (req: EmojiRequest) => void;
@@ -21,13 +26,17 @@ export function useUi() {
   return ui;
 }
 
+type Resolve = (r: ConfirmResult) => void;
+const MAX_UNDO = 3; // avisos de deshacer a la vez (los más antiguos se descartan)
+
 export function UiProvider({ children }: { children: ReactNode }) {
   const [toastMsg, setToastMsg] = useState("");
   const [toastOn, setToastOn] = useState(false);
   const timer = useRef<number | undefined>(undefined);
-  const [confirmReq, setConfirmReq] = useState<{ opts: ConfirmOptions; resolve: (b: boolean) => void; n: number } | null>(null);
+  const [confirmReq, setConfirmReq] = useState<{ opts: ConfirmOptions; resolve: Resolve; n: number } | null>(null);
   const [shareReq, setShareReq] = useState<(ShareTarget & { n: number }) | null>(null);
   const [emojiReq, setEmojiReq] = useState<EmojiRequest | null>(null);
+  const [undos, setUndos] = useState<UndoItem[]>([]);
   const seq = useRef(0);
 
   const toast = useCallback((msg: string) => {
@@ -37,12 +46,23 @@ export function UiProvider({ children }: { children: ReactNode }) {
     timer.current = window.setTimeout(() => setToastOn(false), 2600);
   }, []);
 
-  const pendingConfirm = useRef<((b: boolean) => void) | null>(null);
-  const confirm = useCallback((opts: ConfirmOptions) => new Promise<boolean>(resolve => {
-    pendingConfirm.current?.(false); // si había otra abierta, cuenta como "Cancelar"
+  const pendingConfirm = useRef<Resolve | null>(null);
+  const confirmWithCheck = useCallback((opts: ConfirmOptions) => new Promise<ConfirmResult>(resolve => {
+    pendingConfirm.current?.({ ok: false, checked: false }); // si había otra abierta, cuenta como "Cancelar"
     pendingConfirm.current = resolve;
     setConfirmReq({ opts, resolve, n: ++seq.current });
   }), []);
+  const confirm = useCallback((opts: ConfirmOptions) => confirmWithCheck(opts).then(r => r.ok), [confirmWithCheck]);
+
+  const undoable = useCallback(({ text, onUndo, seconds = 5 }: { text: string; onUndo: () => void; seconds?: number }) => {
+    const item = { id: ++seq.current, text, onUndo, seconds, until: Date.now() + seconds * 1000 };
+    setUndos(list => [...list, item].slice(-MAX_UNDO));
+  }, []);
+  const expireUndo = useCallback((id: number) => setUndos(list => list.filter(x => x.id !== id)), []);
+  const runUndo = useCallback((item: UndoItem) => {
+    setUndos(list => list.filter(x => x.id !== item.id));
+    item.onUndo();
+  }, []);
 
   const share = useCallback((t: ShareTarget) => setShareReq({ ...t, n: ++seq.current }), []);
   const openEmoji = useCallback((req: EmojiRequest) => {
@@ -50,7 +70,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
   const closeEmoji = useCallback(() => setEmojiReq(null), []);
 
-  const api = useMemo(() => ({ toast, confirm, share, openEmoji, closeEmoji }), [toast, confirm, share, openEmoji, closeEmoji]);
+  const api = useMemo(() => ({ toast, confirm, confirmWithCheck, undoable, share, openEmoji, closeEmoji }),
+    [toast, confirm, confirmWithCheck, undoable, share, openEmoji, closeEmoji]);
 
   return (
     <UiContext.Provider value={api}>
@@ -59,16 +80,17 @@ export function UiProvider({ children }: { children: ReactNode }) {
         <ConfirmDialog
           key={confirmReq.n}
           opts={confirmReq.opts}
-          onAnswer={yes => {
+          onAnswer={r => {
             if (pendingConfirm.current === confirmReq.resolve) pendingConfirm.current = null;
-            confirmReq.resolve(yes);
+            confirmReq.resolve(r);
             setConfirmReq(c => (c === confirmReq ? null : c));
           }}
         />
       )}
       {shareReq && <ShareDialog key={shareReq.n} target={shareReq} toast={toast} onClose={() => setShareReq(null)} />}
       {emojiReq && <EmojiPanel req={emojiReq} onClose={closeEmoji} />}
-      <div id="toast" className={`toast${toastOn ? " show" : ""}`} role="status" aria-live="polite">{toastMsg}</div>
+      <UndoStack items={undos} onUndo={runUndo} onExpire={expireUndo} />
+      <div id="toast" className={`toast${toastOn ? " show" : ""}${undos.length ? " above-undo" : ""}`} role="status" aria-live="polite">{toastMsg}</div>
     </UiContext.Provider>
   );
 }

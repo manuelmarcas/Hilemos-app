@@ -7,6 +7,7 @@ import { cls, errMsg, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { useHashPath } from "../state/route";
+import { useListActions } from "../state/listActions";
 
 const CKEY = "votaciones-menu-plegados";
 const loadCollapsed = () => {
@@ -21,8 +22,9 @@ type Menu = { type: "poll" | "group"; id: string } | null;
 type Form = { mode: "new" | "rename"; gid?: string; moveId?: string; value: string } | null;
 
 export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onNavigate: () => void }) {
-  const { store, user, library } = useSession();
+  const { store, user, library, setHomeFilter } = useSession();
   const { toast, confirm } = useUi();
+  const { setArchived, remove } = useListActions();
   const path = useHashPath();
   const lib = library.data;
   const [query, setQuery] = useState("");
@@ -60,17 +62,8 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
     });
   };
 
-  const removePoll = (id: string) => run(async () => {
-    if (!(await confirm({
-      title: "¿Quitar esta votación de tu menú?",
-      message: "Tus votos se mantienen y podrás volver a entrar con el enlace.",
-      confirmLabel: "Quitar",
-      danger: true,
-    }))) return;
-    setMenu(null);
-    await store.removeLibraryEntry(user.uid, id);
-    toast("Quitada de tu menú");
-  });
+  const archivePoll = (id: string) => { setMenu(null); setArchived(id, true); };
+  const removePoll = async (id: string) => { if (await remove(id)) setMenu(null); };
 
   const deleteGroup = (gid: string) => run(async () => {
     const g = lib?.groups[gid];
@@ -148,6 +141,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
 
   let body;
   let total = 0;
+  let archivedCount = 0;
   if (library.error) {
     body = <div className="sb-empty error">{errMsg(library.error)}</div>;
   } else if (!lib) {
@@ -155,9 +149,12 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   } else {
     const groups = sortedGroups(lib.groups);
     // Orden estable (por fecha en que se añadió) para que el menú no salte al ir abriendo votaciones.
+    // Las archivadas no se muestran aquí (tienen su zona en "Mis votaciones").
     const items: Item[] = Object.entries(lib.polls)
       .map(([id, e]) => ({ id, ...e }))
+      .filter(e => !e.archived)
       .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    archivedCount = Object.keys(lib.polls).length - items.length;
     total = items.length;
     const q = query.trim().toLowerCase();
     const searching = !!q;
@@ -178,10 +175,9 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
             </button>
           ))}
           <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}>＋ Grupo nuevo…</button>
-          {e.role !== "owner" && <>
-            <div className="sb-menu-sep" />
-            <button className="sb-menu-item danger" onClick={() => removePoll(e.id)}>Quitar de mi menú</button>
-          </>}
+          <div className="sb-menu-sep" />
+          <button className="sb-menu-item" onClick={() => archivePoll(e.id)}>📦 Archivar</button>
+          <button className="sb-menu-item danger" onClick={() => removePoll(e.id)}>🗑️ Eliminar de mi lista</button>
         </div>
       );
     };
@@ -260,7 +256,10 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       <div className="sb-foot" id="sb-foot">
         {lib && !library.error && (form?.mode === "new" ? formHTML()
           : <button className="sb-add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}>＋ Nuevo grupo</button>)}
-        {lib && <a className="sb-all" href="#/">Ver todas mis votaciones</a>}
+        {lib && <a className="sb-all" href="#/" onClick={() => setHomeFilter("all")}>Ver todas mis votaciones</a>}
+        {lib && archivedCount > 0 && (
+          <a className="sb-all" href="#/" onClick={() => setHomeFilter("archived")}>📦 Archivadas ({archivedCount})</a>
+        )}
       </div>
     </aside>
   );

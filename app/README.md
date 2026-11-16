@@ -48,6 +48,18 @@ src/lib/config.ts          Configuración de Firebase
 - Firebase se carga aparte (import dinámico): el modo demo no lo descarga.
 - `base: "./"` en Vite: la compilación usa rutas relativas y funciona en una subcarpeta o dentro de Capacitor.
 
+## Archivar y eliminar de la lista
+
+- Cada usuario puede **archivar** votaciones (campo `archived` en `users/{uid}/polls/{id}`): salen del panel y del
+  menú lateral, se ven en el filtro «📦 Archivadas» y conservan su grupo. Se pueden desarchivar.
+- **Eliminar de la lista** quita la votación del menú del usuario (no la borra para los demás; se puede volver con
+  el enlace). La primera vez sale un aviso con la casilla «No volver a mostrar», que se guarda en el perfil
+  (`hideRemoveWarning`). Si era la última votación de un grupo (contando las archivadas), el grupo también se borra.
+- En el móvil, en «Mis votaciones»: **deslizar →** archiva (o desarchiva en la zona de archivadas) y
+  **deslizar ←** elimina de la lista. En el ordenador, las mismas acciones están en el botón ⋯ de cada votación.
+- Las acciones se aplican al momento y muestran un aviso con **cuenta atrás de 5 s y «Deshacer»**, que las revierte
+  (incluido el grupo borrado). Así no se pierden si se cierra la app durante la cuenta atrás.
+
 ## Eficiencia en Firestore
 
 Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado

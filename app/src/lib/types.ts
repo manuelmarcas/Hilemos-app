@@ -59,6 +59,7 @@ export interface LibraryEntry {
   ownerName?: string;
   groupId?: string | null;
   addedAt?: number;
+  archived?: boolean; // archivada: sale del panel principal y del menú lateral, pero conserva su grupo
 }
 
 export interface Group {
@@ -76,6 +77,7 @@ export interface Profile {
   name?: string;
   photo?: string;  // imagen de perfil (128 px en base64, URL de Google o vacía)
   thumb?: string;  // miniatura que se copia en los votos (64 px), para que pesen poco
+  hideRemoveWarning?: boolean; // ha marcado "no volver a mostrar" en el aviso de eliminar de su lista
   updatedAt?: number;
 }
 
@@ -90,6 +92,7 @@ export interface AuthUser {
 export interface User extends AuthUser {
   googlePhoto: string;
   thumb: string; // miniatura de `photo`: es la que se guarda en cada voto
+  hideRemoveWarning: boolean;
 }
 
 /** Lo que se copia del usuario en cada voto (nombre y miniatura). */
@@ -111,7 +114,8 @@ export interface Store {
   createPoll(data: PollData): Promise<string>;
   getPoll(id: string): Promise<Poll | null>;
   updatePoll(id: string, patch: Partial<PollData>): Promise<void>;
-  deletePoll(id: string, uid: string): Promise<void>;
+  /** Borra la votación para todos. `dropGroupId`: grupo que queda vacío y se borra a la vez. */
+  deletePoll(id: string, uid: string, dropGroupId?: string | null): Promise<void>;
   watchPoll(id: string, cb: (p: Poll | null) => void, onErr?: ErrorCb): Unsubscribe;
 
   watchVotes(id: string, cb: (v: Votes) => void, onErr?: ErrorCb): Unsubscribe;
@@ -125,7 +129,10 @@ export interface Store {
 
   watchLibrary(uid: string, cb: (l: Library) => void, onErr?: ErrorCb): Unsubscribe;
   saveLibraryEntry(uid: string, pollId: string, data: Partial<LibraryEntry>): Promise<void>;
-  removeLibraryEntry(uid: string, pollId: string): Promise<void>;
+  /** Quita la votación de la lista del usuario. `dropGroupId`: grupo que queda vacío y se borra a la vez. */
+  removeLibraryEntry(uid: string, pollId: string, dropGroupId?: string | null): Promise<void>;
+  /** Vuelve a crear un grupo con su id (para deshacer). */
+  restoreGroup(uid: string, gid: string, data: Group): Promise<void>;
   createGroup(uid: string, name: string): Promise<string>;
   renameGroup(uid: string, gid: string, name: string): Promise<void>;
   deleteGroup(uid: string, gid: string): Promise<void>;

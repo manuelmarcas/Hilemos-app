@@ -1,4 +1,5 @@
-// Pantalla "Mis votaciones": la colección del usuario organizada en grupos.
+// Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
+// En el móvil cada votación se desliza: → archivar (o desarchivar), ← eliminar de la lista.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TYPE, pollMeta } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
@@ -6,6 +7,8 @@ import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
+import { SwipeRow } from "../components/SwipeRow";
+import { useListActions } from "../state/listActions";
 
 type Entry = LibraryEntry & { id: string };
 type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
@@ -13,6 +16,7 @@ type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
 export function Home() {
   const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
   const { toast, confirm, share } = useUi();
+  const { setArchived, remove } = useListActions();
   const lib = library.data;
   // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
   const [cache, setCache] = useState<Record<string, Poll | null>>(() => Object.fromEntries(pollCache));
@@ -47,33 +51,24 @@ export function Home() {
   }
 
   let filter = homeFilter;
-  if (filter !== "all" && filter !== "none" && !lib.groups[filter]) filter = "all";
+  if (filter !== "all" && filter !== "none" && filter !== "archived" && !lib.groups[filter]) filter = "all";
   const setFilter = (f: string) => {
     setHomeFilter(f);
-    setLastGroup(f === "all" || f === "none" ? "" : f);
+    setLastGroup(f === "all" || f === "none" || f === "archived" ? "" : f);
   };
 
   const groups = sortedGroups(lib.groups);
-  const all: Entry[] = Object.entries(lib.polls)
+  const entries: Entry[] = Object.entries(lib.polls)
     .map(([id, e]) => ({ id, ...e }))
     .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)); // como el menú lateral: las añadidas más recientemente primero
+  const all = entries.filter(e => !e.archived);
+  const archived = entries.filter(e => e.archived);
   const inGroup = (gid: string | null) => all.filter(e => (gid ? e.groupId === gid : !e.groupId || !lib.groups[e.groupId]));
 
   const run = async (fn: () => Promise<unknown>) => {
     setStatus("");
     try { await fn(); } catch (err) { setStatus(errMsg(err)); }
   };
-
-  const remove = (id: string) => run(async () => {
-    if (!(await confirm({
-      title: "¿Quitar esta votación de tu menú?",
-      message: "Tus votos se mantienen y podrás volver a entrar con el enlace.",
-      confirmLabel: "Quitar",
-      danger: true,
-    }))) return;
-    await store.removeLibraryEntry(user.uid, id);
-    toast("Quitada de tu menú");
-  });
 
   const deleteGroup = () => run(async () => {
     const g = lib.groups[filter];
@@ -116,13 +111,23 @@ export function Home() {
     const gone = p === null;
     const type = TYPE[(p?.type || e.type)!];
     const owner = (p?.ownerUid || null) === user.uid || e.role === "owner";
+    const groupName = e.groupId ? lib.groups[e.groupId]?.name : "";
     const meta = [
       p ? pollMeta(p) : type?.name || "",
       owner ? "creada por ti" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
+      e.archived && groupName ? `grupo «${groupName}»` : "",
     ].filter(Boolean).join(" · ");
     const open = expanded === e.id;
+    const toggleArchive = () => setArchived(e.id, !e.archived);
     return (
-      <div key={e.id} className={`poll-card ${gone ? "is-gone" : ""}`}>
+      <SwipeRow
+        key={e.id}
+        right={e.archived
+          ? { icon: "📤", label: "Desarchivar", tone: "archive", run: toggleArchive }
+          : { icon: "📦", label: "Archivar", tone: "archive", run: toggleArchive }}
+        left={{ icon: "🗑️", label: "Eliminar", tone: "danger", run: () => remove(e.id) }}
+      >
+      <div className={`poll-card ${gone ? "is-gone" : ""}`}>
         <div className="pc-row">
           <a className="pc-link" href={`#/v/${e.id}`}>
             <span className="pc-icon">{type?.icon || "🗳️"}</span>
@@ -147,10 +152,14 @@ export function Home() {
             {!gone && (
               <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}>🔗 Compartir</button>
             )}
-            {(!owner || gone) && <button className="btn small danger" onClick={() => remove(e.id)}>Quitar de mi menú</button>}
+            <button className="btn small" onClick={() => { setExpanded(null); toggleArchive(); }}>
+              {e.archived ? "📤 Desarchivar" : "📦 Archivar"}
+            </button>
+            <button className="btn small danger" onClick={() => remove(e.id)}>🗑️ Eliminar de mi lista</button>
           </div>
         )}
       </div>
+      </SwipeRow>
     );
   };
 
@@ -162,7 +171,11 @@ export function Home() {
   );
 
   let list;
-  if (!all.length) {
+  if (filter === "archived") {
+    list = archived.length
+      ? <div className="poll-list">{archived.map(card)}</div>
+      : <div className="empty-box">No tienes votaciones archivadas.</div>;
+  } else if (!all.length) {
     list = <div className="empty-box">Todavía no tienes votaciones. <a href="#/nueva">Crea la primera</a> o abre el enlace que te hayan pasado.</div>;
   } else if (filter === "all" && groups.length) {
     const sections = groups.map(gr => ({ key: gr.id, title: gr.name, items: inGroup(gr.id) }))
@@ -191,6 +204,7 @@ export function Home() {
             {chip("all", "Todas", all.length)}
             {groups.map(gr => chip(gr.id, gr.name, inGroup(gr.id).length))}
             {groups.length > 0 && chip("none", "Sin grupo", inGroup(null).length)}
+            {(archived.length > 0 || filter === "archived") && chip("archived", "📦 Archivadas", archived.length)}
             <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}>＋ Nuevo grupo</button>
           </div>
           {form && (
@@ -210,7 +224,15 @@ export function Home() {
           )}
         </div>
         <div className="status" role="alert">{status}</div>
+        {filter === "archived" && archived.length > 0 && (
+          <p className="archived-note">Las archivadas no aparecen en el panel ni en el menú, pero conservan su grupo. Desarchívalas para recuperarlas.</p>
+        )}
         {list}
+        {(filter === "archived" ? archived.length : all.length) > 0 && (
+          <p className="swipe-hint">
+            Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para eliminarla de tu lista.
+          </p>
+        )}
       </div>
     </>
   );

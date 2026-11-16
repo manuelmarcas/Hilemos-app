@@ -5,7 +5,7 @@
 // Colecciones:
 //   polls/{pollId}                     la votación (ver model.ts)
 //   polls/{pollId}/votes/{uid}         participante: { name, photo, picks?, seenAt, updatedAt }
-//   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt }
+//   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt, archived }
 //   users/{uid}/groups/{groupId}       grupos del usuario: { name, createdAt }
 //   users/{uid}                        perfil: { name, photo, updatedAt }
 
@@ -57,7 +57,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     async getPoll(id) { return withId(await F.getDoc(pollRef(id))); },
     updatePoll: (id, patch) => F.updateDoc(pollRef(id), patch),
-    async deletePoll(id, uid) {
+    async deletePoll(id, uid, dropGroupId) {
       // Primero los votos, en lotes (las reglas consultan la votación para permitirlo, así que aún debe existir),
       // y luego la votación y su entrada en la colección del creador, juntas.
       const snap = await F.getDocs(votesCol(id));
@@ -69,6 +69,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       const batch = F.writeBatch(db);
       batch.delete(pollRef(id));
       batch.delete(F.doc(libCol(uid), id));
+      if (dropGroupId) batch.delete(F.doc(groupsCol(uid), dropGroupId));
       await batch.commit();
     },
     watchPoll: (id, cb, onErr) => F.onSnapshot(pollRef(id), s => cb(withId(s)), onErr),
@@ -101,7 +102,13 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       return () => { u1(); u2(); };
     },
     saveLibraryEntry: (uid, pollId, data) => F.setDoc(F.doc(libCol(uid), pollId), data, { merge: true }),
-    removeLibraryEntry: (uid, pollId) => F.deleteDoc(F.doc(libCol(uid), pollId)),
+    async removeLibraryEntry(uid, pollId, dropGroupId) {
+      const batch = F.writeBatch(db);
+      batch.delete(F.doc(libCol(uid), pollId));
+      if (dropGroupId) batch.delete(F.doc(groupsCol(uid), dropGroupId));
+      await batch.commit();
+    },
+    restoreGroup: (uid, gid, data) => F.setDoc(F.doc(groupsCol(uid), gid), data),
     async createGroup(uid, name) {
       const ref = await F.addDoc(groupsCol(uid), { name, createdAt: Date.now() });
       return ref.id;
@@ -194,11 +201,12 @@ export function createDemoStore(): Store {
       Object.assign(db.polls[id], patch);
       write(db);
     },
-    async deletePoll(id, uid) {
+    async deletePoll(id, uid, dropGroupId) {
       const db = load();
       delete db.polls[id];
       delete db.votes[id];
       delete lib(db, uid).polls[id];
+      if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);
     },
     watchPoll: (id, cb) => watch(() => { const p = load().polls[id]; cb(p ? { id, ...clone(p) } : null); }),
@@ -259,9 +267,15 @@ export function createDemoStore(): Store {
       l.polls[pollId] = { ...(l.polls[pollId] || {}), ...clone(data) };
       write(db);
     },
-    async removeLibraryEntry(uid, pollId) {
+    async removeLibraryEntry(uid, pollId, dropGroupId) {
       const db = load();
       delete lib(db, uid).polls[pollId];
+      if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
+      write(db);
+    },
+    async restoreGroup(uid, gid, data) {
+      const db = load();
+      lib(db, uid).groups[gid] = clone(data);
       write(db);
     },
     async createGroup(uid, name) {
