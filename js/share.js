@@ -30,7 +30,7 @@ async function qrCanvas(text, px = 8, margin = 4) {
   const g = c.getContext("2d");
   g.fillStyle = "#fff";
   g.fillRect(0, 0, size, size);
-  g.fillStyle = "#143d22";
+  g.fillStyle = "#451d42";
   for (let r = 0; r < n; r++) {
     for (let col = 0; col < n; col++) {
       if (qr.isDark(r, col)) g.fillRect((col + margin) * px, (r + margin) * px, px, px);
