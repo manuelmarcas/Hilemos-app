@@ -4,6 +4,9 @@ App web para crear votaciones de fechas y compartirlas con un grupo. Es la evolu
 [votaciones](https://github.com/manuelmarcas/votaciones) (la votación de comida/cena de Navidad),
 pero todo es configurable.
 
+> **Versión 2 en React:** la carpeta [`app/`](app/) contiene la misma aplicación migrada a React + Vite + TypeScript,
+> preparada para convertirla en app móvil con Capacitor. Ver [`app/README.md`](app/README.md).
+
 ## Qué se puede hacer
 
 - **Crear votaciones** con:
