@@ -25,7 +25,10 @@ export interface PollData {
   months: string[];
   slots: string[];
   hours?: string[];
+  /** Duración de cada franja (min). 0 con `hourList`. */
   hourStep?: number;
+  /** Horas sueltas elegidas a mano (15:00, 15:30, 18:00…) en vez de franjas periódicas: se votan instantes, sin duración. */
+  hourList?: boolean;
   options?: PollOption[];
   anonymous?: boolean;
   tiebreak?: Tiebreak | null;

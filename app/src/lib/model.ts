@@ -15,7 +15,7 @@ export interface TypeInfo {
 }
 
 export const TYPES: TypeInfo[] = [
-  { id: "hours", icon: "⏰", name: "Horas", unit: ["franja", "franjas"], desc: "Franjas horarias de uno o varios días" },
+  { id: "hours", icon: "⏰", name: "Horas", unit: ["franja", "franjas"], desc: "Franjas horarias u horas sueltas de uno o varios días" },
   { id: "days", icon: "📅", name: "Días", unit: ["día", "días"], desc: "Días concretos, con hasta 4 opciones por día" },
   { id: "weeks", icon: "🗓️", name: "Semanas", unit: ["semana", "semanas"], desc: "Semanas completas, de lunes a domingo" },
   { id: "months", icon: "📆", name: "Meses", unit: ["mes", "meses"], desc: "Meses completos" },
@@ -72,6 +72,7 @@ export function slotLabel(poll: PollData, slot: string) {
   switch (poll.type) {
     case "hours": {
       const [d, h] = slot.split("T");
+      if (poll.hourList) return `${D.cap(D.fmtDayShort(d))} · ${h}`;
       const end = D.hhmm(D.minutesOf(h) + (poll.hourStep || 60));
       return `${D.cap(D.fmtDayShort(d))} · ${h}–${end}`;
     }
@@ -205,7 +206,7 @@ export function pollMeta(poll: PollData) {
   const parts = [t.name];
   if (poll.type === "hours") {
     parts.push(plural(poll.slots.length, ["día", "días"]));
-    parts.push(plural(poll.hours?.length || 0, ["franja", "franjas"]) + " por día");
+    parts.push(plural(poll.hours?.length || 0, poll.hourList ? ["hora", "horas"] : ["franja", "franjas"]) + " por día");
   } else {
     parts.push(plural(poll.slots.length, t.unit));
   }

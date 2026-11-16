@@ -587,6 +587,11 @@ select.input{cursor:pointer}
 .hours-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
 .hours-form label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);font-weight:600}
 .hour-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hour-chips .tag{font-variant-numeric:tabular-nums}
+.hour-mode{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.hour-add{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.hour-add .input{width:auto;min-width:130px}
+.hour-add + .status{margin:-4px 0 10px}
 
 .create-bar{
   position:sticky;

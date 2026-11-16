@@ -438,6 +438,7 @@ function instructions(poll: Poll, T: Tally) {
     case "weeks": return "Pulsa en las semanas que te vengan bien.";
     case "months": return "Pulsa en los meses que te vengan bien.";
     case "hours": {
+      if (poll.hourList) return "Pulsa en las horas que te vengan bien.";
       const step = poll.hourStep || 60;
       return `Pulsa en las franjas horarias que te vengan bien (cada una dura ${step % 60 ? `${step} minutos` : plural(step / 60, ["hora", "horas"])}).`;
     }

@@ -9,7 +9,8 @@ import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { GroupSelect } from "../components/GroupSelect";
 
-// Nombres e iconos sugeridos según el número de opciones (solo se aplican a las que no se han tocado).
+// Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
+// y el icono se propone mientras no se haya elegido otro.
 const PRESETS: Record<number, [string, string][]> = {
   1: [["Disponible", "✅"]],
   2: [["Comida", "🍽️"], ["Cena", "🌙"]],
@@ -17,10 +18,13 @@ const PRESETS: Record<number, [string, string][]> = {
   4: [["Mañana", "🌅"], ["Mediodía", "☀️"], ["Tarde", "🌇"], ["Noche", "🌙"]],
 };
 
-interface Opt { name: string; icon: string; touched: boolean }
+interface Opt { name: string; icon: string; touched: boolean } // touched = icono elegido a mano
 
 const applyPresets = (opts: Opt[], count: number) =>
-  opts.map((o, i) => (!o.touched && PRESETS[count][i] ? { ...o, name: PRESETS[count][i][0], icon: PRESETS[count][i][1] } : o));
+  opts.map((o, i) => (!o.touched && PRESETS[count][i] ? { ...o, icon: PRESETS[count][i][1] } : o));
+
+const HOUR = /^([01]\d|2[0-3]):[0-5]\d$/;
+const MAX_HOURS = 48; // horas sueltas por día
 
 const toggled = (set: Set<string>, k: string) => {
   const next = new Set(set);
@@ -76,6 +80,10 @@ export function Create() {
   const [from, setFrom] = useState("09:00");
   const [to, setTo] = useState("21:00");
   const [step, setStep] = useState(60);
+  const [hourMode, setHourMode] = useState<"range" | "list">("range");
+  const [hourList, setHourList] = useState<string[]>([]); // horas sueltas, ordenadas
+  const [newHour, setNewHour] = useState("");
+  const [hourError, setHourError] = useState("");
   const [groupId, setGroupId] = useState(lastGroup || "");
   const [newGroup, setNewGroup] = useState("");
   const [anonymous, setAnonymous] = useState(false);
@@ -101,6 +109,18 @@ export function Create() {
   const sortedMonths = [...months].sort();
   const today = D.todayKey();
   const hourSlots = D.hourRange(from, to, step);
+  const isList = hourMode === "list";
+  const pollHours = isList ? hourList : hourSlots;
+
+  function addHour() {
+    const h = newHour.trim();
+    if (!HOUR.test(h)) { setHourError("Elige una hora válida (por ejemplo, 15:30)."); return; }
+    if (hourList.includes(h)) { setHourError(`Las ${h} ya están en la lista.`); return; }
+    if (hourList.length >= MAX_HOURS) { setHourError(`Como mucho ${MAX_HOURS} horas.`); return; }
+    setHourList(l => [...l, h].sort());
+    setHourError("");
+    setNewHour("");
+  }
 
   function selectableDays() {
     const out: string[] = [];
@@ -165,7 +185,8 @@ export function Create() {
     setOpts(o => applyPresets(o, n));
   }
 
-  const setOpt = (i: number, patch: Partial<Opt>) => setOpts(o => o.map((x, j) => (j === i ? { ...x, ...patch, touched: true } : x)));
+  const setOpt = (i: number, patch: Partial<Opt>) =>
+    setOpts(o => o.map((x, j) => (j === i ? { ...x, ...patch, touched: x.touched || "icon" in patch } : x)));
 
   // ---------- Validación y envío ----------
 
@@ -181,7 +202,8 @@ export function Create() {
         if (!opts[i].name.trim()) return [`Ponle nombre a la opción ${i + 1}.`, `[data-opt-name="${i}"]`];
       }
     }
-    if (type === "hours" && !hourSlots.length) return ["El rango de horas no contiene ninguna franja.", "#sec-hours"];
+    if (type === "hours" && !isList && !hourSlots.length) return ["El rango de horas no contiene ninguna franja.", "#sec-hours"];
+    if (type === "hours" && isList && !hourList.length) return ["Añade al menos una hora.", "#f-hour"];
     if (access === "emails") {
       if (parsed.invalid.length) return [`Revisa ${parsed.invalid.length === 1 ? "este correo" : "estos correos"}: ${parsed.invalid.slice(0, 3).join(", ")}${parsed.invalid.length > 3 ? "…" : ""}`, "#f-emails"];
       if (!parsed.emails.length) return ["Escribe al menos un correo que pueda entrar.", "#f-emails"];
@@ -221,8 +243,9 @@ export function Create() {
       type,
       months: sortedMonths,
       slots: type === "months" ? sortedMonths : type === "weeks" ? [...weeks].sort() : [...days].sort(),
-      hours: type === "hours" ? hourSlots : [],
-      hourStep: type === "hours" ? step : 0,
+      hours: type === "hours" ? pollHours : [],
+      hourStep: type === "hours" && !isList ? step : 0,
+      ...(type === "hours" && isList ? { hourList: true } : {}),
       options: type === "days"
         ? opts.slice(0, count).map((o, i) => ({ id: `o${i + 1}`, name: o.name.trim(), icon: o.icon }))
         : [],
@@ -288,7 +311,7 @@ export function Create() {
   else if (type === "weeks") summaryParts.push(plural(weeks.size, ["semana", "semanas"]));
   else summaryParts.push(plural(days.size, ["día", "días"]));
   if (type === "days") summaryParts.push(plural(count, ["opción", "opciones"]) + " por día");
-  if (type === "hours") summaryParts.push(plural(hourSlots.length, ["franja", "franjas"]) + " por día");
+  if (type === "hours") summaryParts.push(plural(pollHours.length, isList ? ["hora", "horas"] : ["franja", "franjas"]) + " por día");
   summaryParts.push(anonymous ? "anónima" : "votos visibles");
   if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
   if (access === "approval") summaryParts.push("con aprobación");
@@ -464,7 +487,7 @@ export function Create() {
                         }}>{o.icon || "＋"}</button>
                       <div className="emoji-field">
                         <input ref={el => { optRefs.current[i] = el; }} className="input" id={`f-opt-${i}`} data-opt-name={i} maxLength={30}
-                          value={o.name} placeholder={`Nombre de la opción ${i + 1}`} autoComplete="off"
+                          value={o.name} placeholder={`Ej.: ${PRESETS[count][i][0]}`} aria-label={`Nombre de la opción ${i + 1}`} autoComplete="off"
                           onChange={e => setOpt(i, { name: e.target.value })} />
                         <EmojiButton field={() => optRefs.current[i]} setValue={v => setOpt(i, { name: v })} />
                       </div>
@@ -483,7 +506,7 @@ export function Create() {
                   </div>
                   <div className="legend mini">
                     {shownOpts.map((o, i) => (
-                      <span key={i} className="lg"><span className={`sw c${i}`}></span>{o.icon} {o.name || <em>sin nombre</em>}</span>
+                      <span key={i} className="lg"><span className={`sw c${i}`}></span>{o.icon} {o.name || <em className="muted">{PRESETS[count][i][0]}</em>}</span>
                     ))}
                   </div>
                 </div>
@@ -494,9 +517,36 @@ export function Create() {
 
         <section className="step" id="sec-hours" hidden={!visible.hours}>
           <h2><span className="num">{numbers.hours}</span>Horas</h2>
-          <p className="hint">Las mismas franjas se repetirán en cada uno de los días elegidos.</p>
+          <div className="hour-mode" role="group" aria-label="Cómo se eligen las horas">
+            <button type="button" className={cls("chip", !isList && "on")} aria-pressed={!isList} onClick={() => setHourMode("range")}>Franjas periódicas</button>
+            <button type="button" className={cls("chip", isList && "on")} aria-pressed={isList} onClick={() => setHourMode("list")}>Horas sueltas</button>
+          </div>
+          <p className="hint">
+            {isList
+              ? "Añade las horas concretas que se podrán votar (por ejemplo, 15:00, 15:30, 18:00 y 19:30). Se repetirán en cada uno de los días elegidos."
+              : "Las mismas franjas se repetirán en cada uno de los días elegidos."}
+          </p>
           <div id="s-hours">
-            {visible.hours && <>
+            {visible.hours && isList && <>
+              <div className="hour-add">
+                <input id="f-hour" className="input" type="time" step={300} value={newHour} aria-label="Hora"
+                  onChange={e => { setNewHour(e.target.value); setHourError(""); }}
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addHour(); } }} />
+                <button type="button" className="btn" id="f-hour-add" onClick={addHour}>＋ Añadir</button>
+              </div>
+              {hourError && <p className="status" role="alert">{hourError}</p>}
+              <div className="hour-chips">
+                {hourList.length
+                  ? hourList.map(h => (
+                    <span key={h} className="tag">{h}
+                      <button type="button" aria-label={`Quitar las ${h}`} onClick={() => setHourList(l => l.filter(x => x !== h))}>×</button>
+                    </span>
+                  ))
+                  : <span className="muted">Todavía no hay ninguna hora.</span>}
+              </div>
+              <p className="hint hint-after">{plural(hourList.length, ["hora", "horas"])} por día.</p>
+            </>}
+            {visible.hours && !isList && <>
               <div className="hours-form">
                 <label>Desde<select className="input" value={from} onChange={e => setFrom(e.target.value)}>
                   {starts.map(v => <option key={v} value={v}>{v}</option>)}

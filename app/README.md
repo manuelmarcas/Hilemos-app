@@ -60,6 +60,18 @@ src/lib/config.ts          Configuración de Firebase
 - Las acciones se aplican al momento y muestran un aviso con **cuenta atrás de 5 s y «Deshacer»**, que las revierte
   (incluido el grupo borrado). Así no se pierden si se cierra la app durante la cuenta atrás.
 
+## Votaciones de horas
+
+Al crear una votación de horas se alterna entre dos modos:
+
+- **Franjas periódicas**: desde, hasta y cada cuánto (30 min, 1 h o 2 h). Cada casilla es una franja con duración
+  (`hours` + `hourStep`).
+- **Horas sueltas**: se añaden a mano las horas concretas (15:00, 15:30, 18:00, 19:30…), hasta 48 por día. Se
+  guardan en `hours` con `hourList: true` y `hourStep: 0`; se votan instantes, sin hora de fin.
+
+En «Opciones de cada día», los nombres sugeridos (Comida, Cena…) son solo un ejemplo en el campo (placeholder):
+hay que escribir el nombre. El icono sí se propone, y se puede cambiar.
+
 ## Quién puede unirse
 
 Al crear una votación se elige el acceso (no se puede cambiar después) y, opcionalmente, un máximo de personas:
