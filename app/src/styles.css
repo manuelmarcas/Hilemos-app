@@ -592,12 +592,45 @@ select.input{cursor:pointer}
 .hour-add{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .hour-add .input{width:auto;min-width:130px}
 .hour-add + .status{margin:-4px 0 10px}
-.hour-day-rows{display:flex;flex-direction:column;gap:14px}
-.hour-day-row{background:var(--soft);border-radius:10px;padding:10px 12px}
-.hour-day-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.hour-day-label{font-weight:700;color:var(--brand-strong);text-transform:capitalize}
-.hour-day-head .input{width:auto;min-width:150px}
+.hour-day-rows{display:flex;flex-direction:column;gap:14px;min-width:0}
+.hour-day-row{background:var(--soft);border-radius:10px;padding:10px 12px;min-width:0}
+.hour-day-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-width:0}
+.hour-day-label{flex:none;font-weight:700;color:var(--brand-strong);text-transform:capitalize}
 .hour-day-row .hour-chips{min-height:30px;align-items:center}
+
+.hour-dd{position:relative;flex:1;min-width:0}
+.hour-dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;cursor:pointer;text-align:left}
+.hour-dd-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-weight:600}
+.hour-dd-btn:hover{background:var(--hover)}
+.hour-dd-arrow{flex:none;color:var(--muted);font-size:.75rem;transition:transform .15s}
+.hour-dd-btn[aria-expanded="true"]{background:var(--brand-soft);border-color:var(--brand-soft)}
+.hour-dd-btn[aria-expanded="true"] .hour-dd-label{color:var(--brand-strong)}
+.hour-dd-btn[aria-expanded="true"] .hour-dd-arrow{transform:rotate(180deg);color:var(--brand-strong)}
+.hour-dd-menu{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;
+  max-height:min(280px,60vh);overflow-y:auto;
+  display:grid;gap:2px;
+  padding:6px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  box-shadow:var(--shadow-pop);
+}
+.hour-dd-opt{
+  display:flex;align-items:center;gap:8px;
+  width:100%;
+  border:none;background:none;
+  border-radius:8px;
+  padding:9px 10px;
+  color:var(--ink);
+  font:inherit;
+  font-variant-numeric:tabular-nums;
+  cursor:pointer;
+  text-align:left;
+}
+.hour-dd-opt:hover{background:var(--hover)}
+.hour-dd-opt.on{background:var(--brand-soft);color:var(--brand-strong);font-weight:700}
+.hour-dd-check{flex:none;width:14px;color:var(--brand);font-weight:700}
 
 .create-bar{
   position:sticky;

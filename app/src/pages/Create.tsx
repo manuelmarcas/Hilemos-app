@@ -60,6 +60,52 @@ function EmojiButton({ field, setValue }: {
   );
 }
 
+// Desplegable de horas de un día: varias elegibles a la vez, sin cerrarse al marcar una.
+function HourDropdown({ day, options, chosen, onToggle }: {
+  day: string; options: string[]; chosen: string[]; onToggle: (h: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); btn.current?.focus(); } };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+
+  const label = chosen.length ? plural(chosen.length, ["hora elegida", "horas elegidas"]) : "Elegir horas…";
+
+  return (
+    <div className="hour-dd" ref={wrap}>
+      <button type="button" ref={btn} className="input hour-dd-btn" aria-haspopup="listbox" aria-expanded={open}
+        aria-label={`Horas del ${D.fmtDayShort(day)}`} onClick={() => setOpen(o => !o)}>
+        <span className="hour-dd-label">{label}</span>
+        <span className="hour-dd-arrow" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="hour-dd-menu" role="listbox" aria-multiselectable="true" aria-label={`Horas del ${D.fmtDayShort(day)}`}>
+          {options.map(h => {
+            const on = chosen.includes(h);
+            return (
+              <button key={h} type="button" role="option" aria-selected={on} className={cls("hour-dd-opt", on && "on")}
+                onClick={() => onToggle(h)}>
+                <span className="hour-dd-check" aria-hidden="true">{on ? "✓" : ""}</span>{h}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Create() {
   const { store, user, library, lastGroup, setLastGroup } = useSession();
   const { toast, openEmoji, closeEmoji } = useUi();
@@ -545,12 +591,8 @@ export function Create() {
                       <div key={d} className="hour-day-row">
                         <div className="hour-day-head">
                           <span className="hour-day-label">{D.cap(D.fmtDayShort(d))}</span>
-                          <select className="input" aria-label={`Añadir hora para ${D.fmtDayShort(d)}`} value=""
-                            disabled={chosen.length >= MAX_HOURS}
-                            onChange={e => addDayHour(d, e.target.value)}>
-                            <option value="">＋ Añadir hora…</option>
-                            {starts.filter(h => !chosen.includes(h)).map(h => <option key={h} value={h}>{h}</option>)}
-                          </select>
+                          <HourDropdown day={d} options={starts} chosen={chosen}
+                            onToggle={h => (chosen.includes(h) ? removeDayHour(d, h) : addDayHour(d, h))} />
                         </div>
                         <div className="hour-chips">
                           {chosen.length
