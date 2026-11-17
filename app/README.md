@@ -41,6 +41,7 @@ src/lib/store.ts           Datos: Firebase o modo demo (misma interfaz)
 src/lib/model.ts           Recuentos, ranking y desempate
 src/lib/dates.ts           Utilidades de fechas
 src/lib/util.ts            Errores, imágenes, grupos y enlaces
+src/lib/resultImage.ts     Tarjeta de resultados en PNG para compartir
 src/lib/theme.ts           Tema claro/oscuro
 src/lib/config.ts          Configuración de Firebase
 ```
@@ -117,6 +118,14 @@ queda alguien aceptado sin ningún voto (sin contarse a él). Monta el mensaje (
 si no existe, en WhatsApp. No hay backend: es un mensaje para pegar en el grupo.
 
 En el modo demo, el correo de cada persona es `<nombre>@demo.test` (p. ej. `ana@demo.test`).
+
+## Compartir el resultado
+
+«Compartir resultado» (en las acciones de la votación, solo cuando ya hay votos) dibuja en un `canvas` una tarjeta
+cuadrada de 1080×1080 con el título, la línea de datos, las tres opciones más votadas —con la ganadora del desempate
+si lo hubo— y el enlace, y la comparte con `navigator.share`; si el navegador no puede compartir ficheros, la
+descarga. Los colores salen de los tokens del tema, así que la tarjeta sale en claro o en oscuro según el que esté
+puesto, y en las anónimas nunca aparecen nombres. Está en `src/lib/resultImage.ts`, sin dependencias nuevas.
 
 ## Eficiencia en Firestore
 
