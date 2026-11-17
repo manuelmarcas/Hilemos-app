@@ -8,6 +8,7 @@ import {
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
 import { cls, errMsg, pollUrl } from "../lib/util";
+import { calendarEvent, downloadIcs, googleCalendarUrl } from "../lib/ics";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
@@ -273,6 +274,12 @@ export function PollPage({ id }: { id: string }) {
     navigate("/");
   });
 
+  // Solo hay fecha para el calendario si no queda empate: la ganadora del desempate o la única más votada.
+  const winner = TB
+    ? (TB.done && TB.leaders.length === 1 ? TB.leaders[0] : null)
+    : (T.leaders.length === 1 ? T.leaders[0].key : null);
+  const cal = winner ? calendarEvent(poll, id, winner, pollUrl(id)) : null;
+
   const boardProps: BoardProps = { poll, T, mine, canVote, onVote: toggle };
   const board = {
     days: <BoardDays {...boardProps} />,
@@ -336,6 +343,14 @@ export function PollPage({ id }: { id: string }) {
         <div className="summary-head">
           <h2>🏆 Opciones más votadas</h2>
           {T.leaders.length > 1 && !TB && isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
+          {cal && (
+            <div className="cal-add">
+              <button className="btn small" onClick={() => downloadIcs(cal)}>
+                <span aria-hidden="true">📅</span> Añadir al calendario
+              </button>
+              <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
+            </div>
+          )}
         </div>
         {T.leaders.length > 1 && !TB && (
           <p className="summary-note">

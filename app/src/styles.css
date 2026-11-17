@@ -1313,6 +1313,7 @@ tr.open td{border-bottom-color:transparent}
 
 /* ---------- Ranking y desempate ---------- */
 .summary-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.cal-add{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
 .summary-note{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45}
 .summary-more{margin:2px 2px 0;font-size:.82rem;color:var(--muted)}
 .tb-badge{font-size:.74rem;font-weight:700;background:var(--tie-soft);color:var(--tie-ink);border-radius:99px;padding:3px 9px;white-space:nowrap}
