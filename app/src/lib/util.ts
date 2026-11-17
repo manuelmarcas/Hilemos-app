@@ -8,6 +8,8 @@ const ERRORS: Record<string, string> = {
   "auth/popup-closed-by-user": "Has cerrado la ventana de Google antes de terminar.",
   "auth/popup-blocked": "El navegador ha bloqueado la ventana de Google. Permite las ventanas emergentes e inténtalo de nuevo.",
   "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication (Configuración > Dominios autorizados).",
+  "auth/operation-not-allowed": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
+  "auth/admin-restricted-operation": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
 };
 
 export const errMsg = (e: unknown) => {

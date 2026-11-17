@@ -9,6 +9,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Entró sin cuenta (sesión anónima): solo puede participar en votaciones abiertas, no crearlas.
+    function anon() {
+      return request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
     function pollData(pollId) {
       return get(/databases/$(database)/documents/polls/$(pollId)).data;
     }
@@ -16,8 +21,8 @@ service cloud.firestore {
     // ---------- Votación original de Navidad (index.html del repo "votaciones") ----------
     // Se mantiene para no romperla. Si tus reglas actuales de /votes son distintas, conserva las tuyas.
     match /votes/{uid} {
-      allow read: if signedIn();
-      allow write: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && !anon();
+      allow write: if signedIn() && !anon() && request.auth.uid == uid;
     }
 
     // ---------- Votaciones ----------
@@ -34,6 +39,7 @@ service cloud.firestore {
       allow read: if signedIn();
 
       allow create: if signedIn()
+        && !anon()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
@@ -140,15 +146,16 @@ service cloud.firestore {
           && countedJoin();
 
         // Quién puede entrar: el creador siempre; si es privada, solo los correos permitidos (cuenta verificada);
-        // si es con aprobación, se entra como pendiente.
+        // si es con aprobación, se entra como pendiente; sin cuenta, solo en las abiertas.
         function canJoin() {
           let p = pollData(pollId);
           let d = request.resource.data;
           return (p.ownerUid == request.auth.uid && !('status' in d))
-            || ((!p.get('emailsOnly', false)
-                 || (request.auth.token.email_verified == true
-                     && request.auth.token.email.lower()
-                        in get(/databases/$(database)/documents/polls/$(pollId)/private/access).data.emails))
+            || ((!anon() || !(p.get('approval', false) || p.get('emailsOnly', false)))
+                && (!p.get('emailsOnly', false)
+                    || (request.auth.token.email_verified == true
+                        && request.auth.token.email.lower()
+                           in get(/databases/$(database)/documents/polls/$(pollId)/private/access).data.emails))
                 && (p.get('approval', false) ? d.get('status', null) == 'pending' : !('status' in d)));
         }
 

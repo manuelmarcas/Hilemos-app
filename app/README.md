@@ -152,6 +152,23 @@ fuera de la app.
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
+## Votar sin cuenta
+
+Quien abre el enlace de una votación **abierta** puede votar sin registrarse: en la pantalla de entrada escribe su
+nombre y pulsa «Entrar sin cuenta» (sesión anónima de Firebase, `signInAnonymously`). El nombre se guarda en la
+sesión y en su perfil, así que aguanta una recarga. Requiere activar el método **Anónimo** en Firebase
+Authentication; si no está activado, la pantalla lo dice.
+
+- La sesión anónima vive en ese navegador: si borra los datos o cambia de dispositivo, pierde su lista de
+  votaciones y ya no puede cambiar su voto (seguirá contado, con su nombre). Si la votación tiene tope, su plaza
+  sigue ocupada.
+- En «Tu perfil → Tu cuenta» puede pasar la sesión a su cuenta de Google (`linkWithPopup`): conserva el uid, así
+  que no pierde votos ni votaciones. Si esa cuenta ya se usó en la app, Firebase lo rechaza y la app lo explica.
+- Las votaciones **con aprobación** y **solo estos correos** siguen necesitando Google: el creador tiene que poder
+  identificar a cada persona. Las reglas lo impiden (`anon()`) y la app lo explica en vez de dar un error.
+- Quien entra sin cuenta **no puede crear** votaciones (también por reglas): serían de una sesión que puede
+  desaparecer.
+
 ## Eficiencia en Firestore
 
 Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado

@@ -31,8 +31,17 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   });
   const provider = new A.GoogleAuthProvider();
 
+  // Nombre elegido al entrar sin cuenta: el perfil se guarda en cuanto hay sesión, pero la sesión
+  // se anuncia antes de que la escritura termine, así que de momento el nombre sale de aquí.
+  let anonName = "";
   const toUser = (u: import("firebase/auth").User | null): AuthUser | null =>
-    u && { uid: u.uid, name: u.displayName || "Alguien", photo: u.photoURL || "", email: (u.email || "").toLowerCase() };
+    u && {
+      uid: u.uid,
+      name: u.displayName || (u.isAnonymous && anonName) || "Alguien",
+      photo: u.photoURL || "",
+      email: (u.email || "").toLowerCase(),
+      anon: u.isAnonymous,
+    };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
@@ -49,7 +58,22 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   return {
     mode: "firebase",
     onAuth: cb => A.onAuthStateChanged(auth, u => cb(toUser(u))),
-    signIn: () => A.signInWithPopup(auth, provider),
+    async signIn(opts) {
+      if (!opts?.anonymous) return A.signInWithPopup(auth, provider);
+      const name = (opts.name || "").trim() || "Alguien";
+      anonName = name;
+      const cred = await A.signInAnonymously(auth);
+      // El nombre va en la sesión y, para que aguante una recarga, también en el perfil (si falla, no importa:
+      // la sesión ya lo lleva).
+      await A.updateProfile(cred.user, { displayName: name });
+      F.setDoc(F.doc(db, "users", cred.user.uid), { name, updatedAt: Date.now() }, { merge: true }).catch(() => {});
+    },
+    async linkGoogle() {
+      const u = auth.currentUser;
+      if (!u) throw new Error("No hay ninguna sesión abierta.");
+      await A.linkWithPopup(u, provider);
+      await u.reload();
+    },
     signOut: () => A.signOut(auth),
 
     // ----- Votaciones -----
@@ -207,6 +231,7 @@ export function createDemoStore(): Store {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "anon";
   // Sesiones demo guardadas antes de existir el correo.
   if (user && !user.email) user = { ...user, email: slug(user.name) + "@demo.test" };
+  if (user) user = { ...user, anon: false };
 
   return {
     mode: "demo",
@@ -218,8 +243,10 @@ export function createDemoStore(): Store {
     async signIn(opts) {
       const name = opts?.name || "Alguien";
       // En el modo demo el correo de cada persona es "<nombre>@demo.test" (para probar las votaciones privadas).
-      setUser({ uid: "demo-" + slug(name), name, photo: "", email: slug(name) + "@demo.test" });
+      setUser({ uid: "demo-" + slug(name), name, photo: "", email: slug(name) + "@demo.test", anon: false });
     },
+    // El modo demo no tiene cuentas: su entrada con un nombre ya es la sesión completa.
+    async linkGoogle() { throw fail("unavailable"); },
     async signOut() { setUser(null); },
 
     async createPoll(data, access) {
