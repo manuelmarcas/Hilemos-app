@@ -9,6 +9,7 @@ import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
 import { SwipeRow } from "../components/SwipeRow";
 import { useListActions } from "../state/listActions";
+import { useDuplicate } from "../state/duplicate";
 
 type Entry = LibraryEntry & { id: string };
 type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
@@ -17,6 +18,7 @@ export function Home() {
   const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
   const { toast, confirm, share } = useUi();
   const { setArchived, remove } = useListActions();
+  const duplicate = useDuplicate();
   const lib = library.data;
   // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
   const [cache, setCache] = useState<Record<string, Poll | null>>(() => Object.fromEntries(pollCache));
@@ -152,6 +154,7 @@ export function Home() {
             {!gone && (
               <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}>🔗 Compartir</button>
             )}
+            {p && <button className="btn small" onClick={() => { setExpanded(null); duplicate(p); }}>📋 Duplicar</button>}
             <button className="btn small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? "📤 Desarchivar" : "📦 Archivar"}
             </button>

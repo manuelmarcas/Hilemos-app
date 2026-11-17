@@ -12,11 +12,13 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { groupToDrop } from "../state/listActions";
+import { useDuplicate } from "../state/duplicate";
 import { Avatar } from "../components/Avatar";
 
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
+  const duplicate = useDuplicate();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [pollLoaded, setPollLoaded] = useState(false);
   const [votes, setVotes] = useState<Votes>({});
@@ -299,6 +301,7 @@ export function PollPage({ id }: { id: string }) {
             {isOwner && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
                 onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={remove}
+                onDuplicate={() => duplicate(poll)}
                 onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
             )}
           </div>
@@ -366,9 +369,9 @@ export function PollPage({ id }: { id: string }) {
 
 // ---------- Menú ⋯ del creador: cerrar/reabrir, hacer anónima y eliminar ----------
 
-function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onAccess }: {
+function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDuplicate, onAccess }: {
   closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
-  onAccess?: () => void;
+  onDuplicate: () => void; onAccess?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -416,6 +419,9 @@ function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onAcc
               <span aria-hidden="true">🕶️</span>Hacer anónima
             </button>
           )}
+          <button role="menuitem" className="pm-item" onClick={pick(onDuplicate)}>
+            <span aria-hidden="true">📋</span>Duplicar votación
+          </button>
           <div className="pm-sep" role="separator" />
           <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
             <span aria-hidden="true">🗑️</span>Eliminar votación

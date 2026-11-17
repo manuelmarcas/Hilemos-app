@@ -7,6 +7,7 @@ import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
+import { takeTemplate } from "../state/duplicate";
 import { GroupSelect } from "../components/GroupSelect";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
@@ -112,27 +113,32 @@ export function Create() {
   const now = useRef(new Date()).current;
   const groups = library.data?.groups || null;
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState<PollType>("days");
-  const [year, setYear] = useState(now.getFullYear());
-  const [months, setMonths] = useState<Set<string>>(() => new Set());
-  const [days, setDays] = useState<Set<string>>(() => new Set());   // para "days" y "hours"
-  const [weeks, setWeeks] = useState<Set<string>>(() => new Set()); // lunes de cada semana
-  const [count, setCount] = useState(1);
-  const [opts, setOpts] = useState<Opt[]>(() =>
-    applyPresets(Array.from({ length: MAX_OPTIONS }, () => ({ name: "", icon: "", touched: false })), 1));
-  const [from, setFrom] = useState("09:00");
-  const [to, setTo] = useState("21:00");
-  const [step, setStep] = useState(60);
-  const [hourMode, setHourMode] = useState<"range" | "list">("range");
-  const [hoursByDay, setHoursByDay] = useState<Record<string, string[]>>({}); // horas sueltas, por día
-  const [groupId, setGroupId] = useState(lastGroup || "");
+  const [tpl] = useState(takeTemplate); // datos de la votación que se está duplicando (o null)
+
+  const [title, setTitle] = useState(tpl?.title || "");
+  const [description, setDescription] = useState(tpl?.description || "");
+  const [type, setType] = useState<PollType>(tpl?.type || "days");
+  const [year, setYear] = useState(Math.max(now.getFullYear(), Number(tpl?.months[0]?.slice(0, 4)) || 0));
+  const [months, setMonths] = useState<Set<string>>(() => new Set(tpl?.months));
+  const [days, setDays] = useState<Set<string>>(() => new Set(tpl?.days));   // para "days" y "hours"
+  const [weeks, setWeeks] = useState<Set<string>>(() => new Set(tpl?.weeks)); // lunes de cada semana
+  const [count, setCount] = useState(tpl?.count || 1);
+  const [opts, setOpts] = useState<Opt[]>(() => applyPresets(
+    Array.from({ length: MAX_OPTIONS }, (_, i) => {
+      const o = tpl?.opts[i];
+      return { name: o?.name || "", icon: o?.icon || "", touched: !!o?.icon };
+    }), tpl?.count || 1));
+  const [from, setFrom] = useState(tpl?.from || "09:00");
+  const [to, setTo] = useState(tpl?.to || "21:00");
+  const [step, setStep] = useState(tpl?.step || 60);
+  const [hourMode, setHourMode] = useState<"range" | "list">(tpl?.hourMode || "range");
+  const [hoursByDay, setHoursByDay] = useState<Record<string, string[]>>(tpl?.hoursByDay || {}); // horas sueltas, por día
+  const [groupId, setGroupId] = useState(tpl?.groupId || lastGroup || "");
   const [newGroup, setNewGroup] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
-  const [access, setAccess] = useState<"open" | "approval" | "emails">("open");
-  const [emailsText, setEmailsText] = useState("");
-  const [maxText, setMaxText] = useState(""); // vacío = el tope general (MAX_PEOPLE)
+  const [anonymous, setAnonymous] = useState(!!tpl?.anonymous);
+  const [access, setAccess] = useState<"open" | "approval" | "emails">(tpl?.access || "open");
+  const [emailsText, setEmailsText] = useState(tpl?.emailsText || "");
+  const [maxText, setMaxText] = useState(tpl?.maxText || ""); // vacío = el tope general (MAX_PEOPLE)
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const last = useRef<string | null>(null); // última casilla pulsada (para rangos con Mayús)
