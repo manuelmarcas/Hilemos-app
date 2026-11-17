@@ -26,7 +26,7 @@ export function calendarEvent(poll: PollData, id: string, unit: string, url: str
   const { slot, optId } = unitParts(unit);
   const opt = pollOptions(poll).find(o => o.id === optId);
   const name = poll.type === "days" && opt?.name ? `${opt.icon} ${opt.name}`.trim() : "";
-  const title = name ? `${poll.title} · ${name}` : poll.title;
+  const title = name ? `${poll.title} - ${name}` : poll.title;
   const uid = `${id}-${slot.replace(/[^0-9A-Za-z]/g, "")}@${location.host || "votaciones"}`;
   const base = { uid, title, description: `Votación: ${url}` };
 
