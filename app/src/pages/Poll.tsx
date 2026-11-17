@@ -13,6 +13,7 @@ import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { groupToDrop } from "../state/listActions";
 import { Avatar } from "../components/Avatar";
+import { RemindMissing } from "../components/RemindMissing";
 
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
@@ -349,7 +350,10 @@ export function PollPage({ id }: { id: string }) {
         </div>
       </section>
       <section className="results">
-        <h2>👥 Participantes <span className="muted">({T.people.length})</span></h2>
+        <div className="summary-head">
+          <h2>👥 Participantes <span className="muted">({T.people.length})</span></h2>
+          {isOwner && <RemindMissing poll={poll} T={T} me={user.uid} url={pollUrl(id)} />}
+        </div>
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
         <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>

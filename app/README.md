@@ -103,6 +103,11 @@ recuentos, ranking ni tabla.
 **Participantes**: desde 10 (`PEOPLE_FILTER_FROM`) aparecen un buscador (sin tener en cuenta tildes) y los filtros
 «Todos · Han votado · Sin votar», y la tabla muestra 10 filas con «Ver los N».
 
+**Avisar a quien falta**: junto al título de «Participantes», el creador tiene «📣 Avisar a quien falta» cuando
+queda alguien aceptado sin ningún voto (sin contarse a él). Monta el mensaje («Faltan Ana y Carlos por votar en
+«…»» + enlace; en las anónimas, solo cuántos faltan, sin nombres) y lo abre en el menú de compartir del móvil o,
+si no existe, en WhatsApp. No hay backend: es un mensaje para pegar en el grupo.
+
 En el modo demo, el correo de cada persona es `<nombre>@demo.test` (p. ej. `ana@demo.test`).
 
 ## Eficiencia en Firestore
