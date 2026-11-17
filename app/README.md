@@ -78,6 +78,14 @@ Al crear una votación de horas se alterna entre dos modos:
 En «Opciones de cada día», los nombres sugeridos (Comida, Cena…) son solo un ejemplo en el campo (placeholder):
 hay que escribir el nombre. El icono sí se propone, y se puede cambiar.
 
+## Añadir al calendario
+
+Cuando no hay empate en el primer puesto (o ya ha ganado una opción en el desempate), en «Opciones más votadas»
+aparecen «Añadir al calendario», que descarga un `.ics`, y un enlace a Google Calendar. El evento lo monta
+`src/lib/ics.ts` sin dependencias: dura lo que la franja (`hourStep`), una hora en las horas sueltas, y ocupa el
+día, la semana o el mes completos en los demás tipos. Las horas van sin zona horaria (*flotantes*), igual que las
+guarda la app: las 21:00 votadas son las 21:00 de quien abre el evento.
+
 ## Quién puede unirse
 
 Al crear una votación se elige el acceso (no se puede cambiar después) y, opcionalmente, un máximo de personas:
