@@ -8,6 +8,7 @@ import {
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
 import { cls, errMsg, pollUrl } from "../lib/util";
+import { shareResultCard } from "../lib/resultImage";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
@@ -307,6 +308,13 @@ export function PollPage({ id }: { id: string }) {
             <button className="btn primary" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
               <span aria-hidden="true">🔗</span> Compartir
             </button>
+            {T.top.length > 0 && (
+              <button className="btn" onClick={() => act(async () => {
+                if (await shareResultCard(poll, T, TB) === "downloaded") toast("Imagen del resultado descargada");
+              })}>
+                <span aria-hidden="true">🖼️</span> Compartir resultado
+              </button>
+            )}
           </div>
         </div>
       </div>
