@@ -60,12 +60,13 @@ service cloud.firestore {
 
       // El creador solo puede cerrar/reabrir, cambiar título o descripción, actualizar su nombre visible,
       // hacerla anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate,
-      // el tope de personas y el contador (al aceptar o rechazar solicitudes).
+      // el plazo para votar, el tope de personas y el contador (al aceptar o rechazar solicitudes).
       function ownerUpdate() {
         let d = request.resource.data;
         let keys = d.diff(resource.data).affectedKeys();
         return resource.data.ownerUid == request.auth.uid
-          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members'])
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline'])
+          && (!keys.hasAny(['deadline']) || (d.deadline is int && d.deadline >= 0))
           && (!keys.hasAny(['anonymous']) || d.anonymous == true)
           && (!keys.hasAny(['tiebreak'])
               || d.tiebreak == null

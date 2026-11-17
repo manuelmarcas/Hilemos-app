@@ -136,6 +136,22 @@ si lo hubo— y el enlace, y la comparte con `navigator.share`; si el navegador 
 descarga. Los colores salen de los tokens del tema, así que la tarjeta sale en claro o en oscuro según el que esté
 puesto, y en las anónimas nunca aparecen nombres. Está en `src/lib/resultImage.ts`, sin dependencias nuevas.
 
+## Plazo para votar
+
+Al crear una votación se puede poner un plazo opcional (paso «¿Hasta cuándo se vota?»): día y, si se quiere, hora.
+Se guarda en `deadline` (milisegundos); sin hora, el plazo acaba con ese día (23:59). Mientras queda plazo, la
+votación muestra la pastilla «⏳ Se cierra el …»; al pasar, se comporta como cerrada (mismo aviso y mismas casillas
+bloqueadas) aunque `closed` siga a false, y el creador puede cerrarla de verdad desde ⋯ o pulsar «Quitar el plazo»
+para que se pueda volver a votar (`deadline: 0`). Reabrir una votación cerrada quita también un plazo ya pasado,
+para que no quede abierta y sin poder votar.
+
+*Ojo*: igual que el anonimato, el plazo lo hace cumplir **la app, no el servidor**. No hay Cloud Functions y las
+reglas de Firestore no comprueban `deadline`, así que solo las reglas de `closed` impiden escribir votos desde
+fuera de la app.
+
+En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
+permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
+
 ## Eficiencia en Firestore
 
 Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado

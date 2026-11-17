@@ -43,6 +43,16 @@ export const acceptedVotes = (votes: Votes): Votes =>
 export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 export const isFull = (p: PollData) => hasLimit(p) && (p.members || 0) >= (p.maxPeople as number);
 
+// ----- Plazo para votar -----
+/** Tiene plazo y ya ha pasado: no se admiten votos aunque `closed` siga false. */
+export const deadlinePassed = (p: PollData, now = Date.now()) => !!p.deadline && now >= p.deadline;
+/** «mié 23 dic», con la hora solo si el plazo no acaba con el día. */
+export function fmtDeadline(ts: number) {
+  const dt = new Date(ts);
+  const day = D.fmtDayShort(D.keyOfDate(dt));
+  return dt.getHours() === 23 && dt.getMinutes() === 59 ? day : `${day}, ${D.pad(dt.getHours())}:${D.pad(dt.getMinutes())}`;
+}
+
 const EMAIL = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
 /** Lee una lista de correos separados por comas, espacios, punto y coma o saltos de línea. */
 export function parseEmails(text: string): { emails: string[]; invalid: string[] } {

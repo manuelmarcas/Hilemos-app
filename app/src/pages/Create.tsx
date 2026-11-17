@@ -1,7 +1,7 @@
 // Pantalla "Nueva votación".
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
-import { TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, parseEmails, plural } from "../lib/model";
+import { TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, parseEmails, plural, fmtDeadline } from "../lib/model";
 import type { PollAccess, PollData, PollType } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
@@ -136,6 +136,8 @@ export function Create() {
   const [groupId, setGroupId] = useState(tpl?.groupId || lastGroup || "");
   const [newGroup, setNewGroup] = useState("");
   const [anonymous, setAnonymous] = useState(!!tpl?.anonymous);
+  const [deadlineDay, setDeadlineDay] = useState("");   // "YYYY-MM-DD"; vacío = sin plazo. Una copia no hereda el plazo.
+  const [deadlineTime, setDeadlineTime] = useState(""); // vacío = hasta el final de ese día
   const [access, setAccess] = useState<"open" | "approval" | "emails">(tpl?.access || "open");
   const [emailsText, setEmailsText] = useState(tpl?.emailsText || "");
   const [maxText, setMaxText] = useState(tpl?.maxText || ""); // vacío = el tope general (MAX_PEOPLE)
@@ -265,9 +267,20 @@ export function Create() {
       if (!parsed.emails.length) return ["Escribe al menos un correo que pueda entrar.", "#f-emails"];
       if (parsed.emails.length > MAX_EMAILS) return [`Como mucho ${MAX_EMAILS} correos.`, "#f-emails"];
     }
+    if (deadlineDay && (deadlineTs === null || deadlineTs <= Date.now())) return ["El plazo para votar tiene que ser posterior a ahora.", "#f-deadline"];
     if (maxText.trim() && maxPeople === null) return [`El máximo de personas debe ser un número entre 2 y ${MAX_PEOPLE}.`, "#f-max"];
     return null;
   }
+
+  // Plazo para votar: el final del día elegido si no se pone hora (null = sin plazo o día no válido).
+  const deadlineTs = (() => {
+    if (!deadlineDay) return null;
+    const dt = D.parseDay(deadlineDay);
+    if (Number.isNaN(dt.getTime())) return null;
+    const [h, m] = deadlineTime ? deadlineTime.split(":").map(Number) : [23, 59];
+    dt.setHours(h, m, 0, 0);
+    return dt.getTime();
+  })();
 
   // Quién puede unirse: correos leídos del texto y tope de personas (null = vacío o no válido).
   const parsed = parseEmails(emailsText);
@@ -308,6 +321,7 @@ export function Create() {
         ? opts.slice(0, count).map((o, i) => ({ id: `o${i + 1}`, name: o.name.trim(), icon: o.icon }))
         : [],
       anonymous,
+      ...(deadlineTs ? { deadline: deadlineTs } : {}),
       maxPeople: maxPeople ?? MAX_PEOPLE,
       members: 0,
       approval: access === "approval",
@@ -346,6 +360,7 @@ export function Create() {
     opts: type === "days",
     hours: type === "hours",
     privacy: true,
+    deadline: true,
     access: true,
   };
   const numbers: Partial<Record<keyof typeof visible, number>> = {};
@@ -373,6 +388,7 @@ export function Create() {
     ? plural(listHoursCount, ["hora", "horas"]) + " en total"
     : plural(hourSlots.length, ["franja", "franjas"]) + " por día");
   summaryParts.push(anonymous ? "anónima" : "votos visibles");
+  if (deadlineTs) summaryParts.push(`hasta el ${fmtDeadline(deadlineTs)}`);
   if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
   if (access === "approval") summaryParts.push("con aprobación");
   summaryParts.push(`máx. ${maxPeople ?? MAX_PEOPLE} personas`);
@@ -643,6 +659,30 @@ export function Create() {
             {typeCard(!anonymous, "👁️", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
             {typeCard(anonymous, "🕶️", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
           </div>
+        </section>
+
+        <section className="step" id="sec-deadline">
+          <h2><span className="num">{numbers.deadline}</span>¿Hasta cuándo se vota?</h2>
+          <p className="hint">
+            Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
+            plazo. Si lo dejas vacío, sigue abierta hasta que la cierres.
+          </p>
+          <div className="deadline-form" id="s-deadline">
+            <label htmlFor="f-deadline">Último día
+              <input id="f-deadline" className="input" type="date" min={today} value={deadlineDay}
+                onChange={e => setDeadlineDay(e.target.value)} />
+            </label>
+            <label htmlFor="f-deadline-time">Hora <span className="muted">(opcional)</span>
+              <input id="f-deadline-time" className="input" type="time" step={300} value={deadlineTime}
+                disabled={!deadlineDay} onChange={e => setDeadlineTime(e.target.value)} />
+            </label>
+            {deadlineDay && (
+              <button type="button" className="link-btn" onClick={() => { setDeadlineDay(""); setDeadlineTime(""); }}>
+                Quitar el plazo
+              </button>
+            )}
+          </div>
+          {!!deadlineTs && <p className="hint hint-after">Se podrá votar hasta el {fmtDeadline(deadlineTs)}.</p>}
         </section>
 
         <section className="step" id="sec-access">
