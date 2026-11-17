@@ -39,6 +39,11 @@ export interface PollData {
   ownerName?: string;
   createdAt?: number;
   closed?: boolean;
+  /**
+   * Plazo para votar, en milisegundos (`Date.now()`). Pasado el plazo, la app no admite votos aunque `closed`
+   * siga false. 0 o sin campo: sin plazo. Lo hace cumplir la interfaz, no las reglas de Firestore.
+   */
+  deadline?: number;
   // ----- Quién puede unirse (votaciones creadas desde que existe esta opción) -----
   /** Tope de personas, contando al creador (como mucho MAX_PEOPLE). Si falta, la votación es antigua y no tiene tope. */
   maxPeople?: number;

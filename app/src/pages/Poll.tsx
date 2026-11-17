@@ -4,6 +4,7 @@ import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
   MAX_PEOPLE, MAX_EMAILS, PEOPLE_FILTER_FROM, isRestricted, memberStatus, acceptedVotes, hasLimit, isFull, parseEmails,
+  deadlinePassed, fmtDeadline,
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
@@ -61,6 +62,16 @@ export function PollPage({ id }: { id: string }) {
     if (blocked === "full" && poll && !isFull(poll)) { joined.current = false; setBlocked(""); }
   }, [blocked, poll]);
   const retryJoin = () => { joined.current = false; setBlocked(""); };
+
+  // El plazo tiene que cumplirse con la página abierta, así que se repinta al llegar la hora (si es hoy).
+  const deadline = poll?.deadline || 0;
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const ms = deadline - Date.now();
+    if (ms <= 0 || ms > 86400000) return;
+    const t = window.setTimeout(() => tick(n => n + 1), ms + 500);
+    return () => clearTimeout(t);
+  }, [deadline]);
 
   // Al entrar: el usuario queda como participante y la votación pasa a su colección.
   useEffect(() => {
@@ -144,7 +155,8 @@ export function PollPage({ id }: { id: string }) {
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
-  const canVote = !poll.closed;
+  const expired = deadlinePassed(poll);
+  const canVote = !poll.closed && !expired;
 
   // Cambia el voto propio al momento y lo guarda; si falla, se deshace.
   async function optimistic(patch: Vote, save: () => Promise<void>, errPrefix: string) {
@@ -160,7 +172,7 @@ export function PollPage({ id }: { id: string }) {
   }
 
   function toggle(u: string) {
-    if (!poll || poll.closed) return;
+    if (!canVote) return;
     const picks = new Set((votes[user.uid]?.picks || []).filter(p => T.valid.has(p)));
     picks.has(u) ? picks.delete(u) : picks.add(u);
     const data = { name: user.name, photo: user.thumb, picks: [...picks].sort(), updatedAt: Date.now() };
@@ -198,8 +210,19 @@ export function PollPage({ id }: { id: string }) {
       confirmLabel: "Reabrir y anular desempate",
       danger: true,
     }))) return;
-    await store.updatePoll(id, poll.closed ? { closed: false, tiebreak: null } : { closed: true });
+    // Al reabrir se quita un plazo ya pasado: si no, la votación quedaría abierta pero sin poder votar.
+    await store.updatePoll(id, poll.closed ? { closed: false, tiebreak: null, ...(expired ? { deadline: 0 } : {}) } : { closed: true });
     toast(poll.closed ? "Votación reabierta" : "Votación cerrada");
+  });
+
+  const clearDeadline = () => act(async () => {
+    if (!(await confirm({
+      title: "¿Quitar el plazo?",
+      message: "Se podrá volver a votar y la votación seguirá abierta hasta que la cierres tú.",
+      confirmLabel: "Quitar el plazo",
+    }))) return;
+    await store.updatePoll(id, { deadline: 0 });
+    toast("Plazo quitado: se puede volver a votar");
   });
 
   const tbStart = () => act(async () => {
@@ -293,6 +316,7 @@ export function PollPage({ id }: { id: string }) {
             <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>
             {poll.emailsOnly && <span className="mode-pill anon">✉️ Solo invitados</span>}
             {poll.approval && <span className="mode-pill anon">✋ Con aprobación</span>}
+            {!!poll.deadline && !expired && !poll.closed && <span className="mode-pill">⏳ Se cierra el {fmtDeadline(poll.deadline)}</span>}
           </div>
           <div className="title-row">
             <h1>{poll.title}</h1>
@@ -317,8 +341,14 @@ export function PollPage({ id }: { id: string }) {
           🔒 Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
         </div>
       )}
+      {!poll.closed && expired && (
+        <div className="closed-banner">
+          ⏳ Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.
+          {isOwner && <> <button className="link-btn" onClick={clearDeadline}>Quitar el plazo</button></>}
+        </div>
+      )}
       <div className="poll-info">
-        {!poll.closed && <p className="poll-sub">{instructions(poll, T)}</p>}
+        {canVote && <p className="poll-sub">{instructions(poll, T)}</p>}
         <p className="poll-note">
           {pollRange(poll)} {poll.anonymous
             ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."
