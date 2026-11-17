@@ -65,6 +65,15 @@ src/lib/config.ts          Configuración de Firebase
 - Las acciones se aplican al momento y muestran un aviso con **cuenta atrás de 5 s y «Deshacer»**, que las revierte
   (incluido el grupo borrado). Así no se pierden si se cierra la app durante la cuenta atrás.
 
+## Duplicar una votación
+
+- **📋 Duplicar** abre «Nueva votación» con todo copiado y sin votos: nombre con «(copia)», descripción, tipo,
+  meses, días o semanas, opciones con sus iconos, configuración de horas, privacidad, acceso, tope de personas y
+  grupo. Las fechas ya pasadas se descartan, así que solo hay que elegir las nuevas. Está en el botón ⋯ de cada
+  votación de «Mis votaciones» y, para el creador, también en el menú ⋯ de la votación.
+- La plantilla viaja en memoria (`src/state/duplicate.ts`) y solo vale para esa navegación: si se recarga la página,
+  «Nueva votación» sale en blanco en vez de con una copia vieja.
+
 ## Votaciones de horas
 
 Al crear una votación de horas se alterna entre dos modos:
