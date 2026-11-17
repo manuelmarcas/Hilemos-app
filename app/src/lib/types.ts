@@ -112,6 +112,8 @@ export interface AuthUser {
   photo: string;
   /** Correo de la cuenta (en minúsculas), para las votaciones solo con correos permitidos. */
   email: string;
+  /** Ha entrado sin cuenta (sesión anónima): solo puede votar en las votaciones abiertas. */
+  anon: boolean;
 }
 
 /** Usuario de la app: datos de sesión + perfil elegido por él. */
@@ -134,7 +136,10 @@ export type ErrorCb = (e: unknown) => void;
 export interface Store {
   mode: "firebase" | "demo";
   onAuth(cb: (u: AuthUser | null) => void): Unsubscribe;
-  signIn(opts?: { name: string }): Promise<unknown>;
+  /** `anonymous`: entra sin cuenta con el nombre dado; `name`: nombre del modo demo. */
+  signIn(opts?: { name?: string; anonymous?: boolean }): Promise<unknown>;
+  /** Convierte una sesión sin cuenta en cuenta de Google conservando el uid (y con él los votos). */
+  linkGoogle(): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */

@@ -28,7 +28,7 @@ export function PollPage({ id }: { id: string }) {
   // Votaciones restringidas: quien no está aceptado solo puede leer su propio voto.
   const [myVote, setMyVote] = useState<Vote | null>(null);
   const [myLoaded, setMyLoaded] = useState(false);
-  const [blocked, setBlocked] = useState<"" | "full" | "noaccess">("");
+  const [blocked, setBlocked] = useState<"" | "full" | "noaccess" | "needsaccount">("");
   const [accessOpen, setAccessOpen] = useState(false);
   // Buscador y filtro de la tabla de participantes (cuando hay muchos).
   const [peopleQuery, setPeopleQuery] = useState("");
@@ -104,7 +104,8 @@ export function PollPage({ id }: { id: string }) {
         .then(addToMenu)
         .catch(e => {
           if ((e as { code?: string })?.code === "permission-denied" && !isOwner) {
-            setBlocked(poll.emailsOnly ? "noaccess" : "full");
+            // Sin cuenta solo se puede votar en las abiertas: las restringidas necesitan Google.
+            setBlocked(user.anon && isRestricted(poll) ? "needsaccount" : poll.emailsOnly ? "noaccess" : "full");
           } else {
             setStatus("No se pudo registrar tu participación. " + errMsg(e));
           }
@@ -845,9 +846,37 @@ function WaitingView({ poll, status }: { poll: Poll; status: MemberStatus }) {
   </>;
 }
 
-/** No se puede entrar: votación privada sin invitación o completa. */
-function BlockedView({ poll, kind, email, onRetry }: { poll: Poll; kind: "full" | "noaccess"; email: string; onRetry: () => void }) {
+/** No se puede entrar: votación privada sin invitación, completa, o restringida y sin cuenta. */
+function BlockedView({ poll, kind, email, onRetry }: {
+  poll: Poll; kind: "full" | "noaccess" | "needsaccount"; email: string; onRetry: () => void;
+}) {
+  const { store } = useSession();
   const owner = poll.ownerName || "quien la creó";
+  const [status, setStatus] = useState("");
+
+  const login = async () => {
+    setStatus("");
+    try { await store.signIn(); }
+    catch (e) { setStatus("No se pudo iniciar sesión. " + errMsg(e)); }
+  };
+
+  if (kind === "needsaccount") {
+    return <>
+      <AccessHead poll={poll} />
+      <div className="gate-note blocked" role="status">
+        <h2>🔑 Hace falta una cuenta</h2>
+        <p>
+          {poll.emailsOnly
+            ? `${owner} ha limitado esta votación a unos correos concretos, así que hay que entrar con Google para comprobar el tuyo.`
+            : `${owner} tiene que aceptar a cada participante, así que hay que entrar con Google para que sepa quién eres.`}
+        </p>
+        <button type="button" className="btn primary gate-retry" onClick={login}>Entrar con Google</button>
+        <div className="status" role="alert">{status}</div>
+      </div>
+      <p><a href="#/">← Volver a mis votaciones</a></p>
+    </>;
+  }
+
   return <>
     <AccessHead poll={poll} />
     <div className="gate-note blocked" role="status">

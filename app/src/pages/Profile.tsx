@@ -20,8 +20,26 @@ export function Profile() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [theme, setTheme] = useState(getThemePref);
+  const [linking, setLinking] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+
+  // Guardar la sesión sin cuenta en una cuenta de Google: conserva el uid, así que mantiene votos y votaciones.
+  async function linkGoogle() {
+    if (linking) return;
+    setLinking(true);
+    setStatus("");
+    try {
+      await store.linkGoogle();
+      location.reload();
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      setStatus(code === "auth/credential-already-in-use"
+        ? "Esa cuenta de Google ya se ha usado aquí. Sal y entra con ella: en esa cuenta están sus propias votaciones, y las de ahora se quedarán en este dispositivo."
+        : "No se pudo guardar tu cuenta. " + errMsg(e));
+      setLinking(false);
+    }
+  }
 
   async function save() {
     if (busy) return;
@@ -98,6 +116,19 @@ export function Profile() {
           <button className="btn primary big" id="pf-save" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
           <div className="status" id="pf-status" role="alert">{status}</div>
         </div>
+        {user.anon && store.mode === "firebase" && (
+          <section className="step" id="pf-account">
+            <h2>Tu cuenta</h2>
+            <p className="hint">
+              Has entrado sin cuenta, así que tus votaciones y tus votos viven solo en este dispositivo: si borras los
+              datos del navegador o cambias de móvil, los pierdes. Guárdalos en tu cuenta de Google y los tendrás en
+              cualquier sitio, sin perder nada de lo que ya has votado.
+            </p>
+            <button className="btn" id="pf-link" disabled={linking} onClick={linkGoogle}>
+              {linking ? "Guardando…" : "Guardar en mi cuenta de Google"}
+            </button>
+          </section>
+        )}
         <section className="step" id="pf-prefs">
           <h2>Preferencias</h2>
           <h3 className="pref-label" id="pf-theme-label">Tema</h3>

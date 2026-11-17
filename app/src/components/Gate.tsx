@@ -17,6 +17,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   const path = useHashPath();
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
   const invited = path.startsWith("/v/");
 
   const login = async () => {
@@ -31,6 +32,19 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     if (n) await store.signIn({ name: n });
   };
 
+  const anonLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    const n = name.trim();
+    if (!n || busy) return;
+    setBusy(true);
+    setStatus("");
+    try { await store.signIn({ name: n, anonymous: true }); }
+    catch (err) {
+      setStatus("No se pudo entrar sin cuenta. " + errMsg(err));
+      setBusy(false);
+    }
+  };
+
   return (
     <div id="gate">
       <div className="gate-card">
@@ -38,7 +52,9 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
         <h1>Votaciones</h1>
         <p id="gate-text">
           {invited
-            ? "Te han invitado a una votación. Inicia sesión para ver el calendario y votar; se guardará en tu menú."
+            ? demo
+              ? "Te han invitado a una votación. Entra para ver el calendario y votar; se guardará en tu menú."
+              : "Te han invitado a una votación. Entra con Google y se guardará en tu menú, o vota sin cuenta en un momento."
             : "Crea votaciones de horas, días, semanas o meses, compártelas con tu grupo y mira los resultados en directo."}
         </p>
         {demo ? (
@@ -48,10 +64,25 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
             <button className="btn primary" type="submit">Entrar</button>
           </form>
         ) : (
-          <button className="google-btn" id="login" onClick={login}>
-            <GoogleIcon />
-            Entrar con Google
-          </button>
+          <>
+            <button className="google-btn" id="login" onClick={login}>
+              <GoogleIcon />
+              Entrar con Google
+            </button>
+            {invited && (
+              <form className="gate-anon" onSubmit={anonLogin}>
+                <div className="gate-or"><span>o</span></div>
+                <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
+                  value={name} onChange={e => setName(e.target.value)} />
+                <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar sin cuenta"}</button>
+                <p className="gate-anon-note">
+                  Votas al momento, sin registrarte. Tu voto se queda en este dispositivo, así que si cambias de móvil
+                  o borras los datos del navegador no podrás cambiarlo. En las votaciones privadas o con aprobación
+                  hace falta entrar con Google.
+                </p>
+              </form>
+            )}
+          </>
         )}
         <div id="gate-status" role="alert">{status}</div>
       </div>
