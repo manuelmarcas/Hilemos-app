@@ -172,7 +172,8 @@ Authentication; si no está activado, la pantalla lo dice.
 ## Pestañas bajo el calendario
 
 Para que la pantalla de una votación no se haga eterna, el calendario queda siempre arriba y debajo hay tres
-pestañas: «🏆 Más votadas» (la que sale al entrar), «👥 Participantes» y «💬 Chat», con su número al lado. Las tres
+pestañas: «🏆 Más votadas» (la que sale al entrar), «👥 Participantes» (con su número) y «💬 Chat» (con los
+mensajes sin leer). Las tres
 siguen montadas aunque no se vean, así que el chat no pierde lo que estabas escribiendo al cambiar de pestaña. Se
 puede cambiar con las flechas ← → del teclado.
 
@@ -186,7 +187,10 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
   abierta; pendientes y rechazados no. Lo exigen las reglas (`chatMember()`).
 - Se puede seguir hablando con la votación cerrada o con el plazo pasado: es cuando se remata el plan.
 - En las votaciones anónimas el chat sí lleva nombres (el anonimato es de los votos) y la sección lo avisa.
-- Cada uno puede borrar sus mensajes; no se editan (las reglas no tienen `update`).
+- Los mensajes no se editan ni se borran: las reglas no tienen `update` ni `delete`.
+- **No leídos**: el icono 💬 de la pestaña lleva un globo con los mensajes de los demás que aún no has visto, y
+  desaparece al abrir la pestaña. «Visto hasta» se guarda como `chatSeenAt` en tu biblioteca
+  (`users/{uid}/polls/{id}`), así que lo que leas en el móvil también cuenta como leído en el ordenador.
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
 ## Avisos (notificaciones)

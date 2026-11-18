@@ -1,5 +1,5 @@
 // Pantalla de una votación: calendario, recuentos, desempate y participantes.
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
@@ -42,9 +42,19 @@ export function PollPage({ id }: { id: string }) {
   const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
   const [peopleAll, setPeopleAll] = useState(false);
   const [tab, setTab] = useState<PollTab>("summary");
-  const [chatCount, setChatCount] = useState<number | null>(null);
+  const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
   const lib = library.data;
+
+  // «Visto hasta» del chat: va en la biblioteca del usuario, así se sincroniza entre sus dispositivos.
+  const inLibrary = !!lib?.polls[id];
+  const chatSeenAt = lib?.polls[id]?.chatSeenAt || 0;
+  const seenWritten = useRef(0);
+  const markChatSeen = useCallback((at: number) => {
+    if (!inLibrary || at <= seenWritten.current) return;
+    seenWritten.current = at;
+    store.saveLibraryEntry(user.uid, id, { chatSeenAt: at }).catch(() => { seenWritten.current = 0; });
+  }, [inLibrary, store, user.uid, id]);
 
   const ownOnly = !!poll && isRestricted(poll) && poll.ownerUid !== user.uid;
   const canReadAll = !!poll && (!ownOnly || (!!myVote && memberStatus(myVote) === "accepted"));
@@ -387,7 +397,7 @@ export function PollPage({ id }: { id: string }) {
           onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel} />
       )}
       {board}
-      <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length, chat: chatCount }} />
+      <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length }} unread={tab === "chat" ? 0 : chatUnread} />
       <div className="ptab-panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
         {((T.leaders.length > 1 && !TB && isOwner) || cal) && (
@@ -430,7 +440,8 @@ export function PollPage({ id }: { id: string }) {
       </section>
       </div>
       <div className="ptab-panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
-        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"} onCount={setChatCount} />
+        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"}
+          seenAt={chatSeenAt} onUnread={setChatUnread} onSeen={markChatSeen} />
       </div>
     </>
   );
@@ -447,8 +458,8 @@ const TABS: { id: PollTab; icon: string; label: string }[] = [
 ];
 
 // El calendario queda siempre arriba; debajo se alterna lo demás para que la pantalla no se haga eterna.
-function PollTabs({ tab, setTab, counts }: {
-  tab: PollTab; setTab: (t: PollTab) => void; counts: Partial<Record<PollTab, number | null>>;
+function PollTabs({ tab, setTab, counts, unread }: {
+  tab: PollTab; setTab: (t: PollTab) => void; counts: Partial<Record<PollTab, number>>; unread: number;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   function onKey(e: ReactKeyboardEvent<HTMLDivElement>) {
@@ -463,10 +474,14 @@ function PollTabs({ tab, setTab, counts }: {
     <div className="ptabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
       {TABS.map((t, i) => {
         const on = tab === t.id, n = counts[t.id];
+        const badge = t.id === "chat" && unread > 0 ? unread : 0;
         return (
           <button key={t.id} ref={el => { refs.current[i] = el; }} type="button" role="tab" id={`ptabbtn-${t.id}`}
-            className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}>
-            <span className="ptab-ico" aria-hidden="true">{t.icon}</span>
+            className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}
+            aria-label={badge ? `${t.label}: ${plural(badge, ["mensaje sin leer", "mensajes sin leer"])}` : undefined}>
+            <span className="ptab-ico" aria-hidden="true">
+              {t.icon}{badge > 0 && <span className="ptab-badge">{badge > 99 ? "99+" : badge}</span>}
+            </span>
             <span className="ptab-label">{t.label}{n != null && <span className="n">{n}</span>}</span>
           </button>
         );

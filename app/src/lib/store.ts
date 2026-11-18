@@ -154,7 +154,6 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
         cb(out.reverse());
       }, onErr),
     async sendChat(id, msg) { await F.addDoc(chatCol(id), msg); },
-    deleteChat: (id, msgId) => F.deleteDoc(F.doc(chatCol(id), msgId)),
 
     // ----- Perfil -----
     async getProfile(uid) {
@@ -384,14 +383,6 @@ export function createDemoStore(): Store {
       const text = msg.text.trim();
       if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
       ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };
-      write(db);
-    },
-    async deleteChat(id, msgId) {
-      const db = load();
-      const m = db.chat?.[id]?.[msgId];
-      if (!m) throw fail("not-found");
-      if (m.uid !== user?.uid) throw fail("permission-denied");
-      delete db.chat![id][msgId];
       write(db);
     },
 

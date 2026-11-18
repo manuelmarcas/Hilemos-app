@@ -123,11 +123,10 @@ service cloud.firestore {
       }
 
       // Chat de la votación: un documento por mensaje. Solo el creador y los participantes aceptados;
-      // quien está pendiente o rechazado no entra. No hay update: los mensajes no se editan.
+      // quien está pendiente o rechazado no entra. Ni update ni delete: los mensajes no se editan ni se borran.
       match /chat/{msgId} {
         allow read: if signedIn() && chatMember();
         allow create: if signedIn() && chatMember() && validMsg();
-        allow delete: if signedIn() && resource.data.uid == request.auth.uid;
 
         function chatMember() {
           return pollData(pollId).ownerUid == request.auth.uid

@@ -5,7 +5,6 @@ import { MAX_CHAT } from "../lib/model";
 import type { ChatMessage, Poll, Votes } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
-import { useUi } from "../state/ui";
 import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
 
@@ -16,11 +15,11 @@ function fmtWhen(at: number) {
   return key === D.todayKey() ? hhmm : `${D.fmtDayShort(key)}, ${hhmm}`;
 }
 
-export function Chat({ poll, id, votes, canWrite, active, onCount }: {
-  poll: Poll; id: string; votes: Votes; canWrite: boolean; active: boolean; onCount: (n: number | null) => void;
+export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSeen }: {
+  poll: Poll; id: string; votes: Votes; canWrite: boolean; active: boolean;
+  seenAt: number; onUnread: (n: number) => void; onSeen: (at: number) => void;
 }) {
   const { store, user } = useSession();
-  const { confirm } = useUi();
   const [msgs, setMsgs] = useState<ChatMessage[] | null>(null);
   const [text, setText] = useState("");
   const [status, setStatus] = useState("");
@@ -32,7 +31,16 @@ export function Chat({ poll, id, votes, canWrite, active, onCount }: {
 
   useEffect(() => store.watchChat(id, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id]);
 
-  useEffect(() => onCount(msgs ? msgs.length : null), [msgs, onCount]);
+  const latestAt = msgs ? msgs.reduce((max, m) => Math.max(max, m.at), 0) : 0;
+
+  useEffect(() => {
+    if (msgs) onUnread(msgs.filter(m => m.uid !== user.uid && m.at > seenAt).length);
+  }, [msgs, seenAt, user.uid, onUnread]);
+
+  // Con la pestaña abierta, todo lo que llega se da por leído.
+  useEffect(() => {
+    if (active && latestAt > seenAt) onSeen(latestAt);
+  }, [active, latestAt, seenAt, onSeen]);
 
   // Oculto (otra pestaña) no tiene altura, así que hay que bajar al último mensaje al mostrarlo.
   useEffect(() => {
@@ -55,16 +63,6 @@ export function Chat({ poll, id, votes, canWrite, active, onCount }: {
     }
     setBusy(false);
     field.current?.focus();
-  }
-
-  async function remove(m: ChatMessage) {
-    if (!(await confirm({
-      title: "¿Borrar el mensaje?",
-      message: "Desaparecerá para todos los participantes. No se puede deshacer.",
-      confirmLabel: "Borrar mensaje",
-      danger: true,
-    }))) return;
-    try { await store.deleteChat(id, m.id); } catch (err) { setStatus("No se pudo borrar. " + errMsg(err)); }
   }
 
   return (
@@ -92,10 +90,6 @@ export function Chat({ poll, id, votes, canWrite, active, onCount }: {
                       <div className="chat-head">
                         <span className="chat-name">{own ? "Tú" : m.name}</span>
                         <span className="chat-when">{fmtWhen(m.at)}</span>
-                        {own && (
-                          <button type="button" className="chat-del" aria-label={`Borrar tu mensaje de las ${fmtWhen(m.at)}`}
-                            onClick={() => remove(m)}>×</button>
-                        )}
                       </div>
                       <p className="chat-text">{m.text}</p>
                     </div>

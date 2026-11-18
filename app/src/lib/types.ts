@@ -98,6 +98,8 @@ export interface LibraryEntry {
   groupId?: string | null;
   addedAt?: number;
   archived?: boolean; // archivada: sale del panel principal y del menú lateral, pero conserva su grupo
+  /** Fecha (`at`) del último mensaje del chat que ha visto: lo posterior de otros cuenta como no leído. */
+  chatSeenAt?: number;
 }
 
 export interface Group {
@@ -195,8 +197,6 @@ export interface Store {
   /** Chat de la votación: los últimos CHAT_LIMIT mensajes, del más antiguo al más nuevo. */
   watchChat(id: string, cb: (msgs: ChatMessage[]) => void, onErr?: ErrorCb): Unsubscribe;
   sendChat(id: string, msg: Omit<ChatMessage, "id">): Promise<void>;
-  /** Cada uno borra sus propios mensajes. */
-  deleteChat(id: string, msgId: string): Promise<void>;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;
