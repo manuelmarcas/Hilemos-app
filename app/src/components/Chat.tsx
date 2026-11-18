@@ -16,7 +16,9 @@ function fmtWhen(at: number) {
   return key === D.todayKey() ? hhmm : `${D.fmtDayShort(key)}, ${hhmm}`;
 }
 
-export function Chat({ poll, id, votes, canWrite }: { poll: Poll; id: string; votes: Votes; canWrite: boolean }) {
+export function Chat({ poll, id, votes, canWrite, active, onCount }: {
+  poll: Poll; id: string; votes: Votes; canWrite: boolean; active: boolean; onCount: (n: number | null) => void;
+}) {
   const { store, user } = useSession();
   const { confirm } = useUi();
   const [msgs, setMsgs] = useState<ChatMessage[] | null>(null);
@@ -30,10 +32,13 @@ export function Chat({ poll, id, votes, canWrite }: { poll: Poll; id: string; vo
 
   useEffect(() => store.watchChat(id, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id]);
 
+  useEffect(() => onCount(msgs ? msgs.length : null), [msgs, onCount]);
+
+  // Oculto (otra pestaña) no tiene altura, así que hay que bajar al último mensaje al mostrarlo.
   useEffect(() => {
     const el = list.current;
-    if (el && pinned.current) el.scrollTop = el.scrollHeight;
-  }, [msgs]);
+    if (el && active && pinned.current) el.scrollTop = el.scrollHeight;
+  }, [msgs, active]);
 
   async function send(e: FormEvent) {
     e.preventDefault();
@@ -64,7 +69,6 @@ export function Chat({ poll, id, votes, canWrite }: { poll: Poll; id: string; vo
 
   return (
     <section className="chat">
-      <h2>💬 Chat</h2>
       <p className="chat-note">
         {poll.anonymous
           ? "Habla con el grupo aquí mismo. Los votos son anónimos, pero en el chat se ve tu nombre."

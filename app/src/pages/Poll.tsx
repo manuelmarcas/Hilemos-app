@@ -1,5 +1,5 @@
 // Pantalla de una votación: calendario, recuentos, desempate y participantes.
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
@@ -41,6 +41,8 @@ export function PollPage({ id }: { id: string }) {
   const [peopleQuery, setPeopleQuery] = useState("");
   const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
   const [peopleAll, setPeopleAll] = useState(false);
+  const [tab, setTab] = useState<PollTab>("summary");
+  const [chatCount, setChatCount] = useState<number | null>(null);
   const joined = useRef(false);
   const lib = library.data;
 
@@ -385,19 +387,22 @@ export function PollPage({ id }: { id: string }) {
           onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel} />
       )}
       {board}
+      <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length, chat: chatCount }} />
+      <div className="ptab-panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
-        <div className="summary-head">
-          <h2>🏆 Opciones más votadas</h2>
-          {T.leaders.length > 1 && !TB && isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
-          {cal && (
-            <div className="cal-add">
-              <button className="btn small" onClick={() => downloadIcs(cal)}>
-                <span aria-hidden="true">📅</span> Añadir al calendario
-              </button>
-              <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
-            </div>
-          )}
-        </div>
+        {((T.leaders.length > 1 && !TB && isOwner) || cal) && (
+          <div className="summary-head">
+            {T.leaders.length > 1 && !TB && isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
+            {cal && (
+              <div className="cal-add">
+                <button className="btn small" onClick={() => downloadIcs(cal)}>
+                  <span aria-hidden="true">📅</span> Añadir al calendario
+                </button>
+                <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
+              </div>
+            )}
+          </div>
+        )}
         {T.leaders.length > 1 && !TB && (
           <p className="summary-note">
             Hay {T.leaders.length} opciones empatadas en el primer puesto.{isOwner
@@ -409,11 +414,10 @@ export function PollPage({ id }: { id: string }) {
           <Summary poll={poll} T={T} TB={TB} openVoters={openVoters} byUid={byUid} onToggle={k => toggleIn(setOpenVoters, k)} />
         </div>
       </section>
+      </div>
+      <div className="ptab-panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
       <section className="results">
-        <div className="summary-head">
-          <h2>👥 Participantes <span className="muted">({T.people.length})</span></h2>
-          {isOwner && <RemindMissing poll={poll} T={T} me={user.uid} url={pollUrl(id)} />}
-        </div>
+        {isOwner && <div className="summary-head"><RemindMissing poll={poll} T={T} me={user.uid} url={pollUrl(id)} /></div>}
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
         <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
@@ -424,8 +428,50 @@ export function PollPage({ id }: { id: string }) {
           )}
         </PeopleList>
       </section>
-      <Chat poll={poll} id={id} votes={shown} canWrite={canChat} />
+      </div>
+      <div className="ptab-panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
+        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"} onCount={setChatCount} />
+      </div>
     </>
+  );
+}
+
+// ---------- Pestañas bajo el calendario ----------
+
+type PollTab = "summary" | "people" | "chat";
+
+const TABS: { id: PollTab; icon: string; label: string }[] = [
+  { id: "summary", icon: "🏆", label: "Más votadas" },
+  { id: "people", icon: "👥", label: "Participantes" },
+  { id: "chat", icon: "💬", label: "Chat" },
+];
+
+// El calendario queda siempre arriba; debajo se alterna lo demás para que la pantalla no se haga eterna.
+function PollTabs({ tab, setTab, counts }: {
+  tab: PollTab; setTab: (t: PollTab) => void; counts: Partial<Record<PollTab, number | null>>;
+}) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  function onKey(e: ReactKeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault();
+    const i = TABS.findIndex(t => t.id === tab);
+    const j = (i + (e.key === "ArrowRight" ? 1 : -1) + TABS.length) % TABS.length;
+    setTab(TABS[j].id);
+    refs.current[j]?.focus();
+  }
+  return (
+    <div className="ptabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
+      {TABS.map((t, i) => {
+        const on = tab === t.id, n = counts[t.id];
+        return (
+          <button key={t.id} ref={el => { refs.current[i] = el; }} type="button" role="tab" id={`ptabbtn-${t.id}`}
+            className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}>
+            <span className="ptab-ico" aria-hidden="true">{t.icon}</span>
+            <span className="ptab-label">{t.label}{n != null && <span className="n">{n}</span>}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

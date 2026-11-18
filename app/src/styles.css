@@ -995,6 +995,24 @@ table{width:100%;border-collapse:collapse;font-size:.88rem}
 th,td{padding:7px 6px;border-bottom:1px solid var(--soft);text-align:left}
 td.n,th.n{text-align:right;white-space:nowrap}
 
+/* ---------- Pestañas bajo el calendario ---------- */
+.ptabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:26px 0 14px}
+.ptab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:0;padding:8px 6px;
+  border:1px solid var(--line);border-radius:10px;background:var(--card);
+  color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
+}
+.ptab:hover{background:var(--hover)}
+.ptab[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.ptab[aria-selected="true"]:hover{background:var(--brand-strong)}
+.ptab-ico{font-size:1.15rem;line-height:1}
+.ptab-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptab .n{margin-left:4px;font-size:.75rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums}
+@container view (min-width:480px){.ptab{flex-direction:row;gap:6px;padding:10px 12px;font-size:.9rem}}
+.ptab-panel{min-width:0}
+.ptab-panel > .summary,.ptab-panel > .chat{margin-top:0}
+
 /* ---------- Chat de la votación ---------- */
 .chat{display:grid;gap:4px;margin:26px 0;min-width:0}
 .chat-note{color:var(--muted);font-size:.88rem;margin:0 0 8px;line-height:1.45}

@@ -169,9 +169,16 @@ Authentication; si no está activado, la pantalla lo dice.
 - Quien entra sin cuenta **no puede crear** votaciones (también por reglas): serían de una sesión que puede
   desaparecer.
 
+## Pestañas bajo el calendario
+
+Para que la pantalla de una votación no se haga eterna, el calendario queda siempre arriba y debajo hay tres
+pestañas: «🏆 Más votadas» (la que sale al entrar), «👥 Participantes» y «💬 Chat», con su número al lado. Las tres
+siguen montadas aunque no se vean, así que el chat no pierde lo que estabas escribiendo al cambiar de pestaña. Se
+puede cambiar con las flechas ← → del teclado.
+
 ## Chat de la votación
 
-Al final de cada votación hay un «💬 Chat» en vivo para hablar con el grupo sin irse a WhatsApp. Cada mensaje es
+En la pestaña «💬 Chat» se habla con el grupo en vivo, sin irse a WhatsApp. Cada mensaje es
 un documento de `polls/{id}/chat/{msgId}` con `{ uid, name, text, at }`; la foto no se guarda, sale del voto del
 autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 caracteres (`MAX_CHAT`).
 
