@@ -1027,7 +1027,8 @@ td.n,th.n{text-align:right;white-space:nowrap}
   display:flex;
   flex-direction:column;
   gap:12px;
-  max-height:420px;
+  max-height:min(420px, 55vh);
+  max-height:min(420px, 55dvh);
   overflow-y:auto;
   overscroll-behavior:contain;
   min-width:0;
