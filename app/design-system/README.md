@@ -56,6 +56,14 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
 - Ningún ancho depende del contenido. Los hijos de flex y grid llevan `min-width:0` cuando contienen texto o controles; las rejillas de una columna usan `minmax(0,1fr)` (ya está por defecto para todas, con `grid-auto-columns`); el texto sin espacios parte con `overflow-wrap:anywhere` y lo que no debe partir (chips, títulos de una línea) se corta con `text-overflow:ellipsis`. Un `<select>` se mide por su opción más larga: siempre con `max-width:100%`.
 - Red de seguridad: `#app` lleva `overflow-x:clip` (no `hidden`, que rompería las barras pegajosas). No es excusa para dejar un desbordamiento: si algo queda cortado por la derecha, el fallo está en ese componente.
 
+## Botones y acciones
+
+- Cada acción va junto a lo que afecta: «📣 Avisar a quien falta» encima de la lista de personas (en «Participantes» y en el desempate abierto), «⚖️ Desempatar» después del texto que explica el empate y «📅 Añadir al calendario» encima del ranking.
+- Gestión del creador separada de lo demás: lo que cambia la votación entera (cerrar, acceso, anónima, duplicar, eliminar) va en el menú ⋯ junto al título; lo que gestiona un bloque va en su pie, separado por una línea `line` (el desempate: «Finalizar desempate» y «Anular»; o «Repetir entre las empatadas» y «Quitar desempate»). Comunicarse con el grupo (compartir, avisar, calendario) nunca se mezcla con esos botones.
+- En una fila de acciones: la principal primero, luego las secundarias y la destructiva siempre la última. Como mucho un botón `brand` por bloque.
+- Lo destructivo va como enlace `.link-btn.danger` cuando deshace un bloque entero («Anular», «Quitar desempate», «Eliminar grupo») y como `.btn.danger` cuando es una opción más en una lista de botones («Rechazar», «Eliminar de mi lista», «Quitar imagen»).
+- Formularios y paneles en la página (alineados a la izquierda): «Guardar» / «Crear…» primero y «Cancelar» después. Diálogos (alineados a la derecha): «Cancelar» primero y la confirmación al final, pegada al borde. En los dos casos la principal queda en el borde por el que se empieza a mirar, y en los diálogos el foco empieza en «Cancelar».
+
 ## Iconografía
 
 - Los iconos son los emojis del sistema. Cada opción lleva el emoji que elija quien crea la votación, desde un selector completo. Los de serie son 🍽️ Comida, 🌙 Cena, ☕ Desayuno, 🌅 Mañana, ☀️ Mediodía y 🌇 Tarde.

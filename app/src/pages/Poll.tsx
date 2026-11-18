@@ -401,25 +401,26 @@ export function PollPage({ id }: { id: string }) {
       <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length }} unread={tab === "chat" ? 0 : chatUnread} />
       <div className="ptab-panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
-        {((T.leaders.length > 1 && !TB && isOwner) || cal) && (
+        {cal && (
           <div className="summary-head">
-            {T.leaders.length > 1 && !TB && isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
-            {cal && (
-              <div className="cal-add">
-                <button className="btn small" onClick={() => downloadIcs(cal)}>
-                  <span aria-hidden="true">📅</span> Añadir al calendario
-                </button>
-                <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
-              </div>
-            )}
+            <div className="cal-add">
+              <button className="btn small" onClick={() => downloadIcs(cal)}>
+                <span aria-hidden="true">📅</span> Añadir al calendario
+              </button>
+              <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
+            </div>
           </div>
         )}
+        {/* El botón va con el texto que lo explica, no separado arriba junto al calendario. */}
         {T.leaders.length > 1 && !TB && (
-          <p className="summary-note">
-            Hay {T.leaders.length} opciones empatadas en el primer puesto.{isOwner
-              ? " Puedes abrir un desempate en el que cada persona elige solo una."
-              : " Quien creó la votación puede abrir un desempate."}
-          </p>
+          <div className="summary-tie">
+            <p className="summary-note">
+              Hay {T.leaders.length} opciones empatadas en el primer puesto.{isOwner
+                ? " Puedes abrir un desempate en el que cada persona elige solo una."
+                : " Quien creó la votación puede abrir un desempate."}
+            </p>
+            {isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
+          </div>
         )}
         <div className="summary-list">
           <Summary poll={poll} T={T} TB={TB} openVoters={openVoters} byUid={byUid} onToggle={k => toggleIn(setOpenVoters, k)} />
@@ -673,6 +674,8 @@ function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onR
         <span className="tb-state">{done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
       </div>
       <p className="tb-sub">{sub}</p>
+      {/* Como en «Participantes»: el aviso va encima de la lista a la que se refiere, no con los botones de gestión. */}
+      {!done && <div className="tb-tools">{remind}</div>}
       <div className="tb-options">
         {TB.candidates.map(u => {
           const { optId } = unitParts(u);
@@ -696,7 +699,6 @@ function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onR
             <button className="link-btn danger" onClick={onCancel}>Quitar desempate</button>
           </> : <>
             <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
-            {remind}
             <button className="link-btn danger" onClick={onCancel}>Anular</button>
           </>}
         </div>

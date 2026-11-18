@@ -1412,6 +1412,8 @@ tr.open td{border-bottom-color:transparent}
 .summary-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
 .cal-add{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
 .summary-note{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45}
+.summary-tie{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.summary-tie .summary-note{flex:1 1 240px;min-width:0}
 .summary-more{margin:2px 2px 0;font-size:.82rem;color:var(--muted)}
 .tb-badge{font-size:.74rem;font-weight:700;background:var(--tie-soft);color:var(--tie-ink);border-radius:99px;padding:3px 9px;white-space:nowrap}
 
@@ -1430,6 +1432,8 @@ tr.open td{border-bottom-color:transparent}
 .tiebreak.done .tb-state{color:var(--muted);background:var(--soft)}
 .tb-sub{margin:8px 0 12px;font-size:.92rem;color:var(--muted);line-height:1.45}
 .tb-sub strong{color:var(--ink)}
+.tb-tools{margin:0 0 12px}
+.tb-tools:empty{display:none}
 .tb-options{display:grid;gap:8px}
 @container view (min-width:680px){.tb-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tb-opt{
@@ -1467,7 +1471,8 @@ tr.open td{border-bottom-color:transparent}
 .av-stack .av{box-shadow:0 0 0 2px var(--card)}
 .av-stack .av + .av{margin-left:-7px}
 .av-more{font-size:.72rem;font-weight:700;color:var(--muted);margin-left:4px}
-.tb-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:12px}
+/* Pie de gestión del creador: separado por una línea de las opciones y del aviso. */
+.tb-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 
 /* ---------- Archivar / eliminar de la lista ---------- */
 
