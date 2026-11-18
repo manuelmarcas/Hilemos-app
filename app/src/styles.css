@@ -128,6 +128,10 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+/* Una rejilla sin columnas declaradas mide su columna implícita por el contenido, así que una fila con texto
+   largo ensancha el bloque entero y saca la página de la pantalla. Con minmax(0,1fr) la columna nunca pasa
+   del ancho disponible. Ninguna rejilla de la app fluye por columnas, así que es seguro ponerlo a todas. */
+*{grid-auto-columns:minmax(0, 1fr)}
 [hidden]{display:none !important}
 html,body{min-height:100%}
 body{
@@ -223,7 +227,9 @@ button,input,select,textarea{font:inherit}
 .gate-card .gate-anon-note{font-size:.82rem;line-height:1.45;margin:2px 0 0}
 
 /* ---------- Estructura ---------- */
-#app{max-width:1180px;margin:0 auto;padding:14px 10px 60px}
+/* Red de seguridad: nada de lo que haya dentro puede sacar la página de la pantalla. Es clip y no hidden
+   para no crear un contenedor de desplazamiento (si no, dejarían de funcionar las barras pegajosas). */
+#app{max-width:1180px;margin:0 auto;padding:14px 10px 60px;overflow-x:clip}
 @media (min-width:600px){#app{padding:18px 16px 60px}}
 .topbar{
   display:flex;
@@ -236,7 +242,10 @@ button,input,select,textarea{font:inherit}
   border-bottom:1px solid var(--line);
 }
 .topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
-.brand{font-weight:800;font-size:1.22rem;color:var(--brand-strong);text-decoration:none;white-space:nowrap}
+.brand{
+  font-weight:800;font-size:1.22rem;color:var(--brand-strong);text-decoration:none;
+  white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;
+}
 .sb-toggle{
   display:none;
   align-items:center;
@@ -359,25 +368,30 @@ select.input{cursor:pointer}
   justify-content:space-between;
   margin-bottom:18px;
 }
-.home-head h1{margin:0;font-size:1.75rem;color:var(--brand-strong)}
+.home-head > *{min-width:0}
+.home-head h1{margin:0;font-size:1.75rem;color:var(--brand-strong);overflow-wrap:anywhere}
 .sub{color:var(--muted);font-size:.95rem;margin:4px 0 0;line-height:1.5}
 .group-bar{margin-bottom:14px;display:grid;gap:10px}
 .group-chips{display:flex;flex-wrap:wrap;gap:6px}
+/* Los chips no parten el texto (white-space:nowrap), y un grupo puede llamarse con 40 caracteres. */
+.group-chips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .inline-form{display:flex;flex-wrap:wrap;gap:8px}
 .inline-form .input{flex:1 1 220px;width:auto}
 .group-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:.92rem;color:var(--brand-strong)}
-.lib-sec{margin-top:18px}
-.lib-sec h2{font-size:1rem;color:var(--brand-strong);margin:0 0 8px}
+.lib-sec{margin-top:18px;min-width:0}
+.lib-sec h2{font-size:1rem;color:var(--brand-strong);margin:0 0 8px;overflow-wrap:anywhere}
 .poll-list{display:grid;gap:8px}
+.poll-list > *{min-width:0}
 .poll-card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:12px;
   transition:box-shadow .15s;
+  min-width:0;
 }
 .poll-card:hover{box-shadow:var(--shadow)}
 .poll-card.is-gone{opacity:var(--opacity-disabled)}
-.pc-row{display:flex;align-items:stretch}
+.pc-row{display:flex;align-items:stretch;min-width:0}
 .pc-link{
   display:flex;
   align-items:center;
@@ -391,7 +405,7 @@ select.input{cursor:pointer}
 .pc-icon{font-size:1.5rem;flex:none}
 .pc-main{display:flex;flex-direction:column;min-width:0;flex:1;gap:2px}
 .pc-title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pc-meta{font-size:.8rem;color:var(--muted);line-height:1.35}
+.pc-meta{font-size:.8rem;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
 .pc-badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:none;max-width:40%}
 .badge{font-size:.7rem;font-weight:700;background:var(--danger-soft);color:var(--danger);padding:3px 8px;border-radius:99px;white-space:nowrap}
 .badge.mine{background:var(--brand-soft);color:var(--brand-strong)}
@@ -420,7 +434,9 @@ select.input{cursor:pointer}
   font-size:.86rem;
   color:var(--muted);
 }
-.pc-actions label{display:flex;align-items:center;gap:6px}
+.pc-actions label{display:flex;align-items:center;gap:6px;min-width:0}
+/* Un <select> se mide por su opción más larga: con un nombre de grupo largo estiraba la tarjeta. */
+.pc-actions .input{max-width:100%;min-width:0}
 
 /* ---------- Nueva votación ---------- */
 .page-head{margin-bottom:16px}
@@ -667,7 +683,8 @@ select.input{cursor:pointer}
 .desc{margin:6px 0 0;line-height:1.5;white-space:pre-line}
 .poll-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 @container view (max-width:559.98px){
-  .poll-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .poll-actions{display:grid;grid-template-columns:minmax(0,1fr);width:100%}
+  .poll-actions .btn{min-width:0;white-space:normal}
 }
 /* Título con el menú ⋯ del creador a la derecha */
 .title-row{display:flex;align-items:flex-start;gap:10px}
@@ -1299,8 +1316,10 @@ tr.open td{border-bottom-color:transparent}
 .vline{display:flex;align-items:flex-start;gap:8px;padding-top:4px}
 .vline + .vline{padding-top:6px}
 .vopt{display:inline-flex;align-items:center;gap:4px;flex:none;padding-top:2px}
-.vchips{display:flex;flex-wrap:wrap;gap:4px}
-.vchip{font-size:.78rem;background:var(--soft);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.vchips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+/* Una etiqueta de horas («lun 22 dic 18:00, 18:30…») puede ser más larga que la pantalla: entonces parte. */
+.vchip{font-size:.78rem;background:var(--soft);border-radius:99px;padding:3px 9px;white-space:nowrap;max-width:100%}
+@container view (max-width:559.98px){.vchip{white-space:normal;overflow-wrap:anywhere}}
 .vchip b{font-weight:700}
 
 .votes-btn{
