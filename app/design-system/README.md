@@ -53,6 +53,8 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
 - La maqueta depende del ancho del área de contenido, no del de la pantalla (container queries sobre `#view`). Por debajo de 560px, las acciones de la votación forman una rejilla de 3 columnas iguales. Desde 820px, los meses se muestran de dos en dos. Desde 960px de pantalla, el menú lateral queda fijo a la izquierda; por debajo, es un cajón que se abre con ☰.
 - En el ranking, «N votos» va a la derecha si cabe y, si no, baja alineado a la izquierda.
 - La página nunca se desplaza en horizontal; la tabla de horas se desplaza dentro de su tarjeta, con la columna de horas fija.
+- Ningún ancho depende del contenido. Los hijos de flex y grid llevan `min-width:0` cuando contienen texto o controles; las rejillas de una columna usan `minmax(0,1fr)` (ya está por defecto para todas, con `grid-auto-columns`); el texto sin espacios parte con `overflow-wrap:anywhere` y lo que no debe partir (chips, títulos de una línea) se corta con `text-overflow:ellipsis`. Un `<select>` se mide por su opción más larga: siempre con `max-width:100%`.
+- Red de seguridad: `#app` lleva `overflow-x:clip` (no `hidden`, que rompería las barras pegajosas). No es excusa para dejar un desbordamiento: si algo queda cortado por la derecha, el fallo está en ese componente.
 
 ## Iconografía
 
