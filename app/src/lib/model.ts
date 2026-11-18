@@ -33,6 +33,12 @@ export const PEOPLE_FILTER_FROM = 10;
 /** Correos permitidos como mucho en una votación privada. */
 export const MAX_EMAILS = MAX_PEOPLE;
 
+// ----- Chat -----
+/** Mensajes que se traen de una votación: solo los últimos, que esto no es WhatsApp. */
+export const CHAT_LIMIT = 200;
+/** Longitud máxima de un mensaje (la misma que validan las reglas). */
+export const MAX_CHAT = 500;
+
 /** En una votación restringida, quien no está aceptado no puede ver los votos de los demás. */
 export const isRestricted = (p: PollData) => !!(p.approval || p.emailsOnly);
 export const memberStatus = (v?: Vote | null): MemberStatus =>

@@ -18,6 +18,7 @@ import { groupToDrop } from "../state/listActions";
 import { useDuplicate } from "../state/duplicate";
 import { Avatar } from "../components/Avatar";
 import { RemindMissing } from "../components/RemindMissing";
+import { Chat } from "../components/Chat";
 
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
@@ -163,6 +164,8 @@ export function PollPage({ id }: { id: string }) {
   const isOwner = poll.ownerUid === user.uid;
   const expired = deadlinePassed(poll);
   const canVote = !poll.closed && !expired;
+  // En el chat se escribe aunque la votación esté cerrada: es cuando se remata el plan.
+  const canChat = isOwner || (!!votes[user.uid] && memberStatus(votes[user.uid]) === "accepted");
 
   // Cambia el voto propio al momento y lo guarda; si falla, se deshace.
   async function optimistic(patch: Vote, save: () => Promise<void>, errPrefix: string) {
@@ -421,6 +424,7 @@ export function PollPage({ id }: { id: string }) {
           )}
         </PeopleList>
       </section>
+      <Chat poll={poll} id={id} votes={shown} canWrite={canChat} />
     </>
   );
 }

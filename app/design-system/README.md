@@ -57,7 +57,7 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
 ## Iconografía
 
 - Los iconos son los emojis del sistema. Cada opción lleva el emoji que elija quien crea la votación, desde un selector completo. Los de serie son 🍽️ Comida, 🌙 Cena, ☕ Desayuno, 🌅 Mañana, ☀️ Mediodía y 🌇 Tarde.
-- Iconos fijos: 🔗 Compartir, 📣 Avisar a quien falta, 🔒 Cerrar votación, 🔓 Reabrir, 🗑️ Eliminar, ⚖️ Desempate, 🏆 Opciones más votadas, 👁️ Votos visibles, 🕶️ Anónima, 👥 participantes y votos. Tipos de votación: ⏰ horas, 📅 días, 🗓️ semanas, 📆 meses.
+- Iconos fijos: 🔗 Compartir, 📣 Avisar a quien falta, 🔒 Cerrar votación, 🔓 Reabrir, 🗑️ Eliminar, ⚖️ Desempate, 🏆 Opciones más votadas, 👁️ Votos visibles, 🕶️ Anónima, 👥 participantes y votos, 💬 Chat. Tipos de votación: ⏰ horas, 📅 días, 🗓️ semanas, 📆 meses.
 - El emoji va antes del texto y nunca solo. La única excepción son las casillas del calendario, cuyo significado explica la leyenda.
 - No hay logotipo: la marca es «🗳️ Votaciones» en `wordmark` y `brand-strong`.
 - Avatares: la foto de perfil recortada en círculo o, si no hay, la inicial sobre un tono que sale del nombre (fondo `hsl(h 42% 86%)` y letra `hsl(h 45% 26%)`; en oscuro, `hsl(h 28% 30%)` y `hsl(h 60% 88%)`). En grupo se solapan 7px con un aro de 2px en `card`.

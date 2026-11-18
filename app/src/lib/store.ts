@@ -5,6 +5,7 @@
 // Colecciones:
 //   polls/{pollId}                     la votación (ver model.ts)
 //   polls/{pollId}/votes/{uid}         participante: { name, photo, picks?, seenAt, updatedAt, status? }
+//   polls/{pollId}/chat/{msgId}        mensaje del chat: { uid, name, text, at }
 //   polls/{pollId}/private/access      correos permitidos (solo el creador): { emails }
 //   users/{uid}/polls/{pollId}         colección del usuario: { title, type, role, ownerName, groupId, addedAt, archived }
 //   users/{uid}/groups/{groupId}       grupos del usuario: { name, createdAt }
@@ -12,7 +13,8 @@
 
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
-import type { AuthUser, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
+import { CHAT_LIMIT, MAX_CHAT } from "./model";
+import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
 export async function createFirebaseStore(config: FirebaseOptions): Promise<Store> {
   // Firebase se carga aparte: el modo demo no lo descarga.
@@ -44,6 +46,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
+  const chatCol = (id: string) => F.collection(db, "polls", id, "chat");
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
   const libCol = (uid: string) => F.collection(db, "users", uid, "polls");
   const groupsCol = (uid: string) => F.collection(db, "users", uid, "groups");
@@ -141,6 +144,18 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     // Actualiza nombre/foto del participante sin tocar sus votos (permitido aunque esté cerrada).
     updateParticipant: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),
 
+    // ----- Chat -----
+    // Se piden los últimos por fecha descendente (que es lo que sabe limitar Firestore) y se le dan la vuelta.
+    watchChat: (id, cb, onErr) => F.onSnapshot(
+      F.query(chatCol(id), F.orderBy("at", "desc"), F.limit(CHAT_LIMIT)),
+      snap => {
+        const out: ChatMessage[] = [];
+        snap.forEach(d => out.push({ id: d.id, ...(d.data() as Omit<ChatMessage, "id">) }));
+        cb(out.reverse());
+      }, onErr),
+    async sendChat(id, msg) { await F.addDoc(chatCol(id), msg); },
+    deleteChat: (id, msgId) => F.deleteDoc(F.doc(chatCol(id), msgId)),
+
     // ----- Perfil -----
     async getProfile(uid) {
       const s = await F.getDoc(F.doc(db, "users", uid));
@@ -190,6 +205,7 @@ interface DemoDb {
   votes: Record<string, Votes>;
   users: Record<string, DemoUserData>;
   access?: Record<string, PollAccess>;
+  chat?: Record<string, Record<string, Omit<ChatMessage, "id">>>;
 }
 
 export function createDemoStore(): Store {
@@ -346,6 +362,32 @@ export function createDemoStore(): Store {
       if (!db.polls[id]) throw fail("not-found");
       const votes = (db.votes[id] ||= {});
       votes[uid] = { ...(votes[uid] || {}), ...clone(data) };
+      write(db);
+    },
+
+    watchChat: (id, cb) => watch(() => {
+      const all = load().chat?.[id] || {};
+      const msgs = Object.entries(all).map(([mid, m]) => ({ id: mid, ...clone(m) }));
+      cb(msgs.sort((a, b) => a.at - b.at).slice(-CHAT_LIMIT));
+    }),
+    async sendChat(id, msg) {
+      // Las mismas comprobaciones que hacen las reglas de Firestore.
+      const db = load();
+      if (!db.polls[id]) throw fail("not-found");
+      if (msg.uid !== user?.uid) throw fail("permission-denied");
+      if (db.votes[id]?.[msg.uid]?.status) throw fail("permission-denied"); // pendiente o rechazado: no escribe
+      if (db.polls[id].ownerUid !== msg.uid && !db.votes[id]?.[msg.uid]) throw fail("permission-denied");
+      const text = msg.text.trim();
+      if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
+      ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };
+      write(db);
+    },
+    async deleteChat(id, msgId) {
+      const db = load();
+      const m = db.chat?.[id]?.[msgId];
+      if (!m) throw fail("not-found");
+      if (m.uid !== user?.uid) throw fail("permission-denied");
+      delete db.chat![id][msgId];
       write(db);
     },
 

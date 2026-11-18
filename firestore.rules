@@ -122,6 +122,28 @@ service cloud.firestore {
         }
       }
 
+      // Chat de la votación: un documento por mensaje. Solo el creador y los participantes aceptados;
+      // quien está pendiente o rechazado no entra. No hay update: los mensajes no se editan.
+      match /chat/{msgId} {
+        allow read: if signedIn() && chatMember();
+        allow create: if signedIn() && chatMember() && validMsg();
+        allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+
+        function chatMember() {
+          return pollData(pollId).ownerUid == request.auth.uid
+            || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null);
+        }
+
+        function validMsg() {
+          let d = request.resource.data;
+          return d.keys().hasOnly(['uid', 'name', 'text', 'at'])
+            && d.uid == request.auth.uid
+            && d.name is string && d.name.size() > 0 && d.name.size() <= 100
+            && d.text is string && d.text.size() > 0 && d.text.size() <= 500
+            && d.at is int;
+        }
+      }
+
       // Participantes: un documento por persona (su id es su uid).
       match /votes/{uid} {
         // En las votaciones restringidas (con aprobación o solo con correos), los votos solo los ven el creador
