@@ -394,7 +394,8 @@ export function PollPage({ id }: { id: string }) {
       <div className="status" id="poll-status" role="alert">{status}</div>
       {TB && (
         <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} isOwner={isOwner} byUid={byUid}
-          onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel} />
+          onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel}
+          remind={<RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} />} />
       )}
       {board}
       <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length }} unread={tab === "chat" ? 0 : chatUnread} />
@@ -427,7 +428,7 @@ export function PollPage({ id }: { id: string }) {
       </div>
       <div className="ptab-panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
       <section className="results">
-        {isOwner && <div className="summary-head"><RemindMissing poll={poll} T={T} me={user.uid} url={pollUrl(id)} /></div>}
+        {isOwner && <div className="summary-head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
         <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
@@ -649,9 +650,9 @@ function AvatarStack({ uids, byUid }: { uids: string[]; byUid: Record<string, Pe
   );
 }
 
-function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onRepeat, onCancel }: {
+function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onRepeat, onCancel, remind }: {
   poll: Poll; T: Tally; TB: TiebreakTally; myTb: Vote["tb"]; isOwner: boolean; byUid: Record<string, Person>;
-  onVote: (u: string) => void; onFinish: () => void; onRepeat: () => void; onCancel: () => void;
+  onVote: (u: string) => void; onFinish: () => void; onRepeat: () => void; onCancel: () => void; remind: ReactNode;
 }) {
   const done = !!TB.done;
   const myPick = myTb?.id === TB.id ? myTb.pick : null;
@@ -695,6 +696,7 @@ function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onR
             <button className="link-btn danger" onClick={onCancel}>Quitar desempate</button>
           </> : <>
             <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
+            {remind}
             <button className="link-btn danger" onClick={onCancel}>Anular</button>
           </>}
         </div>

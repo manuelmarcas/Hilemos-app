@@ -125,6 +125,9 @@ recuentos, ranking ni tabla.
 queda alguien aceptado sin ningún voto (sin contarse a él). Monta el mensaje («Faltan Ana y Carlos por votar en
 «…»» + enlace; en las anónimas, solo cuántos faltan, sin nombres) y lo abre en el menú de compartir del móvil o,
 si no existe, en WhatsApp. No hay backend: es un mensaje para pegar en el grupo.
+Con un **desempate abierto** el botón sale también en la tarjeta del desempate y cuenta a quien aún no ha elegido en
+esa ronda («… por votar en el desempate de «…»»). Con la votación cerrada (o el plazo acabado) y sin desempate abierto
+no aparece: ya no queda nada que votar.
 
 En el modo demo, el correo de cada persona es `<nombre>@demo.test` (p. ej. `ana@demo.test`).
 
