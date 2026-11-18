@@ -7,7 +7,10 @@ import type { FirebaseOptions } from "firebase/app";
 
 export const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyCOQU09rJy8_au8mls3b8a82LVreDsNVzU",
-  authDomain: "votaciones-9bc95.firebaseapp.com",
+  // El mismo dominio que la web: con firebaseapp.com, Safari en iPhone separa el almacenamiento de los dos
+  // dominios y el inicio de sesión falla con «missing initial state». Requiere la URI de redirección
+  // https://votaciones-9bc95.web.app/__/auth/handler en el cliente OAuth de Google Cloud.
+  authDomain: "votaciones-9bc95.web.app",
   projectId: "votaciones-9bc95",
   storageBucket: "votaciones-9bc95.firebasestorage.app",
   messagingSenderId: "1092387940683",
