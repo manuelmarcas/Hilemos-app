@@ -13,3 +13,9 @@ export const firebaseConfig: FirebaseOptions = {
   messagingSenderId: "1092387940683",
   appId: "1:1092387940683:web:bd7e18f88fef6f0b32a0ce",
 };
+
+/**
+ * Clave pública de los avisos (Configuración del proyecto > Cloud Messaging > Certificados push web).
+ * Es pública como el resto de esta configuración. Vacía: la app no ofrece los avisos (ver app/README.md).
+ */
+export const fcmVapidKey = "";

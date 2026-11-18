@@ -163,6 +163,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     saveProfile: (uid, data) => F.setDoc(F.doc(db, "users", uid), data, { merge: true }),
 
+    // ----- Avisos -----
+    savePushToken: (uid, token, data) => F.setDoc(F.doc(db, "users", uid, "tokens", token), data),
+    removePushToken: (uid, token) => F.deleteDoc(F.doc(db, "users", uid, "tokens", token)),
+
     // ----- Colección del usuario y grupos -----
     watchLibrary(uid, cb, onErr) {
       let polls: Library["polls"] | null = null, groups: Library["groups"] | null = null;
@@ -401,6 +405,10 @@ export function createDemoStore(): Store {
       l.profile = { ...(l.profile || {}), ...clone(data) };
       write(db);
     },
+
+    // El modo demo no tiene servidor que mande avisos: la pantalla de perfil ni los ofrece.
+    async savePushToken() { throw fail("unavailable"); },
+    async removePushToken() { /* nada */ },
 
     watchLibrary: (uid, cb) => watch(() => {
       const l = load().users[uid] || { polls: {}, groups: {} };

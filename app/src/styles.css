@@ -1344,6 +1344,9 @@ emoji-picker{
 .theme-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .theme-pick .type-card{min-width:0}
 .pref-label{margin:0 0 8px;font-size:.92rem;font-weight:700;color:var(--ink)}
+.pref-block{margin-top:22px;min-width:0}
+.notify-opts{display:flex;flex-direction:column;gap:2px;margin-top:12px;min-width:0}
+.notify-opts .dlg-check{margin:0;padding:6px 0}
 @container view (min-width:560px){.privacy{grid-template-columns:1fr 1fr}}
 
 .table-hint{font-size:.82rem;color:var(--muted);margin:0 0 6px}

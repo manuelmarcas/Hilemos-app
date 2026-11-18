@@ -1,7 +1,9 @@
 // Estructura de la app con sesión: barra superior, menú lateral y pantalla actual.
 import { useEffect, useState } from "react";
 import { useSession } from "../state/session";
+import { useUi } from "../state/ui";
 import { parseRoute, useHashPath } from "../state/route";
+import { onPushMessage } from "../lib/push";
 import { Avatar } from "./Avatar";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
@@ -11,9 +13,18 @@ import { Profile } from "../pages/Profile";
 
 export function Shell() {
   const { store, user } = useSession();
+  const { toast } = useUi();
   const path = useHashPath();
   const route = parseRoute(path);
   const [drawer, setDrawer] = useState(false);
+
+  // Con la app abierta el navegador no pinta el aviso: se muestra como aviso flotante.
+  useEffect(() => {
+    if (store.mode !== "firebase" || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    let off: (() => void) | undefined, alive = true;
+    onPushMessage(toast).then(u => { if (alive) off = u; else u(); }).catch(() => { /* sin avisos en este navegador */ });
+    return () => { alive = false; off?.(); };
+  }, [store, toast]);
 
   // El menú lateral se muestra dentro de una votación y al crear una.
   const withSidebar = route.name === "create" || route.name === "poll";

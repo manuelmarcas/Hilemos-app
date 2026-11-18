@@ -182,6 +182,47 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
 - Cada uno puede borrar sus mensajes; no se editan (las reglas no tienen `update`).
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
+## Avisos (notificaciones)
+
+Están programados pero **apagados**: la app no los ofrece mientras `fcmVapidKey` (en `src/lib/config.ts`) esté
+vacía, y nada los manda hasta desplegar las Cloud Functions de `functions/`.
+
+Qué avisa y a quién (cada persona puede apagar cada tipo en «Tu perfil → Preferencias → Avisos»):
+
+- **Al creador**: alguien vota por primera vez (no en cada cambio, que sería un aviso por clic) y alguien pide entrar
+  en una votación con aprobación.
+- **A quien pidió entrar**: le han aceptado.
+- **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate ya tiene ganadora y
+  se acaba el plazo para votar.
+
+Piezas: `public/firebase-messaging-sw.js` (pinta el aviso; no carga el SDK porque las functions mandan mensajes solo
+de datos), `src/lib/push.ts` (permiso y token), los tokens en `users/{uid}/tokens/{token}` y las preferencias en
+`users/{uid}.notify`. Las reglas actuales de `users/{uid}/{document=**}` ya cubren las dos cosas: **no hay que tocar
+`firestore.rules`**.
+
+Para activarlos:
+
+1. **Plan Blaze** en Firebase (consola → ⚙️ → Uso y facturación). Cloud Functions lo exige aunque el consumo de esta
+   app quede dentro del tramo gratuito (2 millones de invocaciones al mes). Pon una alerta de presupuesto.
+2. **Clave VAPID**: consola → ⚙️ Configuración del proyecto → Cloud Messaging → *Certificados push web* →
+   «Generar par de claves». Copia la clave pública en `fcmVapidKey` de `src/lib/config.ts` y publica la app
+   (`npm run deploy`).
+3. **Desplegar las functions**, desde la raíz del repo:
+   ```bash
+   cd functions && npm install && cd ..
+   app/node_modules/.bin/firebase deploy --only functions --project votaciones-9bc95
+   ```
+   La del plazo (`onDeadline`) es programada: usa Cloud Scheduler, que se activa solo al desplegarla (gratis hasta
+   3 tareas por cuenta de facturación). Si no la quieres, bórrala de `functions/index.js` antes de desplegar.
+4. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
+
+**iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
+Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de
+Safari no se pueden activar; la pantalla de perfil lo explica. Para eso existe `public/manifest.webmanifest`. El
+icono es un SVG; iOS usa PNG para la pantalla de inicio, así que conviene añadir un `apple-touch-icon` de 180×180.
+
+Con la app abierta, el navegador no pinta el aviso: llega como aviso flotante dentro de la app.
+
 ## Eficiencia en Firestore
 
 Firestore cobra por documento leído y no puede unir colecciones en una consulta, así que el modelo está pensado
