@@ -76,6 +76,15 @@ export interface Vote {
   status?: "pending" | "rejected";
 }
 
+/** Documento `polls/{id}/chat/{msgId}`. La foto no se guarda: sale del voto del autor. */
+export interface ChatMessage {
+  id: string;
+  uid: string;
+  name: string;
+  text: string;
+  at: number;
+}
+
 export type MemberStatus = "accepted" | "pending" | "rejected";
 
 export type Votes = Record<string, Vote>;
@@ -171,6 +180,12 @@ export interface Store {
   saveVote(id: string, uid: string, data: Vote): Promise<void>;
   saveTiebreakVote(id: string, uid: string, data: Vote): Promise<void>;
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;
+
+  /** Chat de la votación: los últimos CHAT_LIMIT mensajes, del más antiguo al más nuevo. */
+  watchChat(id: string, cb: (msgs: ChatMessage[]) => void, onErr?: ErrorCb): Unsubscribe;
+  sendChat(id: string, msg: Omit<ChatMessage, "id">): Promise<void>;
+  /** Cada uno borra sus propios mensajes. */
+  deleteChat(id: string, msgId: string): Promise<void>;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;

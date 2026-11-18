@@ -9,6 +9,7 @@ import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { takeTemplate } from "../state/duplicate";
 import { GroupSelect } from "../components/GroupSelect";
+import { EmojiButton } from "../components/EmojiButton";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
 // y el icono se propone mientras no se haya elegido otro.
@@ -31,35 +32,6 @@ const toggled = (set: Set<string>, k: string) => {
   next.has(k) ? next.delete(k) : next.add(k);
   return next;
 };
-
-// Botón 😊 que acompaña a un campo de texto: inserta emojis en la posición del cursor.
-function EmojiButton({ field, setValue }: {
-  field: () => HTMLInputElement | HTMLTextAreaElement | null;
-  setValue: (v: string) => void;
-}) {
-  const { openEmoji } = useUi();
-  return (
-    <button type="button" className="emoji-btn" aria-label="Añadir emoji" aria-expanded="false"
-      onClick={e => {
-        const anchor = e.currentTarget;
-        openEmoji({
-          anchor,
-          keepOpen: true, // se pueden poner varios seguidos
-          onPick: emoji => {
-            const el = field();
-            if (!el) return;
-            const start = el.selectionStart ?? el.value.length;
-            const end = el.selectionEnd ?? el.value.length;
-            const next = el.value.slice(0, start) + emoji + el.value.slice(end);
-            if (el.maxLength > 0 && next.length > el.maxLength) return;
-            setValue(next);
-            const pos = start + emoji.length;
-            requestAnimationFrame(() => { try { el.setSelectionRange(pos, pos); } catch { /* nada */ } });
-          },
-        });
-      }}>😊</button>
-  );
-}
 
 // Desplegable de horas de un día: varias elegibles a la vez, sin cerrarse al marcar una.
 function HourDropdown({ day, options, chosen, onToggle }: {

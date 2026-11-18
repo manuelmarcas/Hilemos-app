@@ -932,7 +932,7 @@ button.hcell:not(:disabled):not(.on):hover{background:var(--hover)}
 
 /* Resumen y participantes */
 .summary{display:grid;gap:10px;margin:26px 0}
-.summary h2,.results h2{font-size:1.05rem;margin:0 0 4px;color:var(--brand-strong)}
+.summary h2,.results h2,.chat h2{font-size:1.05rem;margin:0 0 4px;color:var(--brand-strong)}
 .summary-list{display:flex;flex-direction:column;gap:6px}
 .summary-row{
   display:flex;
@@ -977,6 +977,57 @@ button.hcell:not(:disabled):not(.on):hover{background:var(--hover)}
 table{width:100%;border-collapse:collapse;font-size:.88rem}
 th,td{padding:7px 6px;border-bottom:1px solid var(--soft);text-align:left}
 td.n,th.n{text-align:right;white-space:nowrap}
+
+/* ---------- Chat de la votación ---------- */
+.chat{display:grid;gap:4px;margin:26px 0;min-width:0}
+.chat-note{color:var(--muted);font-size:.88rem;margin:0 0 8px;line-height:1.45}
+.chat-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px;
+  min-width:0;
+}
+.chat-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:420px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  min-width:0;
+  padding-right:2px;
+}
+.chat-list > .muted{font-size:.9rem;margin:0;padding:6px 2px}
+.chat-msg{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.chat-body{
+  min-width:0;
+  flex:1;
+  background:var(--soft);
+  border-radius:10px;
+  padding:7px 10px;
+}
+.chat-msg.own .chat-body{background:var(--brand-soft)}
+.chat-head{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px}
+.chat-name{font-size:.82rem;font-weight:700;color:var(--brand-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-when{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.chat-del{
+  margin-left:auto;
+  flex:none;
+  border:none;
+  background:none;
+  color:var(--muted);
+  font-size:1.05rem;
+  line-height:1;
+  padding:0 2px;
+  cursor:pointer;
+}
+.chat-del:hover{color:var(--danger)}
+.chat-text{margin:0;font-size:.95rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-form{display:flex;align-items:center;gap:8px;min-width:0;margin-top:12px}
+.chat-form .emoji-field{flex:1;min-width:0}
+.chat-form .btn{flex:none}
+.chat-closed{margin:12px 0 0}
 
 /* ---------- Diálogo compartir ---------- */
 .dlg{

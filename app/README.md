@@ -34,7 +34,7 @@ src/styles.css             Estilos
 src/state/ui.tsx           Avisos, confirmaciones, compartir y selector de emojis (contexto)
 src/state/session.tsx      Usuario, colección (votaciones y grupos) y filtros (contexto)
 src/state/route.ts         Rutas con #
-src/components/            Shell (barra y menú), Sidebar, Gate (login), diálogos, Avatar, EmojiPanel…
+src/components/            Shell (barra y menú), Sidebar, Gate (login), diálogos, Avatar, Chat, EmojiPanel…
 src/pages/                 Home, Create, Poll, Profile
 src/lib/types.ts           Tipos del modelo de datos y de la interfaz Store
 src/lib/store.ts           Datos: Firebase o modo demo (misma interfaz)
@@ -168,6 +168,19 @@ Authentication; si no está activado, la pantalla lo dice.
   identificar a cada persona. Las reglas lo impiden (`anon()`) y la app lo explica en vez de dar un error.
 - Quien entra sin cuenta **no puede crear** votaciones (también por reglas): serían de una sesión que puede
   desaparecer.
+
+## Chat de la votación
+
+Al final de cada votación hay un «💬 Chat» en vivo para hablar con el grupo sin irse a WhatsApp. Cada mensaje es
+un documento de `polls/{id}/chat/{msgId}` con `{ uid, name, text, at }`; la foto no se guarda, sale del voto del
+autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 caracteres (`MAX_CHAT`).
+
+- Escriben y leen el creador y los participantes aceptados, también quien entró sin cuenta en una votación
+  abierta; pendientes y rechazados no. Lo exigen las reglas (`chatMember()`).
+- Se puede seguir hablando con la votación cerrada o con el plazo pasado: es cuando se remata el plan.
+- En las votaciones anónimas el chat sí lleva nombres (el anonimato es de los votos) y la sección lo avisa.
+- Cada uno puede borrar sus mensajes; no se editan (las reglas no tienen `update`).
+- Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
 ## Eficiencia en Firestore
 
