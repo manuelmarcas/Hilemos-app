@@ -1,7 +1,9 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { errMsg, imageToAvatar, makeThumb } from "../lib/util";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
+import { disablePush, enablePush, isIos, isStandalone, pushState, type PushState } from "../lib/push";
+import type { NotifyPrefs } from "../lib/types";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { Avatar } from "../components/Avatar";
@@ -10,6 +12,12 @@ const THEMES: [ThemePref, string, string, string][] = [
   ["auto", "🌗", "Automático", "Como tu dispositivo"],
   ["light", "☀️", "Claro", "Fondo claro"],
   ["dark", "🌙", "Oscuro", "Fondo oscuro"],
+];
+
+const NOTIFY: [keyof NotifyPrefs, string][] = [
+  ["votes", "Alguien vota en una votación tuya"],
+  ["state", "Se cierra, hay desempate o se acaba el plazo"],
+  ["members", "Te aceptan, o alguien quiere entrar en una tuya"],
 ];
 
 export function Profile() {
@@ -21,8 +29,47 @@ export function Profile() {
   const [status, setStatus] = useState("");
   const [theme, setTheme] = useState(getThemePref);
   const [linking, setLinking] = useState(false);
+  const [push, setPush] = useState<PushState | null>(null);
+  const [notify, setNotify] = useState<NotifyPrefs>({});
+  const [pushBusy, setPushBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let alive = true;
+    pushState(store).then(s => { if (alive) setPush(s); });
+    store.getProfile(user.uid)
+      .then(p => { if (alive && p?.notify) setNotify(p.notify); })
+      .catch(() => { /* sin perfil guardado: todos los avisos activados */ });
+    return () => { alive = false; };
+  }, [store, user.uid]);
+
+  async function togglePush() {
+    if (pushBusy) return;
+    setPushBusy(true);
+    setStatus("");
+    try {
+      if (push === "on") {
+        await disablePush(store, user.uid);
+        setPush("off");
+        toast("Avisos desactivados en este dispositivo");
+      } else if (await enablePush(store, user.uid)) {
+        setPush("on");
+        toast("Avisos activados en este dispositivo");
+      } else {
+        setPush(Notification.permission === "denied" ? "denied" : "off");
+      }
+    } catch (e) {
+      setStatus("No se pudieron cambiar los avisos. " + errMsg(e));
+    }
+    setPushBusy(false);
+  }
+
+  function toggleNotify(key: keyof NotifyPrefs) {
+    const next = { ...notify, [key]: notify[key] === false };
+    setNotify(next);
+    store.saveProfile(user.uid, { notify: next }).catch(e => setStatus("No se pudo guardar. " + errMsg(e)));
+  }
 
   // Guardar la sesión sin cuenta en una cuenta de Google: conserva el uid, así que mantiene votos y votaciones.
   async function linkGoogle() {
@@ -143,6 +190,41 @@ export function Profile() {
             ))}
           </div>
           <p className="hint hint-after">Se aplica al momento y se recuerda en este dispositivo.</p>
+          {push && push !== "unconfigured" && (push !== "unsupported" || (isIos() && !isStandalone())) && (
+            <div className="pref-block">
+              <h3 className="pref-label" id="pf-notify-label">Avisos</h3>
+              {push === "unsupported" && (
+                <p className="hint">
+                  Para recibir avisos en el iPhone, añade Votaciones a tu pantalla de inicio: pulsa «Compartir» en
+                  Safari y luego «Añadir a pantalla de inicio». Después vuelve aquí y actívalos.
+                </p>
+              )}
+              {push === "denied" && (
+                <p className="hint">
+                  Has bloqueado los avisos en este navegador. Para recibirlos, permítelos en los ajustes del sitio y
+                  vuelve a esta pantalla.
+                </p>
+              )}
+              {(push === "on" || push === "off") && <>
+                <p className="hint">
+                  Te avisamos en este dispositivo cuando pase algo en tus votaciones. Puedes quitarlos cuando quieras.
+                </p>
+                <button className="btn" id="pf-push" disabled={pushBusy} onClick={togglePush} aria-pressed={push === "on"}>
+                  {pushBusy ? "Un momento…" : push === "on" ? "🔕 Desactivar los avisos" : "🔔 Activar los avisos"}
+                </button>
+              </>}
+              {push === "on" && (
+                <div className="notify-opts" role="group" aria-labelledby="pf-notify-label">
+                  {NOTIFY.map(([key, label]) => (
+                    <label key={key} className="dlg-check">
+                      <input type="checkbox" checked={notify[key] !== false} onChange={() => toggleNotify(key)} />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
     </>

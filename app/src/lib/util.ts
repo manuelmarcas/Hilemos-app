@@ -10,6 +10,10 @@ const ERRORS: Record<string, string> = {
   "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication (Configuración > Dominios autorizados).",
   "auth/operation-not-allowed": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
   "auth/admin-restricted-operation": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
+  "messaging/permission-blocked": "Has bloqueado los avisos en este navegador. Permítelos en los ajustes del sitio.",
+  "messaging/unsupported-browser": "Este navegador no admite avisos.",
+  "messaging/failed-service-worker-registration": "No se pudo preparar el navegador para recibir avisos.",
+  "messaging/token-subscribe-failed": "No se pudo dar de alta este dispositivo para los avisos. Revisa la clave VAPID de config.ts.",
 };
 
 export const errMsg = (e: unknown) => {

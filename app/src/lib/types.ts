@@ -101,12 +101,23 @@ export interface Library {
   groups: Record<string, Group>;
 }
 
+/** Qué avisos quiere recibir. Sin el campo, o sin alguna clave, se le avisa de todo. */
+export interface NotifyPrefs {
+  /** Alguien ha votado en una votación suya. */
+  votes?: boolean;
+  /** Se cierra, se reabre, hay desempate o se acaba el plazo. */
+  state?: boolean;
+  /** Le han aceptado, o alguien quiere entrar en una votación suya. */
+  members?: boolean;
+}
+
 /** Documento `users/{uid}` (privado). */
 export interface Profile {
   name?: string;
   photo?: string;  // imagen de perfil (128 px en base64, URL de Google o vacía)
   thumb?: string;  // miniatura que se copia en los votos (64 px), para que pesen poco
   hideRemoveWarning?: boolean; // ha marcado "no volver a mostrar" en el aviso de eliminar de su lista
+  notify?: NotifyPrefs;
   updatedAt?: number;
 }
 
@@ -174,6 +185,10 @@ export interface Store {
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;
+
+  /** Guarda el dispositivo al que mandar los avisos, en `users/{uid}/tokens/{token}`. */
+  savePushToken(uid: string, token: string, data: { platform: string; updatedAt: number }): Promise<void>;
+  removePushToken(uid: string, token: string): Promise<void>;
 
   watchLibrary(uid: string, cb: (l: Library) => void, onErr?: ErrorCb): Unsubscribe;
   saveLibraryEntry(uid: string, pollId: string, data: Partial<LibraryEntry>): Promise<void>;
