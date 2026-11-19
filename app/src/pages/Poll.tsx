@@ -1,5 +1,5 @@
 // Pantalla de una votación: calendario, recuentos, desempate y participantes.
-import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react";
 import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
@@ -9,7 +9,7 @@ import {
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
 import { cls, errMsg, pollUrl } from "../lib/util";
-import { calendarEvent, downloadIcs, googleCalendarUrl } from "../lib/ics";
+import { calendarEvent, downloadIcs, googleCalendarUrl, type CalEvent } from "../lib/ics";
 import { shareResultCard } from "../lib/resultImage";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
@@ -403,12 +403,7 @@ export function PollPage({ id }: { id: string }) {
       <section className="summary">
         {cal && (
           <div className="summary-head">
-            <div className="cal-add">
-              <button className="btn small" onClick={() => downloadIcs(cal)}>
-                <span aria-hidden="true">📅</span> Añadir al calendario
-              </button>
-              <a className="link-btn" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">Google Calendar</a>
-            </div>
+            <CalendarMenu cal={cal} />
           </div>
         )}
         {/* El botón va con el texto que lo explica, no separado arriba junto al calendario. */}
@@ -494,14 +489,9 @@ function PollTabs({ tab, setTab, counts, unread }: {
 
 // ---------- Menú ⋯ del creador: cerrar/reabrir, hacer anónima y eliminar ----------
 
-function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDuplicate, onAccess }: {
-  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
-  onDuplicate: () => void; onAccess?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const btn = useRef<HTMLButtonElement>(null);
-
+// Menú desplegable: se cierra al pulsar fuera o con Escape (volviendo al botón) y se recorre con las flechas.
+function useMenuKeys(open: boolean, setOpen: (open: boolean) => void,
+  wrap: RefObject<HTMLDivElement | null>, btn: RefObject<HTMLButtonElement | null>) {
   useEffect(() => {
     if (!open) return;
     const items = () => [...(wrap.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') || [])];
@@ -521,7 +511,44 @@ function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDup
       document.removeEventListener("pointerdown", onDown, true);
       document.removeEventListener("keydown", onKey, true);
     };
-  }, [open]);
+  }, [open, setOpen, wrap, btn]);
+}
+
+// Un solo botón para el calendario: Google Calendar se abre en la web, sin descargar nada; Apple, Outlook y el
+// resto reciben el archivo .ics (en iPhone lo abre Calendario directamente).
+function CalendarMenu({ cal }: { cal: CalEvent }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useMenuKeys(open, setOpen, wrap, btn);
+  return (
+    <div className="pm" ref={wrap}>
+      <button ref={btn} className="btn small" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        <span aria-hidden="true">📅</span> Añadir al calendario <span className="pm-caret" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="pm-menu start" role="menu" aria-label="Añadir al calendario">
+          <a role="menuitem" className="pm-item" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer"
+            onClick={() => setOpen(false)}>
+            <span aria-hidden="true">🌐</span>Google Calendar
+          </a>
+          <button role="menuitem" className="pm-item" onClick={() => { setOpen(false); downloadIcs(cal); }}>
+            <span aria-hidden="true">📥</span>Apple, Outlook y otros (.ics)
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDuplicate, onAccess }: {
+  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
+  onDuplicate: () => void; onAccess?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useMenuKeys(open, setOpen, wrap, btn);
 
   const pick = (fn: () => void) => () => { setOpen(false); fn(); };
 

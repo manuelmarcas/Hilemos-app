@@ -726,6 +726,9 @@ select.input{cursor:pointer}
 .pm-item:hover,.pm-item:focus-visible{background:var(--hover);outline:none}
 .pm-item.danger{color:var(--danger)}
 .pm-sep{height:1px;background:var(--line);margin:4px 6px}
+.pm-menu.start{left:0;right:auto}
+a.pm-item{text-decoration:none}
+.pm-caret{font-size:.75em;color:var(--muted)}
 .closed-banner{
   background:var(--danger-soft);
   color:var(--danger);
@@ -839,6 +842,9 @@ button.opt:not(:disabled):not(.on):hover{background:var(--hover)}
 .opt.c2.on{background:var(--c2);color:var(--c2-ink)}
 .opt.c3.on{background:var(--c3);color:var(--c3-ink)}
 .opt.best{box-shadow:var(--best-ring)}
+/* La casilla tiene las esquinas redondeadas y recorta lo que sobresale: el aro sigue su curva (radio interior: 10px − 1px de borde). */
+.opt.best{border-radius:6px 6px 9px 9px}
+.opt.best:not(:last-child){border-bottom-left-radius:6px;border-bottom-right-radius:6px}
 @container view (min-width:820px){
   .cell{min-height:96px}
   .cell.n3{min-height:114px}
@@ -1412,7 +1418,6 @@ tr.open td{border-bottom-color:transparent}
 
 /* ---------- Ranking y desempate ---------- */
 .summary-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
-.cal-add{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;min-width:0}
 .summary-note{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45}
 .summary-tie{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .summary-tie .summary-note{flex:1 1 240px;min-width:0}
