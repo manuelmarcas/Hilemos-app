@@ -1,7 +1,7 @@
 {
-  "name": "Votaciones",
-  "short_name": "Votaciones",
-  "description": "Crea votaciones de horas, días, semanas o meses y compártelas con tu grupo.",
+  "name": "Hilemos",
+  "short_name": "Hilemos",
+  "description": "Elige con tu grupo el día, la semana, el mes o la hora. Crea una votación y compártela.",
   "lang": "es",
   "start_url": "/",
   "scope": "/",

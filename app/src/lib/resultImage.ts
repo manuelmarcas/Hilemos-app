@@ -114,7 +114,7 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
   g.textBaseline = "alphabetic";
   g.fillStyle = t["--brand-strong"];
   g.font = `800 40px ${display}`;
-  g.fillText("🗳️ Votaciones", PAD, y);
+  g.fillText("Hilemos", PAD, y);
   y += 56;
 
   const info = TYPE[poll.type];

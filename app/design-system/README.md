@@ -75,7 +75,7 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
   - `public/logo-rounded.svg`: la pantalla de entrada, con fondo `brand` y las esquinas ya redondeadas.
   - Sin fondo, solo el calendario en `logo` (naranja suave, el mismo tono que `c3` en oscuro), con los ojos y la boca huecos para que sirva en los dos temas: `src/components/LogoMark.tsx` en la barra superior y `public/favicon.svg` en la pestaña del navegador.
   - `logo/play-store-512.png`: el icono para la ficha de la Play Store.
-- En la barra superior va el logotipo sin fondo (`LogoMark`, en `logo`) seguido de «meetplan» en `wordmark`, con «meet» en `brand`.
+- En la barra superior va el logotipo sin fondo (`LogoMark`, en `logo`) seguido de «hilemos» en `wordmark`, con «hil» (de hilo, hilar) en `brand` y el resto en `ink`. El nombre va siempre en minúsculas en el logotipo y como «Hilemos» en el texto.
 - Avatares: la foto de perfil recortada en círculo o, si no hay, la inicial sobre un tono que sale del nombre (fondo `hsl(h 42% 86%)` y letra `hsl(h 45% 26%)`; en oscuro, `hsl(h 28% 30%)` y `hsl(h 60% 88%)`). En grupo se solapan 7px con un aro de 2px en `card`.
 
 ## Componentes

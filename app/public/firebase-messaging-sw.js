@@ -12,7 +12,7 @@ self.addEventListener("push", event => {
   try { payload = event.data ? event.data.json() : {}; } catch { payload = {}; }
   const d = payload.data || payload;
   if (!d.title && !d.body) return;
-  event.waitUntil(self.registration.showNotification(d.title || "Votaciones", {
+  event.waitUntil(self.registration.showNotification(d.title || "Hilemos", {
     body: d.body || "",
     lang: "es",
     tag: d.tag || "votaciones",

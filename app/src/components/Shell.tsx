@@ -68,9 +68,9 @@ export function Shell() {
         <div className="topbar-left">
           <button className="sb-toggle" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
             aria-expanded={drawer} onClick={() => setDrawer(d => !d)}>☰</button>
-          <a className="brand" href="#/" aria-label="Meetplan: mis votaciones">
+          <a className="brand" href="#/" aria-label="Hilemos: mis votaciones">
             <LogoMark className="brand-logo" />
-            <span className="brand-name" aria-hidden="true"><span className="brand-meet">meet</span>plan</span>
+            <span className="brand-name" aria-hidden="true"><span className="brand-accent">hil</span>emos</span>
           </a>
         </div>
         <div className="who">

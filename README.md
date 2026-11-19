@@ -1,4 +1,7 @@
-# 🗳️ Votaciones
+# Hilemos
+
+Nombre de la app (antes «Votaciones» y, unos días, «Meetplan»). El repositorio y el proyecto de Firebase
+mantienen el nombre antiguo.
 
 App para crear votaciones de fechas y compartirlas con un grupo. Es la evolución de
 [votaciones](https://github.com/manuelmarcas/votaciones) (la votación de comida/cena de Navidad),

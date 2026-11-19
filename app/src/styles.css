@@ -1,5 +1,5 @@
 :root{
-  /* Design system «Votaciones»: los nombres y valores son los de tokens.json */
+  /* Design system «Hilemos»: los nombres y valores son los de tokens.json */
   --bg:#f6f4f7;
   --card:#ffffff;
   --soft:#eeeaef;
@@ -252,7 +252,7 @@ button,input,select,textarea{font:inherit}
 }
 .brand-logo{width:34px;height:34px;flex:none;display:block;color:var(--logo)}
 .brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.brand-meet{color:var(--brand)}
+.brand-accent{color:var(--brand)}
 .sb-toggle{
   display:none;
   align-items:center;

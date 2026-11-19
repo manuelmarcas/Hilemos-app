@@ -195,7 +195,7 @@ export function Profile() {
               <h3 className="pref-label" id="pf-notify-label">Avisos</h3>
               {push === "unsupported" && (
                 <p className="hint">
-                  Para recibir avisos en el iPhone, añade Votaciones a tu pantalla de inicio: pulsa «Compartir» en
+                  Para recibir avisos en el iPhone, añade Hilemos a tu pantalla de inicio: pulsa «Compartir» en
                   Safari y luego «Añadir a pantalla de inicio». Después vuelve aquí y actívalos.
                 </p>
               )}

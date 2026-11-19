@@ -82,7 +82,7 @@ function icsFile(e: CalEvent) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Votaciones//ES",
+    "PRODID:-//Hilemos//ES",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${e.uid}`,
