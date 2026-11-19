@@ -187,6 +187,9 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       const isGroup = !!s.gid;
       if (searching && !shown.length) return null;
       if (!isGroup && !s.items.length && (!hasGroups || !total)) return null;
+      // Dentro de una votación el menú sirve para moverse entre votaciones: un grupo vacío solo estorba.
+      // Se muestra mientras se arrastra (para poder soltar en él) y al renombrarlo.
+      if (activeId && !dragging && !s.items.length && !(form?.mode === "rename" && form.gid === s.gid)) return null;
       const open = searching || !collapsed.has(s.gid);
       const gmenuOpen = menu?.type === "group" && menu.id === s.gid;
       const renaming = form?.mode === "rename" && form.gid === s.gid;
