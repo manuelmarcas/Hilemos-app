@@ -234,8 +234,9 @@ Para activarlos:
 
 **iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
 Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de
-Safari no se pueden activar; la pantalla de perfil lo explica. Para eso existe `public/manifest.webmanifest`. El
-icono es un SVG; iOS usa PNG para la pantalla de inicio, así que conviene añadir un `apple-touch-icon` de 180×180.
+Safari no se pueden activar; la pantalla de perfil lo explica. Para eso existe `public/manifest.webmanifest`. Los
+iconos (SVG y PNG, normales y adaptables, más el `apple-touch-icon` de 180×180) están descritos en
+[`design-system/README.md`](design-system/README.md#iconografía).
 
 Con la app abierta, el navegador no pinta el aviso: llega como aviso flotante dentro de la app.
 
