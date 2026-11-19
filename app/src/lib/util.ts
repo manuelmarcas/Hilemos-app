@@ -100,4 +100,9 @@ export const sortedGroups = (groups: Record<string, Group> | null | undefined) =
 
 export const pollUrl = (id: string) => `${location.origin}${location.pathname}${location.search}#/v/${id}`;
 
+/** iPhone y iPad (el iPad moderno se presenta como un Mac, pero con pantalla táctil). */
+export const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+export const isAndroid = () => /Android/i.test(navigator.userAgent);
+
 export const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");

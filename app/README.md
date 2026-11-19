@@ -91,8 +91,9 @@ hay que escribir el nombre. El icono sí se propone, y se puede cambiar.
 ## Añadir al calendario
 
 Cuando no hay empate en el primer puesto (o ya ha ganado una opción en el desempate), en «Opciones más votadas»
-aparece «📅 Añadir al calendario ▾», un solo botón con dos opciones: «Google Calendar» (lo abre en la web, sin
-descargar nada) y «Apple, Outlook y otros (.ics)» (descarga el archivo). El evento lo monta
+aparece «📅 Añadir al calendario». Hace lo que toca según el dispositivo: en **Android** abre Google Calendar (sin
+descargar nada); en **iPhone y iPad** descarga el `.ics`, que abre Calendario; en el **ordenador** es un menú con las
+dos opciones («Google Calendar» y «Apple, Outlook y otros (.ics)»). El evento lo monta
 `src/lib/ics.ts` sin dependencias: dura lo que la franja (`hourStep`), una hora en las horas sueltas, y ocupa el
 día, la semana o el mes completos en los demás tipos. Las horas van sin zona horaria (*flotantes*), igual que las
 guarda la app: las 21:00 votadas son las 21:00 de quien abre el evento.

@@ -2,6 +2,9 @@
 // El aviso en segundo plano lo pinta public/firebase-messaging-sw.js.
 import { fcmVapidKey } from "./config";
 import type { Store } from "./types";
+import { isIos } from "./util";
+
+export { isIos };
 
 const SW_URL = "/firebase-messaging-sw.js";
 
@@ -12,9 +15,7 @@ export type PushState =
   | "off"
   | "on";
 
-/** En iPhone y iPad los avisos solo existen si la web está añadida a la pantalla de inicio. */
-export const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent)
-  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+// En iPhone y iPad los avisos solo existen si la web está añadida a la pantalla de inicio (ver isIos en util.ts).
 export const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches
   || (navigator as { standalone?: boolean }).standalone === true;
 

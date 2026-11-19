@@ -8,7 +8,7 @@ import {
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
-import { cls, errMsg, pollUrl } from "../lib/util";
+import { cls, errMsg, isAndroid, isIos, pollUrl } from "../lib/util";
 import { calendarEvent, downloadIcs, googleCalendarUrl, type CalEvent } from "../lib/ics";
 import { shareResultCard } from "../lib/resultImage";
 import { useSession } from "../state/session";
@@ -514,17 +514,22 @@ function useMenuKeys(open: boolean, setOpen: (open: boolean) => void,
   }, [open, setOpen, wrap, btn]);
 }
 
-// Un solo botón para el calendario: Google Calendar se abre en la web, sin descargar nada; Apple, Outlook y el
-// resto reciben el archivo .ics (en iPhone lo abre Calendario directamente).
+// Un solo botón para el calendario, según el dispositivo: en Android abre Google Calendar (sin descargar nada),
+// en iPhone y iPad descarga el .ics, que abre Calendario directamente, y en el ordenador deja elegir con un menú.
 function CalendarMenu({ cal }: { cal: CalEvent }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   useMenuKeys(open, setOpen, wrap, btn);
+  const label = <><span aria-hidden="true">📅</span> Añadir al calendario</>;
+  if (isAndroid()) {
+    return <a className="btn small" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">{label}</a>;
+  }
+  if (isIos()) return <button className="btn small" onClick={() => downloadIcs(cal)}>{label}</button>;
   return (
     <div className="pm" ref={wrap}>
       <button ref={btn} className="btn small" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        <span aria-hidden="true">📅</span> Añadir al calendario <span className="pm-caret" aria-hidden="true">▾</span>
+        {label} <span className="pm-caret" aria-hidden="true">▾</span>
       </button>
       {open && (
         <div className="pm-menu start" role="menu" aria-label="Añadir al calendario">
