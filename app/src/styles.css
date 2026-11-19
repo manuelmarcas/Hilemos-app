@@ -422,6 +422,8 @@ select.input{cursor:pointer}
   border-radius:0 12px 12px 0;
 }
 .pc-more:hover,.pc-more[aria-expanded="true"]{background:var(--hover);color:var(--ink)}
+/* Desplegado, el panel de debajo se une al botón: sin la esquina redondeada que dejaba un hueco. */
+.pc-more[aria-expanded="true"]{border-bottom-right-radius:0}
 .pc-actions{
   display:flex;
   flex-wrap:wrap;
