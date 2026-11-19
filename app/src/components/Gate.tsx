@@ -48,8 +48,8 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   return (
     <div id="gate">
       <div className="gate-card">
-        <div className="gate-emoji">🗳️</div>
-        <h1>Votaciones</h1>
+        <img className="gate-logo" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={72} height={72} />
+        <h1><span className="brand-meet">meet</span>plan</h1>
         <p id="gate-text">
           {invited
             ? demo
