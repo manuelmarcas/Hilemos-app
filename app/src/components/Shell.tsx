@@ -5,6 +5,7 @@ import { useUi } from "../state/ui";
 import { parseRoute, useHashPath } from "../state/route";
 import { onPushMessage } from "../lib/push";
 import { Avatar } from "./Avatar";
+import { LogoMark } from "./LogoMark";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -68,7 +69,7 @@ export function Shell() {
           <button className="sb-toggle" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
             aria-expanded={drawer} onClick={() => setDrawer(d => !d)}>☰</button>
           <a className="brand" href="#/" aria-label="Meetplan: mis votaciones">
-            <img className="brand-logo" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={30} height={30} />
+            <LogoMark className="brand-logo" />
             <span className="brand-name" aria-hidden="true"><span className="brand-meet">meet</span>plan</span>
           </a>
         </div>

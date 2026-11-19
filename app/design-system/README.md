@@ -72,7 +72,8 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
 - Logotipo: un calendario blanco con cara que guiña un ojo y saca la lengua, sobre fondo `brand`. El original (de Recraft) está en `logo/logo-recraft-original.svg`; los que usa la app salen de él:
   - `public/icon.svg`, `icon-192.png`, `icon-512.png` y `apple-touch-icon.png` (180 px): a sangre, sin esquinas; Android, iPhone y la Play Store las recortan por su cuenta.
   - `public/icon-maskable.svg` y sus PNG: el dibujo al 80 % para que quepa en el círculo de los iconos adaptables de Android.
-  - `public/favicon.svg`: la pestaña del navegador, con las esquinas ya redondeadas.
+  - `public/favicon.svg`: la pestaña del navegador y la pantalla de entrada, con las esquinas ya redondeadas.
+  - `src/components/LogoMark.tsx`: la barra superior. Solo el calendario, sin fondo, en `brand`; los ojos y la boca son huecos, así que sirve en los dos temas.
   - `logo/play-store-512.png`: el icono para la ficha de la Play Store.
 - En la barra superior la marca sigue siendo «🗳️ Votaciones» en `wordmark` y `brand-strong`.
 - Avatares: la foto de perfil recortada en círculo o, si no hay, la inicial sobre un tono que sale del nombre (fondo `hsl(h 42% 86%)` y letra `hsl(h 45% 26%)`; en oscuro, `hsl(h 28% 30%)` y `hsl(h 60% 88%)`). En grupo se solapan 7px con un aro de 2px en `card`.
