@@ -1031,7 +1031,11 @@ td.n,th.n{text-align:right;white-space:nowrap}
 }
 .ptab-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ptab .n{margin-left:4px;font-size:.75rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums}
-@container view (min-width:480px){.ptab{flex-direction:row;gap:6px;padding:10px 12px;font-size:.9rem}}
+@container view (min-width:480px){
+  .ptab{flex-direction:row;gap:6px;padding:10px 12px;font-size:.9rem}
+  /* En fila, el contador sobresale a la derecha del emoji: hueco para que no tape el texto */
+  .ptab-ico.has-badge{margin-right:12px}
+}
 .ptab-panel{min-width:0}
 .ptab-panel > .summary,.ptab-panel > .chat{margin-top:0}
 

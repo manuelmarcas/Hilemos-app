@@ -476,7 +476,7 @@ function PollTabs({ tab, setTab, counts, unread }: {
           <button key={t.id} ref={el => { refs.current[i] = el; }} type="button" role="tab" id={`ptabbtn-${t.id}`}
             className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}
             aria-label={badge ? `${t.label}: ${plural(badge, ["mensaje sin leer", "mensajes sin leer"])}` : undefined}>
-            <span className="ptab-ico" aria-hidden="true">
+            <span className={badge > 0 ? "ptab-ico has-badge" : "ptab-ico"} aria-hidden="true">
               {t.icon}{badge > 0 && <span className="ptab-badge">{badge > 99 ? "99+" : badge}</span>}
             </span>
             <span className="ptab-label">{t.label}{n != null && <span className="n">{n}</span>}</span>
