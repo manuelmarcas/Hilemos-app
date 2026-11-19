@@ -1489,16 +1489,25 @@ tr.open td{border-bottom-color:transparent}
   padding:0 20px;
   border-radius:12px;
   font-weight:700;font-size:.92rem;
-  transition:background .15s;
 }
 .swipe-bg.from-left{justify-content:flex-start}
 .swipe-bg.from-right{flex-direction:row-reverse;justify-content:flex-start} /* en row-reverse, flex-start es la derecha */
+/* --p (0 → 1) es lo que falta para lanzar la acción: el color crece con el dedo, del tono suave al pleno. */
 .swipe-bg.tone-archive{background:var(--brand-soft);color:var(--brand-strong)}
-.swipe-bg.tone-archive.armed{background:var(--brand);color:var(--on-brand)}
 .swipe-bg.tone-danger{background:var(--danger-soft);color:var(--danger)}
-.swipe-bg.tone-danger.armed{background:var(--danger);color:#fff}
-.swipe-ic{font-size:1.2rem;transition:transform .15s}
-.swipe-bg.armed .swipe-ic{transform:scale(1.2)}
+.swipe-bg.armed.tone-archive{background:var(--brand);color:var(--on-brand)}
+.swipe-bg.armed.tone-danger{background:var(--danger);color:#fff}
+@supports (background:color-mix(in srgb,red 50%,blue)){
+  .swipe-bg.tone-archive{
+    background:color-mix(in srgb,var(--brand) calc(var(--p,0) * 100%),var(--brand-soft));
+    color:color-mix(in srgb,var(--on-brand) calc(var(--p,0) * 100%),var(--brand-strong));
+  }
+  .swipe-bg.tone-danger{
+    background:color-mix(in srgb,var(--danger) calc(var(--p,0) * 100%),var(--danger-soft));
+    color:color-mix(in srgb,#fff calc(var(--p,0) * 100%),var(--danger));
+  }
+}
+.swipe-ic{font-size:1.2rem;transform:scale(calc(.8 + var(--p,0) * .4))}
 
 .swipe-hint{display:none;margin:14px 2px 0;font-size:.8rem;color:var(--muted);text-align:center}
 @media (hover:none){.swipe-hint{display:block}}

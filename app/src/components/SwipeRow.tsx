@@ -1,6 +1,6 @@
 // Fila que se desliza con el dedo (móvil): hacia la derecha o la izquierda lanza una acción.
 // Con ratón no hace nada (en el ordenador las mismas acciones están en el botón ⋯).
-import { useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { cls } from "../lib/util";
 
 export interface SwipeAction {
@@ -71,12 +71,14 @@ export function SwipeRow({ right, left, children }: {
   };
 
   const armed = Math.abs(dx) >= threshold();
+  const progress = Math.min(1, Math.abs(dx) / threshold());
   const showing = dx > 0 ? right : dx < 0 ? left : null;
 
   return (
     <div ref={box} className={cls("swipe", dx !== 0 && "swiping")}>
       {showing && (
-        <div className={cls("swipe-bg", `tone-${showing.tone}`, dx > 0 ? "from-left" : "from-right", armed && "armed")} aria-hidden="true">
+        <div className={cls("swipe-bg", `tone-${showing.tone}`, dx > 0 ? "from-left" : "from-right", armed && "armed")}
+          style={{ "--p": progress.toFixed(3) } as CSSProperties} aria-hidden="true">
           <span className="swipe-ic">{showing.icon}</span>
           <span className="swipe-lbl">{showing.label}</span>
         </div>
