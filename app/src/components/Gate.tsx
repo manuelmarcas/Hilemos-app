@@ -49,7 +49,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     <div id="gate">
       <div className="gate-card">
         <img className="gate-logo" src={`${import.meta.env.BASE_URL}logo-rounded.svg`} alt="" width={72} height={72} />
-        <h1><span className="brand-accent">hil</span>emos</h1>
+        <h1><span className="wm-hile">hile</span><span className="wm-mos">mos</span></h1>
         <p id="gate-text">
           {invited
             ? demo
