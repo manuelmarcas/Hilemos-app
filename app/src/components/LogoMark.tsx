@@ -1,6 +1,6 @@
 // Logotipo sin fondo: solo el calendario, en el color de la marca. Los ojos y la
 // boca son huecos (máscara), así que se ve bien sobre cualquier fondo y en los dos
-// temas. Sale de public/favicon.svg; el color lo da `color` (currentColor).
+// temas. Sale de public/logo-rounded.svg; el color lo da `color` (currentColor), que es `--logo`.
 import { useId } from "react";
 
 const BODY = [

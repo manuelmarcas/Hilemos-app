@@ -12,6 +12,7 @@
   --brand-strong:#451d42;
   --brand-soft:#ebdfea;
   --on-brand:#ffffff;
+  --logo:#a8679e;
   --best:#1e7a45;
   --best-soft:#e5f2ea;
   --on-best:#ffffff;
@@ -63,6 +64,7 @@
   --brand-strong:#efcbe7;
   --brand-soft:#3f2a3b;
   --on-brand:#1b1619;
+  --logo:#b884ae;
   --best:#5ec98c;
   --best-soft:#1b3426;
   --on-best:#0f2418;
@@ -102,6 +104,7 @@
   --brand-strong:#efcbe7;
   --brand-soft:#3f2a3b;
   --on-brand:#1b1619;
+  --logo:#b884ae;
   --best:#5ec98c;
   --best-soft:#1b3426;
   --on-best:#0f2418;
@@ -247,7 +250,7 @@ button,input,select,textarea{font:inherit}
   font-weight:800;font-size:1.3rem;letter-spacing:-.01em;color:var(--ink);text-decoration:none;
   white-space:nowrap;min-width:0;
 }
-.brand-logo{width:34px;height:34px;flex:none;display:block;color:var(--brand)}
+.brand-logo{width:34px;height:34px;flex:none;display:block;color:var(--logo)}
 .brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .brand-meet{color:var(--brand)}
 .sb-toggle{
