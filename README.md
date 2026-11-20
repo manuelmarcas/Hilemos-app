@@ -7,9 +7,9 @@ App para crear votaciones de fechas y compartirlas con un grupo. Es la evolució
 [votaciones](https://github.com/manuelmarcas/votaciones) (la votación de comida/cena de Navidad),
 pero todo es configurable.
 
-**Dirección única: <https://votaciones-9bc95.web.app>** (Firebase Hosting). Es la única que se publica.
-La antigua de GitHub Pages (`manuelmarcas.github.io/votaciones-app`) solo redirige allí, conservando la votación
-del enlace, para que los enlaces ya compartidos sigan funcionando.
+**Dirección única: <https://hilemos.web.app>** (Firebase Hosting, sitio `hilemos` del proyecto `votaciones-9bc95`).
+Las antiguas, <https://votaciones-9bc95.web.app> y la de GitHub Pages (`manuelmarcas.github.io/votaciones-app`),
+solo redirigen allí conservando la votación del enlace, para que los enlaces ya compartidos sigan funcionando.
 
 El código está en [`app/`](app/) (React + Vite + TypeScript, preparado para la app móvil con Capacitor):
 ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en el historial de git.
@@ -68,7 +68,7 @@ caducan y cambian de dirección.
    y `.firebaserc` de la raíz), o pegarlas en
    *Firebase Console › Firestore Database › Reglas*. Incluyen también la regla de `/votes` de la votación de
    Navidad original.
-2. **Web**: `cd app && npm run deploy` (compila y publica en <https://votaciones-9bc95.web.app>).
+2. **Web**: `cd app && npm run deploy` (compila y publica en <https://hilemos.web.app>).
 
 Si se publica en otro dominio, hay que añadirlo en *Authentication › Configuración › Dominios autorizados*.
 

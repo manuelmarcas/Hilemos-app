@@ -5,7 +5,7 @@ import { Capacitor } from "@capacitor/core";
 export const isNative = () => Capacitor.isNativePlatform();
 
 /** Dirección pública de la web. Dentro de la app la página se sirve desde https://localhost, que no vale para compartir. */
-export const PUBLIC_ORIGIN = "https://votaciones-9bc95.web.app";
+export const PUBLIC_ORIGIN = "https://hilemos.web.app";
 export const publicHost = () => (isNative() ? new URL(PUBLIC_ORIGIN).host : location.host);
 
 /** ¿Hay menú de compartir del sistema? El WebView de Android no tiene navigator.share: en la app va por el plugin. */

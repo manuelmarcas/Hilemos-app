@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "votaciones-9bc95"
+  },
+  "targets": {
+    "votaciones-9bc95": {
+      "hosting": {
+        "app": [
+          "hilemos"
+        ],
+        "antigua": [
+          "votaciones-9bc95"
+        ]
+      }
+    }
   }
 }

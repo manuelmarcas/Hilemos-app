@@ -8,10 +8,11 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy": "npm run build && firebase deploy --only hosting:app",
     "android": "tsc --noEmit && vite build --mode android && cap sync android",
     "android:open": "cap open android",
-    "android:assets": "capacitor-assets generate --android --iconBackgroundColor \"#5E2A59\" --iconBackgroundColorDark \"#5E2A59\" --splashBackgroundColor \"#f6f4f7\" --splashBackgroundColorDark \"#1b1619\""
+    "android:assets": "capacitor-assets generate --android --iconBackgroundColor \"#5E2A59\" --iconBackgroundColorDark \"#5E2A59\" --splashBackgroundColor \"#f6f4f7\" --splashBackgroundColorDark \"#1b1619\"",
+    "deploy:antigua": "firebase deploy --only hosting:antigua"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.6.0",

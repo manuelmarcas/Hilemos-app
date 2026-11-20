@@ -19,13 +19,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Los enlaces de las votaciones (https://votaciones-9bc95.web.app/#/v/<id>) abren la app si está instalada.
+            <!-- Los enlaces de las votaciones (https://hilemos.web.app/#/v/<id>) abren la app si está instalada.
                  Android lo verifica con /.well-known/assetlinks.json en la web (ver «App de Android» en README.md). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="votaciones-9bc95.web.app" />
+                <data android:scheme="https" android:host="hilemos.web.app" />
             </intent-filter>
         </activity>
 

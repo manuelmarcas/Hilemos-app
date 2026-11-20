@@ -12,7 +12,7 @@ initializeApp();
 const db = getFirestore();
 setGlobalOptions({ region: "europe-west1", maxInstances: 5 });
 
-const SITE = "https://votaciones-9bc95.web.app";
+const SITE = "https://hilemos.web.app";
 const pollUrl = id => `${SITE}/#/v/${id}`;
 const DEAD_TOKEN = new Set(["messaging/registration-token-not-registered", "messaging/invalid-registration-token"]);
 const DEADLINE_EVERY_MIN = 15;

@@ -5,7 +5,11 @@ Hace lo mismo que la primera versión (sin React, ya retirada), con el mismo dis
 los mismos datos de Firebase y las mismas rutas (`#/`, `#/nueva`, `#/perfil`, `#/v/<id>`), así que los
 enlaces ya compartidos siguen funcionando.
 
-Se publica en una sola dirección, <https://votaciones-9bc95.web.app>, con `npm run deploy`.
+Se publica en una sola dirección, <https://hilemos.web.app>, con `npm run deploy` (sitio `hilemos` de Firebase
+Hosting). La dirección anterior, <https://votaciones-9bc95.web.app>, es otro sitio del mismo proyecto que solo
+redirige a la nueva conservando la ruta y la votación del enlace (`firebase.json`, destino `antigua`; se publica
+con `npm run deploy:antigua` y casi nunca hace falta). El proyecto de Firebase sigue llamándose `votaciones-9bc95`:
+ese identificador no se puede cambiar.
 
 El diseño (color, tipografía, espaciado, estados…) está documentado en [`design-system/README.md`](design-system/README.md),
 con los valores exactos en [`design-system/tokens.json`](design-system/tokens.json).
@@ -286,7 +290,7 @@ compilarla con `npm run android` y subir una versión nueva a Google Play.
   - Login con Google nativo con `@capacitor-firebase/authentication` (en el WebView no hay ventanas emergentes):
     se elige la cuenta del móvil y la sesión la lleva el SDK web de Firebase, como en la web (`skipNativeAuth`).
   - La página se sirve desde `https://localhost`, así que los enlaces que se comparten (`pollUrl`, la tarjeta
-    del resultado, el `.ics`) usan la web pública, `https://votaciones-9bc95.web.app`.
+    del resultado, el `.ics`) usan la web pública, `https://hilemos.web.app`.
   - Compartir abre el menú del sistema (`@capacitor/share`); el QR y la tarjeta del resultado se comparten en
     vez de descargarse, porque el WebView no descarga archivos.
   - El botón Atrás de Android cierra primero el diálogo abierto.
