@@ -4,7 +4,7 @@ import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode
 import { cls } from "../lib/util";
 
 export interface SwipeAction {
-  icon: string;
+  icon: ReactNode;
   label: string;
   tone: "archive" | "danger";
   /** Devuelve false si no se hizo (cancelada o error): la fila vuelve a su sitio. */

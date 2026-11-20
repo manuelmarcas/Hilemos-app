@@ -8,6 +8,7 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { useHashPath } from "../state/route";
 import { useListActions } from "../state/listActions";
+import { Icon } from "./Icon";
 
 const CKEY = "votaciones-menu-plegados";
 const loadCollapsed = () => {
@@ -171,13 +172,13 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
           {targets.map(([gid, name]) => (
             <button key={gid || "_none"} className="sb-menu-item" disabled={gid === cur}
               onClick={() => { setMenu(null); run(() => move(e.id, gid)); }}>
-              {gid === cur ? "✓ " : ""}{name}
+              {gid === cur && <><Icon name="check" /> </>}{name}
             </button>
           ))}
-          <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}>＋ Grupo nuevo…</button>
+          <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}><Icon name="plus" /> Grupo nuevo…</button>
           <div className="sb-menu-sep" />
-          <button className="sb-menu-item" onClick={() => archivePoll(e.id)}>📦 Archivar</button>
-          <button className="sb-menu-item danger" onClick={() => removePoll(e.id)}>🗑️ Eliminar de mi lista</button>
+          <button className="sb-menu-item" onClick={() => archivePoll(e.id)}><Icon name="archive" /> Archivar</button>
+          <button className="sb-menu-item danger" onClick={() => removePoll(e.id)}><Icon name="trash" /> Eliminar de mi lista</button>
         </div>
       );
     };
@@ -205,7 +206,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
             </button>
             {isGroup && (
               <button className="sb-more" aria-label={`Opciones del grupo ${s.name}`} aria-expanded={gmenuOpen}
-                onClick={() => { setMenu(gmenuOpen ? null : { type: "group", id: s.gid }); setForm(null); }}>⋯</button>
+                onClick={() => { setMenu(gmenuOpen ? null : { type: "group", id: s.gid }); setForm(null); }}><Icon name="more" /></button>
             )}
           </div>
           {gmenuOpen && (
@@ -226,11 +227,11 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
                       <a className="sb-item" href={`#/v/${e.id}`} draggable data-poll={e.id} aria-current={isActive ? "page" : undefined}
                         onClick={() => { setMenu(null); setForm(null); }}
                         onDragStart={ev => onDragStart(ev, e.id)} onDragEnd={endDrag}>
-                        <span className="sb-ic">{(e.type && TYPE[e.type]?.icon) || "🗳️"}</span>
+                        <span className="sb-ic"><Icon name={(e.type && TYPE[e.type]?.icon) || "vote"} /></span>
                         <span className="sb-title">{e.title || "Votación"}</span>
                       </a>
                       <button className="sb-more" aria-label={`Organizar «${e.title || "votación"}»`} aria-expanded={pOpen}
-                        onClick={() => { setMenu(pOpen ? null : { type: "poll", id: e.id }); setForm(null); }}>⋯</button>
+                        onClick={() => { setMenu(pOpen ? null : { type: "poll", id: e.id }); setForm(null); }}><Icon name="more" /></button>
                     </div>
                     {pOpen && pollMenu(e)}
                   </li>
@@ -251,17 +252,17 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
     <aside className={cls("sidebar", dragging && "dragging")} id="sidebar" aria-label="Mis votaciones" onKeyDown={onKeyDown}
       onClick={e => { if ((e.target as HTMLElement).closest("a")) onNavigate(); }}>
       <div className="sb-head">
-        <a className="btn primary sb-new" href="#/nueva">＋ Nueva votación</a>
+        <a className="btn primary sb-new" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
         <input className="input sb-search" id="sb-search" type="search" placeholder="Buscar votación…" autoComplete="off"
           aria-label="Buscar votación" value={query} onChange={e => { setQuery(e.target.value); setMenu(null); }} />
       </div>
       <nav className="sb-body" id="sb-body" aria-label="Mis votaciones">{body}</nav>
       <div className="sb-foot" id="sb-foot">
         {lib && !library.error && (form?.mode === "new" ? formHTML()
-          : <button className="sb-add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}>＋ Nuevo grupo</button>)}
+          : <button className="sb-add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>)}
         {lib && <a className="sb-all" href="#/" onClick={() => setHomeFilter("all")}>Ver todas mis votaciones</a>}
         {lib && archivedCount > 0 && (
-          <a className="sb-all" href="#/" onClick={() => setHomeFilter("archived")}>📦 Archivadas ({archivedCount})</a>
+          <a className="sb-all" href="#/" onClick={() => setHomeFilter("archived")}><Icon name="archive" /> Archivadas ({archivedCount})</a>
         )}
       </div>
     </aside>

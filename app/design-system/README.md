@@ -66,9 +66,11 @@ Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tok
 
 ## Iconografía
 
-- Los iconos son los emojis del sistema. Cada opción lleva el emoji que elija quien crea la votación, desde un selector completo. Los de serie son 🍽️ Comida, 🌙 Cena, ☕ Desayuno, 🌅 Mañana, ☀️ Mediodía y 🌇 Tarde.
-- Iconos fijos: 🔗 Compartir, 📣 Avisar a quien falta, 🔒 Cerrar votación, 🔓 Reabrir, 🗑️ Eliminar, ⚖️ Desempate, 🏆 Opciones más votadas, 👁️ Votos visibles, 🕶️ Anónima, 👥 participantes y votos, 💬 Chat. Tipos de votación: ⏰ horas, 📅 días, 🗓️ semanas, 📆 meses.
-- El emoji va antes del texto y nunca solo. La única excepción son las casillas del calendario, cuyo significado explica la leyenda.
+- La interfaz usa iconos propios en SVG (`src/components/Icon.tsx`, `<Icon name="…" />`): trazo de 1.8 sobre 24×24, puntas y esquinas redondeadas, sin relleno salvo puntos y detalles pequeños, y en el color del texto que los rodea (`currentColor`), a 1.2em. Los tipos de votación salen del mismo calendario con dos anillas que el logotipo. Los iconos grandes que representan algo (tipo de votación en tarjetas, «Mis votaciones» y el menú lateral) van en `brand`; los de los menús, en `muted`.
+- Iconos fijos: `link` Compartir, `share` menú de compartir del sistema, `megaphone` Avisar a quien falta, `lock`/`unlock` Cerrar y Reabrir, `trash` Eliminar, `scale` Desempate, `trophy` Más votadas, `eye` Votos visibles, `incognito` Anónima, `users` participantes y votos, `chat` Chat, `approve` Con aprobación, `mail` Solo estos correos, `hourglass` plazo, `settings` Acceso y plazas, `copy` Duplicar, `archive`/`unarchive`, `more` (⋯), `menu` (☰), `back`, `plus` y `check`. Tipos de votación: `hours`, `days`, `weeks` y `months`.
+- Los emojis se quedan solo para lo que escribe la gente: títulos, descripciones, chat y el icono de cada opción del día, que elige quien crea la votación desde un selector completo. Los de serie son 🍽️ Comida, 🌙 Cena, ☕ Desayuno, 🌅 Mañana, ☀️ Mediodía y 🌇 Tarde. La imagen de resultados (canvas) usa el emoji equivalente de cada tipo (`TYPE[…].emoji`).
+- El botón de emoji (carita) junto a título, descripción, opciones y chat solo aparece con ratón (`hover:hover` y `pointer:fine`): en el móvil y la tableta el teclado ya trae emojis.
+- El icono va antes del texto y nunca solo, salvo en botones con `aria-label` (⋯, ☰, carita). La única otra excepción son las casillas del calendario, cuyo significado explica la leyenda.
 - Logotipo: un calendario blanco con cara que guiña un ojo y saca la lengua, sobre fondo `brand`. El original (de Recraft) está en `logo/logo-recraft-original.svg`; los que usa la app salen de él:
   - `public/icon.svg`, `icon-192.png`, `icon-512.png` y `apple-touch-icon.png` (180 px): a sangre, sin esquinas; Android, iPhone y la Play Store las recortan por su cuenta.
   - `public/icon-maskable.svg` y sus PNG: el dibujo al 80 % para que quepa en el círculo de los iconos adaptables de Android.

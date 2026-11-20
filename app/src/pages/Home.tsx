@@ -1,6 +1,6 @@
 // Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
 // En el móvil cada votación se desliza: → archivar (o desarchivar), ← eliminar de la lista.
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { TYPE, pollMeta } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
 import { errMsg, pollUrl, sortedGroups } from "../lib/util";
@@ -8,6 +8,7 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
 import { SwipeRow } from "../components/SwipeRow";
+import { Icon } from "../components/Icon";
 import { useListActions } from "../state/listActions";
 import { useDuplicate } from "../state/duplicate";
 
@@ -125,14 +126,14 @@ export function Home() {
       <SwipeRow
         key={e.id}
         right={e.archived
-          ? { icon: "📤", label: "Desarchivar", tone: "archive", run: toggleArchive }
-          : { icon: "📦", label: "Archivar", tone: "archive", run: toggleArchive }}
-        left={{ icon: "🗑️", label: "Eliminar", tone: "danger", run: () => remove(e.id) }}
+          ? { icon: <Icon name="unarchive" />, label: "Desarchivar", tone: "archive", run: toggleArchive }
+          : { icon: <Icon name="archive" />, label: "Archivar", tone: "archive", run: toggleArchive }}
+        left={{ icon: <Icon name="trash" />, label: "Eliminar", tone: "danger", run: () => remove(e.id) }}
       >
       <div className={`poll-card ${gone ? "is-gone" : ""}`}>
         <div className="pc-row">
           <a className="pc-link" href={`#/v/${e.id}`}>
-            <span className="pc-icon">{type?.icon || "🗳️"}</span>
+            <span className="pc-icon"><Icon name={type?.icon || "vote"} /></span>
             <span className="pc-main">
               <span className="pc-title">{p?.title || e.title || "Votación"}</span>
               <span className="pc-meta">{meta}</span>
@@ -145,20 +146,20 @@ export function Home() {
             </span>
           </a>
           <button className="pc-more" aria-expanded={open} aria-label="Más opciones"
-            onClick={() => { setStatus(""); setExpanded(open ? null : e.id); }}>⋯</button>
+            onClick={() => { setStatus(""); setExpanded(open ? null : e.id); }}><Icon name="more" /></button>
         </div>
         {open && (
           <div className="pc-actions">
             <label>Grupo <GroupSelect className="input small" groups={lib.groups} value={e.groupId || ""}
               onChange={v => moveTo(e.id, v || null)} /></label>
             {!gone && (
-              <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}>🔗 Compartir</button>
+              <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
-            {p && <button className="btn small" onClick={() => { setExpanded(null); duplicate(p); }}>📋 Duplicar</button>}
+            {p && <button className="btn small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar</button>}
             <button className="btn small" onClick={() => { setExpanded(null); toggleArchive(); }}>
-              {e.archived ? "📤 Desarchivar" : "📦 Archivar"}
+              {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>
-            <button className="btn small danger" onClick={() => remove(e.id)}>🗑️ Eliminar de mi lista</button>
+            <button className="btn small danger" onClick={() => remove(e.id)}><Icon name="trash" /> Eliminar de mi lista</button>
           </div>
         )}
       </div>
@@ -166,7 +167,7 @@ export function Home() {
     );
   };
 
-  const chip = (f: string, label: string, n: number) => (
+  const chip = (f: string, label: ReactNode, n: number) => (
     <button key={f} className={`chip ${filter === f ? "on" : ""}`} aria-pressed={filter === f}
       onClick={() => { setStatus(""); setFilter(f); setForm(null); }}>
       {label} <span className="n">{n}</span>
@@ -207,8 +208,8 @@ export function Home() {
             {chip("all", "Todas", all.length)}
             {groups.map(gr => chip(gr.id, gr.name, inGroup(gr.id).length))}
             {groups.length > 0 && chip("none", "Sin grupo", inGroup(null).length)}
-            {(archived.length > 0 || filter === "archived") && chip("archived", "📦 Archivadas", archived.length)}
-            <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}>＋ Nuevo grupo</button>
+            {(archived.length > 0 || filter === "archived") && chip("archived", <><Icon name="archive" /> Archivadas</>, archived.length)}
+            <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>
           </div>
           {form && (
             <form className="inline-form" id="group-form" onSubmit={submit}>
@@ -248,7 +249,7 @@ function HomeHead() {
         <h1>Mis votaciones</h1>
         <p className="sub">Las que has creado y aquellas en las que participas. Organízalas en grupos.</p>
       </div>
-      <a className="btn primary big" href="#/nueva">＋ Nueva votación</a>
+      <a className="btn primary big" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
     </div>
   );
 }

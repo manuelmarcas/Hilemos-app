@@ -159,13 +159,17 @@ fuera de la app.
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
-## Votar sin cuenta
+## Entrar sin cuenta
 
-Quien abre el enlace de una votación **abierta** puede votar sin registrarse: en la pantalla de entrada escribe su
-nombre y pulsa «Entrar sin cuenta» (sesión anónima de Firebase, `signInAnonymously`). El nombre se guarda en la
+Cualquiera puede usar la app sin registrarse, llegue desde un enlace o desde la portada: en la pantalla de entrada
+escribe su nombre y pulsa «Entrar sin cuenta» (sesión anónima de Firebase, `signInAnonymously`). El nombre se guarda en la
 sesión y en su perfil, así que aguanta una recarga. Requiere activar el método **Anónimo** en Firebase
 Authentication; si no está activado, la pantalla lo dice.
 
+- Internamente se le identifica por el uid de la sesión anónima (el nombre es solo lo que ven los demás y lo puede
+  cambiar en «Tu perfil», como cualquiera). Firebase guarda la sesión en el navegador (o en la app), así que al volver
+  a abrir sigue dentro con el mismo uid: sus votaciones están en `users/{uid}/polls` y sus votos en
+  `polls/{id}/votes/{uid}`, igual que con Google.
 - La sesión anónima vive en ese navegador: si borra los datos o cambia de dispositivo, pierde su lista de
   votaciones y ya no puede cambiar su voto (seguirá contado, con su nombre). Si la votación tiene tope, su plaza
   sigue ocupada.
@@ -173,13 +177,19 @@ Authentication; si no está activado, la pantalla lo dice.
   que no pierde votos ni votaciones. Si esa cuenta ya se usó en la app, Firebase lo rechaza y la app lo explica.
 - Las votaciones **con aprobación** y **solo estos correos** siguen necesitando Google: el creador tiene que poder
   identificar a cada persona. Las reglas lo impiden (`anon()`) y la app lo explica en vez de dar un error.
-- Quien entra sin cuenta **no puede crear** votaciones (también por reglas): serían de una sesión que puede
-  desaparecer.
+- Quien entra sin cuenta **también puede crear** votaciones. La pantalla «Nueva votación» le avisa de que solo podrá
+  gestionarlas desde ese dispositivo y le sugiere guardar la cuenta en Google.
+- «Salir» sin cuenta pide confirmación: después no se puede volver a entrar como ese usuario.
+- Si una votación restringida le pide Google, primero se intenta guardar la sesión en esa cuenta (conserva todo) y,
+  si la cuenta ya existía, se entra con ella.
+- Contra el abuso con bots: Firebase limita las altas por IP (Authentication › Configuración › Cuota de registro).
+  La protección de verdad es **App Check** (reCAPTCHA Enterprise en la web y Play Integrity en Android) aplicado a
+  Authentication y Firestore; está pendiente de configurar en la consola.
 
 ## Pestañas bajo el calendario
 
 Para que la pantalla de una votación no se haga eterna, el calendario queda siempre arriba y debajo hay tres
-pestañas: «🏆 Más votadas» (la que sale al entrar), «👥 Participantes» (con su número) y «💬 Chat» (con los
+pestañas: «Más votadas» (la que sale al entrar), «Participantes» (con su número) y «Chat» (con los
 mensajes sin leer). Las tres
 siguen montadas aunque no se vean, así que el chat no pierde lo que estabas escribiendo al cambiar de pestaña. Se
 puede cambiar con las flechas ← → del teclado.

@@ -10,6 +10,7 @@ import { navigate } from "../state/route";
 import { takeTemplate } from "../state/duplicate";
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
+import { Icon, type IconName } from "../components/Icon";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
 // y el icono se propone mientras no se haya elegido otro.
@@ -69,7 +70,7 @@ function HourDropdown({ day, options, chosen, onToggle }: {
             return (
               <button key={h} type="button" role="option" aria-selected={on} className={cls("hour-dd-opt", on && "on")}
                 onClick={() => onToggle(h)}>
-                <span className="hour-dd-check" aria-hidden="true">{on ? "✓" : ""}</span>{h}
+                <span className="hour-dd-check" aria-hidden="true">{on && <Icon name="check" />}</span>{h}
               </button>
             );
           })}
@@ -343,15 +344,15 @@ export function Create() {
   const minYear = now.getFullYear();
   const isWeeks = type === "weeks";
 
-  const typeCard = (on: boolean, icon: string, name: string, desc: string, onClick: () => void, key: string) => (
+  const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string) => (
     <button key={key} type="button" className={`type-card ${on ? "on" : ""}`} aria-pressed={on} onClick={onClick}>
-      <span className="type-icon">{icon}</span>
+      <span className="type-icon"><Icon name={icon} /></span>
       <span className="type-name">{name}</span>
       <span className="type-desc">{desc}</span>
     </button>
   );
 
-  const summaryParts = [`${TYPE[type].icon} ${TYPE[type].name}`];
+  const summaryParts = [TYPE[type].name];
   if (type === "months") summaryParts.push(plural(months.size, ["mes", "meses"]));
   else if (type === "weeks") summaryParts.push(plural(weeks.size, ["semana", "semanas"]));
   else summaryParts.push(plural(days.size, ["día", "días"]));
@@ -374,8 +375,14 @@ export function Create() {
   return (
     <>
       <div className="page-head">
-        <a className="back" href="#/">← Volver</a>
+        <a className="back" href="#/"><Icon name="back" /> Volver</a>
         <h1>Nueva votación</h1>
+        {user.anon && store.mode === "firebase" && (
+          <p className="sub anon-note">
+            Has entrado sin cuenta: esta votación solo la podrás gestionar (cerrarla, desempatar o eliminarla) desde
+            este dispositivo. Para no perderla, guarda tu cuenta en Google desde <a href="#/perfil">«Tu perfil»</a>.
+          </p>
+        )}
       </div>
       <div className="create" ref={root}>
         <section className="step" id="sec-name">
@@ -532,7 +539,7 @@ export function Create() {
                         onClick={e => {
                           const anchor = e.currentTarget;
                           openEmoji({ anchor, onPick: emoji => { setOpt(i, { icon: emoji }); anchor.focus(); } });
-                        }}>{o.icon || "＋"}</button>
+                        }}>{o.icon || <Icon name="plus" />}</button>
                       <div className="emoji-field">
                         <input ref={el => { optRefs.current[i] = el; }} className="input" id={`f-opt-${i}`} data-opt-name={i} maxLength={30}
                           value={o.name} placeholder={`Ej.: ${PRESETS[count][i][0]}`} aria-label={`Nombre de la opción ${i + 1}`} autoComplete="off"
@@ -628,8 +635,8 @@ export function Create() {
         <section className="step" id="sec-privacy">
           <h2><span className="num">{numbers.privacy}</span>¿Quién ve los votos?</h2>
           <div className="privacy" id="s-privacy">
-            {typeCard(!anonymous, "👁️", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
-            {typeCard(anonymous, "🕶️", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
+            {typeCard(!anonymous, "eye", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
+            {typeCard(anonymous, "incognito", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
           </div>
         </section>
 
@@ -660,9 +667,9 @@ export function Create() {
         <section className="step" id="sec-access">
           <h2><span className="num">{numbers.access}</span>¿Quién puede unirse?</h2>
           <div className="access-pick" id="s-access">
-            {typeCard(access === "open", "🔗", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
-            {typeCard(access === "approval", "✋", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
-            {typeCard(access === "emails", "✉️", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
+            {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
+            {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
+            {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
           </div>
           {access === "emails" && (
             <div className="access-emails">
@@ -686,7 +693,7 @@ export function Create() {
         </section>
 
         <div className="create-bar">
-          <div className="create-summary" id="c-summary">{summaryParts.join(" · ")}</div>
+          <div className="create-summary" id="c-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
           <button type="button" className="btn primary big" id="c-submit" disabled={busy} onClick={submit}>{busy ? "Creando…" : "Crear votación"}</button>
           <div className="status" id="c-status" role="alert">{status}</div>
         </div>

@@ -7,11 +7,12 @@ import type { NotifyPrefs } from "../lib/types";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { Avatar } from "../components/Avatar";
+import { Icon, type IconName } from "../components/Icon";
 
-const THEMES: [ThemePref, string, string, string][] = [
-  ["auto", "🌗", "Automático", "Como tu dispositivo"],
-  ["light", "☀️", "Claro", "Fondo claro"],
-  ["dark", "🌙", "Oscuro", "Fondo oscuro"],
+const THEMES: [ThemePref, IconName, string, string][] = [
+  ["auto", "themeAuto", "Automático", "Como tu dispositivo"],
+  ["light", "sun", "Claro", "Fondo claro"],
+  ["dark", "moon", "Oscuro", "Fondo oscuro"],
 ];
 
 const NOTIFY: [keyof NotifyPrefs, string][] = [
@@ -134,7 +135,7 @@ export function Profile() {
   return (
     <>
       <div className="page-head">
-        <a className="back" href="#/">← Volver</a>
+        <a className="back" href="#/"><Icon name="back" /> Volver</a>
         <h1>Tu perfil</h1>
       </div>
       <div className="profile">
@@ -143,7 +144,7 @@ export function Profile() {
           <div className="avatar-edit">
             <div id="pf-avatar"><Avatar name={name} photo={photo} size={96} seed={user.uid} /></div>
             <div className="avatar-btns">
-              <button className="btn" onClick={() => fileRef.current?.click()}>📷 Subir imagen</button>
+              <button className="btn" onClick={() => fileRef.current?.click()}><Icon name="camera" /> Subir imagen</button>
               {user.googlePhoto && <button className="btn" onClick={() => setPhoto(user.googlePhoto)}>Usar la foto de Google</button>}
               <button className="btn danger" onClick={() => setPhoto("")}>Quitar imagen</button>
               <input ref={fileRef} type="file" id="pf-file" accept="image/*" hidden
@@ -183,7 +184,7 @@ export function Profile() {
             {THEMES.map(([id, icon, label, desc]) => (
               <button key={id} type="button" className={`type-card ${theme === id ? "on" : ""}`} aria-pressed={theme === id}
                 onClick={() => { setThemePref(id); setTheme(id); }}>
-                <span className="type-icon" aria-hidden="true">{icon}</span>
+                <span className="type-icon"><Icon name={icon} /></span>
                 <span className="type-name">{label}</span>
                 <span className="type-desc">{desc}</span>
               </button>
@@ -210,7 +211,7 @@ export function Profile() {
                   Te avisamos en este dispositivo cuando pase algo en tus votaciones. Puedes quitarlos cuando quieras.
                 </p>
                 <button className="btn" id="pf-push" disabled={pushBusy} onClick={togglePush} aria-pressed={push === "on"}>
-                  {pushBusy ? "Un momento…" : push === "on" ? "🔕 Desactivar los avisos" : "🔔 Activar los avisos"}
+                  {pushBusy ? "Un momento…" : push === "on" ? <><Icon name="bellOff" /> Desactivar los avisos</> : <><Icon name="bell" /> Activar los avisos</>}
                 </button>
               </>}
               {push === "on" && (

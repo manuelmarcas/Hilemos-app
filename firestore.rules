@@ -9,7 +9,8 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Entró sin cuenta (sesión anónima): solo puede participar en votaciones abiertas, no crearlas.
+    // Entró sin cuenta (sesión anónima): puede crear votaciones y participar en las abiertas, pero no entrar
+    // en las restringidas (con aprobación o solo con correos), que necesitan saber quién es.
     function anon() {
       return request.auth.token.firebase.sign_in_provider == 'anonymous';
     }
@@ -39,7 +40,6 @@ service cloud.firestore {
       allow read: if signedIn();
 
       allow create: if signedIn()
-        && !anon()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0

@@ -1,6 +1,7 @@
 // Diálogo "Compartir votación": enlace, QR, menú nativo del móvil, WhatsApp, Telegram y correo.
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
+import { Icon } from "./Icon";
 import { copyText } from "../lib/util";
 import { canShareLink, isNative, shareFileNative, shareLink } from "../lib/native";
 
@@ -82,13 +83,13 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
       <div className="share-btns">
         {canShare && (
           <button className="btn" onClick={() => shareLink({ title, text, url })}>
-            📤 Compartir…
+            <Icon name="share" /> Compartir…
           </button>
         )}
-        <a className="btn" target="_blank" rel="noopener" href={`https://wa.me/?text=${enc(`${text} ${url}`)}`}>💬 WhatsApp</a>
-        <a className="btn" target="_blank" rel="noopener" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`}>✈️ Telegram</a>
-        <a className="btn" href={`mailto:?subject=${enc(title)}&body=${enc(`${text}\n\n${url}`)}`}>✉️ Correo</a>
-        <button className="btn" disabled={!qr || !("png" in qr)} onClick={download}>{isNative() ? "🖼️ Compartir QR" : "⬇️ Descargar QR"}</button>
+        <a className="btn" target="_blank" rel="noopener" href={`https://wa.me/?text=${enc(`${text} ${url}`)}`}><Icon name="chat" /> WhatsApp</a>
+        <a className="btn" target="_blank" rel="noopener" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`}><Icon name="send" /> Telegram</a>
+        <a className="btn" href={`mailto:?subject=${enc(title)}&body=${enc(`${text}\n\n${url}`)}`}><Icon name="mail" /> Correo</a>
+        <button className="btn" disabled={!qr || !("png" in qr)} onClick={download}>{isNative() ? <><Icon name="image" /> Compartir QR</> : <><Icon name="download" /> Descargar QR</>}</button>
       </div>
       <p className="dlg-note">Quien abra el enlace (o escanee el QR) e inicie sesión quedará como participante y la votación aparecerá en su menú.</p>
     </Dialog>

@@ -1,4 +1,4 @@
-// Pantalla de entrada: login con Google (o con un nombre en modo demo).
+// Pantalla de entrada: login con Google, sin cuenta (solo un nombre) o, en modo demo, con un nombre.
 import { useState, type FormEvent } from "react";
 import type { Store } from "../lib/types";
 import { errMsg } from "../lib/util";
@@ -55,7 +55,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
           {invited
             ? demo
               ? "Te han invitado a una votación. Entra para ver el calendario y votar; se guardará en tu menú."
-              : "Te han invitado a una votación. Entra con Google y se guardará en tu menú, o vota sin cuenta en un momento."
+              : "Te han invitado a una votación. Entra con Google y se guardará en tu menú, o entra sin cuenta en un momento."
             : "Crea votaciones de horas, días, semanas o meses, compártelas con tu grupo y mira los resultados en directo."}
         </p>
         {demo ? (
@@ -70,19 +70,17 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
               <GoogleIcon />
               Entrar con Google
             </button>
-            {invited && (
-              <form className="gate-anon" onSubmit={anonLogin}>
-                <div className="gate-or"><span>o</span></div>
-                <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
-                  value={name} onChange={e => setName(e.target.value)} />
-                <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar sin cuenta"}</button>
-                <p className="gate-anon-note">
-                  Votas al momento, sin registrarte. Tu voto se queda en este dispositivo, así que si cambias de móvil
-                  o borras los datos del navegador no podrás cambiarlo. En las votaciones privadas o con aprobación
-                  hace falta entrar con Google.
-                </p>
-              </form>
-            )}
+            <form className="gate-anon" onSubmit={anonLogin}>
+              <div className="gate-or"><span>o</span></div>
+              <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
+                value={name} onChange={e => setName(e.target.value)} />
+              <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar sin cuenta"}</button>
+              <p className="gate-anon-note">
+                Solo con tu nombre, sin registrarte. Tus votaciones y tus votos se quedan en este dispositivo: si
+                cambias de móvil o borras los datos del navegador, los pierdes. Puedes guardarlos en tu cuenta de
+                Google cuando quieras desde «Tu perfil». En las votaciones privadas o con aprobación hace falta Google.
+              </p>
+            </form>
           </>
         )}
         <div id="gate-status" role="alert">{status}</div>

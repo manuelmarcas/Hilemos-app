@@ -5,20 +5,24 @@
 
 import * as D from "./dates";
 import type { MemberStatus, Poll, PollData, PollOption, PollType, Vote, Votes } from "./types";
+import type { IconName } from "../components/Icon";
 
 export interface TypeInfo {
   id: PollType;
-  icon: string;
+  /** Icono de la interfaz. */
+  icon: IconName;
+  /** Emoji equivalente, para la imagen de resultados (canvas). */
+  emoji: string;
   name: string;
   unit: [string, string];
   desc: string;
 }
 
 export const TYPES: TypeInfo[] = [
-  { id: "hours", icon: "⏰", name: "Horas", unit: ["franja", "franjas"], desc: "Franjas horarias u horas sueltas de uno o varios días" },
-  { id: "days", icon: "📅", name: "Días", unit: ["día", "días"], desc: "Días concretos, con hasta 4 opciones por día" },
-  { id: "weeks", icon: "🗓️", name: "Semanas", unit: ["semana", "semanas"], desc: "Semanas completas, de lunes a domingo" },
-  { id: "months", icon: "📆", name: "Meses", unit: ["mes", "meses"], desc: "Meses completos" },
+  { id: "hours", icon: "hours", emoji: "⏰", name: "Horas", unit: ["franja", "franjas"], desc: "Franjas horarias u horas sueltas de uno o varios días" },
+  { id: "days", icon: "days", emoji: "📅", name: "Días", unit: ["día", "días"], desc: "Días concretos, con hasta 4 opciones por día" },
+  { id: "weeks", icon: "weeks", emoji: "🗓️", name: "Semanas", unit: ["semana", "semanas"], desc: "Semanas completas, de lunes a domingo" },
+  { id: "months", icon: "months", emoji: "📆", name: "Meses", unit: ["mes", "meses"], desc: "Meses completos" },
 ];
 export const TYPE = Object.fromEntries(TYPES.map(t => [t.id, t])) as Record<PollType, TypeInfo>;
 

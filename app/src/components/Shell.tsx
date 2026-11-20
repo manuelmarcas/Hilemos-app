@@ -6,6 +6,7 @@ import { parseRoute, useHashPath } from "../state/route";
 import { onPushMessage } from "../lib/push";
 import { Avatar } from "./Avatar";
 import { LogoMark } from "./LogoMark";
+import { Icon } from "./Icon";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -14,7 +15,18 @@ import { Profile } from "../pages/Profile";
 
 export function Shell() {
   const { store, user } = useSession();
-  const { toast } = useUi();
+  const { toast, confirm } = useUi();
+
+  // Sin cuenta, cerrar la sesión es irreversible: ese usuario solo existe en este dispositivo.
+  const logout = async () => {
+    if (user.anon && store.mode === "firebase" && !(await confirm({
+      title: "¿Salir sin guardar tu cuenta?",
+      message: "Has entrado sin cuenta: si sales, no podrás volver a entrar como «" + user.name + "» y perderás tus votaciones y la posibilidad de cambiar tus votos. Para conservarlos, guárdalos antes en tu cuenta de Google desde «Tu perfil».",
+      confirmLabel: "Salir",
+      danger: true,
+    }))) return;
+    store.signOut();
+  };
   const path = useHashPath();
   const route = parseRoute(path);
   const [drawer, setDrawer] = useState(false);
@@ -67,7 +79,7 @@ export function Shell() {
       <header className="topbar">
         <div className="topbar-left">
           <button className="sb-toggle" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
-            aria-expanded={drawer} onClick={() => setDrawer(d => !d)}>☰</button>
+            aria-expanded={drawer} onClick={() => setDrawer(d => !d)}><Icon name="menu" /></button>
           <a className="brand" href="#/" aria-label="Hilemos: mis votaciones">
             <LogoMark className="brand-logo" />
             <span className="brand-name" aria-hidden="true"><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></span>
@@ -78,7 +90,7 @@ export function Shell() {
             <span id="me-avatar" className="me-avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
             <span id="who-name">{user.name}</span>
           </a>
-          <button className="logout-btn" id="logout" onClick={() => store.signOut()}>Salir</button>
+          <button className="logout-btn" id="logout" onClick={logout}>Salir</button>
         </div>
       </header>
       <div className="layout">

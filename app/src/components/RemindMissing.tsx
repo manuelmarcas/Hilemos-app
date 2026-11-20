@@ -3,6 +3,7 @@
 import { plural, type Tally, type TiebreakTally } from "../lib/model";
 import type { Poll } from "../lib/types";
 import { canShareLink, shareLink } from "../lib/native";
+import { Icon } from "./Icon";
 
 const MAX_NAMES = 10; // en un mensaje de chat una lista más larga no se lee
 
@@ -35,7 +36,7 @@ export function RemindMissing({ poll, T, TB, open, me, url }: {
         e.preventDefault();
         await shareLink({ title: poll.title, text, url });
       }}>
-      <span aria-hidden="true">📣</span> Avisar a quien falta
+      <Icon name="megaphone" /> Avisar a quien falta
     </a>
   );
 }

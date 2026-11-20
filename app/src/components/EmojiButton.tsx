@@ -1,5 +1,6 @@
-// Botón 😊 que acompaña a un campo de texto: inserta emojis en la posición del cursor.
+// Botón de emoji (carita) que acompaña a un campo de texto: inserta emojis en la posición del cursor.
 import { useUi } from "../state/ui";
+import { Icon } from "./Icon";
 
 export function EmojiButton({ field, setValue }: {
   field: () => HTMLInputElement | HTMLTextAreaElement | null;
@@ -25,6 +26,6 @@ export function EmojiButton({ field, setValue }: {
             requestAnimationFrame(() => { try { el.setSelectionRange(pos, pos); } catch { /* nada */ } });
           },
         });
-      }}>😊</button>
+      }}><Icon name="smile" /></button>
   );
 }

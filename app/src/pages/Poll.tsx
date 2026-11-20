@@ -19,6 +19,7 @@ import { useDuplicate } from "../state/duplicate";
 import { Avatar } from "../components/Avatar";
 import { RemindMissing } from "../components/RemindMissing";
 import { Chat } from "../components/Chat";
+import { Icon, type IconName } from "../components/Icon";
 
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
@@ -149,11 +150,11 @@ export function PollPage({ id }: { id: string }) {
   }, [pollLoaded, votesLoaded, myLoaded, ownOnly, blocked, lib, poll, votes, myVote, id, store, user, toast]);
 
   if (fatal) {
-    return <><div className="empty-box error">{fatal}</div><p><a href="#/">← Volver a mis votaciones</a></p></>;
+    return <><div className="empty-box error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
   if (!pollLoaded) return <div className="loading">Cargando votación…</div>;
   if (!poll) {
-    return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/">← Volver a mis votaciones</a></p></>;
+    return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
 
   if (blocked) return <BlockedView poll={poll} kind={blocked} email={user.email} onRetry={retryJoin} />;
@@ -336,14 +337,14 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            {t.icon} Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · 👥 {plural(T.people.length, ["participante", "participantes"])}
+            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(T.people.length, ["participante", "participantes"])}
             {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
           <div className="mode-line">
-            <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? "🕶️ Anónima" : "👁️ Votos visibles"}</span>
-            {poll.emailsOnly && <span className="mode-pill anon">✉️ Solo invitados</span>}
-            {poll.approval && <span className="mode-pill anon">✋ Con aprobación</span>}
-            {!!poll.deadline && !expired && !poll.closed && <span className="mode-pill">⏳ Se cierra el {fmtDeadline(poll.deadline)}</span>}
+            <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
+            {poll.emailsOnly && <span className="mode-pill anon"><Icon name="mail" /> Solo invitados</span>}
+            {poll.approval && <span className="mode-pill anon"><Icon name="approve" /> Con aprobación</span>}
+            {!!poll.deadline && !expired && !poll.closed && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
           </div>
           <div className="title-row">
             <h1>{poll.title}</h1>
@@ -357,13 +358,13 @@ export function PollPage({ id }: { id: string }) {
           {poll.description && <p className="desc">{poll.description}</p>}
           <div className="poll-actions">
             <button className="btn primary" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
-              <span aria-hidden="true">🔗</span> Compartir
+              <Icon name="link" /> Compartir
             </button>
             {T.top.length > 0 && (
               <button className="btn" onClick={() => act(async () => {
                 if (await shareResultCard(poll, T, TB) === "downloaded") toast("Imagen del resultado descargada");
               })}>
-                <span aria-hidden="true">🖼️</span> Compartir resultado
+                <Icon name="image" /> Compartir resultado
               </button>
             )}
           </div>
@@ -373,12 +374,12 @@ export function PollPage({ id }: { id: string }) {
       {isOwner && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (
         <div className="closed-banner">
-          🔒 Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
+          <Icon name="lock" /> Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
         </div>
       )}
       {!poll.closed && expired && (
         <div className="closed-banner">
-          ⏳ Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.
+          <Icon name="hourglass" /> Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.
           {isOwner && <> <button className="link-btn" onClick={clearDeadline}>Quitar el plazo</button></>}
         </div>
       )}
@@ -414,7 +415,7 @@ export function PollPage({ id }: { id: string }) {
                 ? " Puedes abrir un desempate en el que cada persona elige solo una."
                 : " Quien creó la votación puede abrir un desempate."}
             </p>
-            {isOwner && <button className="btn small" onClick={tbStart}>⚖️ Desempatar</button>}
+            {isOwner && <button className="btn small" onClick={tbStart}><Icon name="scale" /> Desempatar</button>}
           </div>
         )}
         <div className="summary-list">
@@ -448,10 +449,10 @@ export function PollPage({ id }: { id: string }) {
 
 type PollTab = "summary" | "people" | "chat";
 
-const TABS: { id: PollTab; icon: string; label: string }[] = [
-  { id: "summary", icon: "🏆", label: "Más votadas" },
-  { id: "people", icon: "👥", label: "Participantes" },
-  { id: "chat", icon: "💬", label: "Chat" },
+const TABS: { id: PollTab; icon: IconName; label: string }[] = [
+  { id: "summary", icon: "trophy", label: "Más votadas" },
+  { id: "people", icon: "users", label: "Participantes" },
+  { id: "chat", icon: "chat", label: "Chat" },
 ];
 
 // El calendario queda siempre arriba; debajo se alterna lo demás para que la pantalla no se haga eterna.
@@ -477,7 +478,7 @@ function PollTabs({ tab, setTab, counts, unread }: {
             className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}
             aria-label={badge ? `${t.label}: ${plural(badge, ["mensaje sin leer", "mensajes sin leer"])}` : undefined}>
             <span className={badge > 0 ? "ptab-ico has-badge" : "ptab-ico"} aria-hidden="true">
-              {t.icon}{badge > 0 && <span className="ptab-badge">{badge > 99 ? "99+" : badge}</span>}
+              <Icon name={t.icon} />{badge > 0 && <span className="ptab-badge">{badge > 99 ? "99+" : badge}</span>}
             </span>
             <span className="ptab-label">{t.label}{n != null && <span className="n">{n}</span>}</span>
           </button>
@@ -521,7 +522,7 @@ function CalendarMenu({ cal }: { cal: CalEvent }) {
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   useMenuKeys(open, setOpen, wrap, btn);
-  const label = <><span aria-hidden="true">📅</span> Añadir al calendario</>;
+  const label = <><Icon name="calendarAdd" /> Añadir al calendario</>;
   if (isAndroid()) {
     return <a className="btn small" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">{label}</a>;
   }
@@ -535,10 +536,10 @@ function CalendarMenu({ cal }: { cal: CalEvent }) {
         <div className="pm-menu start" role="menu" aria-label="Añadir al calendario">
           <a role="menuitem" className="pm-item" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer"
             onClick={() => setOpen(false)}>
-            <span aria-hidden="true">🌐</span>Google Calendar
+            <Icon name="globe" />Google Calendar
           </a>
           <button role="menuitem" className="pm-item" onClick={() => { setOpen(false); downloadIcs(cal); }}>
-            <span aria-hidden="true">📥</span>Apple, Outlook y otros (.ics)
+            <Icon name="download" />Apple, Outlook y otros (.ics)
           </button>
         </div>
       )}
@@ -560,28 +561,28 @@ function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDup
   return (
     <div className="pm" ref={wrap}>
       <button ref={btn} className="pm-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Opciones de la votación"
-        title="Opciones de la votación" onClick={() => setOpen(o => !o)}>⋯</button>
+        title="Opciones de la votación" onClick={() => setOpen(o => !o)}><Icon name="more" /></button>
       {open && (
         <div className="pm-menu" role="menu" aria-label="Opciones de la votación">
           <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
-            <span aria-hidden="true">{closed ? "🔓" : "🔒"}</span>{closed ? "Reabrir votación" : "Cerrar votación"}
+            <Icon name={closed ? "unlock" : "lock"} />{closed ? "Reabrir votación" : "Cerrar votación"}
           </button>
           {onAccess && (
             <button role="menuitem" className="pm-item" onClick={pick(onAccess)}>
-              <span aria-hidden="true">⚙️</span>Acceso y plazas
+              <Icon name="settings" />Acceso y plazas
             </button>
           )}
           {!anonymous && (
             <button role="menuitem" className="pm-item" onClick={pick(onAnon)}>
-              <span aria-hidden="true">🕶️</span>Hacer anónima
+              <Icon name="incognito" />Hacer anónima
             </button>
           )}
           <button role="menuitem" className="pm-item" onClick={pick(onDuplicate)}>
-            <span aria-hidden="true">📋</span>Duplicar votación
+            <Icon name="copy" />Duplicar votación
           </button>
           <div className="pm-sep" role="separator" />
           <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
-            <span aria-hidden="true">🗑️</span>Eliminar votación
+            <Icon name="trash" />Eliminar votación
           </button>
         </div>
       )}
@@ -627,7 +628,7 @@ function Summary({ poll, T, TB, openVoters, byUid, onToggle }: {
   poll: Poll; T: Tally; TB: TiebreakTally | null; openVoters: Set<string>; byUid: Record<string, Person>; onToggle: (k: string) => void;
 }) {
   if (!T.top.length) return <div className="summary-empty">Todavía no hay votos suficientes.</div>;
-  const tag = (e: Tally["top"][number]) => (poll.type === "days" ? `${e.opt.icon} ${e.opt.name}` : TYPE[poll.type].icon);
+  const tag = (e: Tally["top"][number]) => (poll.type === "days" ? `${e.opt.icon} ${e.opt.name}` : <Icon name={TYPE[poll.type].icon} />);
   const tbWinner = TB?.done && TB.leaders.length === 1 ? TB.leaders[0] : null;
   const more = T.ranking.length - T.top.length;
   return <>
@@ -641,13 +642,13 @@ function Summary({ poll, T, TB, openVoters, byUid, onToggle }: {
             <span className="rank" title={`Puesto ${e.rank}`}>{e.rank}º</span>
             <span className={`tag-best ${poll.type === "days" ? "" : "icon-only"}`}>{tag(e)}</span>
             <span className="what">{slotLabel(poll, e.slot)}</span>
-            {u === tbWinner && <span className="tb-badge">⚖️ Ganó el desempate</span>}
+            {u === tbWinner && <span className="tb-badge"><Icon name="scale" /> Ganó el desempate</span>}
           </div>
           {poll.anonymous
             ? <span className="votes">{votes}</span>
             : (
               <button className="votes votes-btn" aria-expanded={open} title="Ver quién lo ha votado" onClick={() => onToggle(u)}>
-                👥 {votes} <span className="caret" aria-hidden="true">▾</span>
+                <Icon name="users" /> {votes} <span className="caret" aria-hidden="true">▾</span>
               </button>
             )}
           {open && (
@@ -702,7 +703,7 @@ function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onR
   return (
     <section className={`tiebreak ${done ? "done" : ""}`}>
       <div className="tb-head">
-        <h2>⚖️ Desempate{(TB.round || 1) > 1 ? ` · ronda ${TB.round}` : ""}</h2>
+        <h2><Icon name="scale" /> Desempate{(TB.round || 1) > 1 ? ` · ronda ${TB.round}` : ""}</h2>
         <span className="tb-state">{done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
       </div>
       <p className="tb-sub">{sub}</p>
@@ -727,7 +728,7 @@ function TiebreakCard({ poll, T, TB, myTb, isOwner, byUid, onVote, onFinish, onR
       {isOwner && (
         <div className="tb-actions">
           {done ? <>
-            {stillTied && <button className="btn small" onClick={onRepeat}>⚖️ Repetir entre las empatadas</button>}
+            {stillTied && <button className="btn small" onClick={onRepeat}><Icon name="scale" /> Repetir entre las empatadas</button>}
             <button className="link-btn danger" onClick={onCancel}>Quitar desempate</button>
           </> : <>
             <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
@@ -797,7 +798,7 @@ function PeopleTable({ poll, T, people, me, openPeople, onToggle }: {
             return (
               <tr key={p.uid}>
                 <td><span className="person">{who}</span></td>
-                <td className="n">{p.total ? "✓ Sí" : <span className="muted">Aún no</span>}</td>
+                <td className="n">{p.total ? <><Icon name="check" /> Sí</> : <span className="muted">Aún no</span>}</td>
               </tr>
             );
           }
@@ -876,7 +877,7 @@ function Requests({ poll, requests, onSet }: {
   return (
     <section className="requests">
       <div className="rq-head">
-        <h2>✋ Solicitudes {pending.length > 0 && <span className="rq-count">{pending.length}</span>}</h2>
+        <h2><Icon name="approve" /> Solicitudes {pending.length > 0 && <span className="rq-count">{pending.length}</span>}</h2>
         {rejected.length > 0 && (
           <button type="button" className="link-btn" aria-expanded={showRejected} onClick={() => setShowRejected(v => !v)}>
             {showRejected ? "Ocultar rechazadas" : `Ver rechazadas (${rejected.length})`}
@@ -957,7 +958,7 @@ function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void }) {
 
   return (
     <section className="access-panel" aria-label="Acceso y plazas">
-      <h2>⚙️ Acceso y plazas</h2>
+      <h2><Icon name="settings" /> Acceso y plazas</h2>
       <label className="field-label" htmlFor="ap-max">Máximo de personas <span className="muted">(ahora hay {members})</span></label>
       <input id="ap-max" className="input small" type="number" inputMode="numeric" min={min} max={MAX_PEOPLE}
         value={maxText} onChange={e => setMaxText(e.target.value)} />
@@ -983,7 +984,7 @@ function AccessHead({ poll }: { poll: Poll }) {
   return (
     <div className="poll-head">
       <div className="poll-title">
-        <div className="kicker">{t.icon} Votación por {t.name.toLowerCase()} · creada por {poll.ownerName || "alguien"}</div>
+        <div className="kicker"><Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {poll.ownerName || "alguien"}</div>
         <div className="title-row"><h1>{poll.title}</h1></div>
         {poll.description && <p className="desc">{poll.description}</p>}
       </div>
@@ -998,15 +999,15 @@ function WaitingView({ poll, status }: { poll: Poll; status: MemberStatus }) {
     <AccessHead poll={poll} />
     <div className={`gate-note ${status}`} role="status">
       {status === "rejected" ? <>
-        <h2>🚫 No te han aceptado</h2>
+        <h2><Icon name="ban" /> No te han aceptado</h2>
         <p>{owner} no ha aceptado tu solicitud para esta votación, así que no puedes votar ni ver los resultados.</p>
       </> : <>
-        <h2>⏳ Pendiente de aprobación</h2>
+        <h2><Icon name="hourglass" /> Pendiente de aprobación</h2>
         <p>{owner} tiene que aceptarte para que puedas votar y ver los resultados. La votación ya está en tu menú: cuando te acepte, se abrirá aquí sola.</p>
       </>}
     </div>
     <p className="poll-note">{pollRange(poll)}</p>
-    <p><a href="#/">← Volver a mis votaciones</a></p>
+    <p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p>
   </>;
 }
 
@@ -1014,13 +1015,21 @@ function WaitingView({ poll, status }: { poll: Poll; status: MemberStatus }) {
 function BlockedView({ poll, kind, email, onRetry }: {
   poll: Poll; kind: "full" | "noaccess" | "needsaccount"; email: string; onRetry: () => void;
 }) {
-  const { store } = useSession();
+  const { store, user } = useSession();
   const owner = poll.ownerName || "quien la creó";
   const [status, setStatus] = useState("");
 
+  // Sin cuenta: primero se intenta guardar esta sesión en Google (conserva votaciones y votos); si esa cuenta
+  // de Google ya existía, se entra con ella.
   const login = async () => {
     setStatus("");
-    try { await store.signIn(); }
+    try {
+      if (user.anon) {
+        try { await store.linkGoogle(); location.reload(); return; }
+        catch (e) { if ((e as { code?: string })?.code !== "auth/credential-already-in-use") throw e; }
+      }
+      await store.signIn();
+    }
     catch (e) { setStatus("No se pudo iniciar sesión. " + errMsg(e)); }
   };
 
@@ -1028,7 +1037,7 @@ function BlockedView({ poll, kind, email, onRetry }: {
     return <>
       <AccessHead poll={poll} />
       <div className="gate-note blocked" role="status">
-        <h2>🔑 Hace falta una cuenta</h2>
+        <h2><Icon name="key" /> Hace falta una cuenta</h2>
         <p>
           {poll.emailsOnly
             ? `${owner} ha limitado esta votación a unos correos concretos, así que hay que entrar con Google para comprobar el tuyo.`
@@ -1037,7 +1046,7 @@ function BlockedView({ poll, kind, email, onRetry }: {
         <button type="button" className="btn primary gate-retry" onClick={login}>Entrar con Google</button>
         <div className="status" role="alert">{status}</div>
       </div>
-      <p><a href="#/">← Volver a mis votaciones</a></p>
+      <p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p>
     </>;
   }
 
@@ -1045,15 +1054,15 @@ function BlockedView({ poll, kind, email, onRetry }: {
     <AccessHead poll={poll} />
     <div className="gate-note blocked" role="status">
       {kind === "noaccess" ? <>
-        <h2>✉️ Votación privada</h2>
+        <h2><Icon name="mail" /> Votación privada</h2>
         <p>Solo pueden entrar las personas invitadas por {owner}. Has entrado como <strong>{email || "una cuenta sin correo"}</strong>: si te invitó con otro correo, entra con esa cuenta o pídele que añada este.</p>
         <button type="button" className="btn small gate-retry" onClick={onRetry}>Volver a intentarlo</button>
       </> : <>
-        <h2>👥 Votación completa</h2>
+        <h2><Icon name="users" /> Votación completa</h2>
         <p>Ya hay {poll.maxPeople} personas, {poll.maxPeople === MAX_PEOPLE ? "el máximo de cualquier votación" : `el máximo que ha puesto ${owner}`}. Si alguien deja sitio, podrás entrar.</p>
       </>}
     </div>
-    <p><a href="#/">← Volver a mis votaciones</a></p>
+    <p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p>
   </>;
 }
 
