@@ -8,6 +8,8 @@
   --line-strong:#c9c1cc;
   --ink:#2a1f27;
   --muted:#6b5e66;
+  /* Flecha de los desplegables (<select>), en el color de `muted` */
+  --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b5e66' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --brand:#5e2a59;
   --brand-strong:#451d42;
   --brand-soft:#ebdfea;
@@ -62,6 +64,7 @@
   --line-strong:#5a4d55;
   --ink:#f3ebe8;
   --muted:#b6a8b0;
+  --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b6a8b0' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --brand:#dca6d2;
   --brand-strong:#efcbe7;
   --brand-soft:#3f2a3b;
@@ -104,6 +107,7 @@
   --line-strong:#5a4d55;
   --ink:#f3ebe8;
   --muted:#b6a8b0;
+  --chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b6a8b0' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   --brand:#dca6d2;
   --brand-strong:#efcbe7;
   --brand-soft:#3f2a3b;
@@ -345,7 +349,49 @@ button,input,select,textarea{font:inherit}
 .input.big{font-size:1.1rem;padding:12px 14px}
 .input.small{width:auto;padding:6px 10px;font-size:.88rem}
 textarea.input{resize:vertical;font-size:.95rem}
-select.input{cursor:pointer}
+/* ---------- Desplegables (<select>) ----------
+   Campo como los demás, con la flecha propia. Donde se puede (Chrome, Edge y la app de Android, con
+   appearance:base-select) también la lista: tarjeta con sombra de menú, filas como las del menú ⋯ y la elegida
+   en lila. Safari y Firefox abren su lista nativa, pero el campo es el mismo. */
+select.input{
+  appearance:none;-webkit-appearance:none;
+  cursor:pointer;
+  padding-right:36px;
+  background-image:var(--chevron);
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:14px;
+  text-overflow:ellipsis;
+  transition:background-color .15s, border-color .15s;
+}
+select.input.small{padding-right:30px;background-position:right 9px center;background-size:12px}
+select.input:hover{background-color:var(--hover)}
+@supports (appearance:base-select){
+  select.input,select.input::picker(select){appearance:base-select}
+  select.input{display:inline-flex;align-items:center;gap:8px;background-image:none;padding-right:12px}
+  select.input.small{padding-right:10px}
+  select.input::picker-icon{
+    content:"";flex:none;margin-left:auto;width:14px;height:14px;
+    background:var(--chevron) center/14px no-repeat;transition:transform .15s;
+  }
+  select.input:open{background-color:var(--brand-soft);border-color:var(--brand-soft);color:var(--brand-strong)}
+  select.input:open::picker-icon{transform:rotate(180deg)}
+  select.input::picker(select){
+    margin:6px 0;padding:6px;
+    border:1px solid var(--line);border-radius:12px;
+    background:var(--card);color:var(--ink);
+    box-shadow:var(--shadow-pop);
+    max-height:min(300px,60vh);
+  }
+  select.input option{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 10px;border-radius:8px;
+    font-size:.92rem;font-weight:500;cursor:pointer;
+  }
+  select.input option:hover,select.input option:focus-visible{background:var(--hover);outline:none}
+  select.input option:checked{background:var(--brand-soft);color:var(--brand-strong);font-weight:700}
+  select.input option::checkmark{color:var(--brand)}
+}
 
 .chip{
   border:1px solid var(--line);
