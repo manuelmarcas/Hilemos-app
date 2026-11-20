@@ -50,7 +50,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     <div id="gate">
       <div className="gate-card">
         <LogoMark className="gate-logo" size={72} />
-        <h1><span className="wm-hile">hile</span><span className="wm-mos">mos</span></h1>
+        <h1><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></h1>
         <p id="gate-text">
           {invited
             ? demo

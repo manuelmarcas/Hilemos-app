@@ -258,7 +258,7 @@ button,input,select,textarea{font:inherit}
 }
 .brand-logo{width:34px;height:34px;flex:none;display:block;color:var(--logo)}
 .brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
-/* Logotipo de texto: «hile» claro y «mos» oscuro, en la familia del lila del logo */
+/* Logotipo de texto: «Hile» claro y «mos» oscuro, en la familia del lila del logo */
 .wm-hile{color:var(--wordmark-hile)}
 .wm-mos{color:var(--wordmark-mos)}
 .sb-toggle{

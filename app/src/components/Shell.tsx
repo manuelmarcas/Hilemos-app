@@ -70,7 +70,7 @@ export function Shell() {
             aria-expanded={drawer} onClick={() => setDrawer(d => !d)}>☰</button>
           <a className="brand" href="#/" aria-label="Hilemos: mis votaciones">
             <LogoMark className="brand-logo" />
-            <span className="brand-name" aria-hidden="true"><span className="wm-hile">hile</span><span className="wm-mos">mos</span></span>
+            <span className="brand-name" aria-hidden="true"><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></span>
           </a>
         </div>
         <div className="who">
