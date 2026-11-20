@@ -88,7 +88,8 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       if (f.mode === "new") {
         const gid = await store.createGroup(user.uid, name);
         if (f.moveId) await move(f.moveId, gid, name);
-        else toast(`Grupo «${name}» creado`);
+        // Los grupos vacíos no salen en el menú: se dice dónde encontrarlo.
+        else toast(`Grupo «${name}» creado. Aparecerá aquí cuando le muevas alguna votación (con ⋯ o arrastrándola).`);
       } else {
         await store.renameGroup(user.uid, f.gid!, name);
         toast("Grupo renombrado");
@@ -188,9 +189,9 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       const isGroup = !!s.gid;
       if (searching && !shown.length) return null;
       if (!isGroup && !s.items.length && (!hasGroups || !total)) return null;
-      // Dentro de una votación el menú sirve para moverse entre votaciones: un grupo vacío solo estorba.
-      // Se muestra mientras se arrastra (para poder soltar en él) y al renombrarlo.
-      if (activeId && !dragging && !s.items.length && !(form?.mode === "rename" && form.gid === s.gid)) return null;
+      // El menú sirve para moverse entre votaciones: un grupo sin ninguna (sin contar las archivadas), ni «Sin grupo» vacío, solo estorba.
+      // Se muestra mientras se arrastra (para poder soltar en él) y al renombrarlo. Sigue estando en «Mover a».
+      if (!dragging && !s.items.length && !(form?.mode === "rename" && form.gid === s.gid)) return null;
       const open = searching || !collapsed.has(s.gid);
       const gmenuOpen = menu?.type === "group" && menu.id === s.gid;
       const renaming = form?.mode === "rename" && form.gid === s.gid;

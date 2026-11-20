@@ -32,7 +32,8 @@ ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en e
   y puede organizarla en **grupos** con el nombre que quiera (crear, renombrar, eliminar, mover votaciones).
 - **Menú lateral** dentro de cada votación: todas tus votaciones por grupos para saltar de una a otra sin volver
   a la portada, con buscador. Desde ahí se organizan (menú ⋯ o arrastrando a otro grupo) y se crean, renombran,
-  pliegan o eliminan grupos. En el móvil se abre con el botón ☰.
+  pliegan o eliminan grupos.
+  Los grupos sin votaciones no salen en el menú (sí en «Mover a» y mientras se arrastra una votación). En el móvil se abre con el botón ☰.
 - **Emojis** en el título, la descripción y las opciones de cada día, con un selector completo
   (todos los emojis de Unicode, como WhatsApp) con categorías, búsqueda en español, tonos de piel y recientes.
 - **Perfil**: cada usuario elige el nombre que ven los demás y su imagen (subida desde el dispositivo, la de Google
