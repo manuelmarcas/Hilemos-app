@@ -4,19 +4,19 @@ import { publicHost, shareFileNative } from "./native";
 import { TYPE, plural, slotLabel, unitParts } from "./model";
 import type { Poll, PollData } from "./types";
 import type { Tally, TiebreakTally } from "./model";
+import tokens from "../../design-system/tokens.json";
 
 const SIZE = 1080;
 const PAD = 112;
 const DISPLAY = '"Bricolage Grotesque", system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
 const SANS = 'Figtree, system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
 
-// Valores del tema claro por si la hoja de estilos no está disponible al dibujar.
-const FALLBACK: Record<string, string> = {
-  "--bg": "#f6f4f7", "--card": "#ffffff", "--soft": "#eeeaef", "--line": "#e2dde4",
-  "--ink": "#2a1f27", "--muted": "#6b5e66", "--brand": "#5e2a59", "--brand-strong": "#451d42",
-  "--best": "#1e7a45", "--best-soft": "#e5f2ea", "--on-best": "#ffffff",
-  "--tie-soft": "#fff3d1", "--tie-ink": "#7a5a0b",
-};
+// Colores que usa la tarjeta. Si la hoja de estilos no está disponible al dibujar, los del tema claro de tokens.json.
+const USED = ["bg", "card", "soft", "line", "ink", "muted", "brand", "brand-strong", "best", "best-soft", "on-best", "tie-soft", "tie-ink"];
+const FALLBACK: Record<string, string> = Object.fromEntries(USED.map(n => {
+  const t = tokens.color.tokens.find(x => x.name === n);
+  return [`--${n}`, typeof t?.value === "object" ? t.value.light : String(t?.value ?? "")];
+}));
 
 function theme() {
   const cs = getComputedStyle(document.documentElement);

@@ -1,6 +1,6 @@
 Votaciones sirve para que un grupo decida cuándo quedar: qué día, semana, mes u hora, y si es para comer o para cenar. La interfaz es la sobremesa donde se decide: una marca color berenjena sobre grises perla que tiran a su mismo tono, y un color propio para cada opción del día, en pastel: miel, azul cielo, rosa y lila.
 
-Los valores de esta guía son los mismos que usa la app: ver [`tokens.json`](tokens.json) y, ya como variables CSS, [`../src/styles.css`](../src/styles.css).
+Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los toma directamente de ahí: [`tokensPlugin.ts`](tokensPlugin.ts) los convierte en variables CSS al arrancar y al compilar, así que cambiar un valor en `tokens.json` cambia la app y lo deja registrado a la vez. Cuando cambie una regla (cuándo se usa cada color, iconos, componentes…), se actualiza también esta guía.
 
 ## Voz y textos
 

@@ -8,8 +8,14 @@ enlaces ya compartidos siguen funcionando.
 Se publica en una sola dirección, <https://votaciones-9bc95.web.app>, con `npm run deploy`.
 
 El diseño (color, tipografía, espaciado, estados…) está documentado en [`design-system/README.md`](design-system/README.md),
-con los valores exactos en [`design-system/tokens.json`](design-system/tokens.json); la fuente real de verdad
-del código es [`src/styles.css`](src/styles.css).
+con los valores exactos en [`design-system/tokens.json`](design-system/tokens.json).
+
+**`tokens.json` es la única fuente de los valores** (colores en claro y oscuro, sombras, radios, espacios,
+opacidades y fuentes). Un plugin de Vite ([`design-system/tokensPlugin.ts`](design-system/tokensPlugin.ts)) lo
+convierte en las variables CSS (`virtual:tokens.css`, importado en `main.tsx`); [`src/styles.css`](src/styles.css)
+solo las usa con `var(--…)` y la imagen de resultados lee el tema claro del mismo JSON. Para cambiar un color se
+edita `tokens.json`: en `npm run dev` se aplica al momento, y un alias roto (`{nombre}` que no existe) o un valor
+sin claro/oscuro hace fallar la compilación. No se definen variables de diseño en `styles.css`.
 
 ## Comandos
 
@@ -32,7 +38,7 @@ Con `?demo` en la URL funciona sin Firebase (datos en `localStorage`; cada pesta
 index.html                 Contenedor (fuentes y tema antes de pintar)
 src/main.tsx               Arranque de React
 src/App.tsx                Almacén de datos, sesión y elección entre login y app
-src/styles.css             Estilos
+src/styles.css             Estilos (usa las variables de design-system/tokens.json)
 src/state/ui.tsx           Avisos, confirmaciones, compartir y selector de emojis (contexto)
 src/state/session.tsx      Usuario, colección (votaciones y grupos) y filtros (contexto)
 src/state/route.ts         Rutas con #
