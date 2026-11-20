@@ -14,6 +14,7 @@
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { CHAT_LIMIT, MAX_CHAT } from "./model";
+import { isNative } from "./native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
 export async function createFirebaseStore(config: FirebaseOptions): Promise<Store> {
@@ -24,7 +25,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     import("firebase/firestore"),
   ]);
   const app = initializeApp(config);
-  const auth = A.getAuth(app);
+  // En la app (Capacitor) no hay ventanas emergentes: el login con Google es nativo (googleCredential) y la
+  // sesión se guarda en IndexedDB sin cargar el iframe de redirecciones de getAuth.
+  const native = isNative();
+  const auth = native ? A.initializeAuth(app, { persistence: A.indexedDBLocalPersistence }) : A.getAuth(app);
   // Caché local (IndexedDB): al volver a escuchar una votación o la colección, Firestore solo cobra los
   // documentos que han cambiado (si han pasado menos de 30 min). También abre más rápido y funciona sin conexión.
   // Si el navegador no la permite (p. ej. modo privado), Firestore sigue funcionando solo en memoria.
@@ -32,6 +36,20 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }),
   });
   const provider = new A.GoogleAuthProvider();
+  const nativeAuth = async () => (await import("@capacitor-firebase/authentication")).FirebaseAuthentication;
+  // Elige la cuenta de Google del móvil y devuelve la credencial para el SDK web.
+  async function googleCredential() {
+    let idToken: string | undefined;
+    try {
+      idToken = (await (await nativeAuth()).signInWithGoogle()).credential?.idToken;
+    } catch (e) {
+      // Cerrar el selector de cuentas no es un error que haya que explicar con detalle.
+      if (/cancel/i.test(String((e as Error)?.message || e))) throw Object.assign(new Error("cancelado"), { code: "auth/popup-closed-by-user" });
+      throw e;
+    }
+    if (!idToken) throw new Error("Google no ha devuelto la sesión. Inténtalo de nuevo.");
+    return A.GoogleAuthProvider.credential(idToken);
+  }
 
   // Nombre elegido al entrar sin cuenta: el perfil se guarda en cuanto hay sesión, pero la sesión
   // se anuncia antes de que la escritura termine, así que de momento el nombre sale de aquí.
@@ -62,7 +80,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     mode: "firebase",
     onAuth: cb => A.onAuthStateChanged(auth, u => cb(toUser(u))),
     async signIn(opts) {
-      if (!opts?.anonymous) return A.signInWithPopup(auth, provider);
+      if (!opts?.anonymous) return native ? A.signInWithCredential(auth, await googleCredential()) : A.signInWithPopup(auth, provider);
       const name = (opts.name || "").trim() || "Alguien";
       anonName = name;
       const cred = await A.signInAnonymously(auth);
@@ -74,10 +92,15 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async linkGoogle() {
       const u = auth.currentUser;
       if (!u) throw new Error("No hay ninguna sesión abierta.");
-      await A.linkWithPopup(u, provider);
+      if (native) await A.linkWithCredential(u, await googleCredential());
+      else await A.linkWithPopup(u, provider);
       await u.reload();
     },
-    signOut: () => A.signOut(auth),
+    async signOut() {
+      // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
+      if (native) await (await nativeAuth()).signOut().catch(() => {});
+      await A.signOut(auth);
+    },
 
     // ----- Votaciones -----
     async createPoll(data, access) {

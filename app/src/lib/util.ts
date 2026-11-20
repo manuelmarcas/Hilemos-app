@@ -1,5 +1,6 @@
 // Utilidades sin interfaz: mensajes de error, textos, imágenes y enlaces.
 import type { Group } from "./types";
+import { isNative, PUBLIC_ORIGIN } from "./native";
 
 const ERRORS: Record<string, string> = {
   "permission-denied": "Permiso denegado. Si acabas de instalar la app, revisa que las reglas de Firestore (firestore.rules) estén publicadas.",
@@ -98,7 +99,9 @@ export const sortedGroups = (groups: Record<string, Group> | null | undefined) =
   .map(([id, g]) => ({ id, name: g.name || "Sin nombre" }))
   .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
-export const pollUrl = (id: string) => `${location.origin}${location.pathname}${location.search}#/v/${id}`;
+// En la app (Capacitor) la página vive en https://localhost: los enlaces van a la web pública, que la app abre si está instalada.
+export const pollUrl = (id: string) => isNative() ? `${PUBLIC_ORIGIN}/#/v/${id}`
+  : `${location.origin}${location.pathname}${location.search}#/v/${id}`;
 
 /** iPhone y iPad (el iPad moderno se presenta como un Mac, pero con pantalla táctil). */
 export const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent)

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { copyText } from "../lib/util";
+import { canShareLink, isNative, shareFileNative, shareLink } from "../lib/native";
 
 export interface ShareTarget {
   url: string;
@@ -39,7 +40,7 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
   const dlgRef = useRef<HTMLDialogElement | null>(null);
   const text = `¡Vota en «${title}»!`;
   const enc = encodeURIComponent;
-  const canShare = typeof navigator.share === "function";
+  const canShare = canShareLink();
 
   useEffect(() => {
     let alive = true;
@@ -49,8 +50,10 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
     return () => { alive = false; };
   }, [url]);
 
-  const download = () => {
+  const download = async () => {
     if (!qr || !("png" in qr)) return;
+    // En la app las descargas no funcionan: se comparte la imagen (y desde ahí se puede guardar).
+    if (await shareFileNative(await (await fetch(qr.png)).blob(), `qr-${slugFile(title)}.png`, title, text)) return;
     const a = document.createElement("a");
     a.href = qr.png;
     a.download = `qr-${slugFile(title)}.png`;
@@ -78,14 +81,14 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
       </div>
       <div className="share-btns">
         {canShare && (
-          <button className="btn" onClick={async () => { try { await navigator.share({ title, text, url }); } catch { /* cancelado */ } }}>
+          <button className="btn" onClick={() => shareLink({ title, text, url })}>
             📤 Compartir…
           </button>
         )}
         <a className="btn" target="_blank" rel="noopener" href={`https://wa.me/?text=${enc(`${text} ${url}`)}`}>💬 WhatsApp</a>
         <a className="btn" target="_blank" rel="noopener" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`}>✈️ Telegram</a>
         <a className="btn" href={`mailto:?subject=${enc(title)}&body=${enc(`${text}\n\n${url}`)}`}>✉️ Correo</a>
-        <button className="btn" disabled={!qr || !("png" in qr)} onClick={download}>⬇️ Descargar QR</button>
+        <button className="btn" disabled={!qr || !("png" in qr)} onClick={download}>{isNative() ? "🖼️ Compartir QR" : "⬇️ Descargar QR"}</button>
       </div>
       <p className="dlg-note">Quien abra el enlace (o escanee el QR) e inicie sesión quedará como participante y la votación aparecerá en su menú.</p>
     </Dialog>

@@ -2,6 +2,7 @@
 // Con un desempate abierto avisa a quien falta por elegir en el desempate, no en la votación cerrada.
 import { plural, type Tally, type TiebreakTally } from "../lib/model";
 import type { Poll } from "../lib/types";
+import { canShareLink, shareLink } from "../lib/native";
 
 const MAX_NAMES = 10; // en un mensaje de chat una lista más larga no se lee
 
@@ -30,9 +31,9 @@ export function RemindMissing({ poll, T, TB, open, me, url }: {
     <a className="btn small" target="_blank" rel="noopener" title="Avisar a quien falta"
       href={`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`}
       onClick={async e => {
-        if (typeof navigator.share !== "function") return;
+        if (!canShareLink()) return;
         e.preventDefault();
-        try { await navigator.share({ title: poll.title, text, url }); } catch { /* cancelado */ }
+        await shareLink({ title: poll.title, text, url });
       }}>
       <span aria-hidden="true">📣</span> Avisar a quien falta
     </a>

@@ -20,6 +20,8 @@ npm run dev          # servidor de desarrollo: http://localhost:5173/?demo
 npm run typecheck    # comprobar tipos
 npm run build        # compila a dist/ (comprueba tipos antes)
 npm run preview      # sirve dist/ para probar la versión compilada
+npm run android      # compila y copia la web al proyecto de Android (ver «App de Android»)
+npm run android:open # abre el proyecto en Android Studio
 ```
 
 Con `?demo` en la URL funciona sin Firebase (datos en `localStorage`; cada pestaña puede ser una persona distinta).
@@ -255,7 +257,50 @@ para leer lo mínimo:
 
 Límite conocido: si alguien quita una votación de su menú y luego cambia su nombre, en esa votación seguirá el anterior.
 
-## Pendiente para Capacitor
+## App de Android (Capacitor)
 
-- Login con Google nativo (`signInWithPopup` no funciona dentro del WebView): `@capacitor-firebase/authentication`.
-- Enlaces de las votaciones que abran la app (App Links / Universal Links) y `pollUrl` apuntando al dominio público.
+La carpeta `android/` es el proyecto de Android Studio que genera Capacitor. La app es esta misma web
+compilada (`dist/`) dentro de un WebView, así que cualquier cambio en `src/` llega a la app al volver a
+compilarla con `npm run android` y subir una versión nueva a Google Play.
+
+- **Identificador**: `app.hilemos` (en [`capacitor.config.ts`](capacitor.config.ts)). No se puede cambiar
+  una vez publicada en Google Play.
+- **Qué cambia dentro de la app** (todo en [`src/lib/native.ts`](src/lib/native.ts); en el navegador no hace nada):
+  - Login con Google nativo con `@capacitor-firebase/authentication` (en el WebView no hay ventanas emergentes):
+    se elige la cuenta del móvil y la sesión la lleva el SDK web de Firebase, como en la web (`skipNativeAuth`).
+  - La página se sirve desde `https://localhost`, así que los enlaces que se comparten (`pollUrl`, la tarjeta
+    del resultado, el `.ics`) usan la web pública, `https://votaciones-9bc95.web.app`.
+  - Compartir abre el menú del sistema (`@capacitor/share`); el QR y la tarjeta del resultado se comparten en
+    vez de descargarse, porque el WebView no descarga archivos.
+  - El botón Atrás de Android cierra primero el diálogo abierto.
+  - Los avisos web no existen en el WebView: el perfil los muestra como no disponibles.
+- **Firebase**: la app está dada de alta como «Hilemos» (Android). Su configuración es
+  `android/app/google-services.json`, pública como la de la web. El login con Google solo funciona con las
+  claves de firma cuya huella SHA-1 esté en *Configuración del proyecto > Tus apps > Hilemos*; ahora está la
+  clave de pruebas de este ordenador (`~/.android/debug.keystore`). Para añadir otra:
+  `npx firebase apps:android:sha:create 1:1092387940683:android:5b56f82b080e66f632a0ce <SHA-1>` y volver a
+  descargar el `google-services.json` (`npx firebase apps:sdkconfig ANDROID <ese id> -o android/app/google-services.json`).
+- **Iconos y pantalla de arranque**: salen de `assets/` (generados a partir de `public/icon.svg`) con
+  `npm run android:assets`.
+
+### Probarla en un móvil
+
+1. Instalar [Android Studio](https://developer.android.com/studio) (trae el JDK y el SDK de Android).
+2. `npm run android` y `npm run android:open`.
+3. En el móvil, activar las *Opciones de desarrollador* y la *Depuración USB*, conectarlo y pulsar ▶ en Android Studio.
+
+### Publicarla en Google Play
+
+1. Cuenta de [Google Play Console](https://play.google.com/console) (25 $, pago único). Si es una cuenta
+   personal nueva, Google exige una prueba cerrada con al menos 12 personas durante 14 días antes de publicar.
+2. Subir `versionCode` (y `versionName`) en `android/app/build.gradle` en cada versión nueva.
+3. Android Studio: *Build > Generate Signed App Bundle* crea la clave de subida (`.jks`, **guardarla con su
+   contraseña fuera del repositorio**: sin ella no se pueden subir actualizaciones) y el `.aab`.
+4. Con la firma de apps de Google Play, Google vuelve a firmar la app con su propia clave: añadir en Firebase las
+   huellas SHA-1 de la clave de subida y de la de Google Play (*Play Console > Prueba y publica > Integridad de
+   la app*); si no, el login con Google falla en la app descargada de la tienda.
+5. Enlaces que abren la app: publicar `public/.well-known/assetlinks.json` con la huella SHA-256 de la clave de
+   Google Play (la Play Console da el archivo hecho). El filtro ya está en `android/app/src/main/AndroidManifest.xml`;
+   mientras no exista el archivo, los enlaces se abren en el navegador.
+6. Ficha de la tienda: icono de 512 px (`design-system/logo/play-store-512.png`), imagen destacada de 1024×500,
+   capturas, política de privacidad y la forma de pedir que se borre la cuenta.

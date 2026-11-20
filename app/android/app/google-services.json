@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1092387940683",
+    "project_id": "votaciones-9bc95",
+    "storage_bucket": "votaciones-9bc95.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1092387940683:android:5b56f82b080e66f632a0ce",
+        "android_client_info": {
+          "package_name": "app.hilemos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1092387940683-jkjn5lu6471dcequ3fsl2mpn3h5gjjoh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.hilemos",
+            "certificate_hash": "5969357b93d41dfe0bda71a0c6dcbc53b6f4d696"
+          }
+        },
+        {
+          "client_id": "1092387940683-evodojp0hto2f7t4p0ggudjgindqtrcg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvl8NPFxwsX0YKlcNtxC4x13SV0uxUP_8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1092387940683-evodojp0hto2f7t4p0ggudjgindqtrcg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

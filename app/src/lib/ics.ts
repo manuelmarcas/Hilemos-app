@@ -3,6 +3,7 @@
 // Las horas van "flotantes" (sin Z ni TZID) porque la app guarda fechas locales sin zona horaria:
 // las 21:00 que votó el grupo son las 21:00 de quien abre el evento.
 import * as D from "./dates";
+import { publicHost } from "./native";
 import { pollOptions, unitParts } from "./model";
 import type { PollData } from "./types";
 
@@ -27,7 +28,7 @@ export function calendarEvent(poll: PollData, id: string, unit: string, url: str
   const opt = pollOptions(poll).find(o => o.id === optId);
   const name = poll.type === "days" && opt?.name ? `${opt.icon} ${opt.name}`.trim() : "";
   const title = name ? `${poll.title} - ${name}` : poll.title;
-  const uid = `${id}-${slot.replace(/[^0-9A-Za-z]/g, "")}@${location.host || "votaciones"}`;
+  const uid = `${id}-${slot.replace(/[^0-9A-Za-z]/g, "")}@${publicHost() || "votaciones"}`;
   const base = { uid, title, description: `Votación: ${url}` };
 
   if (poll.type === "hours") {

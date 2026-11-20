@@ -1,5 +1,6 @@
 // Tarjeta de resultados en PNG (1080×1080) para compartir en un grupo.
 import * as D from "./dates";
+import { publicHost, shareFileNative } from "./native";
 import { TYPE, plural, slotLabel, unitParts } from "./model";
 import type { Poll, PollData } from "./types";
 import type { Tally, TiebreakTally } from "./model";
@@ -202,7 +203,7 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
   g.textAlign = "left";
   g.fillStyle = t["--muted"];
   g.font = `600 26px ${SANS}`;
-  g.fillText(clamp(g, `Vota tú también en ${location.host}`, inner), PAD, footerY);
+  g.fillText(clamp(g, `Vota tú también en ${publicHost()}`, inner), PAD, footerY);
 
   return new Promise<Blob>((resolve, reject) => {
     c.toBlob(b => (b ? resolve(b) : reject(new Error("No se pudo generar la imagen."))), "image/png");
@@ -212,10 +213,11 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
 const slugFile = (s: string) => (s || "votacion").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "votacion";
 
-/** Comparte la tarjeta y, si el navegador no puede, la descarga. */
+/** Comparte la tarjeta y, si el navegador no puede, la descarga (en la app siempre se comparte). */
 export async function shareResultCard(poll: Poll, T: Tally, TB: TiebreakTally | null): Promise<"shared" | "downloaded"> {
   const blob = await resultCard(poll, T, TB);
   const name = `resultado-${slugFile(poll.title)}-${D.todayKey()}.png`;
+  if (await shareFileNative(blob, name, poll.title, `Resultado de «${poll.title}»`)) return "shared";
   const file = new File([blob], name, { type: "image/png" });
   if (navigator.canShare?.({ files: [file] })) {
     try {
