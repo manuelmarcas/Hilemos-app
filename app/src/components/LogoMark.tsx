@@ -1,6 +1,6 @@
-// Logotipo sin fondo: solo el calendario, en `color` (currentColor, que es `--logo`),
-// con los ojos, la sonrisa y la lengua dibujados encima en su color. Sale de
-// public/logo-rounded.svg: los trazos blancos pasan a currentColor.
+// Logotipo sin fondo de la barra superior y la pantalla de entrada: el calendario en
+// `color` (currentColor, que es `--logo`), con los ojos, la sonrisa y la lengua encima
+// en su color. Es design-system/logo/logo-lila.svg con el lila pasado a currentColor.
 
 // [relleno, trazo]; null = el color del calendario.
 const PATHS: [string | null, string][] = [

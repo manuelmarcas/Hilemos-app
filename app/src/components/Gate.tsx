@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import type { Store } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { useHashPath } from "../state/route";
+import { LogoMark } from "./LogoMark";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -48,7 +49,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   return (
     <div id="gate">
       <div className="gate-card">
-        <img className="gate-logo" src={`${import.meta.env.BASE_URL}logo-rounded.svg`} alt="" width={72} height={72} />
+        <LogoMark className="gate-logo" size={72} />
         <h1><span className="wm-hile">hile</span><span className="wm-mos">mos</span></h1>
         <p id="gate-text">
           {invited
