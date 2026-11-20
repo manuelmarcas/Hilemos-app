@@ -203,12 +203,19 @@ export function Home() {
     <>
       <HomeHead />
       <div id="home-body">
+        {filter === "archived" ? (
+          <div className="archived-head">
+            <button className="link-btn back-link" onClick={() => { setStatus(""); setFilter("all"); }}>
+              <Icon name="back" /> Volver a mis votaciones
+            </button>
+            <h2><Icon name="archive" /> Archivadas <span className="muted">({archived.length})</span></h2>
+          </div>
+        ) : (
         <div className="group-bar">
           <div className="group-chips">
             {chip("all", "Todas", all.length)}
             {groups.map(gr => chip(gr.id, gr.name, inGroup(gr.id).length))}
             {groups.length > 0 && chip("none", "Sin grupo", inGroup(null).length)}
-            {(archived.length > 0 || filter === "archived") && chip("archived", <><Icon name="archive" /> Archivadas</>, archived.length)}
             <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>
           </div>
           {form && (
@@ -227,11 +234,21 @@ export function Home() {
             </div>
           )}
         </div>
+        )}
         <div className="status" role="alert">{status}</div>
         {filter === "archived" && archived.length > 0 && (
           <p className="archived-note">Las archivadas no aparecen en el panel ni en el menú, pero conservan su grupo. Desarchívalas para recuperarlas.</p>
         )}
         {list}
+        {/* Las archivadas no son un grupo: van aparte, al final de la lista. */}
+        {filter !== "archived" && archived.length > 0 && (
+          <button className="archived-row" onClick={() => { setStatus(""); setFilter("archived"); setForm(null); }}>
+            <Icon name="archive" />
+            <span className="archived-row-label">Archivadas</span>
+            <span className="n">{archived.length}</span>
+            <Icon name="back" className="archived-row-go" />
+          </button>
+        )}
         {(filter === "archived" ? archived.length : all.length) > 0 && (
           <p className="swipe-hint">
             Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para eliminarla de tu lista.

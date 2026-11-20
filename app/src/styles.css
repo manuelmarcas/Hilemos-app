@@ -25,10 +25,10 @@
   --danger-soft:#f6e7e7;
   --on-danger:#ffffff;
   /* Colores de las opciones (hasta 4) */
-  --c0:#f2b53c; --c0-ink:#4a3405; --c0-edge:#d99e25;
-  --c1:#3d4f9f; --c1-ink:#ffffff; --c1-edge:#33438a;
-  --c2:#23796f; --c2-ink:#ffffff; --c2-edge:#1d665e;
-  --c3:#c4532f; --c3-ink:#ffffff; --c3-edge:#a84626;
+  --c0:#f2b84b; --c0-ink:#4a3405; --c0-edge:#d9a032;
+  --c1:#38458f; --c1-ink:#ffffff; --c1-edge:#2e3a7a;
+  --c2:#eba3c8; --c2-ink:#4d1239; --c2-edge:#d98bb4;
+  --c3:#7a52b3; --c3-ink:#ffffff; --c3-edge:#68449c;
   --focus:var(--brand);
   --link:var(--brand);
   --font-display:"Bricolage Grotesque", Figtree, system-ui, sans-serif;
@@ -79,9 +79,9 @@
   --danger-soft:#3d2323;
   --on-danger:#1b1619;
   --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
-  --c1:#8b9be3; --c1-ink:#141a33; --c1-edge:#7586d4;
-  --c2:#5cbcae; --c2-ink:#0d2522; --c2-edge:#4ea89b;
-  --c3:#ee8a6a; --c3-ink:#2d0f09; --c3-edge:#da785a;
+  --c1:#7f9ee6; --c1-ink:#121a33; --c1-edge:#6c8bd6;
+  --c2:#f0a8c4; --c2-ink:#3d0f26; --c2-edge:#dc93b0;
+  --c3:#b896ec; --c3-ink:#1e1036; --c3-edge:#a382dc;
   --shadow:0 10px 30px -18px rgba(0,0,0,.7);
   --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
   --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
@@ -121,9 +121,9 @@
   --danger-soft:#3d2323;
   --on-danger:#1b1619;
   --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
-  --c1:#8b9be3; --c1-ink:#141a33; --c1-edge:#7586d4;
-  --c2:#5cbcae; --c2-ink:#0d2522; --c2-edge:#4ea89b;
-  --c3:#ee8a6a; --c3-ink:#2d0f09; --c3-edge:#da785a;
+  --c1:#7f9ee6; --c1-ink:#121a33; --c1-edge:#6c8bd6;
+  --c2:#f0a8c4; --c2-ink:#3d0f26; --c2-edge:#dc93b0;
+  --c3:#b896ec; --c3-ink:#1e1036; --c3-edge:#a382dc;
   --shadow:0 10px 30px -18px rgba(0,0,0,.7);
   --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
   --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
@@ -1554,6 +1554,21 @@ tr.open td{border-bottom-color:transparent}
 .swipe-hint{display:none;margin:14px 2px 0;font-size:.8rem;color:var(--muted);text-align:center}
 @media (hover:none){.swipe-hint{display:block}}
 .archived-note{margin:0 0 12px;font-size:.86rem;color:var(--muted);line-height:1.45}
+/* «Archivadas» al final de «Mis votaciones»: fila aparte con un lila muy suave, para no confundirla con un grupo */
+.archived-row{
+  display:flex;align-items:center;gap:10px;width:100%;margin-top:16px;
+  padding:12px 14px;border:1px dashed color-mix(in srgb,var(--brand) 30%,transparent);border-radius:12px;
+  background:color-mix(in srgb,var(--brand-soft) 55%,transparent);color:var(--brand-strong);
+  font:inherit;font-size:.92rem;font-weight:600;text-align:left;cursor:pointer;transition:background .15s;
+}
+.archived-row:hover{background:var(--brand-soft)}
+.archived-row-label{flex:1;min-width:0}
+.archived-row .n{font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.archived-row-go{transform:rotate(180deg);color:var(--muted)}
+.archived-head{margin-bottom:14px}
+.archived-head h2{margin:6px 0 0;font-size:1.2rem;color:var(--brand-strong)}
+.back-link{padding:2px 0;text-decoration:none;color:var(--muted);font-size:.9rem}
+.back-link:hover{color:var(--brand)}
 
 /* Avisos con "Deshacer" y cuenta atrás */
 .undo-stack{

@@ -58,7 +58,8 @@ src/lib/config.ts          Configuración de Firebase
 ## Archivar y eliminar de la lista
 
 - Cada usuario puede **archivar** votaciones (campo `archived` en `users/{uid}/polls/{id}`): salen del panel y del
-  menú lateral, se ven en el filtro «📦 Archivadas» y conservan su grupo. Se pueden desarchivar.
+  menú lateral, se ven en la fila «Archivadas» del final de la lista (con fondo lila suave, para no confundirla con
+  un grupo) y conservan su grupo. Se pueden desarchivar.
 - **Eliminar de la lista** quita la votación del menú del usuario (no la borra para los demás; se puede volver con
   el enlace). La primera vez sale un aviso con la casilla «No volver a mostrar», que se guarda en el perfil
   (`hideRemoveWarning`). Si era la última votación de un grupo (contando las archivadas), el grupo también se borra.
