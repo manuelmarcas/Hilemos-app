@@ -25,10 +25,10 @@
   --danger-soft:#f6e7e7;
   --on-danger:#ffffff;
   /* Colores de las opciones (hasta 4) */
-  --c0:#f2b84b; --c0-ink:#4a3405; --c0-edge:#d9a032;
-  --c1:#38458f; --c1-ink:#ffffff; --c1-edge:#2e3a7a;
-  --c2:#eba3c8; --c2-ink:#4d1239; --c2-edge:#d98bb4;
-  --c3:#7a52b3; --c3-ink:#ffffff; --c3-edge:#68449c;
+  --c0:#f2c165; --c0-ink:#3d2a06; --c0-edge:#dcaa4c;
+  --c1:#8fb8e8; --c1-ink:#122540; --c1-edge:#77a2d6;
+  --c2:#f2a7c3; --c2-ink:#4a1230; --c2-edge:#dd8fad;
+  --c3:#c3a6e8; --c3-ink:#2b1650; --c3-edge:#ab8cd6;
   --focus:var(--brand);
   --link:var(--brand);
   --font-display:"Bricolage Grotesque", Figtree, system-ui, sans-serif;
@@ -78,10 +78,10 @@
   --danger:#f0897c;
   --danger-soft:#3d2323;
   --on-danger:#1b1619;
-  --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
-  --c1:#7f9ee6; --c1-ink:#121a33; --c1-edge:#6c8bd6;
-  --c2:#f0a8c4; --c2-ink:#3d0f26; --c2-edge:#dc93b0;
-  --c3:#b896ec; --c3-ink:#1e1036; --c3-edge:#a382dc;
+  --c0:#e8b95e; --c0-ink:#2a1d02; --c0-edge:#cfa147;
+  --c1:#86ade0; --c1-ink:#0f1d33; --c1-edge:#7097cc;
+  --c2:#eaa0bc; --c2-ink:#3a0f24; --c2-edge:#d489a5;
+  --c3:#b99ce0; --c3-ink:#22113d; --c3-edge:#a285cc;
   --shadow:0 10px 30px -18px rgba(0,0,0,.7);
   --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
   --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
@@ -120,10 +120,10 @@
   --danger:#f0897c;
   --danger-soft:#3d2323;
   --on-danger:#1b1619;
-  --c0:#e9ad3a; --c0-ink:#2a1d02; --c0-edge:#c99124;
-  --c1:#7f9ee6; --c1-ink:#121a33; --c1-edge:#6c8bd6;
-  --c2:#f0a8c4; --c2-ink:#3d0f26; --c2-edge:#dc93b0;
-  --c3:#b896ec; --c3-ink:#1e1036; --c3-edge:#a382dc;
+  --c0:#e8b95e; --c0-ink:#2a1d02; --c0-edge:#cfa147;
+  --c1:#86ade0; --c1-ink:#0f1d33; --c1-edge:#7097cc;
+  --c2:#eaa0bc; --c2-ink:#3a0f24; --c2-edge:#d489a5;
+  --c3:#b99ce0; --c3-ink:#22113d; --c3-edge:#a285cc;
   --shadow:0 10px 30px -18px rgba(0,0,0,.7);
   --shadow-pop:0 10px 30px -10px rgba(0,0,0,.75);
   --shadow-dialog:0 30px 80px -20px rgba(0,0,0,.85);
