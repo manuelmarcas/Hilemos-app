@@ -1363,6 +1363,13 @@ emoji-picker{
 .privacy{display:grid;grid-template-columns:1fr;gap:10px}
 .theme-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .theme-pick .type-card{min-width:0}
+/* En pantallas estrechas «Automático» no cabe en un tercio: una opción por fila, a todo el ancho, con el icono
+   a la izquierda del nombre y la descripción. */
+@container view (max-width:519.98px){
+  .theme-pick{grid-template-columns:minmax(0,1fr);gap:8px}
+  .theme-pick .type-card{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:0;align-items:center;padding:10px 14px}
+  .theme-pick .type-icon{grid-row:span 2;font-size:1.45rem}
+}
 .pref-label{margin:0 0 8px;font-size:.92rem;font-weight:700;color:var(--ink)}
 .pref-block{margin-top:22px;min-width:0}
 .notify-opts{display:flex;flex-direction:column;gap:2px;margin-top:12px;min-width:0}
