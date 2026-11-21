@@ -190,6 +190,17 @@ export function Profile() {
           <button className="btn primary big" id="pf-save" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
           <div className="status" id="pf-status" role="alert">{status}</div>
         </div>
+        {/* Correo con el que se entra (Google o enlace al correo): solo para verlo, no se cambia aquí. */}
+        {!user.anon && user.email && store.mode === "firebase" && (
+          <section className="step" id="pf-email">
+            <h2><label htmlFor="pf-email-input">Correo de tu cuenta</label></h2>
+            <input id="pf-email-input" className="input" type="email" value={user.email} disabled readOnly />
+            <p className="hint hint-after">
+              Es con el que entras, con Google o con «Entrar con tu correo». No se puede cambiar. Si te invitan a una
+              votación privada, tiene que ser con este correo.
+            </p>
+          </section>
+        )}
         {user.anon && store.mode === "firebase" && (
           <section className="step" id="pf-account">
             <h2>Tu cuenta</h2>

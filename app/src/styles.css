@@ -127,7 +127,7 @@ button,input,select,textarea{font:inherit}
 .key-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .key-check{margin:16px 0 0;font-weight:600}
 .dlg-key .dlg-actions{margin-top:14px}
-.pf-account-or{margin-top:18px}
+.pref-label.pf-account-or{margin-top:26px}
 .pf-mail{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .pf-mail .input{flex:1 1 220px;width:auto;min-width:0}
 .pf-mail-sent{margin:0 0 10px}
@@ -240,6 +240,8 @@ button,input,select,textarea{font:inherit}
   font-size:1rem;
 }
 .input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+/* Campo que solo se muestra (p. ej. el correo de la cuenta en «Tu perfil»): fondo soft, sin el gris del navegador */
+.input:disabled{background:var(--soft);color:var(--muted);border-color:var(--line);opacity:1;-webkit-text-fill-color:var(--muted);cursor:default}
 /* Campo con un fallo (lib/fieldErrors.ts): borde y foco en danger hasta que se escribe en él */
 .input.field-invalid{border-color:var(--danger)}
 .input.field-invalid:focus{outline-color:var(--danger);border-color:var(--danger)}
