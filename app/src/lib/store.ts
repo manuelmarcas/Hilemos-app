@@ -13,7 +13,7 @@
 
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
-import { CHAT_LIMIT, MAX_CHAT } from "./model";
+import { CHAT_LIMIT, MAX_CHAT, ghostName, isAdmin } from "./model";
 import { isNative, PUBLIC_ORIGIN } from "./native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
@@ -229,6 +229,76 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async setDisplayName(name) {
       if (auth.currentUser) await A.updateProfile(auth.currentUser, { displayName: name });
     },
+    async prepareDeleteAccount() {
+      const u = auth.currentUser;
+      if (!u) throw new Error("No hay ninguna sesión abierta.");
+      if (u.providerData.some(p => p.providerId === "google.com")) {
+        if (native) await A.reauthenticateWithCredential(u, await googleCredential());
+        else await A.reauthenticateWithPopup(u, provider);
+        return "ok";
+      }
+      // Sin registro (anónima) no hay forma de volver a entrar: se intenta igual. El resto, si entró hace poco.
+      const last = Date.parse(u.metadata.lastSignInTime || "") || 0;
+      return u.isAnonymous || Date.now() - last < 4 * 60 * 1000 ? "ok" : "relogin";
+    },
+    async deleteAccount(uid) {
+      const u = auth.currentUser;
+      if (!u || u.uid !== uid) throw new Error("No hay ninguna sesión abierta.");
+      const commitIn = async (refs: import("firebase/firestore").DocumentReference[], op: (b: import("firebase/firestore").WriteBatch, r: import("firebase/firestore").DocumentReference) => void) => {
+        for (let i = 0; i < refs.length; i += 450) {
+          const b = F.writeBatch(db);
+          refs.slice(i, i + 450).forEach(r => op(b, r));
+          await b.commit();
+        }
+      };
+      const entries = await F.getDocs(libCol(uid));
+      for (const entry of entries.docs) {
+        const id = entry.id;
+        const snap = await F.getDoc(pollRef(id)).catch(() => null);
+        if (!snap?.exists()) continue;
+        const poll = snap.data() as PollData;
+        const ghost = ghostName();
+        // Mensajes del chat y voto: el mismo nombre sin dueño en toda la votación, sin foto.
+        try {
+          const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
+          await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
+        } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
+        await F.updateDoc(F.doc(votesCol(id), uid), { name: ghost, photo: "" }).catch(() => {});
+        if (poll.ownerUid === uid) {
+          // La votación pasa a un administrador al azar o, si no hay, a cualquier participante aceptado.
+          const all = await F.getDocs(votesCol(id));
+          const accepted = all.docs.filter(d => d.id !== uid && !d.get("status"));
+          const admins = poll.admins || [];
+          const pool = accepted.filter(d => admins.includes(d.id));
+          const from = pool.length ? pool : accepted;
+          if (from.length) {
+            const heir = from[Math.floor(Math.random() * from.length)];
+            await F.updateDoc(pollRef(id), {
+              ownerUid: heir.id, ownerName: heir.get("name") || "Alguien", admins: admins.filter(a => a !== heir.id),
+            });
+          } else {
+            // No queda nadie: se borra la votación con sus votos (el chat no se puede borrar desde la app).
+            await commitIn(all.docs.map(d => d.ref), (b, r) => b.delete(r));
+            const b = F.writeBatch(db);
+            b.delete(accessRef(id));
+            b.delete(pollRef(id));
+            await b.commit();
+          }
+        } else if (poll.admins?.includes(uid)) {
+          await F.updateDoc(pollRef(id), { admins: F.arrayRemove(uid) }).catch(() => {});
+        }
+      }
+      // Sus datos: lista, grupos, dispositivos de avisos y perfil.
+      for (const col of [libCol(uid), groupsCol(uid), F.collection(db, "users", uid, "tokens")]) {
+        const s = await F.getDocs(col);
+        await commitIn(s.docs.map(d => d.ref), (b, r) => b.delete(r));
+      }
+      await F.deleteDoc(F.doc(db, "users", uid));
+      // Y la cuenta de inicio de sesión. Si Firebase no lo deja (sesión antigua), al menos se cierra la sesión:
+      // los datos ya no están.
+      if (native) await (await nativeAuth()).signOut().catch(() => {});
+      try { await u.delete(); } catch { await A.signOut(auth); }
+    },
     async signOut() {
       // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
       if (native) await (await nativeAuth()).signOut().catch(() => {});
@@ -438,6 +508,33 @@ export function createDemoStore(): Store {
     isEmailLink: () => false,
     async completeEmailLink() { throw fail("unavailable"); },
     async setDisplayName() { /* el nombre del modo demo ya va en la sesión */ },
+    async prepareDeleteAccount() { return "ok"; },
+    async deleteAccount(uid) {
+      const db = load();
+      for (const [id, p] of Object.entries(db.polls)) {
+        const v = db.votes[id]?.[uid];
+        if (v) { v.name = ghostName(); v.photo = ""; }
+        for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = v?.name || ghostName();
+        if (p.ownerUid === uid) {
+          const accepted = Object.entries(db.votes[id] || {}).filter(([u, x]) => u !== uid && !x.status);
+          const admins = p.admins || [];
+          const pool = accepted.filter(([u]) => admins.includes(u));
+          const from = pool.length ? pool : accepted;
+          if (from.length) {
+            const [heir, hv] = from[Math.floor(Math.random() * from.length)];
+            Object.assign(p, { ownerUid: heir, ownerName: hv.name || "Alguien", admins: admins.filter(a => a !== heir) });
+          } else {
+            delete db.polls[id];
+            delete db.votes[id];
+          }
+        } else if (p.admins?.includes(uid)) {
+          p.admins = p.admins.filter(a => a !== uid);
+        }
+      }
+      delete db.users[uid];
+      write(db);
+      setUser(null);
+    },
     async signOut() { setUser(null); },
 
     async createPoll(data, access) {
@@ -450,13 +547,13 @@ export function createDemoStore(): Store {
     },
     async getAccess(id) {
       const db = load();
-      if (db.polls[id]?.ownerUid !== user?.uid) throw fail("permission-denied");
+      if (!db.polls[id] || !isAdmin(db.polls[id], user?.uid || "")) throw fail("permission-denied");
       const a = db.access?.[id];
       return a ? clone(a) : null;
     },
     async setAccess(id, access) {
       const db = load();
-      if (db.polls[id]?.ownerUid !== user?.uid) throw fail("permission-denied");
+      if (!db.polls[id] || !isAdmin(db.polls[id], user?.uid || "")) throw fail("permission-denied");
       (db.access ||= {})[id] = clone(access);
       write(db);
     },
@@ -506,7 +603,7 @@ export function createDemoStore(): Store {
       const p = db.polls[id];
       const v = db.votes[id]?.[uid];
       if (!p || !v) throw fail("not-found");
-      if (p.ownerUid !== user?.uid) throw fail("permission-denied");
+      if (!isAdmin(p, user?.uid || "") || uid === p.ownerUid) throw fail("permission-denied");
       if (status === "accepted") delete v.status; else v.status = status;
       const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
       if (counted && delta) p.members = (p.members || 0) + delta;

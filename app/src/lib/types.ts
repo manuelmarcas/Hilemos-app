@@ -36,6 +36,9 @@ export interface PollData {
   anonymous?: boolean;
   tiebreak?: Tiebreak | null;
   ownerUid: string;
+  /** Administradores nombrados por el creador (uids): gestionan la votación como él, salvo eliminarla y
+   *  nombrar o quitar administradores. */
+  admins?: string[];
   ownerName?: string;
   createdAt?: number;
   closed?: boolean;
@@ -188,6 +191,17 @@ export interface Store {
   completeEmailLink(email: string, url: string): Promise<{ linked: boolean; needsName: boolean; uid: string }>;
   /** Nombre de la sesión (cuentas nuevas por correo, que no traen nombre). */
   setDisplayName(name: string): Promise<void>;
+  /**
+   * Antes de eliminar la cuenta: Firebase exige haber entrado hace poco. Con Google se vuelve a pedir la cuenta
+   * (ventana de Google); con correo o clave, si hace rato que se entró, hay que salir y volver a entrar ("relogin").
+   */
+  prepareDeleteAccount(): Promise<"ok" | "relogin">;
+  /**
+   * Elimina la cuenta: en cada votación sus votos y mensajes pasan a un nombre sin dueño (ghostName) y sin foto;
+   * las que creó pasan a un administrador o participante al azar (o se borran si no queda nadie); luego se borran
+   * su perfil, su lista, sus grupos y la cuenta de inicio de sesión.
+   */
+  deleteAccount(uid: string): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */

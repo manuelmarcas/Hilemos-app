@@ -4,7 +4,7 @@ import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
   MAX_PEOPLE, MAX_EMAILS, PEOPLE_FILTER_FROM, isRestricted, memberStatus, acceptedVotes, hasLimit, isFull, parseEmails,
-  deadlinePassed, fmtDeadline,
+  deadlinePassed, fmtDeadline, isAdmin,
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
@@ -57,7 +57,7 @@ export function PollPage({ id }: { id: string }) {
     store.saveLibraryEntry(user.uid, id, { chatSeenAt: at }).catch(() => { seenWritten.current = 0; });
   }, [inLibrary, store, user.uid, id]);
 
-  const ownOnly = !!poll && isRestricted(poll) && poll.ownerUid !== user.uid;
+  const ownOnly = !!poll && isRestricted(poll) && !isAdmin(poll, user.uid);
   const canReadAll = !!poll && (!ownOnly || (!!myVote && memberStatus(myVote) === "accepted"));
 
   useEffect(() => store.watchPoll(id,
@@ -175,10 +175,13 @@ export function PollPage({ id }: { id: string }) {
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
+  // Administra (creador o nombrado): gestiona la votación. Eliminarla y nombrar administradores, solo el creador.
+  const admin = isAdmin(poll, user.uid);
+  const admins = poll.admins || [];
   const expired = deadlinePassed(poll);
   const canVote = !poll.closed && !expired;
   // En el chat se escribe aunque la votación esté cerrada: es cuando se remata el plan.
-  const canChat = isOwner || (!!votes[user.uid] && memberStatus(votes[user.uid]) === "accepted");
+  const canChat = admin || (!!votes[user.uid] && memberStatus(votes[user.uid]) === "accepted");
 
   // Cambia el voto propio al momento y lo guarda; si falla, se deshace.
   async function optimistic(patch: Vote, save: () => Promise<void>, errPrefix: string) {
@@ -306,6 +309,23 @@ export function PollPage({ id }: { id: string }) {
     toast(to === "accepted" ? "Aceptado: ya puede votar" : to === "rejected" ? "Solicitud rechazada" : "Solicitud pendiente");
   });
 
+  // El creador nombra o quita administradores (desde «Participantes»).
+  const toggleAdmin = (uid: string, name: string) => act(async () => {
+    const isAdm = admins.includes(uid);
+    if (!(await confirm(isAdm ? {
+      title: `¿Quitar a ${name} como administrador?`,
+      message: "Seguirá en la votación como participante, pero ya no podrá gestionarla.",
+      confirmLabel: "Quitar administrador",
+      danger: true,
+    } : {
+      title: `¿Nombrar a ${name} administrador?`,
+      message: "Podrá gestionar la votación como tú: cerrarla y reabrirla, abrir desempates, aceptar solicitudes y cambiar el acceso y el plazo. No podrá eliminarla ni nombrar a otros administradores.",
+      confirmLabel: "Nombrar administrador",
+    }))) return;
+    await store.updatePoll(id, { admins: isAdm ? admins.filter(a => a !== uid) : [...admins, uid] });
+    toast(isAdm ? `${name} ya no es administrador` : `${name} ahora es administrador`);
+  });
+
   const remove = () => act(async () => {
     if (!(await confirm({
       title: `¿Eliminar «${poll.title}»?`,
@@ -348,9 +368,9 @@ export function PollPage({ id }: { id: string }) {
           </div>
           <div className="title-row">
             <h1>{poll.title}</h1>
-            {isOwner && (
+            {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
-                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={remove}
+                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
                 onDuplicate={() => duplicate(poll)}
                 onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
             )}
@@ -370,8 +390,8 @@ export function PollPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
-      {isOwner && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
-      {isOwner && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
+      {admin && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
+      {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (
         <div className="closed-banner">
           <Icon name="lock" /> Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
@@ -380,7 +400,7 @@ export function PollPage({ id }: { id: string }) {
       {!poll.closed && expired && (
         <div className="closed-banner">
           <Icon name="hourglass" /> Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.
-          {isOwner && <> <button className="link-btn" onClick={clearDeadline}>Quitar el plazo</button></>}
+          {admin && <> <button className="link-btn" onClick={clearDeadline}>Quitar el plazo</button></>}
         </div>
       )}
       <div className="poll-info">
@@ -394,7 +414,7 @@ export function PollPage({ id }: { id: string }) {
       </div>
       <div className="status" id="poll-status" role="alert">{status}</div>
       {TB && (
-        <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} isOwner={isOwner} byUid={byUid}
+        <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} isOwner={admin} byUid={byUid}
           onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel}
           remind={<RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} />} />
       )}
@@ -411,11 +431,11 @@ export function PollPage({ id }: { id: string }) {
         {T.leaders.length > 1 && !TB && (
           <div className="summary-tie">
             <p className="summary-note">
-              Hay {T.leaders.length} opciones empatadas en el primer puesto.{isOwner
+              Hay {T.leaders.length} opciones empatadas en el primer puesto.{admin
                 ? " Puedes abrir un desempate en el que cada persona elige solo una."
-                : " Quien creó la votación puede abrir un desempate."}
+                : " Quien administra la votación puede abrir un desempate."}
             </p>
-            {isOwner && <button className="btn small" onClick={tbStart}><Icon name="scale" /> Desempatar</button>}
+            {admin && <button className="btn small" onClick={tbStart}><Icon name="scale" /> Desempatar</button>}
           </div>
         )}
         <div className="summary-list">
@@ -425,13 +445,14 @@ export function PollPage({ id }: { id: string }) {
       </div>
       <div className="ptab-panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
       <section className="results">
-        {isOwner && <div className="summary-head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
+        {admin && <div className="summary-head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
         <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
           {people => (
             <div className="table-wrap">
-              <PeopleTable poll={poll} T={T} people={people} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)} />
+              <PeopleTable poll={poll} T={T} people={people} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)}
+                onToggleAdmin={isOwner ? toggleAdmin : undefined} />
             </div>
           )}
         </PeopleList>
@@ -548,7 +569,7 @@ function CalendarMenu({ cal }: { cal: CalEvent }) {
 }
 
 function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDuplicate, onAccess }: {
-  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete: () => void;
+  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete?: () => void;
   onDuplicate: () => void; onAccess?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -580,10 +601,12 @@ function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDup
           <button role="menuitem" className="pm-item" onClick={pick(onDuplicate)}>
             <Icon name="copy" />Duplicar votación
           </button>
-          <div className="pm-sep" role="separator" />
-          <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
-            <Icon name="trash" />Eliminar votación
-          </button>
+          {onDelete && <>
+            <div className="pm-sep" role="separator" />
+            <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
+              <Icon name="trash" />Eliminar votación
+            </button>
+          </>}
         </div>
       )}
     </div>
@@ -768,9 +791,19 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
   </>;
 }
 
-function PeopleTable({ poll, T, people, me, openPeople, onToggle }: {
+function PeopleTable({ poll, T, people, me, openPeople, onToggle, onToggleAdmin }: {
   poll: Poll; T: Tally; people: Person[]; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
+  /** Solo para el creador: nombrar o quitar administradores. */
+  onToggleAdmin?: (uid: string, name: string) => void;
 }) {
+  const admins = poll.admins || [];
+  const role = (uid: string) => uid === poll.ownerUid ? <span className="role-tag owner">Creador</span>
+    : admins.includes(uid) ? <span className="role-tag">Admin</span> : null;
+  const adminBtn = (p: Person) => onToggleAdmin && p.uid !== poll.ownerUid && (
+    <button type="button" className="link-btn admin-btn" onClick={() => onToggleAdmin(p.uid, p.name)}>
+      {admins.includes(p.uid) ? "Quitar admin" : "Hacer admin"}
+    </button>
+  );
   const anon = !!poll.anonymous;
   const multi = poll.type === "days" && !anon;
   const cols = anon ? 2 : multi ? T.opts.length + 1 : 2;
@@ -791,13 +824,14 @@ function PeopleTable({ poll, T, people, me, openPeople, onToggle }: {
             <span>
               {p.name}
               {p.uid === me && <> <span className="muted">(tú)</span></>}
+              {role(p.uid)}
               {!anon && !p.total && <> <span className="muted">· aún no ha votado</span></>}
             </span>
           </>;
           if (anon) {
             return (
               <tr key={p.uid}>
-                <td><span className="person">{who}</span></td>
+                <td><div className="person-cell"><span className="person">{who}</span>{adminBtn(p)}</div></td>
                 <td className="n">{p.total ? <><Icon name="check" /> Sí</> : <span className="muted">Aún no</span>}</td>
               </tr>
             );
@@ -807,13 +841,16 @@ function PeopleTable({ poll, T, people, me, openPeople, onToggle }: {
             <Fragment key={p.uid}>
               <tr className={open ? "open" : ""}>
                 <td>
-                  {p.total
-                    ? (
-                      <button className="person person-btn" aria-expanded={open} onClick={() => onToggle(p.uid)}>
-                        <span className="caret" aria-hidden="true">▸</span>{who}
-                      </button>
-                    )
-                    : <span className="person person-idle">{who}</span>}
+                  <div className="person-cell">
+                    {p.total
+                      ? (
+                        <button className="person person-btn" aria-expanded={open} onClick={() => onToggle(p.uid)}>
+                          <span className="caret" aria-hidden="true">▸</span>{who}
+                        </button>
+                      )
+                      : <span className="person person-idle">{who}</span>}
+                    {adminBtn(p)}
+                  </div>
                 </td>
                 {multi ? T.opts.map(o => <td key={o.id} className="n">{p.perOpt[o.id]}</td>) : <td className="n">{p.total}</td>}
               </tr>

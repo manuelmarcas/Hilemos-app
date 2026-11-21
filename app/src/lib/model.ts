@@ -51,6 +51,16 @@ export const memberStatus = (v?: Vote | null): MemberStatus =>
 export const acceptedVotes = (votes: Votes): Votes =>
   Object.fromEntries(Object.entries(votes).filter(([, v]) => !v?.status));
 export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
+/** Administra la votación: el creador o alguien que él ha nombrado administrador. */
+export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
+
+/** Nombres para los votos y mensajes de quien ha eliminado su cuenta: alguien que estuvo y ya no está. */
+export const GHOST_NAMES = [
+  "Un suspiro", "Una sombra lejana", "Un recuerdo", "Un eco", "Un susurro", "Una huella en la arena",
+  "Alguien que estuvo", "Una silla vacía", "Un nombre olvidado", "Una voz lejana", "Un adiós callado",
+  "Polvo de estrellas", "Una hoja que se llevó el viento", "Un abrazo pendiente", "La última luz de la tarde",
+];
+export const ghostName = () => GHOST_NAMES[Math.floor(Math.random() * GHOST_NAMES.length)];
 export const isFull = (p: PollData) => hasLimit(p) && (p.members || 0) >= (p.maxPeople as number);
 
 // ----- Plazo para votar -----

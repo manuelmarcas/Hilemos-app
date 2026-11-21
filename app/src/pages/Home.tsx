@@ -1,7 +1,7 @@
 // Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
 // En el móvil cada votación se desliza: → archivar (o desarchivar), ← eliminar de la lista.
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { TYPE, pollMeta } from "../lib/model";
+import { TYPE, pollMeta, isAdmin } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
 import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
@@ -143,6 +143,7 @@ export function Home() {
               {p?.closed && <span className="badge">Cerrada</span>}
               {p?.anonymous && <span className="badge anon">Anónima</span>}
               {owner && <span className="badge mine">Tuya</span>}
+              {!owner && p && isAdmin(p, user.uid) && <span className="badge mine">Admin</span>}
             </span>
           </a>
           <button className="pc-more" aria-expanded={open} aria-label="Más opciones"

@@ -22,6 +22,11 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/polls/$(pollId)).data;
     }
 
+    // Administra la votación: el creador (ownerUid) o alguien que él ha nombrado administrador (admins).
+    function isAdminOf(p) {
+      return p.ownerUid == request.auth.uid || request.auth.uid in p.get('admins', []);
+    }
+
     // ---------- Votación original de Navidad (index.html del repo "votaciones") ----------
     // Se mantiene para no romperla. Si tus reglas actuales de /votes son distintas, conserva las tuyas.
     match /votes/{uid} {
@@ -65,16 +70,26 @@ service cloud.firestore {
         && (!('members' in request.resource.data) || 'maxPeople' in request.resource.data)
         && request.resource.data.closed == false;
 
-      allow update: if signedIn() && (ownerUpdate() || joinCount() || leaveCount());
+      allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());
 
-      // El creador solo puede cerrar/reabrir, cambiar título o descripción, actualizar su nombre visible,
-      // hacerla anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate,
-      // el plazo para votar, el tope de personas y el contador (al aceptar o rechazar solicitudes).
+      // Los administradores (creador y nombrados) pueden cerrar/reabrir, cambiar título o descripción, hacerla
+      // anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate, el plazo para votar,
+      // el tope de personas y el contador (al aceptar o rechazar solicitudes). Solo el creador cambia su nombre
+      // visible, nombra o quita administradores y pasa la votación a otra persona (al eliminar su cuenta).
       function ownerUpdate() {
         let d = request.resource.data;
-        let keys = d.diff(resource.data).affectedKeys();
-        return resource.data.ownerUid == request.auth.uid
-          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline'])
+        let old = resource.data;
+        let keys = d.diff(old).affectedKeys();
+        let creator = old.ownerUid == request.auth.uid;
+        return isAdminOf(old)
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid'])
+          && (!keys.hasAny(['ownerName', 'admins', 'ownerUid']) || creator)
+          && (!keys.hasAny(['admins']) || (d.admins is list && d.admins.size() <= 20 && !(d.ownerUid in d.admins)))
+          // Pasar la votación: a alguien aceptado (con su voto y sin estado), no a uno mismo.
+          && (!keys.hasAny(['ownerUid'])
+              || (d.ownerUid is string && d.ownerUid != request.auth.uid
+                  && exists(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid))
+                  && get(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid)).data.get('status', null) == null))
           && (!keys.hasAny(['deadline']) || (d.deadline is int && d.deadline >= 0))
           && (!keys.hasAny(['anonymous']) || d.anonymous == true)
           && (!keys.hasAny(['tiebreak'])
@@ -87,6 +102,14 @@ service cloud.firestore {
               || ('maxPeople' in resource.data
                   && d.maxPeople is int && d.maxPeople >= 2 && d.maxPeople <= 150
                   && d.members is int && d.members >= 0 && d.members <= d.maxPeople));
+      }
+
+      // Un administrador nombrado puede dejar de serlo (lo hace la app al eliminar su cuenta).
+      function leaveAdmins() {
+        let old = resource.data;
+        return request.auth.uid in old.get('admins', [])
+          && request.resource.data.diff(old).affectedKeys().hasOnly(['admins'])
+          && request.resource.data.admins == old.admins.removeAll([request.auth.uid]);
       }
 
       // Cualquiera puede sumar 1 al contador al entrar (a la vez que crea su voto) y restar 1 al salir.
@@ -110,11 +133,11 @@ service cloud.firestore {
 
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
-      // Correos permitidos de una votación privada: solo los ve y cambia el creador.
+      // Correos permitidos de una votación privada: solo los ven y cambian el creador y los administradores.
       match /private/{doc} {
-        allow read: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
+        allow read: if signedIn() && isAdminOf(pollData(pollId));
         allow create: if signedIn() && getAfter(pollPath()).data.ownerUid == request.auth.uid && validAccess();
-        allow update: if signedIn() && pollData(pollId).ownerUid == request.auth.uid && validAccess();
+        allow update: if signedIn() && isAdminOf(pollData(pollId)) && validAccess();
         allow delete: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
 
         function validAccess() {
@@ -130,6 +153,11 @@ service cloud.firestore {
       match /chat/{msgId} {
         allow read: if signedIn() && chatMember();
         allow create: if signedIn() && chatMember() && validMsg();
+        // Solo el nombre de los mensajes propios (al eliminar la cuenta pasan a un nombre sin dueño).
+        allow update: if signedIn() && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+          && request.resource.data.name is string && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 100;
 
         function chatMember() {
           return pollData(pollId).ownerUid == request.auth.uid
@@ -156,7 +184,7 @@ service cloud.firestore {
         function canSeeVotes() {
           let p = pollData(pollId);
           return !(p.get('approval', false) || p.get('emailsOnly', false))
-            || p.ownerUid == request.auth.uid
+            || isAdminOf(p)
             || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null);
         }
 
@@ -206,11 +234,14 @@ service cloud.firestore {
                 || (d.get('picks', []) == old.get('picks', []) && d.get('tb', null) == old.get('tb', null)));
         }
 
-        // El creador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona.
+        // Un administrador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona
+        // (nunca al creador).
         function ownerSetsStatus() {
           let d = request.resource.data;
-          return pollData(pollId).ownerUid == request.auth.uid
+          let p = pollData(pollId);
+          return isAdminOf(p)
             && request.auth.uid != uid
+            && uid != p.ownerUid
             && d.diff(resource.data).affectedKeys().hasOnly(['status'])
             && (!('status' in d) || d.status in ['pending', 'rejected']);
         }

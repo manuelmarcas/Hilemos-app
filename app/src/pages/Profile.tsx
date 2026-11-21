@@ -106,6 +106,32 @@ export function Profile() {
     setMailBusy(false);
   }
 
+  // Eliminar la cuenta (Google Play lo exige en la app y en la web). Firebase pide haber entrado hace poco.
+  const [deleting, setDeleting] = useState(false);
+  const [delMsg, setDelMsg] = useState("");
+  async function deleteAccount() {
+    if (!(await confirm({
+      title: "¿Eliminar tu cuenta?",
+      message: "Se borrarán tu perfil, tu lista de votaciones y tus grupos, y no podrás volver a entrar en esta cuenta. Tus votos y mensajes se quedarán en sus votaciones con un nombre sin dueño. Las votaciones que creaste pasarán a otra persona. No se puede deshacer.",
+      confirmLabel: "Eliminar mi cuenta",
+      danger: true,
+    }))) return;
+    setDeleting(true);
+    setDelMsg("");
+    try {
+      if (await store.prepareDeleteAccount() === "relogin") {
+        setDelMsg("Por seguridad, hay que haber entrado hace poco. Sal, vuelve a entrar (con el enlace del correo o con tu clave) y elimina la cuenta en los 5 minutos siguientes.");
+        setDeleting(false);
+        return;
+      }
+      await store.deleteAccount(user.uid);
+      toast("Tu cuenta se ha eliminado");
+    } catch (e) {
+      setDelMsg("No se pudo eliminar la cuenta. " + errMsg(e));
+      setDeleting(false);
+    }
+  }
+
   async function newKey() {
     if (!(await confirm({
       title: "¿Crear una clave nueva?",
@@ -285,6 +311,18 @@ export function Profile() {
               )}
             </div>
           )}
+        </section>
+        <section className="step pf-danger" id="pf-delete">
+          <h2>Eliminar mi cuenta</h2>
+          <p className="hint">
+            Se borrarán tu perfil, tu lista de votaciones y tus grupos. En las votaciones en las que has participado, tus
+            votos y mensajes se quedan, pero con un nombre sin dueño (como «Un suspiro») y sin tu foto. Las que creaste
+            pasan a un administrador o a otro participante al azar; si no queda nadie, se borran.
+          </p>
+          <button className="btn danger" id="pf-delete-btn" disabled={deleting} onClick={deleteAccount}>
+            <Icon name="trash" /> {deleting ? "Eliminando…" : "Eliminar mi cuenta"}
+          </button>
+          {delMsg && <div className="status" role="alert">{delMsg}</div>}
         </section>
       </div>
     </>

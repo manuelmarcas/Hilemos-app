@@ -170,6 +170,21 @@ fuera de la app.
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
+## Administradores y eliminar la cuenta
+
+- `polls/{id}.admins` (uids): los nombra y los quita solo el creador, desde la tabla de «Participantes»
+  (`PeopleTable`). `isAdmin(poll, uid)` en `model.ts` decide quién gestiona la votación; eliminarla y los
+  administradores son solo del creador (`isOwner`). En las reglas, `isAdminOf()`; un administrador solo puede
+  quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado del creador.
+- `deleteAccount` (`store.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
+  con `ghostName()` (las reglas dejan cambiar solo el nombre de los mensajes propios) y quita su foto; si era el
+  creador, pasa `ownerUid` a un administrador o participante aceptado al azar (las reglas exigen que tenga voto y
+  sin estado) o borra la votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era
+  administrador, se quita de `admins`. Después borra su lista, grupos, dispositivos de avisos y perfil, y la cuenta.
+- `prepareDeleteAccount`: Firebase solo deja borrar una cuenta si se entró hace poco. Con Google se vuelve a pedir
+  (ventana de Google); sin registro se intenta igual; con correo o clave, si hace más de 4 minutos, se pide salir y
+  volver a entrar.
+
 ## Entrar con un enlace al correo
 
 En la pantalla de entrada, «Entrar con tu correo» manda un enlace (Firebase, `sendSignInLinkToEmail`, sin servidor ni
