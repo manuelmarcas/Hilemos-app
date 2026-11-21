@@ -112,7 +112,7 @@ export function Profile() {
   async function deleteAccount() {
     if (!(await confirm({
       title: "¿Eliminar tu cuenta?",
-      message: "Se borrarán tu perfil, tu lista de votaciones y tus grupos, y no podrás volver a entrar en esta cuenta. Tus votos y mensajes se quedarán en sus votaciones con un nombre sin dueño. Las votaciones que creaste pasarán a otra persona. No se puede deshacer.",
+      message: "Se borrarán tu perfil, tu lista de votaciones y tus grupos. Podrás volver a entrar con el mismo correo o con Google, pero empezarás con una cuenta nueva, sin nada de lo anterior. Tus votos y mensajes se quedarán en sus votaciones con un nombre sin dueño, y las votaciones que creaste pasarán a otra persona. No se puede deshacer.",
       confirmLabel: "Eliminar mi cuenta",
       danger: true,
     }))) return;
@@ -317,7 +317,8 @@ export function Profile() {
           <p className="hint">
             Se borrarán tu perfil, tu lista de votaciones y tus grupos. En las votaciones en las que has participado, tus
             votos y mensajes se quedan, pero con un nombre sin dueño (como «Un suspiro») y sin tu foto. Las que creaste
-            pasan a un administrador o a otro participante al azar; si no queda nadie, se borran.
+            pasan a un administrador o a otro participante al azar; si no queda nadie, se borran. Si después vuelves a
+            entrar, aunque sea con el mismo correo, será con una cuenta nueva, sin nada de lo anterior.
           </p>
           <button className="btn danger" id="pf-delete-btn" disabled={deleting} onClick={deleteAccount}>
             <Icon name="trash" /> {deleting ? "Eliminando…" : "Eliminar mi cuenta"}
