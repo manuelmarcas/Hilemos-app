@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent,
+  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, withTiebreakAdjusted,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -176,7 +176,10 @@ export function PollPage({ id }: { id: string }) {
   // Pendientes y rechazados no cuentan en recuentos, ranking ni tabla.
   const accepted = acceptedVotes(shown);
   const T = tally(poll, accepted);
-  const TB = tiebreakTally(poll, accepted);
+  // Si alguien se salió durante el desempate y cambió el empate, todos lo ven ya ajustado al entrar (con su aviso);
+  // lo guarda el primer administrador que la abre (TiebreakGuard).
+  const view = withTiebreakAdjusted(poll, T);
+  const TB = tiebreakTally(view, accepted);
   const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone).map(([uid, v]) => ({ uid, ...v }))
     .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
@@ -292,7 +295,7 @@ export function PollPage({ id }: { id: string }) {
       message: "Ya no se podrá votar en él y se mostrará el resultado.",
       confirmLabel: "Finalizar",
     }))) return;
-    await store.updatePoll(id, { tiebreak: { ...poll.tiebreak!, done: true, finishedAt: Date.now() } });
+    await store.updatePoll(id, { tiebreak: { ...view.tiebreak!, done: true, finishedAt: Date.now() } });
     toast("Desempate finalizado");
   });
 
@@ -444,9 +447,9 @@ export function PollPage({ id }: { id: string }) {
         <div className="legend"><Legend poll={poll} T={T} /></div>
       </div>
       <div className="status" id="poll-status" role="alert">{status}</div>
-      <TiebreakSolvedNote poll={poll} T={T} />
+      <TiebreakSolvedNote poll={view} T={T} />
       {TB && (
-        <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} canManage={admin} byUid={byUid}
+        <TiebreakCard poll={view} T={T} TB={TB} myTb={votes[user.uid]?.tb} canManage={admin} byUid={byUid}
           onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel}
           remind={<RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} />} />
       )}

@@ -206,7 +206,8 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   (`tiebreakShift` en `model.ts` dice si el empate ya no es el del desempate) y, en la misma escritura, deja
   `tbNote` para que todos sepan qué ha pasado: `TiebreakSolvedNote` (se quitó el desempate) o el aviso de
   `TiebreakCard` (sigue entre menos opciones; a quien había elegido una que sale, se le pide que vuelva a elegir).
-  Mientras no se ajusta, quien no administra ve en la tarjeta que el empate ha cambiado. Las acciones de los
+  Antes de que se guarde, cada dispositivo ya lo muestra ajustado (`withTiebreakAdjusted` en `model.ts`, con el
+  mismo aviso): los votos del desempate a las opciones que siguen valen igual, porque ya estaban en él. Las acciones de los
   administradores que cambian el desempate (reabrir, abrir otro, repetir, anular) quitan `tbNote`; en las reglas,
   `tbNote` solo lo escriben administradores y con esa forma.
 - En «Participantes», quien tiene `gone` va aparte en «Se fueron» (`GonePeople`, plegado y en gris): sus votos cuentan

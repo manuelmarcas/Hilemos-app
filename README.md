@@ -69,11 +69,11 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
   lejana»…, uno por votación) y sin foto en sus mensajes del chat y, si la creó, en «Creador». Sus votos: con la
   votación abierta o con un desempate abierto, se borran (y su plaza queda libre); si ya no se puede votar (cerrada o
   con el plazo pasado), se quedan con ese nombre y van aparte, plegados, en **«Se fueron»** de «Participantes» (los
-  totales siguen cuadrando; las cabeceras solo cuentan a quien sigue). Si se iba durante un desempate, el primer
-  administrador que abre la votación lo recalcula: sin empate se quita y queda la ganadora; con empate entre menos
-  opciones, sigue solo entre esas; con el mismo empate, no cambia nada. **Todos ven un aviso de lo que ha pasado**
-  (en la tarjeta del desempate o, si se quitó, en su lugar), y quien no administra ve, hasta que se ajuste, que el
-  empate ha cambiado. Si vuelve a entrar con el enlace, vuelve a ser él: sus votos (si se quedaron) y sus mensajes
+  totales siguen cuadrando; las cabeceras solo cuentan a quien sigue). Si se iba durante un desempate, el desempate se
+  ajusta solo al momento para todos: sin empate se quita y queda la ganadora; con empate entre menos opciones, sigue
+  solo entre esas; con el mismo empate, no cambia nada. **Quien entra ve un aviso**: «Han cambiado los votos porque una
+  persona se ha salido de la votación…» (en la tarjeta del desempate o, si ya no hace falta, en su lugar). Cada
+  dispositivo lo calcula con los votos que quedan y lo guarda el primer administrador que abre la votación. Si vuelve a entrar con el enlace, vuelve a ser él: sus votos (si se quedaron) y sus mensajes
   recuperan su nombre, y si la creó vuelve a salir como «Creador», aunque la sigue gestionando el «Delegado». Una
   votación que ya no existe solo se quita de la lista. Si era la última votación de un grupo, el grupo también se
   borra.

@@ -231,6 +231,20 @@ export function tiebreakShift(poll: PollData, T: Tally): string[] | null {
   return same ? null : leaders;
 }
 
+/**
+ * La votación con el desempate ya ajustado si alguien dejó de participar (tiebreakShift), aunque ningún
+ * administrador lo haya guardado todavía: así todos lo ven al momento, con el mismo aviso (tbNote) que dejará
+ * TiebreakGuard al guardarlo. Los votos del desempate siguen valiendo: las opciones que quedan ya estaban en él.
+ */
+export function withTiebreakAdjusted<P extends PollData>(poll: P, T: Tally): P {
+  const leaders = tiebreakShift(poll, T);
+  const tb = poll.tiebreak;
+  if (!leaders || !tb) return poll;
+  return leaders.length < 2
+    ? { ...poll, tiebreak: null, tbNote: { at: 0, solved: true } }
+    : { ...poll, tiebreak: { ...tb, candidates: leaders }, tbNote: { at: 0, solved: false, tb: tb.id, n: leaders.length } };
+}
+
 export interface TiebreakTally {
   id: number;
   candidates: string[];

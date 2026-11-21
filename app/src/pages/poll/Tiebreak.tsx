@@ -35,16 +35,13 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
   const myPick = myTb?.id === TB.id ? myTb.pick : null;
   const winner = done && TB.leaders.length === 1 ? TB.leaders[0] : null;
   const stillTied = done && TB.leaders.length > 1;
-  // Si alguien dejó de participar y cambió el empate, lo ven todos: si ya se ajustó (tbNote, lo escribe
-  // TiebreakGuard), qué ha pasado; si no, que se ajustará al abrirla quien la administra (a él ya se le ajusta solo).
+  // Si alguien se salió y cambió el empate, lo ven todos al entrar (la votación llega ya ajustada: ver
+  // withTiebreakAdjusted). A quien había elegido una opción que sale se le pide que vuelva a elegir.
   let note: ReactNode = null;
-  if (!done && !canManage && tiebreakShift(poll, T)) {
-    note = "Alguien ha dejado de participar y con eso ha cambiado el empate. El desempate se ajustará en cuanto " +
-      "abra la votación quien la administra.";
-  } else if (!done && poll.tbNote && !poll.tbNote.solved && poll.tbNote.tb === TB.id) {
+  if (!done && poll.tbNote && !poll.tbNote.solved && poll.tbNote.tb === TB.id) {
     const lost = myTb?.id === TB.id && !TB.candidates.includes(myTb.pick);
     note = <>
-      Alguien ha dejado de participar y con eso ha cambiado el empate: el desempate sigue solo entre
+      Han cambiado los votos porque una persona se ha salido de la votación: el desempate sigue solo entre
       las {TB.candidates.length} opciones que siguen empatadas.
       {lost && <> <strong>Tu elección ya no está entre ellas: vuelve a elegir.</strong></>}
     </>;
@@ -127,8 +124,8 @@ export function TiebreakGuard({ id, poll, T, active }: { id: string; poll: Poll;
 }
 
 /**
- * Aviso para todos cuando el desempate se quitó porque alguien dejó de participar y ya no había empate (tbNote).
- * Se ve mientras la votación siga cerrada y sin desempate.
+ * Aviso para todos cuando el desempate ya no hace falta porque alguien se salió y ya no hay empate (tbNote, o
+ * calculado con withTiebreakAdjusted). Se ve mientras la votación siga cerrada y sin desempate.
  */
 export function TiebreakSolvedNote({ poll, T }: { poll: Poll; T: Tally }) {
   if (!poll.closed || poll.tiebreak || !poll.tbNote?.solved) return null;
@@ -137,8 +134,8 @@ export function TiebreakSolvedNote({ poll, T }: { poll: Poll; T: Tally }) {
     <p className="tb-note tb-note-solved" role="status">
       <Icon name="scale" />
       <span>
-        Alguien dejó de participar durante el desempate y con eso ya no hay empate: se ha quitado el desempate
-        {winner ? <> y gana <strong>{winner}</strong></> : " y gana la más votada"}.
+        Han cambiado los votos porque una persona se ha salido de la votación y ya no hay empate, así que el
+        desempate ya no hace falta{winner ? <>: gana <strong>{winner}</strong></> : " y gana la más votada"}.
       </span>
     </p>
   );
