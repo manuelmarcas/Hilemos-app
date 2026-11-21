@@ -7,6 +7,7 @@ import { makeThumb } from "./lib/util";
 import { SessionProvider } from "./state/session";
 import { Gate } from "./components/Gate";
 import { Shell } from "./components/Shell";
+import { EmailLinkFinish } from "./components/EmailLinkFinish";
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo") || !firebaseConfig?.apiKey;
@@ -35,8 +36,17 @@ export function App() {
   // undefined: aún no se sabe si hay sesión.
   const [user, setUser] = useState<User | null | undefined>(undefined);
 
+  // Enlace de entrada por correo pendiente de completar (abierto en la web o, en la app, recibido por appUrlOpen).
+  const [emailLink, setEmailLink] = useState<string | null>(null);
+
   useEffect(() => {
-    storePromise.then(setStore, e => setBootError(e?.message || String(e)));
+    storePromise.then(s => {
+      setStore(s);
+      if (s.isEmailLink(location.href)) setEmailLink(location.href);
+    }, e => setBootError(e?.message || String(e)));
+    const onLink = (e: Event) => setEmailLink((e as CustomEvent<string>).detail);
+    window.addEventListener("hilemos-email-link", onLink);
+    return () => window.removeEventListener("hilemos-email-link", onLink);
   }, []);
 
   useEffect(() => {
@@ -70,6 +80,12 @@ export function App() {
   let content;
   if (bootError) content = <div className="boot"><div className="empty-box error">No se pudo cargar la aplicación: {bootError}</div></div>;
   else if (!store || user === undefined) content = <div className="boot">Cargando…</div>;
+  else if (emailLink) {
+    content = <EmailLinkFinish store={store} url={emailLink} onDone={name => {
+      if (name) setUser(u => (u ? { ...u, name } : u));
+      setEmailLink(null);
+    }} />;
+  }
   else if (!user) content = <Gate store={store} demo={DEMO} />;
   else {
     content = (

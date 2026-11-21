@@ -1,5 +1,5 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { errMsg, imageToAvatar, makeThumb } from "../lib/util";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import { disablePush, enablePush, isIos, isStandalone, pushState, type PushState } from "../lib/push";
@@ -88,6 +88,22 @@ export function Profile() {
         : "No se pudo guardar tu cuenta. " + errMsg(e));
       setLinking(false);
     }
+  }
+
+  // Guardar la cuenta sin registro en un correo: se manda el enlace y, al abrirlo aquí, se vincula (EmailLinkFinish).
+  const [mail, setMail] = useState("");
+  const [mailSent, setMailSent] = useState("");
+  const [mailBusy, setMailBusy] = useState(false);
+  const [mailErr, setMailErr] = useState("");
+  async function sendMail(e: FormEvent) {
+    e.preventDefault();
+    const m = mail.trim();
+    if (!m || mailBusy) return;
+    setMailBusy(true);
+    setMailErr("");
+    try { await store.sendEmailLink(m); setMailSent(m); }
+    catch (err) { setMailErr("No se pudo mandar el enlace. " + errMsg(err)); }
+    setMailBusy(false);
   }
 
   async function newKey() {
@@ -184,12 +200,26 @@ export function Profile() {
               tienes guardada, crea una nueva (la anterior dejará de valer).
             </p>
             <button className="btn" id="pf-key" onClick={newKey}><Icon name="key" /> Crear una clave nueva</button>
-            <h3 className="pref-label pf-account-or">O guárdala en Google</h3>
+            <h3 className="pref-label pf-account-or">O guárdala con tu correo o con Google</h3>
             <p className="hint">
-              Con tu cuenta de Google no necesitas clave: entras con Google en cualquier sitio, sin perder nada de lo
-              que ya has votado.
+              Así no necesitas clave: entras con tu correo o con Google en cualquier sitio, sin perder nada de lo que ya
+              has votado.
             </p>
-            <button className="btn" id="pf-link" disabled={linking} onClick={linkGoogle}>
+            {mailSent ? (
+              <p className="hint pf-mail-sent" role="status">
+                <Icon name="mail" /> Te hemos mandado un enlace a <strong>{mailSent}</strong>. Ábrelo <strong>en este
+                mismo dispositivo</strong> para guardar tu cuenta en ese correo.{" "}
+                <button className="link-btn" onClick={() => setMailSent("")}>Usar otro correo</button>
+              </p>
+            ) : (
+              <form className="pf-mail" onSubmit={sendMail}>
+                <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
+                  required value={mail} onChange={e => setMail(e.target.value)} />
+                <button className="btn" type="submit" disabled={mailBusy}><Icon name="mail" /> {mailBusy ? "Enviando…" : "Enviarme el enlace"}</button>
+              </form>
+            )}
+            {mailErr && <div className="status" role="alert">{mailErr}</div>}
+            <button className="btn pf-google" id="pf-link" disabled={linking} onClick={linkGoogle}>
               {linking ? "Guardando…" : "Guardar en mi cuenta de Google"}
             </button>
           </section>

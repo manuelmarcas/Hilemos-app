@@ -98,6 +98,15 @@ button,input,select,textarea{font:inherit}
 .gate-or::before,.gate-or::after{content:"";flex:1;height:1px;background:var(--line)}
 .gate-anon .input{min-width:0;text-align:center}
 .gate-card .gate-anon-note{font-size:.82rem;line-height:1.45;margin:2px 0 0}
+/* Segunda forma de entrar (correo), con el mismo tamaño que la de Google */
+.btn.gate-alt{width:100%;margin-top:10px;padding:13px 18px;font-size:1rem}
+.gate-card .google-btn + .gate-anon,.gate-card .google-btn + .gate-sent{margin-top:20px}
+.gate-alt .ic{color:var(--brand)}
+.gate-key-btn{justify-self:center;margin:14px auto 0;display:flex}
+.gate-key-btn .ic{color:var(--brand)}
+.gate-card .gate-sent p{margin:12px 0 0;color:var(--ink);font-size:.92rem}
+.gate-sent .ic{color:var(--brand)}
+.gate-card > .gate-switch{margin-top:14px}
 .gate-label{font-size:.88rem;font-weight:600;color:var(--ink);margin-top:2px}
 .gate-card .gate-anon-note .ic{color:var(--brand)}
 .gate-switch{justify-self:center;font-size:.84rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
@@ -118,6 +127,10 @@ button,input,select,textarea{font:inherit}
 .key-check{margin:16px 0 0;font-weight:600}
 .dlg-key .dlg-actions{margin-top:14px}
 .pf-account-or{margin-top:18px}
+.pf-mail{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.pf-mail .input{flex:1 1 220px;width:auto;min-width:0}
+.pf-mail-sent{margin:0 0 10px}
+.pf-mail-sent .ic{color:var(--brand)}
 
 /* ---------- Estructura ---------- */
 /* Red de seguridad: nada de lo que haya dentro puede sacar la página de la pantalla. Es clip y no hidden

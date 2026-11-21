@@ -1040,8 +1040,8 @@ function BlockedView({ poll, kind, email, onRetry }: {
         <h2><Icon name="key" /> Hace falta una cuenta</h2>
         <p>
           {poll.emailsOnly
-            ? `${owner} ha limitado esta votación a unos correos concretos, así que hay que entrar con Google para comprobar el tuyo.`
-            : `${owner} tiene que aceptar a cada participante, así que hay que entrar con Google para que sepa quién eres.`}
+            ? `${owner} ha limitado esta votación a unos correos concretos, así que hay que entrar con Google para comprobar el tuyo (o guardar tu cuenta con ese correo en «Tu perfil»).`
+            : `${owner} tiene que aceptar a cada participante, así que hay que entrar con Google para que sepa quién eres (o guardar tu cuenta con tu correo en «Tu perfil»).`}
         </p>
         <button type="button" className="btn primary gate-retry" onClick={login}>Entrar con Google</button>
         <div className="status" role="alert">{status}</div>

@@ -170,6 +170,20 @@ fuera de la app.
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
+## Entrar con un enlace al correo
+
+En la pantalla de entrada, «Entrar con tu correo» manda un enlace (Firebase, `sendSignInLinkToEmail`, sin servidor ni
+contraseña; el correo lo envía Firebase con su plantilla y en castellano). Requiere activar en Firebase
+**Correo electrónico/contraseña › Vínculo de correo electrónico (acceso sin contraseña)**.
+
+- El enlace vuelve a la misma pantalla con `?correo=1` y `EmailLinkFinish` (montado en `App.tsx`) completa la entrada.
+  Si se abre en otro dispositivo, pide confirmar el correo; si la cuenta es nueva, el nombre.
+- Con una cuenta sin registro abierta (también desde «Tu perfil → Tu cuenta»), el enlace **guarda esa cuenta en el
+  correo** (`linkWithCredential`, mismo uid) y quita la clave de acceso. Hay que abrirlo en el mismo dispositivo.
+  Si el correo ya tiene su propia cuenta, se avisa y, si se había quitado la clave, se le da una nueva.
+- La cuenta queda con el correo verificado, así que también puede entrar en las votaciones «solo estos correos».
+- En la app de Android, si el enlace la abre, `appUrlOpen` lo pasa a `EmailLinkFinish` (evento `hilemos-email-link`).
+
 ## Entrar sin cuenta y clave de acceso
 
 Cualquiera puede usar la app sin registrarse, llegue desde un enlace o desde la portada: en la pantalla de entrada

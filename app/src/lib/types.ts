@@ -171,6 +171,19 @@ export interface Store {
   createAccessKey(): Promise<string>;
   /** Vuelve a entrar en una cuenta sin registro con su clave de acceso. */
   signInWithKey(key: string): Promise<void>;
+  /** Manda el enlace para entrar con el correo (o, con una cuenta sin registro abierta, para guardarla en él). */
+  sendEmailLink(email: string): Promise<void>;
+  /** Correo al que se mandó el último enlace desde este dispositivo ("" si no hay). */
+  pendingLinkEmail(): string;
+  /** Si la dirección es un enlace de entrada por correo. */
+  isEmailLink(url: string): boolean;
+  /**
+   * Completa el enlace del correo. Con una cuenta sin registro abierta, se guarda en ese correo (mismo uid, se quita
+   * la clave); si no, se entra con él. `linked`: se guardó la cuenta abierta; `needsName`: cuenta nueva sin nombre.
+   */
+  completeEmailLink(email: string, url: string): Promise<{ linked: boolean; needsName: boolean; uid: string }>;
+  /** Nombre de la sesión (cuentas nuevas por correo, que no traen nombre). */
+  setDisplayName(name: string): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */

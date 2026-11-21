@@ -14,7 +14,7 @@
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
 import { CHAT_LIMIT, MAX_CHAT } from "./model";
-import { isNative } from "./native";
+import { isNative, PUBLIC_ORIGIN } from "./native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
 // ----- Clave de acceso (cuentas sin registro) -----
@@ -36,6 +36,8 @@ function randomKeyChars(n: number) {
   }
   return out;
 }
+// Correo al que se mandó el enlace de entrada: al abrirlo en el mismo dispositivo no hay que volver a escribirlo.
+const LINK_EMAIL = "hilemos-link-email";
 const keyEmail = (id: string) => `${id.toLowerCase()}@${KEY_DOMAIN}`;
 const formatKey = (k: string) => k.match(/.{4}/g)!.join("-");
 
@@ -51,6 +53,9 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   // sesión se guarda en IndexedDB sin cargar el iframe de redirecciones de getAuth.
   const native = isNative();
   const auth = native ? A.initializeAuth(app, { persistence: A.indexedDBLocalPersistence }) : A.getAuth(app);
+  auth.languageCode = "es"; // correos de Firebase (enlace de entrada) en castellano
+  const isKeyOnly = (u: import("firebase/auth").User) =>
+    u.isAnonymous || u.providerData.every(p => p.providerId === "password" && isKeyEmail(p.email));
   // Caché local (IndexedDB): al volver a escuchar una votación o la colección, Firestore solo cobra los
   // documentos que han cambiado (si han pasado menos de 30 min). También abre más rápido y funciona sin conexión.
   // Si el navegador no la permite (p. ej. modo privado), Firestore sigue funcionando solo en memoria.
@@ -85,7 +90,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       email: isKeyEmail(u.email) ? (u.providerData.find(p => p.providerId === "google.com")?.email || "").toLowerCase()
         : (u.email || "").toLowerCase(),
       // Sin cuenta: la sesión anónima y la cuenta interna de la clave de acceso (sin Google).
-      anon: u.isAnonymous || u.providerData.every(p => p.providerId === "password" && isKeyEmail(p.email)),
+      anon: isKeyOnly(u),
     };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
@@ -158,6 +163,51 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       const k = key.toUpperCase().replace(/[^0-9A-Z]/g, "");
       if (k.length !== KEY_ID + KEY_SECRET) throw Object.assign(new Error("bad key"), { code: "key/format" });
       await A.signInWithEmailAndPassword(auth, keyEmail(k.slice(0, KEY_ID)), k.slice(KEY_ID));
+    },
+    async sendEmailLink(email) {
+      // Vuelve a la misma pantalla (p. ej. la votación del enlace). En la app, a la web pública, que la app abre.
+      const base = native ? PUBLIC_ORIGIN : location.origin + location.pathname;
+      try {
+        await A.sendSignInLinkToEmail(auth, email, { url: `${base}?correo=1${location.hash}`, handleCodeInApp: true });
+      } catch (e) {
+        // operation-not-allowed aquí significa que falta activar el enlace por correo (no el acceso anónimo).
+        if ((e as { code?: string })?.code === "auth/operation-not-allowed") throw Object.assign(new Error("email link"), { code: "auth/email-link-disabled" });
+        throw e;
+      }
+      try { localStorage.setItem(LINK_EMAIL, email); } catch { /* nada */ }
+    },
+    pendingLinkEmail() {
+      try { return localStorage.getItem(LINK_EMAIL) || ""; } catch { return ""; }
+    },
+    isEmailLink: url => A.isSignInWithEmailLink(auth, url),
+    async completeEmailLink(email, url) {
+      const cur = auth.currentUser;
+      const cred = A.EmailAuthProvider.credentialWithLink(email, url);
+      let result: { linked: boolean; needsName: boolean; uid: string };
+      if (cur && isKeyOnly(cur)) {
+        // Cuenta sin registro abierta: se guarda en ese correo (mismo uid). La clave ya no hace falta y, como
+        // ocupa el sitio del correo en la cuenta, se quita antes.
+        const hadKey = cur.providerData.some(p => p.providerId === "password" && isKeyEmail(p.email));
+        if (hadKey) await A.unlink(cur, "password");
+        try {
+          await A.linkWithCredential(cur, cred);
+        } catch (e) {
+          // Ese correo ya es de otra cuenta: esta sigue sin registro; si tenía clave, hay que darle una nueva.
+          throw Object.assign(e as object, { keyRemoved: hadKey });
+        }
+        if (isKeyEmail(cur.email)) await A.updateEmail(cur, email).catch(() => {});
+        await cur.reload();
+        await cur.getIdToken(true); // que las reglas vean ya el correo
+        result = { linked: true, needsName: false, uid: cur.uid };
+      } else {
+        const res = await A.signInWithEmailLink(auth, email, url);
+        result = { linked: false, needsName: !res.user.displayName, uid: res.user.uid };
+      }
+      try { localStorage.removeItem(LINK_EMAIL); } catch { /* nada */ }
+      return result;
+    },
+    async setDisplayName(name) {
+      if (auth.currentUser) await A.updateProfile(auth.currentUser, { displayName: name });
     },
     async signOut() {
       // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
@@ -354,6 +404,11 @@ export function createDemoStore(): Store {
     async linkGoogle() { throw fail("unavailable"); },
     async createAccessKey() { throw fail("unavailable"); },
     async signInWithKey() { throw fail("unavailable"); },
+    async sendEmailLink() { throw fail("unavailable"); },
+    pendingLinkEmail: () => "",
+    isEmailLink: () => false,
+    async completeEmailLink() { throw fail("unavailable"); },
+    async setDisplayName() { /* el nombre del modo demo ya va en la sesión */ },
     async signOut() { setUser(null); },
 
     async createPoll(data, access) {

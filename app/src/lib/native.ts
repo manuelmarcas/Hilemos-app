@@ -47,6 +47,8 @@ export function initNative() {
   void import("@capacitor/app").then(({ App }) => {
     // Enlace de una votación abierto desde fuera (WhatsApp, correo…) con la app instalada: se va a su ruta (#/v/<id>).
     void App.addListener("appUrlOpen", ({ url }) => {
+      // Enlace de entrada por correo: lo completa App (EmailLinkFinish).
+      if (/[?&]oobCode=/.test(url)) { window.dispatchEvent(new CustomEvent("hilemos-email-link", { detail: url })); return; }
       const { hash } = new URL(url);
       if (hash.startsWith("#/")) location.hash = hash;
     });
