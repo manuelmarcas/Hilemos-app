@@ -14,6 +14,9 @@ solo redirigen allí conservando la votación del enlace, para que los enlaces y
 El código está en [`app/`](app/) (React + Vite + TypeScript, preparado para la app móvil con Capacitor):
 ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en el historial de git.
 
+Inventario de funcionalidades y propuesta de planes (gratis y premium):
+[`docs/funcionalidades-y-planes.md`](docs/funcionalidades-y-planes.md).
+
 ## Qué se puede hacer
 
 - **Crear votaciones** con:
