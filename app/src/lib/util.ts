@@ -133,3 +133,7 @@ export const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent)
 export const isAndroid = () => /Android/i.test(navigator.userAgent);
 
 export const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
+
+/** Texto en minúsculas, sin tildes ni símbolos, para nombres de archivo e identificadores («Cena de Navidad» → «cena-de-navidad»). */
+export const slugify = (s: string, max = 40) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, max);

@@ -1,0 +1,192 @@
+/* Tableros para votar: calendario de días con sus opciones, semanas, meses y horas. */
+
+/* Calendario de días */
+.months{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+@container view (min-width:820px){.months{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
+.month{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:10px;
+  box-shadow:var(--shadow-card);
+  min-width:0;
+}
+@container view (min-width:820px){.month{padding:18px}}
+.month h2{font-size:1.15rem;margin:0 0 14px;text-align:center;text-transform:capitalize;color:var(--brand-strong)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+@container view (min-width:820px){.grid{gap:6px}}
+.dow{font-size:.72rem;color:var(--muted);text-align:center;padding:2px 0;font-weight:600}
+.cell{
+  border:1px solid var(--line);
+  border-radius:10px;
+  min-height:64px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:var(--card);
+  min-width:0;
+}
+.cell.n3{min-height:84px}
+.cell.n4{min-height:100px}
+.cell.empty{border:none;background:transparent}
+.cell.off{opacity:var(--opacity-off);background:var(--soft)}
+.day{font-size:.74rem;font-weight:700;padding:4px 6px 2px;color:var(--ink)}
+.opt{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  font-size:.9rem;
+  font-weight:600;
+  border:none;
+  background:none;
+  padding:3px 2px;
+  color:var(--ink);
+  cursor:pointer;
+  min-height:22px;
+  min-width:0;
+}
+.opt + .opt{border-top:1px solid var(--line)}
+.cell.n3 .opt,.cell.n4 .opt{flex-direction:row;gap:3px;font-size:.8rem;padding:1px 2px}
+.opt .label{line-height:1}
+.opt:disabled{cursor:default}
+.count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:16px;
+  height:16px;
+  padding:0 4px;
+  border-radius:99px;
+  background:var(--soft);
+  color:inherit;
+  font-size:.66rem;
+  font-weight:800;
+  line-height:1;
+}
+.on .count{background:var(--card);color:var(--ink)}
+.opt.c0.on{background:var(--c0);color:var(--c0-ink)}
+.opt.c1.on{background:var(--c1);color:var(--c1-ink)}
+.opt.c2.on{background:var(--c2);color:var(--c2-ink)}
+.opt.c3.on{background:var(--c3);color:var(--c3-ink)}
+.opt.best{box-shadow:var(--best-ring)}
+/* La casilla tiene las esquinas redondeadas y recorta lo que sobresale: el aro sigue su curva (radio interior: 10px − 1px de borde). */
+.opt.best{border-radius:6px 6px 9px 9px}
+.opt.best:not(:last-child){border-bottom-left-radius:6px;border-bottom-right-radius:6px}
+@container view (min-width:820px){
+  .cell{min-height:96px}
+  .cell.n3{min-height:114px}
+  .cell.n4{min-height:132px}
+  .opt{flex-direction:row;gap:5px;font-size:.8rem}
+}
+/* Con una sola opción, esa opción es la casilla entera: el icono y el contador crecen para llenarla (con el tamaño
+   de cuatro opciones se quedaban perdidos en medio). Con dos, un poco; con tres o cuatro ya van justos. */
+.cell.n1 .opt{flex-direction:column;gap:5px}
+.cell.n1 .opt .label{font-size:1.5rem}
+.cell.n1 .count{min-width:20px;height:20px;padding:0 6px;font-size:.74rem}
+.cell.n2 .opt .label{font-size:1.1rem}
+.cell.n2 .count{min-width:18px;height:18px;font-size:.7rem}
+@container view (min-width:820px){
+  .cell.n1 .opt{gap:7px}
+  .cell.n1 .opt .label{font-size:1.9rem}
+  .cell.n1 .count{min-width:24px;height:24px;font-size:.82rem}
+  .cell.n2 .opt .label{font-size:1.2rem}
+}
+/* Semanas */
+.whead,.wrow{display:grid;grid-template-columns:2.6em repeat(7,minmax(0,1fr)) 2.4em;align-items:center;text-align:center}
+.whead{font-size:.72rem;color:var(--muted);font-weight:600;padding:0 9px 4px}
+.wrows{display:grid;gap:6px}
+.wrow{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:10px;
+  padding:12px 8px;
+  cursor:pointer;
+  font-weight:600;
+  font-size:.9rem;
+  color:var(--ink);
+}
+@container view (min-width:820px){.wrow{padding:18px 8px}}
+.wcount{display:flex;justify-content:flex-end}
+.wrow.off{opacity:var(--opacity-off);background:var(--soft);cursor:default}
+.wrow:disabled{cursor:default}
+/* Meses */
+.year-board{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:14px 10px;
+  box-shadow:var(--shadow-card);
+  margin-bottom:20px;
+}
+@container view (min-width:820px){.year-board{padding:18px}}
+.year-board h2{text-align:center;margin:0 0 12px;color:var(--brand-strong);font-size:1.15rem}
+.mtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@container view (min-width:560px){.mtiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}}
+@container view (min-width:960px){.mtiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.mtile{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:80px;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:700;
+  color:var(--ink);
+  padding:10px 4px;
+  min-width:0;
+}
+.mname{font-size:.92rem;text-transform:capitalize}
+.mtile.off{opacity:var(--opacity-off);background:var(--soft);cursor:default}
+.mtile:disabled{cursor:default}
+/* Horas */
+.hours-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:8px;
+  box-shadow:var(--shadow-card);
+}
+.hours-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.htable{border-collapse:separate;border-spacing:4px;margin:0 auto}
+.htable th{font-weight:600;color:var(--muted);font-size:.74rem}
+.htable thead th{padding:2px;min-width:50px;text-align:center}
+.htable thead th span{display:block;line-height:1.2}
+.hd-day{font-size:1.05rem;color:var(--ink);font-weight:800}
+.htable tbody th{
+  position:sticky;
+  left:0;
+  background:var(--card);
+  padding:0 6px 0 2px;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  z-index:1;
+}
+.htable .corner{position:sticky;left:0;background:var(--card);z-index:2}
+.htable td{padding:0}
+.hcell{
+  width:100%;
+  min-width:50px;
+  height:34px;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:8px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--ink);
+}
+.hcell:disabled{cursor:default}
+.hcell.off{opacity:var(--opacity-off);background:var(--soft)}
+/* Estado "votado" y "más votado" para semanas, meses y horas */
+.wrow.on,.mtile.on,.hcell.on{background:var(--c0);border-color:var(--c0-edge);color:var(--c0-ink)}
+.wrow.on .wnum{color:var(--c0-ink)}
+.wrow.best,.mtile.best,.hcell.best{box-shadow:var(--best-ring);border-color:var(--best)}

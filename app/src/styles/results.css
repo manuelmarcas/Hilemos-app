@@ -1,0 +1,188 @@
+/* Bajo el calendario: pestañas, «Más votadas» (ranking y desempate) y «Participantes» (tabla y filtros). */
+
+/* Resumen y participantes */
+.summary{display:grid;gap:10px;margin:26px 0}
+.summary-list{display:flex;flex-direction:column;gap:6px}
+.summary-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 12px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:.95rem;
+}
+.summary-row.first{background:var(--best-soft);border-color:var(--best)}
+.summary-row.first .voter{background:var(--card)}
+/* El bloque principal crece: si cabe, el botón de votos queda a la derecha; si no, baja alineado a la izquierda. */
+.sr-main{flex:1 1 auto;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.rank{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:24px;
+  padding:0 6px;
+  border-radius:99px;
+  background:var(--soft);
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:800;
+}
+.summary-row.first .rank{background:var(--best);color:var(--on-best)}
+.summary-row .votes{font-weight:700;white-space:nowrap}
+.summary-empty{color:var(--muted);font-size:.9rem;padding:10px 2px}
+.results{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:16px;
+}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:7px 6px;border-bottom:1px solid var(--soft);text-align:left}
+td.n,th.n{text-align:right;white-space:nowrap}
+.ptabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:26px 0 14px}
+.ptab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-width:0;padding:8px 6px;
+  border:1px solid var(--line);border-radius:10px;background:var(--card);
+  color:var(--ink);font:inherit;font-size:.82rem;font-weight:600;line-height:1.2;text-align:center;cursor:pointer;
+}
+.ptab:hover{background:var(--hover)}
+.ptab[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.ptab[aria-selected="true"]:hover{background:var(--brand-strong)}
+.ptab-ico{position:relative;display:flex;font-size:1.15rem;line-height:1}
+.ptab-badge{
+  position:absolute;top:-8px;right:-14px;
+  min-width:18px;height:18px;padding:0 5px;
+  border-radius:999px;background:var(--brand);color:var(--on-brand);
+  box-shadow:0 0 0 2px var(--card);
+  font-size:.68rem;font-weight:700;line-height:18px;text-align:center;font-variant-numeric:tabular-nums;
+}
+.ptab-label{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptab .n{margin-left:4px;font-size:.75rem;font-weight:700;opacity:.75;font-variant-numeric:tabular-nums}
+@container view (min-width:480px){
+  .ptab{flex-direction:row;gap:6px;padding:10px 12px;font-size:.9rem}
+  /* En fila, el contador sobresale a la derecha del emoji: hueco para que no tape el texto */
+  .ptab-ico.has-badge{margin-right:12px}
+}
+.ptab-panel{min-width:0}
+.ptab-panel > .summary,.ptab-panel > .chat{margin-top:0}
+.person{display:inline-flex;align-items:center;gap:8px}
+/* Nombre del participante y, para el creador, «Hacer admin» / «Quitar admin» a la derecha */
+.person-cell{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.admin-btn{flex:none;font-size:.78rem;text-decoration:none;padding:2px 6px;border-radius:6px}
+.admin-btn:hover{background:var(--hover);text-decoration:underline}
+/* «Creador» y «Admin» junto al nombre */
+.role-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);
+  font-size:.68rem;font-weight:700;letter-spacing:.02em;vertical-align:1px}
+.role-tag.owner{background:var(--brand-soft);color:var(--brand-strong)}
+.table-hint{font-size:.82rem;color:var(--muted);margin:0 0 6px}
+.person-btn{
+  border:none;
+  background:none;
+  padding:3px 8px 3px 0;
+  margin-left:-2px;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  border-radius:8px;
+}
+.person-btn:hover{background:var(--hover)}
+.person .caret{width:12px;flex:none;color:var(--muted);font-size:.72rem;transition:transform .15s;text-align:center}
+.person-btn[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.person-idle{padding-left:12px}
+tr.open td{border-bottom-color:transparent}
+.pv-row td{padding:0 6px 10px 44px}
+.vline{display:flex;align-items:flex-start;gap:8px;padding-top:4px}
+.vline + .vline{padding-top:6px}
+.vopt{display:inline-flex;align-items:center;gap:4px;flex:none;padding-top:2px}
+.vchips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+/* Una etiqueta de horas («lun 22 dic 18:00, 18:30…») puede ser más larga que la pantalla: entonces parte. */
+.vchip{font-size:.78rem;background:var(--soft);border-radius:99px;padding:3px 9px;white-space:nowrap;max-width:100%}
+@container view (max-width:559.98px){.vchip{white-space:normal;overflow-wrap:anywhere}}
+.vchip b{font-weight:700}
+.votes-btn{
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:99px;
+  padding:4px 10px;
+  font:inherit;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+  white-space:nowrap;
+}
+.votes-btn:hover{background:var(--hover)}
+.votes-btn .caret{display:inline-block;font-size:.7rem;color:var(--muted);transition:transform .15s}
+.votes-btn[aria-expanded="true"]{background:var(--brand-soft);border-color:var(--brand-soft);color:var(--brand-strong)}
+.votes-btn[aria-expanded="true"] .caret{transform:rotate(180deg)}
+.voters{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding-top:6px}
+.voter{display:inline-flex;align-items:center;gap:6px;background:var(--soft);border-radius:99px;padding:2px 10px 2px 2px;font-size:.84rem}
+.summary-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.summary-note{margin:0;font-size:.88rem;color:var(--muted);line-height:1.45}
+.summary-tie{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.summary-tie .summary-note{flex:1 1 240px;min-width:0}
+.summary-more{margin:2px 2px 0;font-size:.82rem;color:var(--muted)}
+.tb-badge{font-size:.74rem;font-weight:700;background:var(--tie-soft);color:var(--tie-ink);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.tiebreak{
+  background:var(--card);
+  border:2px solid var(--tie);
+  border-radius:var(--radius-lg);
+  padding:14px;
+  margin:0 0 20px;
+  box-shadow:var(--shadow-card);
+}
+.tiebreak.done{border-color:var(--line)}
+.tb-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+.tb-head h2{margin:0;font-size:1.08rem;color:var(--brand-strong)}
+.tb-state{font-size:.78rem;font-weight:700;color:var(--tie-ink);background:var(--tie-soft);border-radius:99px;padding:3px 10px}
+.tiebreak.done .tb-state{color:var(--muted);background:var(--soft)}
+.tb-sub{margin:8px 0 12px;font-size:.92rem;color:var(--muted);line-height:1.45}
+.tb-sub strong{color:var(--ink)}
+.tb-tools{margin:0 0 12px}
+.tb-tools:empty{display:none}
+.tb-options{display:grid;gap:8px}
+@container view (min-width:680px){.tb-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tb-opt{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-width:0;
+  text-align:left;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:12px;
+  padding:12px;
+  font:inherit;
+  font-size:.93rem;
+  color:var(--ink);
+  cursor:pointer;
+}
+.tb-opt:hover:not(:disabled){border-color:var(--brand)}
+.tb-opt:disabled{cursor:default}
+.tb-radio{
+  width:20px;height:20px;
+  flex:none;
+  border-radius:50%;
+  border:2px solid var(--muted);
+  background:var(--card);
+}
+.tb-opt.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}
+.tb-opt.on .tb-radio{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px var(--card)}
+.tb-opt.win{border-color:var(--best);background:var(--best-soft);box-shadow:inset 0 0 0 1px var(--best)}
+.tb-label{flex:1;min-width:0;display:flex;align-items:center;gap:8px;line-height:1.35}
+.tb-label .sw{flex:none}
+.tb-opt .count{flex:none;min-width:22px;height:22px;font-size:.78rem}
+/* Pie de gestión (administradores): separado por una línea de las opciones y del aviso. */
+.tb-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+/* Tabla de participantes con muchos: buscador y filtros */
+.people-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 10px}
+.people-search{flex:1 1 200px;min-width:0;width:auto}
+.people-chips{display:flex;flex-wrap:wrap;gap:6px}
+.people-more{margin-top:8px}

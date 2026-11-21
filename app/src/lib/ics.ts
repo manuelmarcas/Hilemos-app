@@ -6,6 +6,7 @@ import * as D from "./dates";
 import { publicHost } from "./native";
 import { pollOptions, unitParts } from "./model";
 import type { PollData } from "./types";
+import { slugify } from "./util";
 
 export interface CalEvent {
   uid: string;
@@ -18,9 +19,6 @@ export interface CalEvent {
 }
 
 const HOUR_FALLBACK = 60; // duración de una hora suelta, que no tiene fin propio
-
-const slug = (s: string) => (s || "votacion").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "votacion";
 
 /** Evento de la casilla `unit` ("<casilla>|<opción>"), o null si no se puede interpretar. */
 export function calendarEvent(poll: PollData, id: string, unit: string, url: string): CalEvent | null {
@@ -101,7 +99,7 @@ export function downloadIcs(e: CalEvent) {
   const url = URL.createObjectURL(new Blob([icsFile(e)], { type: "text/calendar;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${slug(e.title)}.ics`;
+  a.download = `${slugify(e.title) || "votacion"}.ics`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000); // revocarlo antes de que el navegador lo lea cancela la descarga
 }

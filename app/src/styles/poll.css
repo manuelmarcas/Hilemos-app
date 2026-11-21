@@ -1,0 +1,107 @@
+/* Votación: cabecera (datos, modo, título y menú ⋯), avisos de cerrada o plazo, cómo se vota y leyenda. */
+
+.poll-head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;justify-content:space-between}
+.poll-title{min-width:0;flex:1 1 320px}
+.kicker{font-size:.82rem;color:var(--muted);font-weight:600;margin-bottom:8px;line-height:1.4}
+.poll-head h1{font-size:1.75rem;margin:0;line-height:1.2;color:var(--brand-strong);overflow-wrap:anywhere}
+.desc{margin:6px 0 0;line-height:1.5;white-space:pre-line}
+.poll-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+@container view (max-width:559.98px){
+  .poll-actions{display:grid;grid-template-columns:minmax(0,1fr);width:100%}
+  .poll-actions .btn{min-width:0;white-space:normal}
+}
+/* Título con el menú ⋯ (solo administradores) a la derecha */
+.title-row{display:flex;align-items:flex-start;gap:10px}
+.title-row h1{flex:1;min-width:0}
+.pm{position:relative;flex:none}
+.pm-btn{
+  width:40px;height:40px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:10px;
+  font-size:1.3rem;line-height:1;
+  color:var(--muted);
+  cursor:pointer;
+}
+.pm-btn:hover,.pm-btn[aria-expanded="true"]{background:var(--hover);color:var(--ink)}
+.pm-menu{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:30;
+  min-width:220px;
+  display:grid;
+  padding:6px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:var(--shadow-pop);
+}
+.pm-item{
+  display:flex;align-items:center;gap:10px;
+  border:none;background:none;
+  text-align:left;
+  padding:10px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font:inherit;font-size:.92rem;font-weight:600;
+  color:var(--ink);
+}
+.pm-item:hover,.pm-item:focus-visible{background:var(--hover);outline:none}
+.pm-item.danger{color:var(--danger)}
+.pm-sep{height:1px;background:var(--line);margin:4px 6px}
+.pm-menu.start{left:0;right:auto}
+.pm-caret{font-size:.75em;color:var(--muted)}
+.closed-banner{
+  background:var(--danger-soft);
+  color:var(--danger);
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:600;
+  font-size:.9rem;
+  line-height:1.4;
+  margin:20px 0 0;
+}
+.closed-banner .link-btn{color:inherit}
+/* Cómo se vota, periodo/privacidad y leyenda: bloques separados para que no se amontonen en el móvil */
+.poll-info{display:flex;flex-direction:column;gap:8px;margin:20px 0 18px}
+.poll-sub{color:var(--ink);font-size:.95rem;margin:0;line-height:1.5}
+.poll-note{color:var(--muted);font-size:.88rem;margin:0;line-height:1.5}
+.poll-info .legend{
+  margin:8px 0 0;
+  padding:10px 14px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 16px;
+  align-items:center;
+  font-size:.85rem;
+  color:var(--muted);
+  margin:2px 0 12px;
+}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block;flex:none}
+.sw.c0{background:var(--c0)}
+.sw.c1{background:var(--c1)}
+.sw.c2{background:var(--c2)}
+.sw.c3{background:var(--c3)}
+.sw.best{background:var(--card);box-shadow:inset 0 0 0 2px var(--best)}
+#poll-status{margin-bottom:8px}
+.mode-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 16px}
+.mode-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:.76rem;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:99px;
+  background:var(--brand-soft);
+  color:var(--brand-strong);
+}
+.mode-pill.anon{background:var(--soft);color:var(--ink)}
+/* «Salir de la votación», al final de la votación: discreto, como acción destructiva de bloque */
+.poll-leave{margin:28px 0 8px;padding-top:14px;border-top:1px solid var(--line);text-align:center}
+.poll-leave .link-btn{font-size:.86rem}

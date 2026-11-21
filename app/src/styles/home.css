@@ -1,0 +1,128 @@
+/* «Mis votaciones»: grupos, tarjetas de votación (con su menú ⋯ y el deslizar del móvil) y archivadas. */
+
+.home-head{
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+  align-items:flex-end;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.home-head > *{min-width:0}
+.home-head h1{margin:0;font-size:1.75rem;color:var(--brand-strong);overflow-wrap:anywhere}
+.sub{color:var(--muted);font-size:.95rem;margin:4px 0 0;line-height:1.5}
+.group-bar{margin-bottom:14px;display:grid;gap:10px}
+.group-chips{display:flex;flex-wrap:wrap;gap:6px}
+/* Los chips no parten el texto (white-space:nowrap), y un grupo puede llamarse con 40 caracteres. */
+.group-chips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.inline-form{display:flex;flex-wrap:wrap;gap:8px}
+.inline-form .input{flex:1 1 220px;width:auto}
+.group-tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:.92rem;color:var(--brand-strong)}
+.lib-sec{margin-top:18px;min-width:0}
+.lib-sec h2{font-size:1rem;color:var(--brand-strong);margin:0 0 8px;overflow-wrap:anywhere}
+.poll-list{display:grid;gap:8px}
+.poll-list > *{min-width:0}
+.poll-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  transition:box-shadow .15s;
+  min-width:0;
+}
+.poll-card:hover{box-shadow:var(--shadow-card)}
+.poll-card.is-gone{opacity:var(--opacity-disabled)}
+.pc-row{display:flex;align-items:stretch;min-width:0}
+.pc-link{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex:1;
+  min-width:0;
+  padding:12px 4px 12px 14px;
+  text-decoration:none;
+  color:var(--ink);
+}
+.pc-icon{font-size:1.5rem;flex:none;display:flex}
+.pc-main{display:flex;flex-direction:column;min-width:0;flex:1;gap:2px}
+.pc-title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-meta{font-size:.8rem;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
+.pc-badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:none;max-width:40%}
+.badge{font-size:.7rem;font-weight:700;background:var(--danger-soft);color:var(--danger);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.badge.mine{background:var(--brand-soft);color:var(--brand-strong)}
+.badge.gone{background:var(--soft);color:var(--muted)}
+.pc-more{
+  flex:none;
+  width:44px;
+  border:none;
+  border-left:1px solid var(--line);
+  background:none;
+  font-size:1.2rem;
+  color:var(--muted);
+  cursor:pointer;
+  border-radius:0 12px 12px 0;
+}
+.pc-more:hover,.pc-more[aria-expanded="true"]{background:var(--hover);color:var(--ink)}
+/* Desplegado, el panel de debajo se une al botón: sin la esquina redondeada que dejaba un hueco. */
+.pc-more[aria-expanded="true"]{border-bottom-right-radius:0}
+.pc-actions{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 12px;
+  padding:10px 14px 12px;
+  border-top:1px solid var(--line);
+  background:var(--bg);
+  border-radius:0 0 12px 12px;
+  font-size:.86rem;
+  color:var(--muted);
+}
+.pc-actions label{display:flex;align-items:center;gap:6px;min-width:0}
+/* Un <select> se mide por su opción más larga: con un nombre de grupo largo estiraba la tarjeta. */
+.pc-actions .input{max-width:100%;min-width:0}
+.badge.anon{background:var(--soft);color:var(--ink)}
+/* Fila deslizable (móvil): debajo aparece la acción que se lanzará al soltar */
+.swipe{position:relative;border-radius:12px}
+.swipe.swiping{overflow:hidden}
+.swipe-fg{position:relative;z-index:1;touch-action:pan-y;will-change:transform}
+.swipe.swiping .poll-card{box-shadow:var(--shadow-pop)}
+.swipe-bg{
+  position:absolute;inset:0;
+  display:flex;align-items:center;gap:8px;
+  padding:0 20px;
+  border-radius:12px;
+  font-weight:700;font-size:.92rem;
+}
+.swipe-bg.from-left{justify-content:flex-start}
+.swipe-bg.from-right{flex-direction:row-reverse;justify-content:flex-start} /* en row-reverse, flex-start es la derecha */
+/* --p (0 → 1) es lo que falta para lanzar la acción: el color crece con el dedo, del tono suave al pleno. */
+.swipe-bg.tone-archive{background:var(--brand-soft);color:var(--brand-strong)}
+.swipe-bg.tone-danger{background:var(--danger-soft);color:var(--danger)}
+.swipe-bg.armed.tone-archive{background:var(--brand);color:var(--on-brand)}
+.swipe-bg.armed.tone-danger{background:var(--danger);color:#fff}
+@supports (background:color-mix(in srgb,red 50%,blue)){
+  .swipe-bg.tone-archive{
+      background:color-mix(in srgb,var(--brand) calc(var(--p,0) * 100%),var(--brand-soft));
+      color:color-mix(in srgb,var(--on-brand) calc(var(--p,0) * 100%),var(--brand-strong));
+    }
+  .swipe-bg.tone-danger{
+      background:color-mix(in srgb,var(--danger) calc(var(--p,0) * 100%),var(--danger-soft));
+      color:color-mix(in srgb,#fff calc(var(--p,0) * 100%),var(--danger));
+    }
+}
+.swipe-ic{display:flex;font-size:1.3rem;transform:scale(calc(.8 + var(--p,0) * .4))}
+.swipe-hint{display:none;margin:14px 2px 0;font-size:.8rem;color:var(--muted);text-align:center}
+@media (hover:none){.swipe-hint{display:block}}
+.archived-note{margin:0 0 12px;font-size:.86rem;color:var(--muted);line-height:1.45}
+/* «Archivadas» al final de «Mis votaciones»: fila aparte con un lila muy suave, para no confundirla con un grupo */
+.archived-row{
+  display:flex;align-items:center;gap:10px;width:100%;margin-top:16px;
+  padding:12px 14px;border:1px dashed color-mix(in srgb,var(--brand) 30%,transparent);border-radius:12px;
+  background:color-mix(in srgb,var(--brand-soft) 55%,transparent);color:var(--brand-strong);
+  font:inherit;font-size:.92rem;font-weight:600;text-align:left;cursor:pointer;transition:background .15s;
+}
+.archived-row:hover{background:var(--brand-soft)}
+.archived-row-label{flex:1;min-width:0}
+.archived-row .n{font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.archived-row-go{transform:rotate(180deg);color:var(--muted)}
+.archived-head{margin-bottom:14px}
+.archived-head h2{margin:6px 0 0;font-size:1.2rem;color:var(--brand-strong)}

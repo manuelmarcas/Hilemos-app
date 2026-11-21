@@ -24,8 +24,8 @@ type Form = { mode: "new" | "rename"; gid?: string; moveId?: string; value: stri
 
 export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onNavigate: () => void }) {
   const { store, user, library, setHomeFilter } = useSession();
-  const { toast, confirm } = useUi();
-  const { setArchived, remove } = useListActions();
+  const { toast } = useUi();
+  const { setArchived, remove, moveTo, deleteGroup } = useListActions();
   const path = useHashPath();
   const lib = library.data;
   const [query, setQuery] = useState("");
@@ -44,10 +44,10 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
 
   const validGroup = (gid: string | null | undefined) => (gid && lib?.groups[gid] ? gid : "");
 
+  // Mover a otro grupo (no hace nada si ya está en ese).
   async function move(id: string, gid: string, groupName?: string) {
     if (!lib || validGroup(lib.polls[id]?.groupId) === (gid || "")) return;
-    await store.saveLibraryEntry(user.uid, id, { groupId: gid || null });
-    toast(gid ? `Movida a «${groupName || lib.groups[gid]?.name || "grupo"}»` : "Movida a «Sin grupo»");
+    await moveTo(id, gid, groupName);
   }
 
   const run = async (fn: () => Promise<unknown> | void) => {
@@ -66,18 +66,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   const archivePoll = (id: string) => { setMenu(null); setArchived(id, true); };
   const removePoll = async (id: string) => { if (await remove(id)) setMenu(null); };
 
-  const deleteGroup = (gid: string) => run(async () => {
-    const g = lib?.groups[gid];
-    if (!g || !(await confirm({
-      title: `¿Eliminar el grupo «${g.name}»?`,
-      message: "Las votaciones del grupo no se borran: pasan a «Sin grupo».",
-      confirmLabel: "Eliminar grupo",
-      danger: true,
-    }))) return;
-    setMenu(null);
-    await store.deleteGroup(user.uid, gid);
-    toast("Grupo eliminado");
-  });
+  const removeGroup = (gid: string) => run(async () => { if (await deleteGroup(gid)) setMenu(null); });
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -213,7 +202,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
           {gmenuOpen && (
             <div className="sb-menu">
               <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "rename", gid: s.gid, value: lib.groups[s.gid]?.name || "" }); }}>Renombrar</button>
-              <button className="sb-menu-item danger" onClick={() => deleteGroup(s.gid)}>Eliminar grupo</button>
+              <button className="sb-menu-item danger" onClick={() => removeGroup(s.gid)}>Eliminar grupo</button>
             </div>
           )}
           {renaming && formHTML()}
@@ -254,7 +243,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       onClick={e => { if ((e.target as HTMLElement).closest("a")) onNavigate(); }}>
       <div className="sb-head">
         <a className="btn primary sb-new" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
-        <input className="input sb-search" id="sb-search" type="search" placeholder="Buscar votación…" autoComplete="off"
+        <input className="input sb-search" type="search" placeholder="Buscar votación…" autoComplete="off"
           aria-label="Buscar votación" value={query} onChange={e => { setQuery(e.target.value); setMenu(null); }} />
       </div>
       <nav className="sb-body" id="sb-body" aria-label="Mis votaciones">{body}</nav>

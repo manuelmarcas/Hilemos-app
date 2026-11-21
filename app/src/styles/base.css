@@ -1,0 +1,67 @@
+/* Base: reinicio, cuerpo de la página, tipografía, utilidades (textos apagados, estados, cargando, cajas vacías),
+   el aviso del modo demo, la pantalla de arranque y los iconos. */
+
+*{box-sizing:border-box}
+/* Una rejilla sin columnas declaradas mide su columna implícita por el contenido, así que una fila con texto
+   largo ensancha el bloque entero y saca la página de la pantalla. Con minmax(0,1fr) la columna nunca pasa
+   del ancho disponible. Ninguna rejilla de la app fluye por columnas, así que es seguro ponerlo a todas. */
+*{grid-auto-columns:minmax(0, 1fr)}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  background:
+    radial-gradient(circle at 10% 0%, var(--glow-a) 0, transparent 45%),
+    radial-gradient(circle at 90% 10%, var(--glow-b) 0, transparent 45%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--ink);
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--link)}
+h1,h2,.brand{font-family:var(--font-display);letter-spacing:-.005em}
+h1{font-weight:800;letter-spacing:-.01em}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button,input,select,textarea{font:inherit}
+.muted{color:var(--muted);font-weight:400}
+.status{color:var(--danger);font-size:.88rem;min-height:1.2em}
+.status:empty{min-height:0}
+.loading{color:var(--muted);padding:40px 0;text-align:center}
+.empty-box{
+  background:var(--card);
+  border:1px dashed var(--line);
+  border-radius:12px;
+  padding:20px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.5;
+}
+.empty-box.error{color:var(--danger);border-color:var(--danger-soft)}
+.demo-banner{
+  background:var(--tie-soft);
+  border-bottom:1px solid var(--tie);
+  color:var(--tie-ink);
+  font-size:.84rem;
+  padding:8px 16px;
+  text-align:center;
+  line-height:1.4;
+}
+.demo-banner a{color:var(--tie-ink);font-weight:700;margin-left:6px}
+.boot{min-height:60vh;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:16px}
+a.pm-item{text-decoration:none}
+button.opt:not(:disabled):not(.on):hover{background:var(--hover)}
+button.wrow:not(:disabled):not(.on):hover{background:var(--hover)}
+button.mtile:not(:disabled):not(.on):hover{background:var(--hover)}
+button.hcell:not(:disabled):not(.on):hover{background:var(--hover)}
+
+/* ---------- Iconos (Icon.tsx) ---------- */
+/* SVG de trazo en el color del texto que los rodea; se ajustan al tamaño de letra. */
+.ic{display:inline-block;width:1.2em;height:1.2em;flex:none;vertical-align:-.24em;overflow:visible}
+.btn .ic,.chip .ic,.pm-item .ic,.sb-menu-item .ic,.mode-pill .ic,.tb-badge .ic,.votes-btn .ic{width:1.15em;height:1.15em}
+/* Iconos grandes que representan algo (tipo de votación, opción de una tarjeta): en el lila de la marca. */
+.type-icon .ic,.pc-icon .ic,.sb-ic .ic{color:var(--brand)}
+.type-card.on .type-icon .ic{color:var(--brand-strong)}
+.pm-item .ic{color:var(--muted)}
+.pm-item.danger .ic{color:inherit}
+.btn.primary .ic{color:inherit}

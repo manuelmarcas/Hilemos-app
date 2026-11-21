@@ -16,10 +16,10 @@ con los valores exactos en [`design-system/tokens.json`](design-system/tokens.js
 
 **`tokens.json` es la única fuente de los valores** (colores en claro y oscuro, sombras, radios, espacios,
 opacidades y fuentes). Un plugin de Vite ([`design-system/tokensPlugin.ts`](design-system/tokensPlugin.ts)) lo
-convierte en las variables CSS (`virtual:tokens.css`, importado en `main.tsx`); [`src/styles.css`](src/styles.css)
-solo las usa con `var(--…)` y la imagen de resultados lee el tema claro del mismo JSON. Para cambiar un color se
+convierte en las variables CSS (`virtual:tokens.css`, importado en `main.tsx`); los estilos de [`src/styles/`](src/styles/)
+solo las usan con `var(--…)` y la imagen de resultados lee el tema claro del mismo JSON. Para cambiar un color se
 edita `tokens.json`: en `npm run dev` se aplica al momento, y un alias roto (`{nombre}` que no existe) o un valor
-sin claro/oscuro hace fallar la compilación. No se definen variables de diseño en `styles.css`.
+sin claro/oscuro hace fallar la compilación. No se definen variables de diseño en `src/styles/`.
 
 ## Comandos
 
@@ -40,21 +40,34 @@ Con `?demo` en la URL funciona sin Firebase (datos en `localStorage`; cada pesta
 
 ```
 index.html                 Contenedor (fuentes y tema antes de pintar)
-src/main.tsx               Arranque de React
-src/App.tsx                Almacén de datos, sesión y elección entre login y app
-src/styles.css             Estilos (usa las variables de design-system/tokens.json)
-src/state/ui.tsx           Avisos, confirmaciones, compartir y selector de emojis (contexto)
+src/main.tsx               Arranque de React (variables del design system, estilos, tema y avisos de campos)
+src/App.tsx                Almacén de datos, sesión y elección entre la entrada y la app
+src/styles/                Estilos por zonas; index.css los importa en orden (usan las variables de tokens.json)
+src/state/ui.tsx           Avisos, «Deshacer», confirmaciones, compartir y selector de emojis (contexto)
 src/state/session.tsx      Usuario, colección (votaciones y grupos) y filtros (contexto)
+src/state/listActions.ts   Acciones sobre «Mis votaciones» (archivar, quitar, mover a un grupo, borrar un grupo)
+src/state/accessKey.ts     Clave de acceso recién creada (la enseña AccessKeyDialog)
+src/state/duplicate.ts     «Duplicar» una votación en «Nueva votación»
 src/state/route.ts         Rutas con #
-src/components/            Shell (barra y menú), Sidebar, Gate (login), diálogos, Avatar, Chat, EmojiPanel…
-src/pages/                 Home, Create, Poll, Profile
+src/hooks/useDismiss.ts    Desplegables y menús que se cierran al pulsar fuera o con Escape
+src/components/            Shell (barra y menú), Sidebar, Gate y GateCard (entrada), diálogos, Avatar, Chat, emojis…
+src/pages/Home.tsx         «Mis votaciones»
+src/pages/Create.tsx       «Nueva votación»
+src/pages/Profile.tsx      «Tu perfil»
+src/pages/poll/            Una votación: PollPage (estado y acciones) y sus partes (tableros, más votadas,
+                           desempate, participantes, acceso, menús y pestañas)
 src/lib/types.ts           Tipos del modelo de datos y de la interfaz Store
-src/lib/store.ts           Datos: Firebase o modo demo (misma interfaz)
-src/lib/model.ts           Recuentos, ranking y desempate
+src/lib/store/             Datos con la misma interfaz: firebase.ts (Firestore y Auth), demo.ts (localStorage)
+                           y accessKey.ts (clave de acceso: correo ficticio + contraseña)
+src/lib/model.ts           Recuentos, ranking, desempate, permisos y reglas al salir
 src/lib/dates.ts           Utilidades de fechas
-src/lib/util.ts            Errores, imágenes, grupos y enlaces
+src/lib/util.ts            Errores, imágenes, enlaces, textos y plataforma
+src/lib/fieldErrors.ts     Avisos de campos con el estilo de la app (en vez de las burbujas del navegador)
+src/lib/ics.ts             Añadir al calendario (Google, .ics)
+src/lib/push.ts            Avisos push (pendiente de las Cloud Functions)
 src/lib/resultImage.ts     Tarjeta de resultados en PNG para compartir
 src/lib/theme.ts           Tema claro/oscuro
+src/lib/native.ts          Integración con Capacitor (Android)
 src/lib/config.ts          Configuración de Firebase
 ```
 
@@ -176,10 +189,10 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   (`PeopleTable`). `isAdmin(poll, uid)` en `model.ts` decide quién gestiona la votación; eliminarla y los
   administradores son solo del creador (`isOwner`). En las reglas, `isAdminOf()`; un administrador solo puede
   quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado del creador.
-- `leave()` en `store.ts` (usada por `leavePoll` y `deleteAccount`) decide con `keepsVotesOnLeave` (`model.ts`) si los
+- `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`) decide con `keepsVotesOnLeave` (`model.ts`) si los
   votos se quedan (cerrada o plazo pasado, sin desempate abierto: nombre sin dueño y `gone`) o se borran (con tope,
-  junto con `members - 1`). `TiebreakGuard` (`Poll.tsx`) ajusta el desempate al abrir la votación un administrador.
-- `deleteAccount` (`store.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
+  junto con `members - 1`). `TiebreakGuard` (`pages/poll/Tiebreak.tsx`) ajusta el desempate al abrir la votación un administrador.
+- `deleteAccount` (`store/firebase.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
   con `ghostName()` (las reglas dejan cambiar solo el nombre de los mensajes propios) y quita su foto; si era el
   creador, pasa `ownerUid` a un administrador o participante aceptado al azar (las reglas exigen que tenga voto y
   sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o borra la
@@ -214,7 +227,7 @@ Firebase Authentication.
 - Internamente se le identifica por su uid (el nombre es solo lo que ven los demás y lo puede cambiar en «Tu perfil»).
   Firebase guarda la sesión en el navegador o en la app, así que al volver a abrir sigue dentro con el mismo uid:
   sus votaciones están en `users/{uid}/polls` y sus votos en `polls/{id}/votes/{uid}`, igual que con Google.
-- **Clave de acceso** (`createAccessKey` / `signInWithKey` en `src/lib/store.ts`, sin servidor): al entrar se genera
+- **Clave de acceso** (`createAccessKey` / `signInWithKey` en `src/lib/store/firebase.ts`, con la clave de `accessKey.ts`; sin servidor): al entrar se genera
   una clave aleatoria de 20 caracteres (`7KQ2-M9XF-4TBD-HR8P-W3NC`, sin 0/O ni 1/I/L) y se vincula al uid como una
   cuenta interna de correo y contraseña: los 8 primeros caracteres forman un correo ficticio
   (`7kq2m9xf@clave.hilemos.web.app`, que no recibe nada) y los 12 últimos son la contraseña, que Firebase guarda

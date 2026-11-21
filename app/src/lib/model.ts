@@ -55,12 +55,24 @@ export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
 
 /** Nombres para los votos y mensajes de quien ha eliminado su cuenta: alguien que estuvo y ya no está. */
-export const GHOST_NAMES = [
+const GHOST_NAMES = [
   "Un suspiro", "Una sombra lejana", "Un recuerdo", "Un eco", "Un susurro", "Una huella en la arena",
   "Alguien que estuvo", "Una silla vacía", "Un nombre olvidado", "Una voz lejana", "Un adiós callado",
   "Polvo de estrellas", "Una hoja que se llevó el viento", "Un abrazo pendiente", "La última luz de la tarde",
 ];
 export const ghostName = () => GHOST_NAMES[Math.floor(Math.random() * GHOST_NAMES.length)];
+
+/**
+ * Quién hereda la votación cuando su creador se va: un administrador al azar o, si no hay, cualquier participante
+ * aceptado que siga (nunca quien también se fue: la votación se quedaría sin nadie que la gestione).
+ * null si no queda nadie.
+ */
+export function pickHeir(votes: Votes, leaving: string, admins: string[] = []): string | null {
+  const stay = Object.entries(votes).filter(([u, v]) => u !== leaving && !v?.status && !v?.gone).map(([u]) => u);
+  const pool = stay.filter(u => admins.includes(u));
+  const from = pool.length ? pool : stay;
+  return from.length ? from[Math.floor(Math.random() * from.length)] : null;
+}
 
 /**
  * Si quien se va de la votación deja sus votos: solo si ya no se puede votar (cerrada o con el plazo pasado) y no

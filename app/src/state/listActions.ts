@@ -1,5 +1,6 @@
-// Acciones sobre la lista del usuario: archivar/desarchivar y eliminar de la lista (con "Deshacer").
-// Se aplican al momento y el aviso con cuenta atrás permite revertirlas: así no se pierden si se cierra la app.
+// Acciones sobre la lista del usuario, compartidas por «Mis votaciones» y el menú lateral: archivar/desarchivar y
+// eliminar de la lista (al momento, con un aviso de «Deshacer» con cuenta atrás: así no se pierden si se cierra la
+// app), mover una votación de grupo y eliminar un grupo.
 import { useCallback } from "react";
 import type { Library } from "../lib/types";
 import { errMsg } from "../lib/util";
@@ -24,7 +25,7 @@ const short = (t: string | undefined) => {
 
 export function useListActions() {
   const { store, user, library, updateUser } = useSession();
-  const { toast, confirmWithCheck, undoable } = useUi();
+  const { toast, confirm, confirmWithCheck, undoable } = useUi();
   const lib = library.data;
 
   /** Archiva (o desarchiva) una votación. Devuelve false si no se pudo. */
@@ -84,5 +85,25 @@ export function useListActions() {
     return true;
   }, [lib, store, user.uid, user.hideRemoveWarning, updateUser, confirmWithCheck, toast, undoable]);
 
-  return { setArchived, remove };
+  /** Mueve una votación a un grupo (null o "" = «Sin grupo»). `groupName`: si el grupo se acaba de crear. */
+  const moveTo = useCallback(async (id: string, gid: string | null, groupName?: string) => {
+    await store.saveLibraryEntry(user.uid, id, { groupId: gid || null });
+    toast(gid ? `Movida a «${groupName || lib?.groups[gid]?.name || "grupo"}»` : "Movida a «Sin grupo»");
+  }, [lib, store, user.uid, toast]);
+
+  /** Elimina un grupo, tras confirmarlo (sus votaciones pasan a «Sin grupo»). Devuelve false si se canceló. */
+  const deleteGroup = useCallback(async (gid: string) => {
+    const g = lib?.groups[gid];
+    if (!g || !(await confirm({
+      title: `¿Eliminar el grupo «${g.name}»?`,
+      message: "Las votaciones del grupo no se borran: pasan a «Sin grupo».",
+      confirmLabel: "Eliminar grupo",
+      danger: true,
+    }))) return false;
+    await store.deleteGroup(user.uid, gid);
+    toast("Grupo eliminado");
+    return true;
+  }, [lib, store, user.uid, confirm, toast]);
+
+  return { setArchived, remove, moveTo, deleteGroup };
 }

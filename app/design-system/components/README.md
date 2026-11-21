@@ -1,7 +1,7 @@
 # Componentes
 
 Guías de uso de cada componente: qué es, qué clases lleva y cuándo usarlo. Las clases son las de
-[`../../src/styles.css`](../../src/styles.css), que es la referencia viva; aquí no hay una copia aparte de los estilos.
+[`../../src/styles/`](../../src/styles/) (un archivo por zona), que es la referencia viva; aquí no hay una copia aparte de los estilos.
 
 | Componente | Para qué |
 | --- | --- |

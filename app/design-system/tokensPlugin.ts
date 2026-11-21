@@ -1,5 +1,5 @@
 // Plugin de Vite: convierte tokens.json en las variables CSS de la app (módulo virtual «virtual:tokens.css»).
-// tokens.json es la única fuente de los valores: styles.css solo los usa con var(--…). Al cambiar tokens.json,
+// tokens.json es la única fuente de los valores: src/styles/ solo los usa con var(--…). Al cambiar tokens.json,
 // el servidor de desarrollo recarga los estilos, y un token mal escrito hace fallar la compilación.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

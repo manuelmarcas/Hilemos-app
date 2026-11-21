@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Store } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { makeAccessKey } from "../state/accessKey";
-import { LogoMark } from "./LogoMark";
+import { GateCard } from "./GateCard";
 
 type Step = "checking" | "email" | "error";
 
@@ -53,26 +53,22 @@ export function EmailLinkFinish({ store, url, onDone }: {
 
   const submitEmail = (e: FormEvent) => { e.preventDefault(); if (email.trim() && !busy) void finish(email); };
   return (
-    <div id="gate">
-      <div className="gate-card">
-        <LogoMark className="gate-logo" size={72} />
-        <h1><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></h1>
-        {step === "checking" && <p>Comprobando el enlace…</p>}
-        {step === "email" && (
-          <form className="gate-anon" onSubmit={submitEmail}>
-            <p>Para terminar de entrar, confirma el correo al que te mandamos el enlace.</p>
-            <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" required autoFocus
-              data-error="Escribe el correo al que te mandamos el enlace."
-              value={email} onChange={e => setEmail(e.target.value)} />
-            <button className="btn primary" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
-          </form>
-        )}
-        {step === "error" && <>
-          <p>No se pudo completar la entrada con el enlace.</p>
-          <button className="btn" onClick={() => onDone()}>Volver</button>
-        </>}
-        <div id="gate-status" role="alert">{status}</div>
-      </div>
-    </div>
+    <GateCard>
+      {step === "checking" && <p>Comprobando el enlace…</p>}
+      {step === "email" && (
+        <form className="gate-anon" onSubmit={submitEmail}>
+          <p>Para terminar de entrar, confirma el correo al que te mandamos el enlace.</p>
+          <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" required autoFocus
+            data-error="Escribe el correo al que te mandamos el enlace."
+            value={email} onChange={e => setEmail(e.target.value)} />
+          <button className="btn primary" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
+        </form>
+      )}
+      {step === "error" && <>
+        <p>No se pudo completar la entrada con el enlace.</p>
+        <button className="btn" onClick={() => onDone()}>Volver</button>
+      </>}
+      <div id="gate-status" role="alert">{status}</div>
+    </GateCard>
   );
 }

@@ -25,7 +25,7 @@ function DemoBanner() {
   return (
     <div id="demo-banner" className="demo-banner">
       <strong>Modo demo:</strong> los datos se guardan solo en este navegador. Abre otra pestaña y entra con otro nombre para simular a otra persona.
-      {exit && <a id="demo-exit" href={exit}>Salir del modo demo</a>}
+      {exit && <a href={exit}>Salir del modo demo</a>}
     </div>
   );
 }

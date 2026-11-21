@@ -4,9 +4,9 @@ import { fcmVapidKey } from "./config";
 import type { Store } from "./types";
 import { isIos } from "./util";
 
-export { isIos };
-
 const SW_URL = "/firebase-messaging-sw.js";
+// El token del dispositivo se recuerda aquí para poder borrarlo al desactivar los avisos.
+const TOKEN_KEY = "votaciones-push-token";
 
 export type PushState =
   | "unsupported"   // el navegador no puede (o es iPhone sin añadir a la pantalla de inicio)
@@ -34,11 +34,8 @@ export async function pushState(store: Store): Promise<PushState> {
   if (!(await messaging())) return "unsupported";
   if (!fcmVapidKey) return "unconfigured";
   if (Notification.permission === "denied") return "denied";
-  return Notification.permission === "granted" && localStorage.getItem(tokenKey()) ? "on" : "off";
+  return Notification.permission === "granted" && localStorage.getItem(TOKEN_KEY) ? "on" : "off";
 }
-
-// El token del dispositivo se recuerda aquí para poder borrarlo al desactivar los avisos.
-const tokenKey = () => "votaciones-push-token";
 
 /** Pide permiso, registra el service worker y guarda el token. Devuelve false si no dieron permiso. */
 export async function enablePush(store: Store, uid: string): Promise<boolean> {
@@ -49,13 +46,13 @@ export async function enablePush(store: Store, uid: string): Promise<boolean> {
   const token = await m.M.getToken(m.instance, { vapidKey: fcmVapidKey, serviceWorkerRegistration: registration });
   if (!token) return false;
   await store.savePushToken(uid, token, { platform: navigator.userAgent.slice(0, 120), updatedAt: Date.now() });
-  try { localStorage.setItem(tokenKey(), token); } catch { /* sin localStorage, se podrá volver a activar */ }
+  try { localStorage.setItem(TOKEN_KEY, token); } catch { /* sin localStorage, se podrá volver a activar */ }
   return true;
 }
 
 export async function disablePush(store: Store, uid: string) {
-  const token = localStorage.getItem(tokenKey());
-  try { localStorage.removeItem(tokenKey()); } catch { /* nada */ }
+  const token = localStorage.getItem(TOKEN_KEY);
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* nada */ }
   if (token) await store.removePushToken(uid, token).catch(() => { /* ya no estaba */ });
   const m = await messaging();
   if (m) await m.M.deleteToken(m.instance).catch(() => { /* el token ya no valía */ });

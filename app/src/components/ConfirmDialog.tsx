@@ -27,7 +27,7 @@ export function ConfirmDialog({ opts, onAnswer }: { opts: ConfirmOptions; onAnsw
 
   return (
     <Dialog
-      id="confirm-dlg"
+     
       className="dlg dlg-confirm"
       onOpen={dlg => {
         ref.current = dlg;

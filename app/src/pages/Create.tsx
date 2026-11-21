@@ -11,6 +11,7 @@ import { takeTemplate } from "../state/duplicate";
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
+import { useDismiss } from "../hooks/useDismiss";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
 // y el icono se propone mientras no se haya elegido otro.
@@ -41,18 +42,7 @@ function HourDropdown({ day, options, chosen, onToggle }: {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); btn.current?.focus(); } };
-    document.addEventListener("pointerdown", onDown, true);
-    document.addEventListener("keydown", onKey, true);
-    return () => {
-      document.removeEventListener("pointerdown", onDown, true);
-      document.removeEventListener("keydown", onKey, true);
-    };
-  }, [open]);
+  useDismiss(open, setOpen, wrap, btn);
 
   const label = chosen.length ? plural(chosen.length, ["hora elegida", "horas elegidas"]) : "Elegir horas…";
 
@@ -394,7 +384,7 @@ export function Create() {
             <EmojiButton field={() => titleRef.current} setValue={setTitle} />
           </div>
           <div className="emoji-field area">
-            <textarea ref={descRef} id="f-desc" className="input" maxLength={300} rows={2} placeholder="Descripción (opcional)"
+            <textarea ref={descRef} className="input" maxLength={300} rows={2} placeholder="Descripción (opcional)"
               value={description} onChange={e => setDescription(e.target.value)} />
             <EmojiButton field={() => descRef.current} setValue={setDescription} />
           </div>
@@ -413,7 +403,7 @@ export function Create() {
 
         <section className="step" id="sec-type">
           <h2><span className="num">{numbers.type}</span>¿Qué se vota?</h2>
-          <div className="types" id="s-type">
+          <div className="types">
             {TYPES.map(t => typeCard(type === t.id, t.icon, t.name, t.desc, () => {
               if (type === t.id) return;
               setType(t.id);
@@ -424,12 +414,12 @@ export function Create() {
 
         <section className="step" id="sec-months">
           <h2><span className="num">{numbers.months}</span>Meses</h2>
-          <p className="hint" id="h-months">
+          <p className="hint">
             {type === "months"
               ? "Elige los meses que se podrán votar. Cambia de año con las flechas."
               : `Elige el mes o los meses en los que estarán ${isWeeks ? "las semanas" : "los días"} de la votación. Cambia de año con las flechas.`}
           </p>
-          <div id="s-months">
+          <div>
             <div className="year-nav">
               <button type="button" className="icon-btn" disabled={year <= minYear} aria-label="Año anterior" onClick={() => setYear(y => y - 1)}>‹</button>
               <strong>{year}</strong>
@@ -457,13 +447,13 @@ export function Create() {
         </section>
 
         <section className="step" id="sec-slots" hidden={!visible.slots}>
-          <h2><span className="num">{numbers.slots}</span><span id="t-slots">{isWeeks ? "Semanas" : "Días"}</span></h2>
-          <p className="hint" id="h-slots">
+          <h2><span className="num">{numbers.slots}</span><span>{isWeeks ? "Semanas" : "Días"}</span></h2>
+          <p className="hint">
             {!sortedMonths.length ? "" : isWeeks
               ? "Pulsa en las semanas que se podrán votar. Una semana que cae entre dos meses es la misma en los dos calendarios."
               : `Pulsa en los días que se podrán votar${type === "hours" ? " (en cada uno se votarán las horas)" : ""}. En ordenador, mantén Mayús para marcar un rango.`}
           </p>
-          <div id="s-slots">
+          <div>
             {visible.slots && (!sortedMonths.length
               ? <div className="empty-box">Primero elige al menos un mes.</div>
               : <>
@@ -522,7 +512,7 @@ export function Create() {
         <section className="step" id="sec-opts" hidden={!visible.opts}>
           <h2><span className="num">{numbers.opts}</span>Opciones de cada día</h2>
           <p className="hint">Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.</p>
-          <div id="s-opts">
+          <div>
             {visible.opts && <>
               <div className="seg" role="group" aria-label="Opciones por día">
                 {[1, 2, 3, 4].map(k => (
@@ -581,7 +571,7 @@ export function Create() {
               ? "Elige, para cada día, las horas concretas que se podrán votar. Pueden ser distintas en cada día (por ejemplo, 18:00 y 18:30 uno y 19:00 otro)."
               : "Las mismas franjas se repetirán en cada uno de los días elegidos."}
           </p>
-          <div id="s-hours">
+          <div>
             {visible.hours && isList && <>
               {!sortedHourDays.length
                 ? <div className="empty-box">Primero elige los días en el paso «{numbers.slots}. Días».</div>
@@ -634,7 +624,7 @@ export function Create() {
 
         <section className="step" id="sec-privacy">
           <h2><span className="num">{numbers.privacy}</span>¿Quién ve los votos?</h2>
-          <div className="privacy" id="s-privacy">
+          <div className="privacy">
             {typeCard(!anonymous, "eye", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
             {typeCard(anonymous, "incognito", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
           </div>
@@ -646,7 +636,7 @@ export function Create() {
             Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
             plazo. Si lo dejas vacío, sigue abierta hasta que la cierres.
           </p>
-          <div className="deadline-form" id="s-deadline">
+          <div className="deadline-form">
             <label htmlFor="f-deadline">Último día
               <input id="f-deadline" className="input" type="date" min={today} value={deadlineDay}
                 onChange={e => setDeadlineDay(e.target.value)} />
@@ -666,7 +656,7 @@ export function Create() {
 
         <section className="step" id="sec-access">
           <h2><span className="num">{numbers.access}</span>¿Quién puede unirse?</h2>
-          <div className="access-pick" id="s-access">
+          <div className="access-pick">
             {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
             {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
             {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
@@ -693,9 +683,9 @@ export function Create() {
         </section>
 
         <div className="create-bar">
-          <div className="create-summary" id="c-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
-          <button type="button" className="btn primary big" id="c-submit" disabled={busy} onClick={submit}>{busy ? "Creando…" : "Crear votación"}</button>
-          <div className="status" id="c-status" role="alert">{status}</div>
+          <div className="create-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
+          <button type="button" className="btn primary big" disabled={busy} onClick={submit}>{busy ? "Creando…" : "Crear votación"}</button>
+          <div className="status" role="alert">{status}</div>
         </div>
       </div>
     </>

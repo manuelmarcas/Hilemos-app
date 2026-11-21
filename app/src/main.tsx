@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "virtual:tokens.css"; // variables del design system (tokens.json)
-import "./styles.css";
+import "./styles/index.css";
 import { initTheme } from "./lib/theme";
 import { initNative } from "./lib/native";
 import { installFieldErrors } from "./lib/fieldErrors";

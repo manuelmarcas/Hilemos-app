@@ -1,5 +1,6 @@
 // Enseña la clave de acceso recién creada (cuentas sin registro). No se cierra hasta marcar que se ha guardado:
-// el servidor solo guarda su huella, así que después no se puede volver a ver (solo crear otra).
+// Firebase la guarda cifrada (es la contraseña de su cuenta interna), así que después no se puede volver a ver,
+// solo crear otra. Ver lib/store/accessKey.ts.
 import { useState } from "react";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";

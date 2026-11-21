@@ -1,0 +1,21 @@
+/* Estilos de la app, por zonas. El orden importa: a igualdad de especificidad gana la regla que va después
+   (p. ej. emoji.css retoca campos de controls.css, y las pantallas retocan los controles comunes).
+
+   Las variables (color, sombra, radio, espacio, opacidad y fuentes) salen de design-system/tokens.json, en el
+   módulo virtual «virtual:tokens.css» (design-system/tokensPlugin.ts), que main.tsx importa antes que esto.
+   Aquí solo se usan con var(--…): no se define ningún valor de diseño. */
+@import "./base.css";      /* reinicio, cuerpo, utilidades e iconos */
+@import "./controls.css";  /* botones, campos, desplegables, chips, avatares */
+@import "./page.css";      /* piezas de las pantallas de formulario */
+@import "./overlays.css";  /* avisos y diálogos */
+@import "./layout.css";    /* barra superior, menú lateral y área de contenido */
+@import "./gate.css";      /* pantallas sin sesión */
+@import "./home.css";      /* «Mis votaciones» */
+@import "./create.css";    /* «Nueva votación» */
+@import "./poll.css";      /* votación: cabecera, menús, avisos y leyenda */
+@import "./boards.css";    /* tableros para votar (días, semanas, meses y horas) */
+@import "./results.css";   /* «Más votadas», desempate y «Participantes» */
+@import "./access.css";    /* solicitudes, acceso y avisos de quien no puede entrar */
+@import "./chat.css";      /* chat */
+@import "./profile.css";   /* «Tu perfil» */
+@import "./emoji.css";     /* botón y panel de emojis (el último) */

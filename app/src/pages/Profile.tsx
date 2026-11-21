@@ -1,8 +1,8 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { errMsg, imageToAvatar, makeThumb } from "../lib/util";
+import { errMsg, imageToAvatar, isIos, makeThumb } from "../lib/util";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
-import { disablePush, enablePush, isIos, isStandalone, pushState, type PushState } from "../lib/push";
+import { disablePush, enablePush, isStandalone, pushState, type PushState } from "../lib/push";
 import type { NotifyPrefs } from "../lib/types";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
@@ -194,12 +194,12 @@ export function Profile() {
         <section className="step">
           <h2>Imagen de perfil</h2>
           <div className="avatar-edit">
-            <div id="pf-avatar"><Avatar name={name} photo={photo} size={96} seed={user.uid} /></div>
+            <div><Avatar name={name} photo={photo} size={96} seed={user.uid} /></div>
             <div className="avatar-btns">
               <button className="btn" onClick={() => fileRef.current?.click()}><Icon name="camera" /> Subir imagen</button>
               {user.googlePhoto && <button className="btn" onClick={() => setPhoto(user.googlePhoto)}>Usar la foto de Google</button>}
               <button className="btn danger" onClick={() => setPhoto("")}>Quitar imagen</button>
-              <input ref={fileRef} type="file" id="pf-file" accept="image/*" hidden
+              <input ref={fileRef} type="file" accept="image/*" hidden
                 onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; onFile(f); }} />
             </div>
           </div>
@@ -213,12 +213,12 @@ export function Profile() {
           <p className="hint hint-after">Es el nombre que verán los demás en las votaciones y en la tabla de participantes.</p>
         </section>
         <div className="profile-bar">
-          <button className="btn primary big" id="pf-save" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
-          <div className="status" id="pf-status" role="alert">{status}</div>
+          <button className="btn primary big" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
+          <div className="status" role="alert">{status}</div>
         </div>
         {/* Correo con el que se entra (Google o enlace al correo): solo para verlo, no se cambia aquí. */}
         {!user.anon && user.email && store.mode === "firebase" && (
-          <section className="step" id="pf-email">
+          <section className="step">
             <h2><label htmlFor="pf-email-input">Correo de tu cuenta</label></h2>
             <input id="pf-email-input" className="input" type="email" value={user.email} disabled readOnly />
             <p className="hint hint-after">
@@ -228,7 +228,7 @@ export function Profile() {
           </section>
         )}
         {user.anon && store.mode === "firebase" && (
-          <section className="step" id="pf-account">
+          <section className="step">
             <h2>Tu cuenta</h2>
             <h3 className="pref-label">Clave de acceso</h3>
             <p className="hint">
@@ -236,7 +236,7 @@ export function Profile() {
               cambias de móvil, necesitas tu clave de acceso. Por seguridad no se puede volver a ver: si no la
               tienes guardada, crea una nueva (la anterior dejará de valer).
             </p>
-            <button className="btn" id="pf-key" onClick={newKey}><Icon name="key" /> Crear una clave nueva</button>
+            <button className="btn" onClick={newKey}><Icon name="key" /> Crear una clave nueva</button>
             <h3 className="pref-label pf-account-or">O guárdala con tu correo o con Google</h3>
             <p className="hint">
               Así no necesitas clave: entras con tu correo o con Google en cualquier sitio, sin perder nada de lo que ya
@@ -257,15 +257,15 @@ export function Profile() {
               </form>
             )}
             {mailErr && <div className="status" role="alert">{mailErr}</div>}
-            <button className="btn pf-google" id="pf-link" disabled={linking} onClick={linkGoogle}>
+            <button className="btn pf-google" disabled={linking} onClick={linkGoogle}>
               {linking ? "Guardando…" : "Guardar en mi cuenta de Google"}
             </button>
           </section>
         )}
-        <section className="step" id="pf-prefs">
+        <section className="step">
           <h2>Preferencias</h2>
           <h3 className="pref-label" id="pf-theme-label">Tema</h3>
-          <div className="theme-pick" id="pf-theme" role="group" aria-labelledby="pf-theme-label">
+          <div className="theme-pick" role="group" aria-labelledby="pf-theme-label">
             {THEMES.map(([id, icon, label, desc]) => (
               <button key={id} type="button" className={`type-card ${theme === id ? "on" : ""}`} aria-pressed={theme === id}
                 onClick={() => { setThemePref(id); setTheme(id); }}>
@@ -295,7 +295,7 @@ export function Profile() {
                 <p className="hint">
                   Te avisamos en este dispositivo cuando pase algo en tus votaciones. Puedes quitarlos cuando quieras.
                 </p>
-                <button className="btn" id="pf-push" disabled={pushBusy} onClick={togglePush} aria-pressed={push === "on"}>
+                <button className="btn" disabled={pushBusy} onClick={togglePush} aria-pressed={push === "on"}>
                   {pushBusy ? "Un momento…" : push === "on" ? <><Icon name="bellOff" /> Desactivar los avisos</> : <><Icon name="bell" /> Activar los avisos</>}
                 </button>
               </>}
@@ -312,7 +312,7 @@ export function Profile() {
             </div>
           )}
         </section>
-        <section className="step pf-danger" id="pf-delete">
+        <section className="step pf-danger">
           <h2>Eliminar mi cuenta</h2>
           <p className="hint">
             Se borrarán tu perfil, tu lista de votaciones y tus grupos. En las votaciones en las que has participado, tus
@@ -320,7 +320,7 @@ export function Profile() {
             pasan a un administrador o a otro participante al azar; si no queda nadie, se borran. Si después vuelves a
             entrar, aunque sea con el mismo correo, será con una cuenta nueva, sin nada de lo anterior.
           </p>
-          <button className="btn danger" id="pf-delete-btn" disabled={deleting} onClick={deleteAccount}>
+          <button className="btn danger" disabled={deleting} onClick={deleteAccount}>
             <Icon name="trash" /> {deleting ? "Eliminando…" : "Eliminar mi cuenta"}
           </button>
           {delMsg && <div className="status" role="alert">{delMsg}</div>}

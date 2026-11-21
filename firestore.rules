@@ -12,7 +12,7 @@ service cloud.firestore {
     // Entró sin cuenta (sesión anónima): puede crear votaciones y participar en las abiertas, pero no entrar
     // en las restringidas (con aprobación o solo con correos), que necesitan saber quién es.
     // También quien entra con su clave de acceso: la app la guarda como una cuenta interna de correo y contraseña
-    // con un correo ficticio de @clave.hilemos.web.app (ver app/src/lib/store.ts).
+    // con un correo ficticio de @clave.hilemos.web.app (ver app/src/lib/store/accessKey.ts).
     function anon() {
       return request.auth.token.firebase.sign_in_provider == 'anonymous'
         || request.auth.token.get('email', '').matches('.*@clave[.]hilemos[.]web[.]app$');

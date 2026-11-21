@@ -17,8 +17,8 @@ type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
 
 export function Home() {
   const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
-  const { toast, confirm, share } = useUi();
-  const { setArchived, remove } = useListActions();
+  const { toast, share } = useUi();
+  const { setArchived, remove, moveTo, deleteGroup } = useListActions();
   const duplicate = useDuplicate();
   const lib = library.data;
   // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
@@ -73,18 +73,7 @@ export function Home() {
     try { await fn(); } catch (err) { setStatus(errMsg(err)); }
   };
 
-  const deleteGroup = () => run(async () => {
-    const g = lib.groups[filter];
-    if (!g || !(await confirm({
-      title: `¿Eliminar el grupo «${g.name}»?`,
-      message: "Las votaciones del grupo no se borran: pasan a «Sin grupo».",
-      confirmLabel: "Eliminar grupo",
-      danger: true,
-    }))) return;
-    await store.deleteGroup(user.uid, filter);
-    setFilter("all");
-    toast("Grupo eliminado");
-  });
+  const removeGroup = () => run(async () => { if (await deleteGroup(filter)) setFilter("all"); });
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -104,10 +93,6 @@ export function Home() {
     });
   };
 
-  const moveTo = (id: string, groupId: string | null) => run(async () => {
-    await store.saveLibraryEntry(user.uid, id, { groupId });
-    toast(groupId ? `Movida a «${lib.groups[groupId]?.name}»` : "Movida a «Sin grupo»");
-  });
 
   const card = (e: Entry) => {
     const p = cache[e.id];
@@ -152,7 +137,7 @@ export function Home() {
         {open && (
           <div className="pc-actions">
             <label>Grupo <GroupSelect className="input small" groups={lib.groups} value={e.groupId || ""}
-              onChange={v => moveTo(e.id, v || null)} /></label>
+              onChange={v => run(() => moveTo(e.id, v || null))} /></label>
             {!gone && (
               <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
@@ -220,8 +205,8 @@ export function Home() {
             <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>
           </div>
           {form && (
-            <form className="inline-form" id="group-form" onSubmit={submit}>
-              <input ref={nameRef} className="input" id="group-name" maxLength={40} placeholder="Nombre del grupo (ej.: Familia, Trabajo…)"
+            <form className="inline-form" onSubmit={submit}>
+              <input ref={nameRef} className="input" maxLength={40} placeholder="Nombre del grupo (ej.: Familia, Trabajo…)"
                 autoComplete="off" value={form.value} onChange={e => setForm(f => f && { ...f, value: e.target.value })} />
               <button className="btn primary" type="submit">{form.mode === "new" ? "Crear grupo" : "Guardar"}</button>
               <button className="btn" type="button" onClick={() => setForm(null)}>Cancelar</button>
@@ -231,7 +216,7 @@ export function Home() {
             <div className="group-tools">
               <strong>{g.name}</strong>
               <button className="link-btn" onClick={() => { setStatus(""); setForm({ mode: "rename", gid: filter, value: g.name || "" }); }}>Renombrar</button>
-              <button className="link-btn danger" onClick={deleteGroup}>Eliminar grupo</button>
+              <button className="link-btn danger" onClick={removeGroup}>Eliminar grupo</button>
             </div>
           )}
         </div>

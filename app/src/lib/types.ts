@@ -192,9 +192,9 @@ export interface Store {
   isEmailLink(url: string): boolean;
   /**
    * Completa el enlace del correo. Con una cuenta sin registro abierta, se guarda en ese correo (mismo uid, se quita
-   * la clave); si no, se entra con él. `linked`: se guardó la cuenta abierta; `needsName`: cuenta nueva sin nombre.
+   * la clave) y devuelve `linked`; si no, se entra con él.
    */
-  completeEmailLink(email: string, url: string): Promise<{ linked: boolean; needsName: boolean; uid: string }>;
+  completeEmailLink(email: string, url: string): Promise<{ linked: boolean }>;
   /** Nombre de la sesión (cuentas nuevas por correo, que no traen nombre). */
   setDisplayName(name: string): Promise<void>;
   /**

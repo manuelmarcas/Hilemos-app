@@ -1,0 +1,84 @@
+/* Emojis: el botón de los campos de texto (solo con ratón) y el panel para elegirlos (hoja inferior en el móvil).
+   Va el último: sus reglas sobre .input tienen que ganar a las de los controles. */
+
+.opt-row .emoji-field{flex:1;min-width:0}
+.chat-form .emoji-field{flex:1;min-width:0}
+.emoji-field{position:relative}
+.emoji-field + .emoji-field{margin-top:8px}
+.emoji-field .input{padding-right:46px}
+.emoji-btn{
+  position:absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;height:36px;
+  border:none;
+  background:none;
+  border-radius:8px;
+  font-size:1.2rem;
+  line-height:1;
+  cursor:pointer;
+  color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s, background .15s;
+}
+.emoji-field.area .emoji-btn{top:6px;transform:none}
+.emoji-btn:hover,.emoji-btn:focus-visible,.emoji-btn[aria-expanded="true"]{color:var(--brand);background:var(--hover)}
+/* En el móvil y la tableta el teclado ya trae emojis: el botón solo sale con ratón (ordenador). */
+@media (hover:none),(pointer:coarse){
+  .emoji-btn{display:none}
+  .emoji-field .input{padding-right:12px}
+  .emoji-field .input.big{padding-right:14px}
+}
+.emoji-panel{
+  position:absolute;
+  z-index:70;
+  width:352px;
+  height:420px;
+  display:flex;
+  flex-direction:column;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.4);
+  overflow:hidden;
+}
+.emoji-panel.sheet{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  width:auto;
+  height:min(420px, 60vh);
+  border-radius:16px 16px 0 0;
+}
+.emoji-panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 6px 6px 14px;
+  font-size:.85rem;
+  font-weight:700;
+  color:var(--muted);
+  border-bottom:1px solid var(--line);
+}
+.emoji-panel-x{width:32px;height:32px;border:none;border-radius:50%;background:var(--soft);font-size:1.2rem;line-height:1;cursor:pointer}
+.emoji-panel-body{flex:1;min-height:0;display:flex}
+.emoji-panel-msg{margin:auto;padding:20px;text-align:center;color:var(--muted);font-size:.9rem;line-height:1.45}
+emoji-picker{
+  width:100%;
+  height:100%;
+  --background:var(--card);
+  --border-color:transparent;
+  --border-size:0;
+  --indicator-color:var(--brand);
+  --input-border-color:var(--line);
+  --input-border-radius:10px;
+  --input-font-color:var(--ink);
+  --input-placeholder-color:var(--muted);
+  --outline-color:var(--brand);
+  --button-hover-background:var(--hover);
+  --button-active-background:var(--soft);
+  --category-font-color:var(--muted);
+  --emoji-size:1.45rem;
+  --num-columns:8;
+}
+.emoji-panel.sheet emoji-picker{--num-columns:8;--emoji-size:1.6rem}

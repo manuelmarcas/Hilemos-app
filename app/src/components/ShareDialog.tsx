@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { Icon } from "./Icon";
-import { copyText } from "../lib/util";
+import { copyText, slugify } from "../lib/util";
 import { canShareLink, isNative, shareFileNative, shareLink } from "../lib/native";
 
 export interface ShareTarget {
@@ -32,9 +32,6 @@ async function qrCanvas(text: string, px = 8, margin = 4) {
   return c;
 }
 
-const slugFile = (s: string) => (s || "votacion").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "votacion";
-
 export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; onClose: () => void; toast: (m: string) => void }) {
   const { url, title } = target;
   const [qr, setQr] = useState<{ png: string } | { error: string } | null>(null);
@@ -42,6 +39,7 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
   const text = `¡Vota en «${title}»!`;
   const enc = encodeURIComponent;
   const canShare = canShareLink();
+  const fileName = `qr-${slugify(title) || "votacion"}`;
 
   useEffect(() => {
     let alive = true;
@@ -54,16 +52,16 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
   const download = async () => {
     if (!qr || !("png" in qr)) return;
     // En la app las descargas no funcionan: se comparte la imagen (y desde ahí se puede guardar).
-    if (await shareFileNative(await (await fetch(qr.png)).blob(), `qr-${slugFile(title)}.png`, title, text)) return;
+    if (await shareFileNative(await (await fetch(qr.png)).blob(), `${fileName}.png`, title, text)) return;
     const a = document.createElement("a");
     a.href = qr.png;
-    a.download = `qr-${slugFile(title)}.png`;
+    a.download = `${fileName}.png`;
     a.click();
   };
 
   return (
     <Dialog
-      id="share-dlg"
+     
       className="dlg"
       onClose={onClose}
       onOpen={dlg => { dlgRef.current = dlg; dlg.querySelector("input")?.select(); }}

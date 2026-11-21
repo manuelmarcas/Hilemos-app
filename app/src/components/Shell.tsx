@@ -12,7 +12,7 @@ import { NameDialog } from "./NameDialog";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
-import { PollPage } from "../pages/Poll";
+import { PollPage } from "../pages/poll/PollPage";
 import { Profile } from "../pages/Profile";
 
 export function Shell() {
@@ -92,7 +92,7 @@ export function Shell() {
             <span id="me-avatar" className="me-avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
             <span id="who-name">{user.name}</span>
           </a>
-          <button className="logout-btn" id="logout" onClick={logout}>Salir</button>
+          <button className="logout-btn" onClick={logout}>Salir</button>
         </div>
       </header>
       <div className="layout">
