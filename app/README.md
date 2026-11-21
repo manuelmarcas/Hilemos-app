@@ -179,7 +179,8 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 - `deleteAccount` (`store.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
   con `ghostName()` (las reglas dejan cambiar solo el nombre de los mensajes propios) y quita su foto; si era el
   creador, pasa `ownerUid` a un administrador o participante aceptado al azar (las reglas exigen que tenga voto y
-  sin estado) o borra la votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era
+  sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o borra la
+  votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era
   administrador, se quita de `admins`. Después borra su lista, grupos, dispositivos de avisos y perfil, y la cuenta.
 - `prepareDeleteAccount`: Firebase solo deja borrar una cuenta si se entró hace poco. Con Google se vuelve a pedir
   (ventana de Google); sin registro se intenta igual; con correo o clave, si hace más de 4 minutos, se pide salir y

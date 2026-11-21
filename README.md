@@ -63,7 +63,9 @@ ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en e
 - **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sus votos y mensajes se quedan con un
   nombre sin dueño al azar («Un suspiro», «Una sombra lejana»…) y sin foto; las votaciones que creó pasan a un
   administrador al azar o, si no hay, a otro participante (si no queda nadie, se borran); y se borran su perfil, su
-  lista, sus grupos y la cuenta. Firebase pide haber entrado hace poco: con Google se vuelve a pedir la cuenta; con
+  lista, sus grupos y la cuenta. Quien hereda una votación es su **«Delegado»**, con todos los poderes del creador, y
+  «Creador» se queda en el nombre sin dueño. Quien se fue (`gone` en su voto) no hereda, no se le cuenta como
+  «falta por votar» ni aparece en las solicitudes. Firebase pide haber entrado hace poco: con Google se vuelve a pedir la cuenta; con
   correo o clave, si hace rato, hay que salir y volver a entrar.
 
 ## Publicar
@@ -93,7 +95,7 @@ index.html        Redirección de GitHub Pages a la dirección única
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador eliminó su cuenta: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
 | `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `seenAt`, `updatedAt` |
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `hideRemoveWarning`, `updatedAt` |

@@ -39,6 +39,10 @@ export interface PollData {
   /** Administradores nombrados por el creador (uids): gestionan la votación como él, salvo eliminarla y
    *  nombrar o quitar administradores. */
   admins?: string[];
+  /** Si el creador eliminó su cuenta: su uid y el nombre sin dueño con el que se quedó. Quien la gestiona ahora
+   *  (ownerUid) es su «Delegado», con todos los poderes del creador. */
+  founder?: string;
+  founderName?: string;
   ownerName?: string;
   createdAt?: number;
   closed?: boolean;
@@ -77,6 +81,8 @@ export interface Vote {
   updatedAt?: number;
   /** Solo en votaciones con aprobación: pendiente o rechazado. Sin campo = aceptado. */
   status?: "pending" | "rejected";
+  /** Eliminó su cuenta: el voto se queda con un nombre sin dueño. No hereda la votación ni se le avisa. */
+  gone?: boolean;
 }
 
 /** Documento `polls/{id}/chat/{msgId}`. La foto no se guarda: sale del voto del autor. */

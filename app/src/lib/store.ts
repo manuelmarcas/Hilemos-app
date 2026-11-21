@@ -263,18 +263,21 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
           const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
           await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
         } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
-        await F.updateDoc(F.doc(votesCol(id), uid), { name: ghost, photo: "" }).catch(() => {});
+        await F.updateDoc(F.doc(votesCol(id), uid), { name: ghost, photo: "", gone: true }).catch(() => {});
         if (poll.ownerUid === uid) {
           // La votación pasa a un administrador al azar o, si no hay, a cualquier participante aceptado.
           const all = await F.getDocs(votesCol(id));
-          const accepted = all.docs.filter(d => d.id !== uid && !d.get("status"));
+          // Nunca alguien que también se fue: la votación se quedaría sin nadie que la gestione.
+          const accepted = all.docs.filter(d => d.id !== uid && !d.get("status") && !d.get("gone"));
           const admins = poll.admins || [];
           const pool = accepted.filter(d => admins.includes(d.id));
           const from = pool.length ? pool : accepted;
           if (from.length) {
             const heir = from[Math.floor(Math.random() * from.length)];
+            // El creador original se recuerda (con su nombre sin dueño) aunque la votación pase de mano varias veces.
             await F.updateDoc(pollRef(id), {
               ownerUid: heir.id, ownerName: heir.get("name") || "Alguien", admins: admins.filter(a => a !== heir.id),
+              ...(poll.founder ? {} : { founder: uid, founderName: ghost }),
             });
           } else {
             // No queda nadie: se borra la votación con sus votos (el chat no se puede borrar desde la app).
@@ -513,16 +516,18 @@ export function createDemoStore(): Store {
       const db = load();
       for (const [id, p] of Object.entries(db.polls)) {
         const v = db.votes[id]?.[uid];
-        if (v) { v.name = ghostName(); v.photo = ""; }
-        for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = v?.name || ghostName();
+        const ghost = ghostName();
+        if (v) { v.name = ghost; v.photo = ""; v.gone = true; }
+        for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = v?.name || ghost;
         if (p.ownerUid === uid) {
-          const accepted = Object.entries(db.votes[id] || {}).filter(([u, x]) => u !== uid && !x.status);
+          const accepted = Object.entries(db.votes[id] || {}).filter(([u, x]) => u !== uid && !x.status && !x.gone);
           const admins = p.admins || [];
           const pool = accepted.filter(([u]) => admins.includes(u));
           const from = pool.length ? pool : accepted;
           if (from.length) {
             const [heir, hv] = from[Math.floor(Math.random() * from.length)];
-            Object.assign(p, { ownerUid: heir, ownerName: hv.name || "Alguien", admins: admins.filter(a => a !== heir) });
+            Object.assign(p, { ownerUid: heir, ownerName: hv.name || "Alguien", admins: admins.filter(a => a !== heir),
+              ...(p.founder ? {} : { founder: uid, founderName: ghost }) });
           } else {
             delete db.polls[id];
             delete db.votes[id];

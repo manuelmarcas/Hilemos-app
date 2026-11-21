@@ -82,14 +82,19 @@ service cloud.firestore {
         let keys = d.diff(old).affectedKeys();
         let creator = old.ownerUid == request.auth.uid;
         return isAdminOf(old)
-          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid'])
-          && (!keys.hasAny(['ownerName', 'admins', 'ownerUid']) || creator)
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid', 'founder', 'founderName'])
+          && (!keys.hasAny(['ownerName', 'admins', 'ownerUid', 'founder', 'founderName']) || creator)
+          // El creador original (founder) solo se apunta al pasar la votación, y una vez.
+          && (!keys.hasAny(['founder', 'founderName'])
+              || (keys.hasAny(['ownerUid']) && !('founder' in old) && d.founder == request.auth.uid
+                  && d.founderName is string && d.founderName.size() <= 100))
           && (!keys.hasAny(['admins']) || (d.admins is list && d.admins.size() <= 20 && !(d.ownerUid in d.admins)))
-          // Pasar la votación: a alguien aceptado (con su voto y sin estado), no a uno mismo.
+          // Pasar la votación: a alguien aceptado (con su voto, sin estado y que no se haya ido), no a uno mismo.
           && (!keys.hasAny(['ownerUid'])
               || (d.ownerUid is string && d.ownerUid != request.auth.uid
                   && exists(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid))
-                  && get(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid)).data.get('status', null) == null))
+                  && get(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid)).data.get('status', null) == null
+                  && get(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.ownerUid)).data.get('gone', false) == false))
           && (!keys.hasAny(['deadline']) || (d.deadline is int && d.deadline >= 0))
           && (!keys.hasAny(['anonymous']) || d.anonymous == true)
           && (!keys.hasAny(['tiebreak'])

@@ -170,7 +170,7 @@ export function PollPage({ id }: { id: string }) {
   const accepted = acceptedVotes(shown);
   const T = tally(poll, accepted);
   const TB = tiebreakTally(poll, accepted);
-  const requests = Object.entries(votes).filter(([, v]) => v?.status).map(([uid, v]) => ({ uid, ...v }))
+  const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone).map(([uid, v]) => ({ uid, ...v }))
     .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   const mine = new Set(votes[user.uid]?.picks || []);
@@ -357,7 +357,7 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(T.people.length, ["participante", "participantes"])}
+            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {poll.founder ? poll.founderName || "alguien" : isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(T.people.length, ["participante", "participantes"])}
             {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
           <div className="mode-line">
@@ -797,9 +797,11 @@ function PeopleTable({ poll, T, people, me, openPeople, onToggle, onToggleAdmin 
   onToggleAdmin?: (uid: string, name: string) => void;
 }) {
   const admins = poll.admins || [];
-  const role = (uid: string) => uid === poll.ownerUid ? <span className="role-tag owner">Creador</span>
+  // Si el creador eliminó su cuenta, «Creador» se queda en su nombre sin dueño y quien la gestiona es «Delegado».
+  const role = (uid: string) => uid === poll.founder ? <span className="role-tag owner">Creador</span>
+    : uid === poll.ownerUid ? <span className="role-tag owner">{poll.founder ? "Delegado" : "Creador"}</span>
     : admins.includes(uid) ? <span className="role-tag">Admin</span> : null;
-  const adminBtn = (p: Person) => onToggleAdmin && p.uid !== poll.ownerUid && (
+  const adminBtn = (p: Person) => onToggleAdmin && p.uid !== poll.ownerUid && !p.gone && (
     <button type="button" className="link-btn admin-btn" onClick={() => onToggleAdmin(p.uid, p.name)}>
       {admins.includes(p.uid) ? "Quitar admin" : "Hacer admin"}
     </button>

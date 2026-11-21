@@ -125,6 +125,8 @@ export interface Person {
   perOpt: Record<string, number>;
   total: number;
   picks: string[];
+  /** Eliminó su cuenta (Vote.gone). */
+  gone: boolean;
 }
 
 export interface RankEntry {
@@ -170,7 +172,7 @@ export function tally(poll: PollData, votes: Votes): Tally {
       perOpt[p.slice(p.lastIndexOf("|") + 1)]++;
       picks.push(p);
     }
-    people.push({ uid, name: v.name || "Alguien", photo: v.photo || "", perOpt, total: picks.length, picks: picks.sort() });
+    people.push({ uid, name: v.name || "Alguien", photo: v.photo || "", perOpt, total: picks.length, picks: picks.sort(), gone: !!v.gone });
   }
   people.sort((a, b) => a.name.localeCompare(b.name, "es"));
 

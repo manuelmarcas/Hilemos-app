@@ -22,7 +22,8 @@ export function RemindMissing({ poll, T, TB, open, me, url }: {
   // Votación cerrada (o con el plazo acabado) y sin desempate abierto: ya no hay nada que votar.
   if (!open && !inTiebreak) return null;
   const tbVoted = inTiebreak ? new Set(Object.values(TB.voters).flat()) : null;
-  const missing = T.people.filter(p => p.uid !== me && (tbVoted ? !tbVoted.has(p.uid) : !p.total));
+  // Quien eliminó su cuenta ya no puede votar: no se le cuenta como «falta».
+  const missing = T.people.filter(p => p.uid !== me && !p.gone && (tbVoted ? !tbVoted.has(p.uid) : !p.total));
   if (!missing.length) return null;
   // En las anónimas el mensaje va sin nombres, que acaba pegado en un grupo.
   const who = poll.anonymous ? plural(missing.length, ["persona", "personas"]) : nameList(missing.map(p => p.name));
