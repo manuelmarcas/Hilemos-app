@@ -186,3 +186,16 @@ tr.open td{border-bottom-color:transparent}
 .people-search{flex:1 1 200px;min-width:0;width:auto}
 .people-chips{display:flex;flex-wrap:wrap;gap:6px}
 .people-more{margin-top:8px}
+/* «Se fueron»: plegado bajo la tabla y en gris (sus votos cuentan, pero ya no están) */
+.people-gone{margin-top:14px}
+.people-gone-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  border:none;background:none;padding:4px 8px 4px 0;border-radius:8px;
+  font:inherit;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;
+}
+.people-gone-btn:hover{color:var(--ink)}
+.people-gone-btn .caret{width:12px;font-size:.72rem;text-align:center;transition:transform .15s}
+.people-gone-btn[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.people-gone .table-hint{margin:4px 0 6px}
+.people-gone table{color:var(--muted)}
+.people-gone .av{filter:grayscale(1);opacity:.7}

@@ -1,6 +1,6 @@
 // Pestaña «Participantes»: la tabla (con lo que ha votado cada uno, sus papeles y, para el creador, nombrar
-// administradores) y, con muchos participantes, buscador, filtros y lista recortada.
-import { Fragment, type ReactNode } from "react";
+// administradores); con muchos participantes, buscador, filtros y lista recortada; y debajo, plegado, «Se fueron».
+import { Fragment, useState, type ReactNode } from "react";
 import * as D from "../../lib/dates";
 import { PEOPLE_FILTER_FROM, slotShort, type Person, type Tally } from "../../lib/model";
 import type { Poll } from "../../lib/types";
@@ -33,13 +33,15 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
   </>;
 }
 
-export function PeopleTable({ poll, T, people, me, openPeople, onToggle, onToggleAdmin }: {
+export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado nadie.", me, openPeople, onToggle, onToggleAdmin }: {
   poll: Poll; T: Tally; people: Person[]; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
+  /** Texto de la tabla sin nadie. */
+  empty?: string;
   /** Solo para el creador: nombrar o quitar administradores. */
   onToggleAdmin?: (uid: string, name: string) => void;
 }) {
   const admins = poll.admins || [];
-  // Si el creador eliminó su cuenta, «Creador» se queda en su nombre sin dueño y quien la gestiona es «Delegado».
+  // Si el creador se fue, «Creador» se queda en su nombre sin dueño (en «Se fueron») y quien la gestiona es «Delegado».
   const role = (uid: string) => uid === poll.founder ? <span className="role-tag owner">Creador</span>
     : uid === poll.ownerUid ? <span className="role-tag owner">{poll.founder ? "Delegado" : "Creador"}</span>
     : admins.includes(uid) ? <span className="role-tag">Admin</span> : null;
@@ -101,7 +103,7 @@ export function PeopleTable({ poll, T, people, me, openPeople, onToggle, onToggl
               {open && <tr className="pv-row"><td colSpan={cols}><PersonVotes poll={poll} T={T} picks={p.picks} /></td></tr>}
             </Fragment>
           );
-        }) : <tr><td colSpan={cols}>{T.people.length ? "Nadie coincide con la búsqueda." : "Todavía no ha entrado nadie."}</td></tr>}
+        }) : <tr><td colSpan={cols}>{empty}</td></tr>}
       </tbody>
     </table>
   );
@@ -110,20 +112,23 @@ export function PeopleTable({ poll, T, people, me, openPeople, onToggle, onToggl
 export type PeopleFilter = "all" | "voted" | "novote";
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-/** Con muchos participantes: buscador, filtro (han votado / sin votar) y lista recortada con «Ver todos». */
-export function PeopleList({ T, query, setQuery, filter, setFilter, all, setAll, children }: {
-  T: Tally; query: string; setQuery: (q: string) => void; filter: PeopleFilter; setFilter: (f: PeopleFilter) => void;
-  all: boolean; setAll: (a: boolean) => void; children: (people: Person[]) => ReactNode;
+/**
+ * Con muchos participantes (`people`): buscador, filtro (han votado / sin votar) y lista recortada con «Ver todos».
+ * `children` pinta la tabla con los que se ven y el texto para cuando no se ve ninguno.
+ */
+export function PeopleList({ people, query, setQuery, filter, setFilter, all, setAll, children }: {
+  people: Person[]; query: string; setQuery: (q: string) => void; filter: PeopleFilter; setFilter: (f: PeopleFilter) => void;
+  all: boolean; setAll: (a: boolean) => void; children: (people: Person[], empty: string) => ReactNode;
 }) {
-  const many = T.people.length >= PEOPLE_FILTER_FROM;
-  if (!many) return <>{children(T.people)}</>;
+  const empty = people.length ? "Nadie coincide con la búsqueda." : "Todavía no ha entrado nadie.";
+  if (people.length < PEOPLE_FILTER_FROM) return <>{children(people, empty)}</>;
   const q = norm(query.trim());
-  const voted = T.people.filter(p => p.total > 0).length;
-  const filtered = T.people.filter(p =>
+  const voted = people.filter(p => p.total > 0).length;
+  const filtered = people.filter(p =>
     (filter === "all" || (filter === "voted") === p.total > 0) && (!q || norm(p.name).includes(q)));
   const cut = !all && !q && filtered.length > PEOPLE_FILTER_FROM;
   const chips: [PeopleFilter, string, number][] = [
-    ["all", "Todos", T.people.length], ["voted", "Han votado", voted], ["novote", "Sin votar", T.people.length - voted],
+    ["all", "Todos", people.length], ["voted", "Han votado", voted], ["novote", "Sin votar", people.length - voted],
   ];
   return <>
     <div className="people-tools">
@@ -137,10 +142,33 @@ export function PeopleList({ T, query, setQuery, filter, setFilter, all, setAll,
         ))}
       </div>
     </div>
-    {children(cut ? filtered.slice(0, PEOPLE_FILTER_FROM) : filtered)}
+    {children(cut ? filtered.slice(0, PEOPLE_FILTER_FROM) : filtered, empty)}
     {cut && <button type="button" className="link-btn people-more" onClick={() => setAll(true)}>Ver los {filtered.length}</button>}
     {all && !q && filtered.length > PEOPLE_FILTER_FROM && (
       <button type="button" className="link-btn people-more" onClick={() => setAll(false)}>Ver menos</button>
     )}
   </>;
+}
+
+/**
+ * «Se fueron»: quienes salieron de la votación ya cerrada (o eliminaron su cuenta). Sus votos siguen contando, con un
+ * nombre sin dueño, así que van aparte y plegados: los totales cuadran sin mezclarlos con quien sigue.
+ */
+export function GonePeople({ poll, T, people, me, openPeople, onToggle }: {
+  poll: Poll; T: Tally; people: Person[]; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="people-gone">
+      <button type="button" className="people-gone-btn" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="caret" aria-hidden="true">▸</span> Se fueron <span className="muted">({people.length})</span>
+      </button>
+      {open && <>
+        <p className="table-hint">Salieron cuando ya no se podía votar: sus votos siguen contando, con un nombre sin dueño.</p>
+        <div className="table-wrap">
+          <PeopleTable poll={poll} T={T} people={people} me={me} openPeople={openPeople} onToggle={onToggle} />
+        </div>
+      </>}
+    </div>
+  );
 }

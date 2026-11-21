@@ -154,11 +154,12 @@ service cloud.firestore {
       }
 
       // Chat de la votación: un documento por mensaje. Solo el creador y los participantes aceptados;
-      // quien está pendiente o rechazado no entra. Ni update ni delete: los mensajes no se editan ni se borran.
+      // quien está pendiente o rechazado no entra. Los mensajes no se editan ni se borran.
       match /chat/{msgId} {
         allow read: if signedIn() && chatMember();
         allow create: if signedIn() && chatMember() && validMsg();
-        // Solo el nombre de los mensajes propios (al eliminar la cuenta pasan a un nombre sin dueño).
+        // Solo el nombre de los mensajes propios: al salir de la votación (o eliminar la cuenta) pasan a un nombre
+        // sin dueño. La app lo hace antes de borrar su voto, mientras aún es chatMember() para poder leerlos.
         allow update: if signedIn() && resource.data.uid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
           && request.resource.data.name is string && request.resource.data.name.size() > 0

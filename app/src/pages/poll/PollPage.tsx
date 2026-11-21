@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin, keepsVotesOnLeave,
+  isFull, deadlinePassed, fmtDeadline, isAdmin,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -12,7 +12,7 @@ import { shareResultCard } from "../../lib/resultImage";
 import { useSession } from "../../state/session";
 import { useUi } from "../../state/ui";
 import { navigate } from "../../state/route";
-import { groupToDrop } from "../../state/listActions";
+import { groupToDrop, useListActions } from "../../state/listActions";
 import { useDuplicate } from "../../state/duplicate";
 import { RemindMissing } from "../../components/RemindMissing";
 import { Chat } from "../../components/Chat";
@@ -20,7 +20,7 @@ import { Icon } from "../../components/Icon";
 import { BoardDays, BoardHours, BoardMonths, BoardWeeks, type BoardProps } from "./Boards";
 import { Legend, Summary, instructions } from "./Summary";
 import { TiebreakCard, TiebreakGuard } from "./Tiebreak";
-import { PeopleList, PeopleTable, type PeopleFilter } from "./People";
+import { GonePeople, PeopleList, PeopleTable, type PeopleFilter } from "./People";
 import { AccessPanel, BlockedView, Requests, WaitingView } from "./Access";
 import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
@@ -29,6 +29,7 @@ export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
   const duplicate = useDuplicate();
+  const { leave: leavePoll } = useListActions();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [pollLoaded, setPollLoaded] = useState(false);
   const [votes, setVotes] = useState<Votes>({});
@@ -178,6 +179,10 @@ export function PollPage({ id }: { id: string }) {
   const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone).map(([uid, v]) => ({ uid, ...v }))
     .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
+  // Quien se fue con la votación cerrada deja sus votos (con un nombre sin dueño): cuentan en los totales, pero en
+  // «Participantes» va aparte, en «Se fueron».
+  const present = T.people.filter(p => !p.gone);
+  const gone = T.people.filter(p => p.gone);
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
   // Administra (creador o nombrado): gestiona la votación. Eliminarla y nombrar administradores, solo el creador.
@@ -335,19 +340,9 @@ export function PollPage({ id }: { id: string }) {
     toast(isAdm ? `${name} ya no es administrador` : `${name} ahora es administrador`);
   });
 
-  // Salir de la votación (también el creador: pasa a otra persona). Ver keepsVotesOnLeave y store.leavePoll.
+  // Salir de la votación (también el creador: pasa a otra persona). El aviso y la salida, en listActions.
   const leave = () => act(async () => {
-    const keeps = keepsVotesOnLeave(poll) && memberStatus(votes[user.uid]) === "accepted";
-    const message = [
-      keeps ? "La votación ya está cerrada, así que tus votos se quedan, pero con un nombre sin dueño."
-        : "Se borrarán tus votos y tu plaza quedará libre.",
-      isOwner ? "Como la creaste, pasará a un administrador o a otro participante al azar; si no queda nadie, se borrará." : "",
-      "Podrás volver a entrar con el enlace.",
-    ].filter(Boolean).join(" ");
-    if (!(await confirm({ title: "¿Salir de la votación?", message, confirmLabel: "Salir", danger: true }))) return;
-    await store.leavePoll(id, user.uid, { name: user.name, dropGroupId: groupToDrop(lib, id) });
-    toast("Has salido de la votación");
-    navigate("/");
+    if (await leavePoll(id, { poll, vote: votes[user.uid] ?? null })) navigate("/");
   });
 
   const remove = () => act(async () => {
@@ -383,7 +378,7 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {poll.founder ? poll.founderName || "alguien" : isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(T.people.length, ["participante", "participantes"])}
+            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {poll.founder ? poll.founderName || "alguien" : isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(present.length, ["participante", "participantes"])}
             {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
           <div className="mode-line">
@@ -445,7 +440,7 @@ export function PollPage({ id }: { id: string }) {
           remind={<RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} />} />
       )}
       {board}
-      <PollTabs tab={tab} setTab={setTab} counts={{ people: T.people.length }} unread={tab === "chat" ? 0 : chatUnread} />
+      <PollTabs tab={tab} setTab={setTab} counts={{ people: present.length }} unread={tab === "chat" ? 0 : chatUnread} />
       <div className="ptab-panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
         {cal && (
@@ -473,15 +468,18 @@ export function PollPage({ id }: { id: string }) {
       <section className="results">
         {admin && <div className="summary-head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
         {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
-        <PeopleList T={T} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
+        <PeopleList people={present} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
-          {people => (
+          {(people, empty) => (
             <div className="table-wrap">
-              <PeopleTable poll={poll} T={T} people={people} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)}
-                onToggleAdmin={isOwner ? toggleAdmin : undefined} />
+              <PeopleTable poll={poll} T={T} people={people} empty={empty} me={user.uid} openPeople={openPeople}
+                onToggle={k => toggleIn(setOpenPeople, k)} onToggleAdmin={isOwner ? toggleAdmin : undefined} />
             </div>
           )}
         </PeopleList>
+        {gone.length > 0 && (
+          <GonePeople poll={poll} T={T} people={gone} me={user.uid} openPeople={openPeople} onToggle={k => toggleIn(setOpenPeople, k)} />
+        )}
       </section>
       </div>
       <div className="ptab-panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>

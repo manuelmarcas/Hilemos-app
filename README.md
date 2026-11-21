@@ -60,19 +60,23 @@ ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en e
 - **Administradores**: en «Participantes», el creador puede nombrar administradores («Hacer admin») y quitarlos.
   Gestionan la votación como él (cerrar y reabrir, desempates, solicitudes, acceso y plazo), pero no pueden
   eliminarla ni nombrar a otros administradores. Llevan la etiqueta «Admin» (y el creador, «Creador»).
-- **Salir de la votación** (al final de cada una) y **eliminar la cuenta** siguen la misma regla con sus votos: si la
-  votación está abierta o con un desempate abierto, se borran y su plaza queda libre; si ya está cerrada (o con el
-  plazo pasado), se quedan con un nombre sin dueño. Si se iba durante un desempate, el primer administrador que abre
-  la votación lo recalcula: sin empate se quita y queda la ganadora; con empate entre menos opciones, sigue solo
-  entre esas; con el mismo empate, no cambia nada. Quien sale de una votación que creó la cede como al eliminar la
-  cuenta.
-- **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sus mensajes (y sus votos, si se quedan)
-  pasan a un nombre sin dueño al azar («Un suspiro», «Una sombra lejana»…) y sin foto; las votaciones que creó pasan a un
-  administrador al azar o, si no hay, a otro participante (si no queda nadie, se borran); y se borran su perfil, su
-  lista, sus grupos y la cuenta. Quien hereda una votación es su **«Delegado»**, con todos los poderes del creador, y
-  «Creador» se queda en el nombre sin dueño. Quien se fue (`gone` en su voto) no hereda, no se le cuenta como
-  «falta por votar» ni aparece en las solicitudes. Firebase pide haber entrado hace poco: con Google se vuelve a pedir la cuenta; con
-  correo o clave, si hace rato, hay que salir y volver a entrar.
+- **Salir de la votación**: al final de cada votación, en su menú ⋯ de «Mis votaciones» y del menú lateral, y
+  deslizándola hacia la izquierda en el móvil. Siempre pide confirmación (no se puede deshacer) con un aviso de lo que
+  pasará según cómo esté la votación. Quien sale pasa a un nombre sin dueño al azar («Un suspiro», «Una sombra
+  lejana»…, uno por votación) y sin foto en sus mensajes del chat y, si la creó, en «Creador». Sus votos: con la
+  votación abierta o con un desempate abierto, se borran (y su plaza queda libre); si ya no se puede votar (cerrada o
+  con el plazo pasado), se quedan con ese nombre y van aparte, plegados, en **«Se fueron»** de «Participantes» (los
+  totales siguen cuadrando; las cabeceras solo cuentan a quien sigue). Si se iba durante un desempate, el primer
+  administrador que abre la votación lo recalcula: sin empate se quita y queda la ganadora; con empate entre menos
+  opciones, sigue solo entre esas; con el mismo empate, no cambia nada. Si vuelve a entrar con el enlace, recupera su
+  nombre y sus votos (si se quedaron). Una votación que ya no existe solo se quita de la lista. Si era la última
+  votación de un grupo, el grupo también se borra.
+- Quien sale de una votación que creó la cede a un administrador al azar o, si no hay, a otro participante (si no
+  queda nadie, se borra). Quien la hereda es su **«Delegado»**, con todos los poderes del creador. Quien se fue
+  (`gone` en su voto) no hereda, no se le cuenta como «falta por votar» ni aparece en las solicitudes.
+- **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sale de cada votación de su lista como con
+  «Salir de la votación» y se borran su perfil, su lista, sus grupos y la cuenta. Firebase pide haber entrado hace
+  poco: con Google se vuelve a pedir la cuenta; con correo o clave, si hace rato, hay que salir y volver a entrar.
 
 ## Publicar
 
@@ -101,10 +105,10 @@ index.html        Redirección de GitHub Pages a la dirección única
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador eliminó su cuenta: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
-| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `seenAt`, `updatedAt` |
-| `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `hideRemoveWarning`, `updatedAt` |
+| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `updatedAt` |
+| `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |
 | `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |
 | `users/{uid}/groups/{groupId}` | Grupos privados del usuario: `name`, `createdAt` |
 

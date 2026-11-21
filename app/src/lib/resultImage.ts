@@ -119,7 +119,8 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
   y += 56;
 
   const info = TYPE[poll.type];
-  const meta = [`${info.emoji} Votación por ${info.name.toLowerCase()}`, plural(T.people.length, ["participante", "participantes"])];
+  // Como en la cabecera de la votación: quien se fue (sus votos siguen contando) no suma como participante.
+  const meta = [`${info.emoji} Votación por ${info.name.toLowerCase()}`, plural(T.people.filter(p => !p.gone).length, ["participante", "participantes"])];
   if (poll.closed) meta.push("cerrada");
   g.fillStyle = t["--muted"];
   g.font = `600 28px ${SANS}`;

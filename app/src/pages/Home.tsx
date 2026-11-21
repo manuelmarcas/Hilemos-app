@@ -1,5 +1,5 @@
 // Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
-// En el móvil cada votación se desliza: → archivar (o desarchivar), ← eliminar de la lista.
+// En el móvil cada votación se desliza: → archivar (o desarchivar), ← salir de ella (con confirmación).
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { TYPE, pollMeta, isAdmin } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
@@ -18,7 +18,7 @@ type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
 export function Home() {
   const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
   const { toast, share } = useUi();
-  const { setArchived, remove, moveTo, deleteGroup } = useListActions();
+  const { setArchived, leave, moveTo, deleteGroup } = useListActions();
   const duplicate = useDuplicate();
   const lib = library.data;
   // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
@@ -113,7 +113,9 @@ export function Home() {
         right={e.archived
           ? { icon: <Icon name="unarchive" />, label: "Desarchivar", tone: "archive", run: toggleArchive }
           : { icon: <Icon name="archive" />, label: "Archivar", tone: "archive", run: toggleArchive }}
-        left={{ icon: <Icon name="trash" />, label: "Eliminar", tone: "danger", run: () => remove(e.id) }}
+        left={gone
+          ? { icon: <Icon name="trash" />, label: "Quitar", tone: "danger", run: () => leave(e.id) }
+          : { icon: <Icon name="leave" />, label: "Salir", tone: "danger", run: () => leave(e.id) }}
       >
       <div className={`poll-card ${gone ? "is-gone" : ""}`}>
         <div className="pc-row">
@@ -145,7 +147,9 @@ export function Home() {
             <button className="btn small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>
-            <button className="btn small danger" onClick={() => remove(e.id)}><Icon name="trash" /> Eliminar de mi lista</button>
+            <button className="btn small danger" onClick={() => leave(e.id)}>
+              {gone ? <><Icon name="trash" /> Quitar de mi lista</> : <><Icon name="leave" /> Salir de la votación</>}
+            </button>
           </div>
         )}
       </div>
@@ -237,7 +241,7 @@ export function Home() {
         )}
         {(filter === "archived" ? archived.length : all.length) > 0 && (
           <p className="swipe-hint">
-            Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para eliminarla de tu lista.
+            Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para salir de ella.
           </p>
         )}
       </div>

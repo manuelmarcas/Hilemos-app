@@ -1,4 +1,4 @@
-// Avisos con cuenta atrás y botón "Deshacer" (al archivar o eliminar una votación de la lista).
+// Avisos con cuenta atrás y botón «Deshacer» (al archivar o desarchivar una votación).
 import { useEffect, useState, type CSSProperties } from "react";
 
 export interface UndoItem {

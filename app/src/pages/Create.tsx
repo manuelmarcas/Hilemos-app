@@ -369,8 +369,9 @@ export function Create() {
         <h1>Nueva votación</h1>
         {user.anon && store.mode === "firebase" && (
           <p className="sub anon-note">
-            Has entrado sin cuenta: esta votación solo la podrás gestionar (cerrarla, desempatar o eliminarla) desde
-            este dispositivo. Para no perderla, guarda tu cuenta en Google desde <a href="#/perfil">«Tu perfil»</a>.
+            Has entrado sin cuenta: para gestionar esta votación (cerrarla, desempatar o eliminarla) desde otro
+            dispositivo o después de cerrar sesión, necesitarás tu clave de acceso. Si prefieres no depender de ella,
+            guarda tu cuenta con tu correo o con Google en <a href="#/perfil">«Tu perfil»</a>.
           </p>
         )}
       </div>

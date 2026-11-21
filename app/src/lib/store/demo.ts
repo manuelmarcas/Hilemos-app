@@ -63,25 +63,26 @@ export function createDemoStore(): Store {
   if (user) user = { ...user, anon: false, hasName: true };
   const me = () => user?.uid || "";
 
-  /** Deja una votación: las mismas reglas que `leave` en firebase.ts. */
-  function leave(db: DemoDb, id: string, uid: string, { ghost, name }: { ghost?: string; name: string }) {
+  /** Deja una votación: lo mismo que `leave` en firebase.ts. */
+  function leave(db: DemoDb, id: string, uid: string) {
     const p = db.polls[id];
     if (!p) return;
-    if (ghost) for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = ghost;
+    const ghost = ghostName();
+    for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = ghost;
     if (p.ownerUid === uid) {
       const votes = db.votes[id] || {};
       const heir = pickHeir(votes, uid, p.admins);
       if (!heir) { delete db.polls[id]; delete db.votes[id]; return; }
       Object.assign(p, {
         ownerUid: heir, ownerName: votes[heir]?.name || "Alguien", admins: (p.admins || []).filter(a => a !== heir),
-        ...(p.founder ? {} : { founder: uid, founderName: ghost || name }),
+        ...(p.founder ? {} : { founder: uid, founderName: ghost }),
       });
     } else if (p.admins?.includes(uid)) {
       p.admins = p.admins.filter(a => a !== uid);
     }
     const v = db.votes[id]?.[uid];
     if (!v) return;
-    const sad = { name: ghost || ghostName(), photo: "", gone: true };
+    const sad = { name: ghost, photo: "", gone: true };
     if (v.status === "rejected") { Object.assign(v, sad); return; }
     if (v.status === "pending" || !keepsVotesOnLeave(p)) {
       delete db.votes[id][uid];
@@ -118,10 +119,7 @@ export function createDemoStore(): Store {
     async prepareDeleteAccount() { return "ok"; },
     async deleteAccount(uid) {
       const db = load();
-      for (const id of Object.keys(db.users[uid]?.polls || {})) {
-        const ghost = ghostName();
-        leave(db, id, uid, { ghost, name: ghost });
-      }
+      for (const id of Object.keys(db.users[uid]?.polls || {})) leave(db, id, uid);
       delete db.users[uid];
       write(db);
       setUser(null);
@@ -165,9 +163,9 @@ export function createDemoStore(): Store {
       write(db);
     },
     watchPoll: (id, cb) => watch(() => { const p = load().polls[id]; cb(p ? { id, ...clone(p) } : null); }),
-    async leavePoll(id, uid, { name, dropGroupId }) {
+    async leavePoll(id, uid, dropGroupId) {
       const db = load();
-      leave(db, id, uid, { name });
+      leave(db, id, uid);
       delete lib(db, uid).polls[id];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);
@@ -176,6 +174,7 @@ export function createDemoStore(): Store {
     // ---------- Participantes y votos ----------
     watchVotes: (id, cb) => watch(() => cb(clone(load().votes[id] || {}))),
     watchVote: (id, uid, cb) => watch(() => { const v = load().votes[id]?.[uid]; cb(v ? clone(v) : null); }),
+    async getVote(id, uid) { const v = load().votes[id]?.[uid]; return v ? clone(v) : null; },
     async joinPoll(id, u, opts = {}) {
       // Las mismas comprobaciones que hacen las reglas de Firestore.
       const db = load();
@@ -193,7 +192,9 @@ export function createDemoStore(): Store {
         }
         votes[u.uid] = opts.pending ? { ...base, status: "pending" } : base;
       } else {
-        votes[u.uid] = { ...(votes[u.uid] || {}), ...base };
+        // Ya participaba: como en Firestore, si había salido de la votación cerrada y vuelve, deja de contar como ido.
+        const { gone: _gone, ...prev } = votes[u.uid] || {};
+        votes[u.uid] = { ...prev, ...base };
       }
       write(db);
     },
@@ -286,11 +287,6 @@ export function createDemoStore(): Store {
       const db = load();
       delete lib(db, uid).polls[pollId];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
-      write(db);
-    },
-    async restoreGroup(uid, gid, data) {
-      const db = load();
-      lib(db, uid).groups[gid] = clone(data);
       write(db);
     },
     async createGroup(uid, name) {

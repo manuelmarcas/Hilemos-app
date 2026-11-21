@@ -68,7 +68,6 @@ export function App() {
         name: profile?.name || authUser.name,
         photo,
         thumb,
-        hideRemoveWarning: !!profile?.hideRemoveWarning,
         // Solo si se ha podido leer el perfil: si falló la lectura, no se sabe si tiene nombre.
         needsName: profileRead && !profile?.name && !authUser.hasName,
       });

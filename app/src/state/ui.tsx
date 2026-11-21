@@ -1,15 +1,14 @@
 // Interfaz común a todas las pantallas: avisos (toast), confirmaciones, deshacer, compartir y selector de emojis.
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
-import { ConfirmDialog, type ConfirmOptions, type ConfirmResult } from "../components/ConfirmDialog";
+import { ConfirmDialog, type ConfirmOptions } from "../components/ConfirmDialog";
 import { ShareDialog, type ShareTarget } from "../components/ShareDialog";
 import { EmojiPanel, type EmojiRequest } from "../components/EmojiPanel";
 import { UndoStack, type UndoItem } from "../components/UndoStack";
 
 interface UiApi {
   toast: (msg: string) => void;
+  /** Pregunta con ConfirmDialog; true si se acepta. */
   confirm: (opts: ConfirmOptions) => Promise<boolean>;
-  /** Como `confirm`, pero devuelve también si se marcó la casilla (`opts.checkbox`). */
-  confirmWithCheck: (opts: ConfirmOptions) => Promise<ConfirmResult>;
   /** Aviso con cuenta atrás y botón "Deshacer" (la acción ya está hecha; `onUndo` la revierte). */
   undoable: (opts: { text: string; onUndo: () => void; seconds?: number }) => void;
   share: (target: ShareTarget) => void;
@@ -26,7 +25,7 @@ export function useUi() {
   return ui;
 }
 
-type Resolve = (r: ConfirmResult) => void;
+type Resolve = (ok: boolean) => void;
 const MAX_UNDO = 3; // avisos de deshacer a la vez (los más antiguos se descartan)
 
 export function UiProvider({ children }: { children: ReactNode }) {
@@ -47,12 +46,11 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const pendingConfirm = useRef<Resolve | null>(null);
-  const confirmWithCheck = useCallback((opts: ConfirmOptions) => new Promise<ConfirmResult>(resolve => {
-    pendingConfirm.current?.({ ok: false, checked: false }); // si había otra abierta, cuenta como "Cancelar"
+  const confirm = useCallback((opts: ConfirmOptions) => new Promise<boolean>(resolve => {
+    pendingConfirm.current?.(false); // si había otra abierta, cuenta como «Cancelar»
     pendingConfirm.current = resolve;
     setConfirmReq({ opts, resolve, n: ++seq.current });
   }), []);
-  const confirm = useCallback((opts: ConfirmOptions) => confirmWithCheck(opts).then(r => r.ok), [confirmWithCheck]);
 
   const undoable = useCallback(({ text, onUndo, seconds = 5 }: { text: string; onUndo: () => void; seconds?: number }) => {
     const item = { id: ++seq.current, text, onUndo, seconds, until: Date.now() + seconds * 1000 };
@@ -70,8 +68,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
   const closeEmoji = useCallback(() => setEmojiReq(null), []);
 
-  const api = useMemo(() => ({ toast, confirm, confirmWithCheck, undoable, share, openEmoji, closeEmoji }),
-    [toast, confirm, confirmWithCheck, undoable, share, openEmoji, closeEmoji]);
+  const api = useMemo(() => ({ toast, confirm, undoable, share, openEmoji, closeEmoji }),
+    [toast, confirm, undoable, share, openEmoji, closeEmoji]);
 
   return (
     <UiContext.Provider value={api}>
@@ -80,9 +78,9 @@ export function UiProvider({ children }: { children: ReactNode }) {
         <ConfirmDialog
           key={confirmReq.n}
           opts={confirmReq.opts}
-          onAnswer={r => {
+          onAnswer={ok => {
             if (pendingConfirm.current === confirmReq.resolve) pendingConfirm.current = null;
-            confirmReq.resolve(r);
+            confirmReq.resolve(ok);
             setConfirmReq(c => (c === confirmReq ? null : c));
           }}
         />

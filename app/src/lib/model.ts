@@ -54,7 +54,7 @@ export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 /** Administra la votación: el creador o alguien que él ha nombrado administrador. */
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
 
-/** Nombres para los votos y mensajes de quien ha eliminado su cuenta: alguien que estuvo y ya no está. */
+/** Nombres para quien se va (sale de la votación o elimina su cuenta): alguien que estuvo y ya no está. */
 const GHOST_NAMES = [
   "Un suspiro", "Una sombra lejana", "Un recuerdo", "Un eco", "Un susurro", "Una huella en la arena",
   "Alguien que estuvo", "Una silla vacía", "Un nombre olvidado", "Una voz lejana", "Un adiós callado",
@@ -144,7 +144,7 @@ export interface Person {
   perOpt: Record<string, number>;
   total: number;
   picks: string[];
-  /** Eliminó su cuenta (Vote.gone). */
+  /** Se fue y sus votos se quedan con un nombre sin dueño (Vote.gone): va en «Se fueron». */
   gone: boolean;
 }
 

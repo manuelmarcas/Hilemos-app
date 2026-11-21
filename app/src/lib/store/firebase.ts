@@ -89,6 +89,12 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     await b.commit();
   }
 
+  /** Quita la votación de la lista del usuario, y el grupo que se queda vacío (`dropGroupId`), en el lote `b`. */
+  function dropFromLibrary(b: WriteBatch, uid: string, pollId: string, dropGroupId?: string | null) {
+    b.delete(F.doc(libCol(uid), pollId));
+    if (dropGroupId) b.delete(F.doc(groupsCol(uid), dropGroupId));
+  }
+
   /**
    * Escucha datos del propio usuario (users/{uid}/…), que siempre puede leer. Justo al entrar (sobre todo al juntar
    * dos formas de entrar en la misma cuenta) Firestore puede recibir la primera lectura antes que la sesión y
@@ -155,19 +161,19 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   // ---------- Salir de una votación (también al eliminar la cuenta) ----------
 
   /**
-   * Deja la votación `id`. `ghost`: solo al eliminar la cuenta, el nombre sin dueño para sus mensajes del chat y para
-   * el creador original. `name`: su nombre, si solo sale. Ver keepsVotesOnLeave (model.ts) para sus votos.
+   * Deja la votación `id` (ver leavePoll en types.ts). Quien se va pasa a un nombre sin dueño (uno por votación) en
+   * sus mensajes del chat, en «Creador» si la creó y en sus votos si se quedan (ver keepsVotesOnLeave, model.ts).
    */
-  async function leave(id: string, uid: string, { ghost, name }: { ghost?: string; name: string }) {
+  async function leave(id: string, uid: string) {
     const snap = await F.getDoc(pollRef(id)).catch(() => null);
     if (!snap?.exists()) return;
     const poll = snap.data() as PollData;
-    if (ghost) {
-      try {
-        const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
-        await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
-      } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
-    }
+    const ghost = ghostName();
+    // El chat va primero: las reglas solo dejan leerlo (y renombrar los mensajes propios) a quien sigue dentro.
+    try {
+      const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
+      await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
+    } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
     if (poll.ownerUid === uid) {
       // La votación pasa a otra persona (pickHeir); si no queda nadie, se borra.
       const votes = toMap<Vote>(await F.getDocs(votesCol(id)));
@@ -176,7 +182,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       // El creador original se recuerda aunque la votación pase de mano varias veces.
       await F.updateDoc(pollRef(id), {
         ownerUid: heir, ownerName: votes[heir]?.name || "Alguien", admins: (poll.admins || []).filter(a => a !== heir),
-        ...(poll.founder ? {} : { founder: uid, founderName: ghost || name }),
+        ...(poll.founder ? {} : { founder: uid, founderName: ghost }),
       });
     } else if (poll.admins?.includes(uid)) {
       await F.updateDoc(pollRef(id), { admins: F.arrayRemove(uid) }).catch(() => {});
@@ -187,7 +193,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     const v = await F.getDoc(vref).catch(() => null);
     if (!v?.exists()) return;
     const status = v.get("status");
-    const sad = { name: ghost || ghostName(), photo: "", gone: true };
+    const sad = { name: ghost, photo: "", gone: true };
     if (status === "rejected") { await F.updateDoc(vref, sad).catch(() => {}); return; } // no puede salir
     if (status === "pending" || !keepsVotesOnLeave(poll)) {
       const b = F.writeBatch(db);
@@ -320,12 +326,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async deleteAccount(uid) {
       const u = currentUser();
       if (u.uid !== uid) throw new Error("No hay ninguna sesión abierta.");
-      // En cada votación de su lista: sus mensajes y (si se quedan) sus votos pasan a un nombre sin dueño.
-      // Si una votación falla (p. ej. ya no existe o no hay acceso), se sigue con las demás.
-      for (const entry of (await F.getDocs(libCol(uid))).docs) {
-        const ghost = ghostName();
-        await leave(entry.id, uid, { ghost, name: ghost }).catch(() => {});
-      }
+      // Sale de cada votación de su lista. Si una falla (p. ej. ya no existe o no hay acceso), se sigue con las demás.
+      for (const entry of (await F.getDocs(libCol(uid))).docs) await leave(entry.id, uid).catch(() => {});
       // Sus datos: lista, grupos, dispositivos de avisos y perfil.
       for (const col of [libCol(uid), groupsCol(uid), tokensCol(uid)]) {
         const s = await F.getDocs(col);
@@ -356,16 +358,12 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async getPoll(id) { return withId(await F.getDoc(pollRef(id))); },
     updatePoll: (id, patch) => F.updateDoc(pollRef(id), patch),
     // La votación y, a la vez, su entrada en la colección del creador (y su grupo, si se queda vacío).
-    deletePoll: (id, uid, dropGroupId) => removePoll(id, b => {
-      b.delete(F.doc(libCol(uid), id));
-      if (dropGroupId) b.delete(F.doc(groupsCol(uid), dropGroupId));
-    }),
+    deletePoll: (id, uid, dropGroupId) => removePoll(id, b => dropFromLibrary(b, uid, id, dropGroupId)),
     watchPoll: (id, cb, onErr) => F.onSnapshot(pollRef(id), s => cb(withId(s)), onErr),
-    async leavePoll(id, uid, { name, dropGroupId }) {
-      await leave(id, uid, { name });
+    async leavePoll(id, uid, dropGroupId) {
+      await leave(id, uid);
       const b = F.writeBatch(db);
-      b.delete(F.doc(libCol(uid), id));
-      if (dropGroupId) b.delete(F.doc(groupsCol(uid), dropGroupId));
+      dropFromLibrary(b, uid, id, dropGroupId);
       await b.commit();
     },
 
@@ -375,6 +373,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     watchVotes: (id, cb, onErr) => F.onSnapshot(votesCol(id), snap => cb(toMap<Vote>(snap)), onErr),
     watchVote: (id, uid, cb, onErr) => F.onSnapshot(F.doc(votesCol(id), uid),
       s => cb(s.exists() ? (s.data() as Vote) : null), onErr),
+    async getVote(id, uid) {
+      const s = await F.getDoc(F.doc(votesCol(id), uid));
+      return s.exists() ? (s.data() as Vote) : null;
+    },
     async joinPoll(id, user, opts = {}) {
       const ref = F.doc(votesCol(id), user.uid);
       const base: Vote = { name: user.name, photo: user.photo, seenAt: Date.now() };
@@ -441,12 +443,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     saveLibraryEntry: (uid, pollId, data) => F.setDoc(F.doc(libCol(uid), pollId), data, { merge: true }),
     async removeLibraryEntry(uid, pollId, dropGroupId) {
-      const batch = F.writeBatch(db);
-      batch.delete(F.doc(libCol(uid), pollId));
-      if (dropGroupId) batch.delete(F.doc(groupsCol(uid), dropGroupId));
-      await batch.commit();
+      const b = F.writeBatch(db);
+      dropFromLibrary(b, uid, pollId, dropGroupId);
+      await b.commit();
     },
-    restoreGroup: (uid, gid, data) => F.setDoc(F.doc(groupsCol(uid), gid), data),
     async createGroup(uid, name) {
       const ref = await F.addDoc(groupsCol(uid), { name, createdAt: Date.now() });
       return ref.id;

@@ -39,8 +39,8 @@ export interface PollData {
   /** Administradores nombrados por el creador (uids): gestionan la votación como él, salvo eliminarla y
    *  nombrar o quitar administradores. */
   admins?: string[];
-  /** Si el creador eliminó su cuenta: su uid y el nombre sin dueño con el que se quedó. Quien la gestiona ahora
-   *  (ownerUid) es su «Delegado», con todos los poderes del creador. */
+  /** Si el creador se fue (salió o eliminó su cuenta): su uid y el nombre sin dueño con el que se quedó. Quien la
+   *  gestiona ahora (ownerUid) es su «Delegado», con todos los poderes del creador. */
   founder?: string;
   founderName?: string;
   ownerName?: string;
@@ -81,7 +81,8 @@ export interface Vote {
   updatedAt?: number;
   /** Solo en votaciones con aprobación: pendiente o rechazado. Sin campo = aceptado. */
   status?: "pending" | "rejected";
-  /** Eliminó su cuenta: el voto se queda con un nombre sin dueño. No hereda la votación ni se le avisa. */
+  /** Se fue (salió de la votación ya cerrada o eliminó su cuenta): el voto se queda con un nombre sin dueño. No
+   *  hereda la votación ni se le avisa. Si vuelve a entrar, recupera su nombre y deja de contar como ido. */
   gone?: boolean;
 }
 
@@ -136,7 +137,6 @@ export interface Profile {
   name?: string;
   photo?: string;  // imagen de perfil (128 px en base64, URL de Google o vacía)
   thumb?: string;  // miniatura que se copia en los votos (64 px), para que pesen poco
-  hideRemoveWarning?: boolean; // ha marcado "no volver a mostrar" en el aviso de eliminar de su lista
   notify?: NotifyPrefs;
   updatedAt?: number;
 }
@@ -158,7 +158,6 @@ export interface AuthUser {
 export interface User extends AuthUser {
   googlePhoto: string;
   thumb: string; // miniatura de `photo`: es la que se guarda en cada voto
-  hideRemoveWarning: boolean;
   /** Ni la sesión ni el perfil tienen nombre: NameDialog lo pide. */
   needsName?: boolean;
 }
@@ -203,17 +202,18 @@ export interface Store {
    */
   prepareDeleteAccount(): Promise<"ok" | "relogin">;
   /**
-   * Elimina la cuenta: en cada votación sus votos y mensajes pasan a un nombre sin dueño (ghostName) y sin foto;
-   * las que creó pasan a un administrador o participante al azar (o se borran si no queda nadie); luego se borran
-   * su perfil, su lista, sus grupos y la cuenta de inicio de sesión.
+   * Elimina la cuenta: sale de cada votación de su lista como con leavePoll y luego se borran su perfil, su lista,
+   * sus grupos y la cuenta de inicio de sesión.
    */
   deleteAccount(uid: string): Promise<void>;
   /**
-   * Sale de la votación (y la quita de su lista). Abierta o con un desempate abierto: sus votos se borran y su plaza
-   * queda libre. Cerrada: sus votos se quedan con un nombre sin dueño. Si era el creador, la votación pasa a un
-   * administrador o participante al azar (o se borra si no queda nadie).
+   * Sale de la votación y la quita de su lista. Pasa a un nombre sin dueño (ghostName, sin foto) en sus mensajes del
+   * chat y, si la creó, en «Creador». Sus votos: abierta o con un desempate abierto, se borran y su plaza queda
+   * libre; cerrada, se quedan con ese nombre (ver keepsVotesOnLeave). Si era el creador, la votación pasa a un
+   * administrador o participante al azar (o se borra si no queda nadie). `dropGroupId`: grupo que queda vacío y se
+   * borra a la vez.
    */
-  leavePoll(id: string, uid: string, opts: { name: string; dropGroupId?: string | null }): Promise<void>;
+  leavePoll(id: string, uid: string, dropGroupId?: string | null): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */
@@ -230,6 +230,8 @@ export interface Store {
   watchVotes(id: string, cb: (v: Votes) => void, onErr?: ErrorCb): Unsubscribe;
   /** Solo el voto propio: lo que puede leer quien aún no ha sido aceptado en una votación restringida. */
   watchVote(id: string, uid: string, cb: (v: Vote | null) => void, onErr?: ErrorCb): Unsubscribe;
+  /** El voto propio, una vez (null si no participa). */
+  getVote(id: string, uid: string): Promise<Vote | null>;
   /**
    * Registra al usuario como participante sin tocar sus votos. Si es nuevo en una votación con tope (`counted`),
    * entra a la vez que se suma 1 al contador de la votación. `pending`: entra pendiente de aprobación.
@@ -256,8 +258,6 @@ export interface Store {
   saveLibraryEntry(uid: string, pollId: string, data: Partial<LibraryEntry>): Promise<void>;
   /** Quita la votación de la lista del usuario. `dropGroupId`: grupo que queda vacío y se borra a la vez. */
   removeLibraryEntry(uid: string, pollId: string, dropGroupId?: string | null): Promise<void>;
-  /** Vuelve a crear un grupo con su id (para deshacer). */
-  restoreGroup(uid: string, gid: string, data: Group): Promise<void>;
   createGroup(uid: string, name: string): Promise<string>;
   renameGroup(uid: string, gid: string, name: string): Promise<void>;
   deleteGroup(uid: string, gid: string): Promise<void>;

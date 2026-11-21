@@ -45,7 +45,7 @@ src/App.tsx                Almacén de datos, sesión y elección entre la entra
 src/styles/                Estilos por zonas; index.css los importa en orden (usan las variables de tokens.json)
 src/state/ui.tsx           Avisos, «Deshacer», confirmaciones, compartir y selector de emojis (contexto)
 src/state/session.tsx      Usuario, colección (votaciones y grupos) y filtros (contexto)
-src/state/listActions.ts   Acciones sobre «Mis votaciones» (archivar, quitar, mover a un grupo, borrar un grupo)
+src/state/listActions.ts   Acciones sobre la lista (archivar, salir de una votación, mover a un grupo, borrar un grupo)
 src/state/accessKey.ts     Clave de acceso recién creada (la enseña AccessKeyDialog)
 src/state/duplicate.ts     «Duplicar» una votación en «Nueva votación»
 src/state/route.ts         Rutas con #
@@ -78,18 +78,23 @@ src/lib/config.ts          Configuración de Firebase
 - Firebase se carga aparte (import dinámico): el modo demo no lo descarga.
 - `base: "./"` en Vite: la compilación usa rutas relativas y funciona en una subcarpeta o dentro de Capacitor.
 
-## Archivar y eliminar de la lista
+## Archivar y salir de una votación
+
+Las acciones sobre la lista están en `state/listActions.ts` (`useListActions`), compartidas por «Mis votaciones»,
+el menú lateral y la propia votación.
 
 - Cada usuario puede **archivar** votaciones (campo `archived` en `users/{uid}/polls/{id}`): salen del panel y del
   menú lateral, se ven en la fila «Archivadas» del final de la lista (con fondo lila suave, para no confundirla con
-  un grupo) y conservan su grupo. Se pueden desarchivar.
-- **Eliminar de la lista** quita la votación del menú del usuario (no la borra para los demás; se puede volver con
-  el enlace). La primera vez sale un aviso con la casilla «No volver a mostrar», que se guarda en el perfil
-  (`hideRemoveWarning`). Si era la última votación de un grupo (contando las archivadas), el grupo también se borra.
+  un grupo) y conservan su grupo. Se pueden desarchivar. Se aplica al momento, con un aviso de **cuenta atrás de 5 s
+  y «Deshacer»** (`UndoStack`): así no se pierde nada si se cierra la app durante la cuenta atrás.
+- **Salir de la votación** (`leave`) siempre pide confirmación: no se puede deshacer. El aviso (`leaveMessage`) dice
+  qué pasará según cómo esté la votación y qué papel tiene en ella: abierta, con desempate abierto, cerrada o con el
+  plazo pasado; pendiente de aprobación; creador o administrador; si era la última votación de su grupo; y cómo
+  volver. Lo que pasa de verdad lo hace `leavePoll` en el almacén (ver «Administradores y eliminar la cuenta»).
+  Una votación que ya no existe solo se quita de la lista (`removeLibraryEntry`). Si era la última votación de un
+  grupo (contando las archivadas, `groupToDrop`), el grupo también se borra.
 - En el móvil, en «Mis votaciones»: **deslizar →** archiva (o desarchiva en la zona de archivadas) y
-  **deslizar ←** elimina de la lista. En el ordenador, las mismas acciones están en el botón ⋯ de cada votación.
-- Las acciones se aplican al momento y muestran un aviso con **cuenta atrás de 5 s y «Deshacer»**, que las revierte
-  (incluido el grupo borrado). Así no se pierden si se cierra la app durante la cuenta atrás.
+  **deslizar ←** sale de la votación. En el ordenador, las mismas acciones están en el botón ⋯ de cada votación.
 
 ## Duplicar una votación
 
@@ -189,15 +194,20 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   (`PeopleTable`). `isAdmin(poll, uid)` en `model.ts` decide quién gestiona la votación; eliminarla y los
   administradores son solo del creador (`isOwner`). En las reglas, `isAdminOf()`; un administrador solo puede
   quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado del creador.
-- `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`) decide con `keepsVotesOnLeave` (`model.ts`) si los
-  votos se quedan (cerrada o plazo pasado, sin desempate abierto: nombre sin dueño y `gone`) o se borran (con tope,
-  junto con `members - 1`). `TiebreakGuard` (`pages/poll/Tiebreak.tsx`) ajusta el desempate al abrir la votación un administrador.
-- `deleteAccount` (`store/firebase.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
-  con `ghostName()` (las reglas dejan cambiar solo el nombre de los mensajes propios) y quita su foto; si era el
-  creador, pasa `ownerUid` a un administrador o participante aceptado al azar (las reglas exigen que tenga voto y
-  sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o borra la
-  votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era
-  administrador, se quita de `admins`. Después borra su lista, grupos, dispositivos de avisos y perfil, y la cuenta.
+- `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
+  saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
+  cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el
+  creador, pasa `ownerUid` a un administrador o participante aceptado al azar (`pickHeir`; las reglas exigen que
+  tenga voto, sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o
+  borra la votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era administrador, se
+  quita de `admins`. Sus votos: `keepsVotesOnLeave` (`model.ts`) decide si se quedan (cerrada o plazo pasado, sin
+  desempate abierto: con el nombre sin dueño, sin foto y `gone`) o se borran (con tope, junto con `members - 1`).
+  `TiebreakGuard` (`pages/poll/Tiebreak.tsx`) ajusta el desempate al abrir la votación un administrador.
+- En «Participantes», quien tiene `gone` va aparte en «Se fueron» (`GonePeople`, plegado y en gris): sus votos cuentan
+  en los totales, pero la cabecera, la pestaña y la imagen de resultados solo cuentan a quien sigue. Si vuelve a
+  entrar, `joinPoll` le quita `gone` y recupera su nombre.
+- `deleteAccount` (`store/firebase.ts`): `leave()` en cada votación de su lista y después borra su lista, grupos,
+  dispositivos de avisos y perfil, y la cuenta.
 - `prepareDeleteAccount`: Firebase solo deja borrar una cuenta si se entró hace poco. Con Google se vuelve a pedir
   (ventana de Google); sin registro se intenta igual; con correo o clave, si hace más de 4 minutos, se pide salir y
   volver a entrar.

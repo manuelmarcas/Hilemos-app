@@ -1,8 +1,10 @@
-// Acciones sobre la lista del usuario, compartidas por «Mis votaciones» y el menú lateral: archivar/desarchivar y
-// eliminar de la lista (al momento, con un aviso de «Deshacer» con cuenta atrás: así no se pierden si se cierra la
-// app), mover una votación de grupo y eliminar un grupo.
+// Acciones sobre la lista del usuario, compartidas por «Mis votaciones», el menú lateral y la propia votación:
+// archivar/desarchivar (al momento, con un aviso de «Deshacer» con cuenta atrás: así no se pierde nada si se cierra
+// la app), salir de una votación (siempre con confirmación: no se puede deshacer), mover una votación de grupo y
+// eliminar un grupo.
 import { useCallback } from "react";
-import type { Library } from "../lib/types";
+import { MAX_PEOPLE, hasLimit, isAdmin, keepsVotesOnLeave, memberStatus } from "../lib/model";
+import type { Library, Poll, Vote } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { useSession } from "./session";
 import { useUi } from "./ui";
@@ -23,9 +25,41 @@ const short = (t: string | undefined) => {
   return s.length > 28 ? s.slice(0, 27) + "…" : s;
 };
 
+/**
+ * Qué pasa al salir de la votación `p`, según cómo esté y qué papel tenga `uid` en ella (lo que hace `leavePoll`
+ * en los almacenes). `vote`: su voto (null si no participa). `group`: grupo que se queda vacío y se elimina.
+ */
+function leaveMessage(p: Poll, uid: string, vote: Vote | null, group: string | null) {
+  const status = vote ? memberStatus(vote) : null;
+  const out: string[] = [];
+  if (status === "pending") {
+    out.push("Se retirará tu solicitud para entrar.");
+  } else if (status === "accepted") {
+    if (keepsVotesOnLeave(p)) {
+      out.push("Ya no se puede votar, así que tus votos se quedan, pero con un nombre sin dueño.");
+    } else if (p.tiebreak && !p.tiebreak.done) {
+      out.push("Hay un desempate abierto, así que se borrarán tus votos (también el del desempate). Si con eso cambia " +
+        "el empate, el desempate se ajusta: sigue entre las que queden empatadas o, si ya no hay empate, gana la más votada.");
+    } else {
+      // La plaza solo importa si quien la creó puso un máximo (sin él, el tope es el general, MAX_PEOPLE).
+      const limited = hasLimit(p) && (p.maxPeople as number) < MAX_PEOPLE;
+      out.push(limited ? "Se borrarán tus votos y tu plaza quedará libre." : "Se borrarán tus votos.");
+    }
+    out.push("Si escribiste en el chat, tus mensajes se quedan, también con un nombre sin dueño.");
+  }
+  if (p.ownerUid === uid) {
+    out.push("Como la creaste, pasará a un administrador o a otro participante al azar; si no queda nadie, se borrará.");
+  } else if (isAdmin(p, uid)) {
+    out.push("Dejarás de ser administrador.");
+  }
+  if (group) out.push(`Era la última votación del grupo «${group}», así que el grupo también se eliminará.`);
+  out.push(p.approval ? "Para volver, tendrás que pedir entrar otra vez con el enlace." : "Podrás volver a entrar con el enlace.");
+  return out.join(" ");
+}
+
 export function useListActions() {
-  const { store, user, library, updateUser } = useSession();
-  const { toast, confirm, confirmWithCheck, undoable } = useUi();
+  const { store, user, library } = useSession();
+  const { toast, confirm, undoable } = useUi();
   const lib = library.data;
 
   /** Archiva (o desarchiva) una votación. Devuelve false si no se pudo. */
@@ -45,45 +79,44 @@ export function useListActions() {
     return true;
   }, [lib, store, user.uid, toast, undoable]);
 
-  /** Quita una votación de la lista (con el aviso la primera vez). Devuelve false si se canceló o falló. */
-  const remove = useCallback(async (id: string) => {
-    const entry = lib?.polls[id];
-    if (!lib || !entry) return false;
-    if (!user.hideRemoveWarning) {
-      const r = await confirmWithCheck({
-        title: "¿Eliminar de tu lista?",
-        message: "La votación dejará de aparecer en tus votaciones y en el menú. No se borra para los demás y tus votos " +
-          "se mantienen: podrás volver a unirte con su enlace. Si es la última votación de un grupo, el grupo también " +
-          "se elimina. (Para borrar para todos una votación que creaste, usa «Eliminar votación» dentro de ella).",
-        confirmLabel: "Eliminar de mi lista",
-        danger: true,
-        checkbox: "No volver a mostrar este aviso",
-      });
-      if (r.checked) {
-        updateUser({ hideRemoveWarning: true });
-        store.saveProfile(user.uid, { hideRemoveWarning: true }).catch(() => {});
-      }
-      if (!r.ok) return false;
-    }
+  /**
+   * Sale de la votación `id` tras confirmarlo, con un aviso de lo que pasará (leaveMessage). Si la votación ya no
+   * existe, solo la quita de la lista. `known`: la votación y el voto propio, si ya se tienen (desde la propia
+   * votación), para no volver a pedirlos. Devuelve true si salió.
+   */
+  const leave = useCallback(async (id: string, known?: { poll: Poll; vote: Vote | null }) => {
     const gid = groupToDrop(lib, id);
-    const group = gid ? lib.groups[gid] : null;
+    const group = gid ? lib?.groups[gid]?.name || "" : null;
+    const title = known?.poll.title || lib?.polls[id]?.title;
     try {
-      await store.removeLibraryEntry(user.uid, id, gid);
+      const poll = known ? known.poll : await store.getPoll(id);
+      if (!poll) {
+        if (!(await confirm({
+          title: "¿Quitar de tu lista?",
+          message: "Esta votación ya no existe: la eliminó quien la creó. Solo se quitará de tu lista." +
+            (group ? ` Era la última del grupo «${group}», así que el grupo también se eliminará.` : ""),
+          confirmLabel: "Quitar",
+          danger: true,
+        }))) return false;
+        await store.removeLibraryEntry(user.uid, id, gid);
+        toast(`«${short(title)}» quitada de tu lista`);
+        return true;
+      }
+      const vote = known ? known.vote : await store.getVote(id, user.uid);
+      if (!(await confirm({
+        title: "¿Salir de la votación?",
+        message: leaveMessage(poll, user.uid, vote, group),
+        confirmLabel: "Salir",
+        danger: true,
+      }))) return false;
+      await store.leavePoll(id, user.uid, gid);
+      toast(`Has salido de «${short(poll.title || title)}»`);
+      return true;
     } catch (e) {
       toast(errMsg(e));
       return false;
     }
-    undoable({
-      text: `«${short(entry.title)}» eliminada de tu lista${group ? ` (y el grupo «${group.name}»)` : ""}`,
-      onUndo: async () => {
-        try {
-          if (gid && group) await store.restoreGroup(user.uid, gid, group);
-          await store.saveLibraryEntry(user.uid, id, entry);
-        } catch (e) { toast(errMsg(e)); }
-      },
-    });
-    return true;
-  }, [lib, store, user.uid, user.hideRemoveWarning, updateUser, confirmWithCheck, toast, undoable]);
+  }, [lib, store, user.uid, confirm, toast]);
 
   /** Mueve una votación a un grupo (null o "" = «Sin grupo»). `groupName`: si el grupo se acaba de crear. */
   const moveTo = useCallback(async (id: string, gid: string | null, groupName?: string) => {
@@ -105,5 +138,5 @@ export function useListActions() {
     return true;
   }, [lib, store, user.uid, confirm, toast]);
 
-  return { setArchived, remove, moveTo, deleteGroup };
+  return { setArchived, leave, moveTo, deleteGroup };
 }

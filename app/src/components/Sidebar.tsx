@@ -1,5 +1,5 @@
 // Menú lateral: las votaciones del usuario agrupadas, para saltar de una a otra y organizarlas
-// (mover entre grupos con ⋯ o arrastrando, crear/renombrar/eliminar/plegar grupos).
+// (mover entre grupos con ⋯ o arrastrando, archivar, salir, crear/renombrar/eliminar/plegar grupos).
 import { useEffect, useRef, useState, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
 import { TYPE } from "../lib/model";
 import type { LibraryEntry } from "../lib/types";
@@ -25,7 +25,7 @@ type Form = { mode: "new" | "rename"; gid?: string; moveId?: string; value: stri
 export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onNavigate: () => void }) {
   const { store, user, library, setHomeFilter } = useSession();
   const { toast } = useUi();
-  const { setArchived, remove, moveTo, deleteGroup } = useListActions();
+  const { setArchived, leave, moveTo, deleteGroup } = useListActions();
   const path = useHashPath();
   const lib = library.data;
   const [query, setQuery] = useState("");
@@ -64,7 +64,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   };
 
   const archivePoll = (id: string) => { setMenu(null); setArchived(id, true); };
-  const removePoll = async (id: string) => { if (await remove(id)) setMenu(null); };
+  const leavePoll = async (id: string) => { if (await leave(id)) setMenu(null); };
 
   const removeGroup = (gid: string) => run(async () => { if (await deleteGroup(gid)) setMenu(null); });
 
@@ -168,7 +168,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
           <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}><Icon name="plus" /> Grupo nuevo…</button>
           <div className="sb-menu-sep" />
           <button className="sb-menu-item" onClick={() => archivePoll(e.id)}><Icon name="archive" /> Archivar</button>
-          <button className="sb-menu-item danger" onClick={() => removePoll(e.id)}><Icon name="trash" /> Eliminar de mi lista</button>
+          <button className="sb-menu-item danger" onClick={() => leavePoll(e.id)}><Icon name="leave" /> Salir de la votación</button>
         </div>
       );
     };
