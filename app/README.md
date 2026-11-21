@@ -177,7 +177,8 @@ contraseña; el correo lo envía Firebase con su plantilla y en castellano). Req
 **Correo electrónico/contraseña › Vínculo de correo electrónico (acceso sin contraseña)**.
 
 - El enlace vuelve a la misma pantalla con `?correo=1` y `EmailLinkFinish` (montado en `App.tsx`) completa la entrada.
-  Si se abre en otro dispositivo, pide confirmar el correo; si la cuenta es nueva, el nombre.
+  Si se abre en otro dispositivo, pide confirmar el correo. El nombre de las cuentas nuevas lo pide `NameDialog`
+  (en `Shell`) ya dentro de la app, y vuelve a salir hasta que se ponga aunque se cierre la página a medias.
 - Con una cuenta sin registro abierta (también desde «Tu perfil → Tu cuenta»), el enlace **guarda esa cuenta en el
   correo** (`linkWithCredential`, mismo uid) y quita la clave de acceso. Hay que abrirlo en el mismo dispositivo.
   Si el correo ya tiene su propia cuenta, se avisa y, si se había quitado la clave, se le da una nueva.

@@ -141,6 +141,8 @@ export interface AuthUser {
   email: string;
   /** Ha entrado sin cuenta (sesión anónima): solo puede votar en las votaciones abiertas. */
   anon: boolean;
+  /** La sesión trae nombre (las cuentas nuevas por enlace al correo no). */
+  hasName: boolean;
 }
 
 /** Usuario de la app: datos de sesión + perfil elegido por él. */
@@ -148,6 +150,8 @@ export interface User extends AuthUser {
   googlePhoto: string;
   thumb: string; // miniatura de `photo`: es la que se guarda en cada voto
   hideRemoveWarning: boolean;
+  /** Ni la sesión ni el perfil tienen nombre: NameDialog lo pide. */
+  needsName?: boolean;
 }
 
 /** Lo que se copia del usuario en cada voto (nombre y miniatura). */

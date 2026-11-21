@@ -114,6 +114,7 @@ button,input,select,textarea{font:inherit}
 .key-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
 .key-input::placeholder{letter-spacing:.08em}
 /* Clave de acceso recién creada (AccessKeyDialog) */
+.name-dlg-input{margin-top:16px}
 .dlg-key{width:min(440px, calc(100% - 32px))}
 .dlg-key h2{display:flex;align-items:center;gap:8px;padding-right:0}
 .key-box{

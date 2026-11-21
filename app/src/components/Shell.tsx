@@ -8,6 +8,7 @@ import { Avatar } from "./Avatar";
 import { LogoMark } from "./LogoMark";
 import { Icon } from "./Icon";
 import { AccessKeyDialog } from "./AccessKeyDialog";
+import { NameDialog } from "./NameDialog";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -100,6 +101,7 @@ export function Shell() {
       </div>
       <div className="sb-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />
       <AccessKeyDialog />
+      <NameDialog />
     </div>
   );
 }

@@ -69,6 +69,7 @@ export function App() {
         photo,
         thumb,
         hideRemoveWarning: !!profile?.hideRemoveWarning,
+        needsName: !profile?.name && !authUser.hasName,
       });
     });
   }, [store]);
@@ -81,10 +82,7 @@ export function App() {
   if (bootError) content = <div className="boot"><div className="empty-box error">No se pudo cargar la aplicación: {bootError}</div></div>;
   else if (!store || user === undefined) content = <div className="boot">Cargando…</div>;
   else if (emailLink) {
-    content = <EmailLinkFinish store={store} url={emailLink} onDone={name => {
-      if (name) setUser(u => (u ? { ...u, name } : u));
-      setEmailLink(null);
-    }} />;
+    content = <EmailLinkFinish store={store} url={emailLink} onDone={() => setEmailLink(null)} />;
   }
   else if (!user) content = <Gate store={store} demo={DEMO} />;
   else {

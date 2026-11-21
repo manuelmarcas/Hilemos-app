@@ -91,6 +91,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
         : (u.email || "").toLowerCase(),
       // Sin cuenta: la sesión anónima y la cuenta interna de la clave de acceso (sin Google).
       anon: isKeyOnly(u),
+      hasName: !!u.displayName || (u.isAnonymous && !!anonName),
     };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
@@ -386,7 +387,7 @@ export function createDemoStore(): Store {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "anon";
   // Sesiones demo guardadas antes de existir el correo.
   if (user && !user.email) user = { ...user, email: slug(user.name) + "@demo.test" };
-  if (user) user = { ...user, anon: false };
+  if (user) user = { ...user, anon: false, hasName: true };
 
   return {
     mode: "demo",
@@ -398,7 +399,7 @@ export function createDemoStore(): Store {
     async signIn(opts) {
       const name = opts?.name || "Alguien";
       // En el modo demo el correo de cada persona es "<nombre>@demo.test" (para probar las votaciones privadas).
-      setUser({ uid: "demo-" + slug(name), name, photo: "", email: slug(name) + "@demo.test", anon: false });
+      setUser({ uid: "demo-" + slug(name), name, photo: "", email: slug(name) + "@demo.test", anon: false, hasName: true });
     },
     // El modo demo no tiene cuentas: su entrada con un nombre ya es la sesión completa.
     async linkGoogle() { throw fail("unavailable"); },

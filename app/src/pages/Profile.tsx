@@ -124,7 +124,7 @@ export function Profile() {
     try {
       const thumb = await makeThumb(photo);
       await store.saveProfile(user.uid, { name: n, photo, thumb, updatedAt: Date.now() });
-      updateUser({ name: n, photo, thumb });
+      updateUser({ name: n, photo, thumb, needsName: false });
 
       // El nombre y la miniatura van copiados en cada voto (así abrir una votación no lee perfiles):
       // si han cambiado, se actualizan en las votaciones del menú. Es raro, y cuesta una escritura por votación.
