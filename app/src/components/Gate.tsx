@@ -101,8 +101,8 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
           </form>
         ) : (
           <>
-            {/* Al pedir la clave solo se ve su formulario: Google despistaría (es otra cuenta distinta). */}
-            {mode !== "key" && (
+            {/* Al pedir el correo o la clave solo se ve su formulario: Google despistaría (es otra forma de entrar). */}
+            {mode === "main" && (
               <button className="google-btn" id="login" onClick={login}>
                 <GoogleIcon />
                 Entrar con Google
