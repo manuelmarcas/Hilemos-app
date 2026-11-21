@@ -33,7 +33,19 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   const login = async () => {
     setStatus("");
     try { await store.signIn(); }
-    catch (e) { setStatus("No se pudo iniciar sesión. " + errMsg(e)); }
+    catch (e) {
+      const err = e as { code?: string; customData?: { email?: string } };
+      // Ese correo ya tiene cuenta creada con el enlace (y no es de Gmail, así que Firebase no las junta solo):
+      // se lleva al formulario del correo, ya relleno, para entrar con él.
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        setMode("email");
+        setSentTo("");
+        if (err.customData?.email) setEmail(err.customData.email);
+        setStatus("Ya tienes una cuenta de Hilemos con ese correo, creada con «Entrar con tu correo». Entra con esa opción: ahí están tus votaciones.");
+        return;
+      }
+      setStatus("No se pudo iniciar sesión. " + errMsg(e));
+    }
   };
 
   const demoLogin = async (e: FormEvent) => {

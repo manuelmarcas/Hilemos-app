@@ -7,6 +7,7 @@ const ERRORS: Record<string, string> = {
   "unavailable": "Sin conexión con el servidor. Comprueba tu conexión a internet.",
   "not-found": "La votación ya no existe.",
   "auth/popup-closed-by-user": "Has cerrado la ventana de Google antes de terminar.",
+  "auth/account-exists-with-different-credential": "Ya tienes una cuenta de Hilemos con ese correo, creada con «Entrar con tu correo». Entra con esa opción: ahí están tus votaciones.",
   "auth/popup-blocked": "El navegador ha bloqueado la ventana de Google. Permite las ventanas emergentes e inténtalo de nuevo.",
   "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication (Configuración > Dominios autorizados).",
   "auth/operation-not-allowed": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
