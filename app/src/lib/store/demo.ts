@@ -249,6 +249,8 @@ export function createDemoStore(): Store {
       if (msg.uid !== user?.uid) throw fail("permission-denied");
       if (db.votes[id]?.[msg.uid]?.status) throw fail("permission-denied"); // pendiente o rechazado: no escribe
       if (db.polls[id].ownerUid !== msg.uid && !db.votes[id]?.[msg.uid]) throw fail("permission-denied");
+      // Los avisos de cambios solo los escribe quien administra la votación.
+      if (msg.sys && !isAdmin(db.polls[id], msg.uid)) throw fail("permission-denied");
       const text = msg.text.trim();
       if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
       ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };

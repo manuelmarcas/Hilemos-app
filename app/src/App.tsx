@@ -8,6 +8,8 @@ import { SessionProvider } from "./state/session";
 import { Gate } from "./components/Gate";
 import { Shell } from "./components/Shell";
 import { EmailLinkFinish } from "./components/EmailLinkFinish";
+import { LegalStandalone } from "./pages/Legal";
+import { legalDoc, useHashPath } from "./state/route";
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo") || !firebaseConfig?.apiKey;
@@ -35,6 +37,8 @@ export function App() {
   const [bootError, setBootError] = useState("");
   // undefined: aún no se sabe si hay sesión.
   const [user, setUser] = useState<User | null | undefined>(undefined);
+  // La privacidad y las condiciones se leen también sin entrar (están enlazadas desde la entrada).
+  const legal = legalDoc(useHashPath());
 
   // Enlace de entrada por correo pendiente de completar (abierto en la web o, en la app, recibido por appUrlOpen).
   const [emailLink, setEmailLink] = useState<string | null>(null);
@@ -84,7 +88,7 @@ export function App() {
   else if (emailLink) {
     content = <EmailLinkFinish store={store} url={emailLink} onDone={() => setEmailLink(null)} />;
   }
-  else if (!user) content = <Gate store={store} demo={DEMO} />;
+  else if (!user) content = legal ? <LegalStandalone doc={legal} /> : <Gate store={store} demo={DEMO} />;
   else {
     content = (
       <SessionProvider key={user.uid} store={store} demo={DEMO} user={user} updateUser={updateUser}>

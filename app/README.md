@@ -105,6 +105,32 @@ el menú lateral y la propia votación.
 - La plantilla viaja en memoria (`src/state/duplicate.ts`) y solo vale para esa navegación: si se recarga la página,
   «Nueva votación» sale en blanco en vez de con una copia vieja.
 
+## Editar una votación
+
+- Menú ⋯ → **Editar votación** (`#/v/<id>/editar`, `src/pages/poll/EditPoll.tsx`): abre la pantalla de «Nueva
+  votación» en modo edición (`Create` con `edit`), con la plantilla de `editTemplate` (todo lo que tiene, también lo
+  pasado, y los ids de sus opciones para que renombrar una no la convierta en otra).
+- Siempre se cambian el nombre y la descripción. Sin desempate, también lo que se vota: se puede añadir, pero no
+  quitar nada que tenga votos (`lockedSlots`, `lockedOpts` y `lockedHours`, con un punto en el calendario). Antes de
+  guardar se comprueba otra vez con los votos de ese momento (`lostVotedUnit` en `model.ts`). Las opciones nuevas
+  toman un id que la votación no haya usado nunca.
+- No se cambian el tipo (para eso, duplicar), el modo de las horas ni la duración de las franjas; el acceso, el plazo
+  y la privacidad tienen su sitio en la propia votación.
+- Se guarda solo lo que cambia y cada cambio va al chat como aviso (`sys: true`, frases de `src/lib/changes.ts`),
+  que se pinta como una línea centrada con el nombre de quien lo hizo.
+- Las reglas dejan cambiar `months`, `slots`, `hours`, `hourStep`, `hoursByDay` y `options` solo a los
+  administradores y sin desempate, con la misma forma que al crear (`validShape`). No pueden comprobar los votos
+  (habría que leerlos todos), así que «no quitar lo que tiene votos» lo hace la app.
+
+## Votaciones de opciones libres
+
+- Tipo `options`: una lista de 2 a 30 opciones (`MIN_CHOICES`, `MAX_CHOICES`), cada una con nombre (obligatorio,
+  sin repetir) y emoji opcional; sin emoji se guarda ⚪ (`DEFAULT_CHOICE_ICON`). Sin meses, días ni horas.
+- Se guardan en `options` (`{ id, name, icon }`, ids `c1`, `c2`…) y sus ids son también las casillas (`slots`), con
+  la opción única `v`: los votos son `"c1|v"`. Así el recuento, el ranking, el desempate, la imagen del resultado y
+  la tabla de participantes funcionan igual que en el resto de tipos. No tienen «Añadir al calendario».
+- Se vota en tarjetas (`BoardOptions`), varias a la vez.
+
 ## Votaciones de horas
 
 Al crear una votación de horas se alterna entre dos modos:
@@ -304,12 +330,19 @@ Qué avisa y a quién (cada persona puede apagar cada tipo en «Tu perfil → Pr
 - **Al creador**: alguien vota por primera vez (no en cada cambio, que sería un aviso por clic) y alguien pide entrar
   en una votación con aprobación.
 - **A quien pidió entrar**: le han aceptado.
-- **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate ya tiene ganadora y
-  se acaba el plazo para votar.
+- **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate termina («Ya hay
+  resultado definitivo» si tiene ganadora) y se acaba el plazo para votar.
 
-Piezas: `public/firebase-messaging-sw.js` (pinta el aviso; no carga el SDK porque las functions mandan mensajes solo
-de datos), `src/lib/push.ts` (permiso y token), los tokens en `users/{uid}/tokens/{token}` y las preferencias en
-`users/{uid}.notify`. Las reglas actuales de `users/{uid}/{document=**}` ya cubren las dos cosas: **no hay que tocar
+Piezas: `public/firebase-messaging-sw.js` (pinta el aviso en el navegador; no carga el SDK porque las functions le
+mandan mensajes solo de datos), `src/lib/push.ts` (permiso y token, en la web y en Android), los tokens en
+`users/{uid}/tokens/{token}` (con `platform: "android"` los de la app) y las preferencias en `users/{uid}.notify`.
+
+**App de Android**: usa el plugin `@capacitor/push-notifications` (el WebView no tiene avisos web). Ya está
+instalado y configurado: `google-services.json`, el icono pequeño `res/drawable/ic_stat_hilemos.xml`, el color y el
+canal «avisos» en el `AndroidManifest.xml` (la app crea el canal al activarlos). A los tokens de Android las functions
+les mandan el aviso con bloque `notification`, para que Android lo pinte aunque la app esté cerrada; al pulsarlo se
+abre la votación (`initNativePushTaps`). Android 13+ pide permiso al activarlos. Se encienden a la vez que en la web,
+con `fcmVapidKey`, así que hay que generar una versión nueva de la app (`npm run android`) después de rellenarla. Las reglas actuales de `users/{uid}/{document=**}` ya cubren las dos cosas: **no hay que tocar
 `firestore.rules`**.
 
 Para activarlos:
@@ -326,7 +359,13 @@ Para activarlos:
    ```
    La del plazo (`onDeadline`) es programada: usa Cloud Scheduler, que se activa solo al desplegarla (gratis hasta
    3 tareas por cuenta de facturación). Si no la quieres, bórrala de `functions/index.js` antes de desplegar.
-4. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
+4. **App de Android**: con la clave ya en `config.ts`, `npm run android` y subir la versión nueva.
+5. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
+
+Qué es gratis con Blaze (cuotas de cada mes): los envíos de Firebase Cloud Messaging, sin límite; Cloud Functions,
+2 millones de invocaciones y su tiempo de cálculo; Cloud Scheduler, 3 tareas; Artifact Registry (donde se guardan las
+functions desplegadas), 0,5 GB. Las lecturas que hacen las functions cuentan en el margen diario de Firestore (50.000
+lecturas). `onVoteWritten` no lee nada salvo cuando hay que avisar, porque salta con cada casilla que se pulsa.
 
 **iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
 Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de

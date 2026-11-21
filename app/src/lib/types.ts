@@ -1,7 +1,12 @@
 // Tipos del modelo de datos (ver README: "Modelo de datos (Firestore)").
 
-export type PollType = "hours" | "days" | "weeks" | "months";
+export type PollType = "hours" | "days" | "weeks" | "months" | "options";
 
+/**
+ * Opción de una votación. En las de días, las opciones de cada día (comida, cena…; como mucho MAX_OPTIONS). En las
+ * de opciones libres («options»), cada una de las opciones que se votan (restaurante, destino…; como mucho
+ * MAX_CHOICES), y sus ids son también las casillas (`slots`).
+ */
 export interface PollOption {
   id: string;
   name: string;
@@ -105,6 +110,9 @@ export interface ChatMessage {
   name: string;
   text: string;
   at: number;
+  /** Aviso automático de un cambio en la votación (lo escribe un administrador al editarla). `text` va sin sujeto
+   *  («ha añadido el …»): se pinta detrás del nombre de quien lo hizo. */
+  sys?: boolean;
 }
 
 export type MemberStatus = "accepted" | "pending" | "rejected";

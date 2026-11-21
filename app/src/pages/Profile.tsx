@@ -59,7 +59,7 @@ export function Profile() {
         setPush("on");
         toast("Avisos activados en este dispositivo");
       } else {
-        setPush(Notification.permission === "denied" ? "denied" : "off");
+        setPush(await pushState(store)); // sin permiso: bloqueados o sin activar
       }
     } catch (e) {
       setStatus("No se pudieron cambiar los avisos. " + errMsg(e));
@@ -311,6 +311,14 @@ export function Profile() {
               )}
             </div>
           )}
+        </section>
+        <section className="step">
+          <h2>Privacidad y condiciones</h2>
+          <p className="hint">Qué datos guarda Hilemos, para qué y qué puedes hacer con ellos, y las normas de uso de la app.</p>
+          <div className="pf-legal">
+            <a className="btn" href="#/privacidad"><Icon name="lock" /> Política de privacidad</a>
+            <a className="btn" href="#/condiciones"><Icon name="vote" /> Condiciones de uso</a>
+          </div>
         </section>
         <section className="step pf-danger">
           <h2>Eliminar mi cuenta</h2>

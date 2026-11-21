@@ -3,6 +3,7 @@
 #gate{
   min-height:90vh;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   padding:24px 16px;
@@ -60,3 +61,5 @@
 .gate-switch{justify-self:center;display:inline-flex;align-items:center;gap:4px}
 .key-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
 .key-input::placeholder{letter-spacing:.08em}
+/* Debajo de la tarjeta de entrada: los enlaces a las condiciones y la privacidad */
+.gate-legal{max-width:420px;margin:16px 0 0;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.5}

@@ -13,6 +13,7 @@ export function instructions(poll: Poll, T: Tally) {
         : `Cada día disponible tiene ${T.opts.length} opciones (de arriba abajo: ${T.opts.map(o => `${o.icon} ${o.name}`).join(", ")}). Pulsa en las que te vengan bien.`;
     case "weeks": return "Pulsa en las semanas que te vengan bien.";
     case "months": return "Pulsa en los meses que te vengan bien.";
+    case "options": return "Pulsa en las opciones que te gusten. Puedes elegir varias.";
     case "hours": {
       if (poll.hourList) return "Pulsa en las horas que te vengan bien.";
       const step = poll.hourStep || 60;

@@ -94,7 +94,11 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   };
 
   return (
-    <GateCard>
+    <GateCard footer={
+      <p className="gate-legal">
+        Al entrar aceptas las <a href="#/condiciones">condiciones de uso</a> y la <a href="#/privacidad">política de privacidad</a>.
+      </p>
+    }>
       <p>
         {invited
           ? demo

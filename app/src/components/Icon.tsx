@@ -18,12 +18,15 @@ const ICONS = {
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
   plus: <path d="M12 5v14M5 12h14" />,
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  edit: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4" />,
 
   // Tipos de votación
   hours: <><circle cx="12" cy="12.5" r="8.5" /><path d="M12 8v4.5l3 2M5 3.5 3 5.5M19 3.5l2 2" /></>,
   days: cal(<rect x="10" y="13" width="4" height="4" rx="1.2" fill="currentColor" stroke="none" />),
   weeks: cal(<rect x="6.5" y="13.2" width="11" height="3.6" rx="1.4" fill="currentColor" stroke="none" />),
   months: cal(<>{dot(8, 13.5)}{dot(12, 13.5)}{dot(16, 13.5)}{dot(8, 17)}{dot(12, 17)}{dot(16, 17)}</>),
+  options: <>{dot(5, 7, 1.3)}{dot(5, 12, 1.3)}{dot(5, 17, 1.3)}<path d="M9.5 7H20M9.5 12H20M9.5 17h7" /></>,
   calendarAdd: cal(<path d="M12 12.5v5M9.5 15h5" />),
   vote: <><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M8.5 12.5l2.5 2.5 4.5-5.5" /></>,
 

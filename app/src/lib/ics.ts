@@ -22,6 +22,7 @@ const HOUR_FALLBACK = 60; // duración de una hora suelta, que no tiene fin prop
 
 /** Evento de la casilla `unit` ("<casilla>|<opción>"), o null si no se puede interpretar. */
 export function calendarEvent(poll: PollData, id: string, unit: string, url: string): CalEvent | null {
+  if (poll.type === "options") return null; // las opciones libres no tienen fecha
   const { slot, optId } = unitParts(unit);
   const opt = pollOptions(poll).find(o => o.id === optId);
   const name = poll.type === "days" && opt?.name ? `${opt.icon} ${opt.name}`.trim() : "";

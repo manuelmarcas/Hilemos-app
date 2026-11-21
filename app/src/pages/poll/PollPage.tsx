@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, withTiebreakAdjusted,
+  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, withTiebreakAdjusted, isFinal, repeatCandidates,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -17,9 +17,9 @@ import { useDuplicate } from "../../state/duplicate";
 import { RemindMissing } from "../../components/RemindMissing";
 import { Chat } from "../../components/Chat";
 import { Icon } from "../../components/Icon";
-import { BoardDays, BoardHours, BoardMonths, BoardWeeks, type BoardProps } from "./Boards";
+import { BoardDays, BoardHours, BoardMonths, BoardOptions, BoardWeeks, type BoardProps } from "./Boards";
 import { Legend, Summary, instructions } from "./Summary";
-import { TiebreakCard, TiebreakGuard, TiebreakSolvedNote } from "./Tiebreak";
+import { TiebreakCard, TiebreakGuard, TiebreakSolvedNote, unitText } from "./Tiebreak";
 import { GonePeople, PeopleList, PeopleTable, type PeopleFilter } from "./People";
 import { AccessPanel, BlockedView, Requests, WaitingView } from "./Access";
 import { CalendarMenu, OwnerMenu } from "./Menus";
@@ -248,7 +248,12 @@ export function PollPage({ id }: { id: string }) {
 
   // ---------- Gestión: lo que hacen los administradores (y, lo marcado, solo el creador) ----------
 
+  // Con un desempate finalizado el resultado es definitivo: no se reabre (el menú ni lo ofrece; las reglas tampoco).
+  const tbDone = !!poll.tiebreak?.done;
+  const final = isFinal(TB);
+
   const closeOrReopen = () => act(async () => {
+    if (poll.closed && tbDone) return;
     if (!poll.closed && !(await confirm({
       title: "¿Cerrar la votación?",
       message: "Nadie podrá votar ni cambiar sus votos. Los resultados seguirán visibles y podrás reabrirla cuando quieras.",
@@ -290,31 +295,41 @@ export function PollPage({ id }: { id: string }) {
   });
 
   const tbFinish = () => act(async () => {
-    if (!(await confirm({
+    if (!TB) return;
+    // Con una sola en cabeza, al finalizar queda como resultado definitivo; si no, solo se podrá repetir.
+    const lead = TB.leaders.length === 1 ? unitText(view, T, TB.leaders[0]) : null;
+    if (!(await confirm(lead ? {
       title: "¿Finalizar el desempate?",
-      message: "Ya no se podrá votar en él y se mostrará el resultado.",
-      confirmLabel: "Finalizar",
+      message: `Ganará «${lead}» y quedará marcada definitivamente como la opción ganadora: en cuanto lo finalices ya no se podrá votar en el desempate, ni volver a abrirlo, ni reabrir la votación. Se avisará a todos del resultado.`,
+      confirmLabel: "Finalizar: es definitivo",
+    } : {
+      title: "¿Finalizar el desempate sin ganadora?",
+      message: `${TB.total ? "Ahora mismo sigue el empate" : "Nadie ha votado todavía en el desempate"}, así que no habrá ganadora. Ya no se podrá votar en esta ronda ni reabrir la votación: solo podrás repetir el desempate.`,
+      confirmLabel: "Finalizar sin ganadora",
+      danger: true,
     }))) return;
     await store.updatePoll(id, { tiebreak: { ...view.tiebreak!, done: true, finishedAt: Date.now() } });
     toast("Desempate finalizado");
   });
 
   const tbRepeat = () => act(async () => {
-    if (!TB || TB.leaders.length < 2) return;
+    if (!TB || final) return;
+    const cands = repeatCandidates(TB);
     if (!(await confirm({
       title: "¿Repetir el desempate?",
-      message: `Nueva ronda solo entre las ${TB.leaders.length} opciones que siguen empatadas. Cada persona vuelve a elegir una.`,
+      message: `Nueva ronda solo entre las ${cands.length} opciones ${TB.leaders.length > 1 ? "que siguen empatadas" : "del desempate"}. Cada persona vuelve a elegir una.`,
       confirmLabel: "Repetir desempate",
     }))) return;
-    await store.updatePoll(id, { tiebreak: { id: Date.now(), candidates: TB.leaders, done: false, round: (poll.tiebreak?.round || 1) + 1 }, ...clearTbNote });
+    await store.updatePoll(id, { tiebreak: { id: Date.now(), candidates: cands, done: false, round: (poll.tiebreak?.round || 1) + 1 }, ...clearTbNote });
     toast("Nueva ronda de desempate");
   });
 
   const tbCancel = () => act(async () => {
+    if (tbDone) return; // finalizado ya no se quita
     if (!(await confirm({
-      title: poll.tiebreak?.done ? "¿Quitar el desempate?" : "¿Anular el desempate?",
+      title: "¿Anular el desempate?",
       message: "Se borrará el desempate y sus votos. La votación principal seguirá cerrada; puedes reabrirla si quieres.",
-      confirmLabel: poll.tiebreak?.done ? "Quitar" : "Anular",
+      confirmLabel: "Anular",
       danger: true,
     }))) return;
     await store.updatePoll(id, { tiebreak: null, ...clearTbNote });
@@ -384,6 +399,7 @@ export function PollPage({ id }: { id: string }) {
     weeks: <BoardWeeks {...boardProps} />,
     months: <BoardMonths {...boardProps} />,
     hours: <BoardHours {...boardProps} />,
+    options: <BoardOptions {...boardProps} />,
   }[poll.type];
 
   return (
@@ -404,7 +420,9 @@ export function PollPage({ id }: { id: string }) {
             <h1>{poll.title}</h1>
             {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
-                onCloseOrReopen={closeOrReopen} onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
+                onCloseOrReopen={poll.closed && tbDone ? undefined : closeOrReopen}
+                onEdit={() => navigate(`/v/${id}/editar`)}
+                onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
                 onDuplicate={() => duplicate(poll)}
                 onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
             )}
@@ -426,11 +444,15 @@ export function PollPage({ id }: { id: string }) {
       </div>
       {admin && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
       {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
-      {poll.closed && (
+      {poll.closed && (final ? (
+        <div className="closed-banner final">
+          <Icon name="trophy" /> Resultado definitivo: <strong>{unitText(view, T, TB!.leaders[0])}</strong>. La votación está cerrada y ya no se puede reabrir.
+        </div>
+      ) : (
         <div className="closed-banner">
           <Icon name="lock" /> Votación cerrada: ya no se pueden cambiar los votos{TB && !TB.done ? ". Hay un desempate abierto justo debajo" : ""}.
         </div>
-      )}
+      ))}
       {!poll.closed && expired && (
         <div className="closed-banner">
           <Icon name="hourglass" /> Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.

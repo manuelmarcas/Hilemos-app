@@ -23,10 +23,16 @@ export const TYPES: TypeInfo[] = [
   { id: "days", icon: "days", emoji: "📅", name: "Días", unit: ["día", "días"], desc: "Días concretos, con hasta 4 opciones por día" },
   { id: "weeks", icon: "weeks", emoji: "🗓️", name: "Semanas", unit: ["semana", "semanas"], desc: "Semanas completas, de lunes a domingo" },
   { id: "months", icon: "months", emoji: "📆", name: "Meses", unit: ["mes", "meses"], desc: "Meses completos" },
+  { id: "options", icon: "options", emoji: "🗳️", name: "Opciones", unit: ["opción", "opciones"], desc: "Una lista libre, sin fechas: restaurante, regalo, destino…" },
 ];
 export const TYPE = Object.fromEntries(TYPES.map(t => [t.id, t])) as Record<PollType, TypeInfo>;
 
 export const MAX_OPTIONS = 4;
+/** Opciones de una votación de opciones libres: como poco 2 y como mucho MAX_CHOICES. */
+export const MIN_CHOICES = 2;
+export const MAX_CHOICES = 30;
+/** Icono de una opción libre a la que no se le ha elegido ninguno: neutro, para que no sugiera nada. */
+export const DEFAULT_CHOICE_ICON = "⚪";
 export const TOP_N = 5; // opciones que se muestran en "más votadas"
 
 // ----- Quién puede unirse -----
@@ -119,8 +125,16 @@ export function hoursForDay(poll: PollData, day: string): string[] {
   return poll.hours || [];
 }
 
+/** Opción libre de la casilla `slot` (en las votaciones de opciones libres, cada casilla es una opción). */
+export const choiceOf = (poll: PollData, slot: string) => poll.options?.find(o => o.id === slot);
+const choiceText = (poll: PollData, slot: string) => {
+  const c = choiceOf(poll, slot);
+  return c ? `${c.icon || DEFAULT_CHOICE_ICON} ${c.name}` : "Opción";
+};
+
 // Claves de cada casilla votable (sin la opción).
 export function slotKeys(poll: PollData) {
+  if (poll.type === "options") return (poll.options || []).map(o => o.id);
   if (poll.type === "hours") return poll.slots.flatMap(d => hoursForDay(poll, d).map(h => `${d}T${h}`));
   return poll.slots;
 }
@@ -135,6 +149,7 @@ export function slotLabel(poll: PollData, slot: string) {
     }
     case "weeks": return D.fmtWeek(slot);
     case "months": return D.cap(D.fmtMonth(slot));
+    case "options": return choiceText(poll, slot);
     default: return D.cap(D.fmtDayLong(slot));
   }
 }
@@ -172,12 +187,38 @@ export interface Tally {
   people: Person[];
 }
 
+/** Claves que se pueden votar ("<casilla>|<opción>"). */
+export function validUnits(poll: PollData) {
+  const opts = pollOptions(poll);
+  const valid = new Set<string>();
+  slotKeys(poll).forEach(s => opts.forEach(o => valid.add(unitKey(s, o.id))));
+  return valid;
+}
+
+/** «🍽️ Comida · Viernes 18 de diciembre» (o solo la casilla, si la votación no es de días). */
+export function unitLabel(poll: PollData, u: string) {
+  const { slot, optId } = unitParts(u);
+  const o = poll.type === "days" ? pollOptions(poll).find(x => x.id === optId) : null;
+  return o ? `${o.icon} ${o.name} · ${slotLabel(poll, slot)}` : slotLabel(poll, slot);
+}
+
+/**
+ * Al editar una votación: la primera casilla con votos que desaparece con el cambio de `old` a `next` (o null). Lo
+ * que ya tiene votos no se puede quitar. Solo cuentan los votos a casillas que existían.
+ */
+export function lostVotedUnit(old: PollData, next: PollData, votes: Votes): string | null {
+  const before = validUnits(old), after = validUnits(next);
+  for (const v of Object.values(votes)) {
+    for (const p of v?.picks || []) if (before.has(p) && !after.has(p)) return p;
+  }
+  return null;
+}
+
 // Recuento de votos: por casilla+opción, mejores casillas y resumen por persona.
 export function tally(poll: PollData, votes: Votes): Tally {
   const opts = pollOptions(poll);
   const slots = slotKeys(poll);
-  const valid = new Set<string>();
-  slots.forEach(s => opts.forEach(o => valid.add(unitKey(s, o.id))));
+  const valid = validUnits(poll);
 
   const counts: Record<string, number> = {};
   const voters: Record<string, string[]> = {}; // casilla+opción -> [uid]
@@ -273,6 +314,16 @@ export function tiebreakTally(poll: Poll, votes: Votes): TiebreakTally | null {
   return { ...tb, counts, voters, max, leaders, total };
 }
 
+/**
+ * El desempate terminó con una sola ganadora: es el resultado definitivo. Ya no se puede reabrir la votación ni el
+ * desempate (las reglas no dejan reabrir ninguna votación con un desempate finalizado).
+ */
+export const isFinal = (TB: TiebreakTally | null) => !!TB?.done && TB.leaders.length === 1;
+/** Desempate finalizado sin ganadora única (sigue el empate o nadie votó): solo se puede repetir. */
+export const tiebreakUnsolved = (TB: TiebreakTally | null) => !!TB?.done && TB.leaders.length !== 1;
+/** Entre qué opciones se repite un desempate sin ganadora: las que siguen empatadas o, si nadie votó, las mismas. */
+export const repeatCandidates = (TB: TiebreakTally) => (TB.leaders.length > 1 ? TB.leaders : TB.candidates);
+
 export const unitParts = (u: string) => { const i = u.lastIndexOf("|"); return { slot: u.slice(0, i), optId: u.slice(i + 1) }; };
 
 // Etiqueta corta de una casilla, para listas compactas: "lun 22 dic", "S52 · 21–27 dic"…
@@ -281,6 +332,7 @@ export function slotShort(poll: PollData, slot: string) {
     case "hours": { const [d, h] = slot.split("T"); return `${D.fmtDayShort(d)} ${h}`; }
     case "weeks": return `S${D.isoWeek(D.parseDay(slot))} · ${D.fmtWeekRange(slot)}`;
     case "months": return D.cap(D.fmtMonth(slot));
+    case "options": return choiceText(poll, slot);
     default: return D.fmtDayShort(slot);
   }
 }
@@ -297,6 +349,8 @@ export function pollMeta(poll: PollData) {
     } else {
       parts.push(plural(poll.hours?.length || 0, ["franja", "franjas"]) + " por día");
     }
+  } else if (poll.type === "options") {
+    parts.push(plural(poll.options?.length || 0, t.unit));
   } else {
     parts.push(plural(poll.slots.length, t.unit));
   }
@@ -306,6 +360,7 @@ export function pollMeta(poll: PollData) {
 
 // Texto con el periodo en el que se puede votar.
 export function pollRange(poll: PollData) {
+  if (poll.type === "options") return `Se elige entre ${plural(poll.options?.length || 0, ["opción", "opciones"])}.`;
   const s = [...poll.slots].sort();
   if (!s.length) return "";
   const first = s[0], last = s[s.length - 1];

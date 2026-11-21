@@ -21,7 +21,8 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
 
 - **Crear votaciones** con:
   1. Nombre (y descripción opcional).
-  2. Tipo: **horas**, **días**, **semanas** o **meses**.
+  2. Tipo: **horas**, **días**, **semanas**, **meses** u **opciones** (una lista libre, sin fechas: restaurante,
+     regalo, destino…; de 2 a 30, cada una con su nombre y, si se quiere, un emoji; sin emoji se pone ⚪).
   3. Los meses en los que estará la votación (pueden ser de años distintos).
   4. Los días (o semanas) concretos que se podrán votar dentro de esos meses. El resto aparecen bloqueados.
      Hay atajos (todos, ninguno, lunes a viernes, fines de semana) y, en ordenador, Mayús + clic marca un rango.
@@ -50,8 +51,16 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
   comparten puesto).
 - **Desempate**: si hay varias opciones empatadas en el primer puesto, el creador puede abrir un desempate.
   La votación principal se cierra y cada participante elige **una sola** de las empatadas (puede cambiarla mientras
-  esté abierto). El creador lo finaliza, puede repetirlo entre las que sigan empatadas o anularlo; la ganadora se
-  marca en el ranking. Reabrir la votación principal anula el desempate.
+  esté abierto). Mientras está abierto se puede anular (y reabrir la votación, que también lo anula). **Finalizarlo
+  es definitivo**: la confirmación avisa de que la ganadora queda marcada para siempre, y desde entonces no se puede
+  reabrir ni la votación ni el desempate (lo impiden también las reglas). Arriba sale «Resultado definitivo: …» y se
+  avisa a todos. Si se finaliza sin ganadora (sigue el empate o nadie votó), solo se puede repetir entre esas mismas
+  opciones.
+- **Editar una votación** (menú ⋯ → «Editar votación», solo administradores): nombre y descripción siempre; sin
+  desempate, también se pueden **añadir** días, semanas, meses, horas u opciones, pero **no quitar lo que ya tiene
+  algún voto** (un día con un voto, o una opción con un voto en cualquier día, semana, mes u hora). Lo que tiene votos
+  lleva un punto y no se deja quitar. El tipo de votación no se cambia: para eso está «Duplicar». Cada cambio deja un
+  **aviso en el chat** («Ana ha añadido el viernes 18 de diciembre», «… ha cambiado el título…»).
 - **Votos visibles o anónimos** (se elige al crearla). Con votos visibles, en la tabla de participantes se pulsa
   un nombre para ver qué ha votado esa persona, y en "opciones más votadas" se puede desplegar quién las votó.
   En las anónimas solo se ven los totales y si cada persona ha votado. El creador puede hacer anónima una votación
@@ -80,6 +89,8 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
 - Quien sale de una votación que creó la cede a un administrador al azar o, si no hay, a otro participante (si no
   queda nadie, se borra). Quien la hereda es su **«Delegado»**, con todos los poderes del creador. Quien se fue
   (`gone` en su voto) no hereda, no se le cuenta como «falta por votar» ni aparece en las solicitudes.
+- **Política de privacidad y condiciones de uso** en `#/privacidad` y `#/condiciones` (`app/src/pages/Legal.tsx`):
+  enlazadas desde la entrada y desde «Tu perfil», y se leen también sin entrar.
 - **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sale de cada votación de su lista como con
   «Salir de la votación» y se borran su perfil, su lista, sus grupos y la cuenta. Firebase pide haber entrado hace
   poco: con Google se vuelve a pedir la cuenta; con correo o clave, si hace rato, hay que salir y volver a entrar.
@@ -111,8 +122,9 @@ index.html        Redirección de GitHub Pages a la dirección única
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana, meses votables o, en las de opciones, los ids de las opciones), `hours` y `hourStep` (solo horas), `options` (opciones de cada día en las de días; las opciones libres en las de `type: "options"`), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
+| `polls/{pollId}/chat/{msgId}` | Mensajes del chat: `uid`, `name`, `text`, `at` y `sys` (aviso automático de un cambio al editar la votación; solo lo escriben los administradores) |
 | `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `updatedAt` |
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |
 | `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |

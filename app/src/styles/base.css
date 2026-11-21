@@ -54,6 +54,7 @@ button.opt:not(:disabled):not(.on):hover{background:var(--hover)}
 button.wrow:not(:disabled):not(.on):hover{background:var(--hover)}
 button.mtile:not(:disabled):not(.on):hover{background:var(--hover)}
 button.hcell:not(:disabled):not(.on):hover{background:var(--hover)}
+button.choice:not(:disabled):not(.on):hover{background:var(--hover)}
 
 /* ---------- Iconos (Icon.tsx) ---------- */
 /* SVG de trazo en el color del texto que los rodea; se ajustan al tamaño de letra. */

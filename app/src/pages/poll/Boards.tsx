@@ -1,8 +1,9 @@
-// Tableros para votar, uno por tipo de votación: calendario de días (con sus opciones), semanas, meses y horas.
+// Tableros para votar, uno por tipo de votación: calendario de días (con sus opciones), semanas, meses, horas y
+// opciones libres.
 // Cada casilla votable es un botón con su recuento; «on» es mi voto y «best» la más votada de su opción.
 import type { ReactNode } from "react";
 import * as D from "../../lib/dates";
-import { hoursForDay, slotLabel, unitKey, type Tally } from "../../lib/model";
+import { DEFAULT_CHOICE_ICON, hoursForDay, slotLabel, unitKey, type Tally } from "../../lib/model";
 import type { Poll } from "../../lib/types";
 import { cls } from "../../lib/util";
 
@@ -154,6 +155,25 @@ export function BoardHours({ poll, T, mine, canVote, onVote }: BoardProps) {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+export function BoardOptions({ poll, T, mine, canVote, onVote }: BoardProps) {
+  return (
+    <div className="choices-card">
+      <div className="choices">
+        {(poll.options || []).map(o => {
+          const u = unitKey(o.id, "v");
+          return (
+            <VoteBtn key={o.id} base="choice" u={u} T={T} mine={mine} enabled={canVote} label={o.name} onVote={onVote}>
+              <span className="choice-icon" aria-hidden="true">{o.icon || DEFAULT_CHOICE_ICON}</span>
+              <span className="choice-name">{o.name}</span>
+              <Count T={T} u={u} />
+            </VoteBtn>
+          );
+        })}
       </div>
     </div>
   );

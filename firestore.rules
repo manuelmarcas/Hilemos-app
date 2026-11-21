@@ -52,12 +52,8 @@ service cloud.firestore {
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 120
-        && request.resource.data.type in ['hours', 'days', 'weeks', 'months']
-        && request.resource.data.slots is list
-        && request.resource.data.slots.size() > 0
-        && request.resource.data.slots.size() <= 400
-        && request.resource.data.options is list
-        && request.resource.data.options.size() <= 4
+        && request.resource.data.type in ['hours', 'days', 'weeks', 'months', 'options']
+        && validShape(request.resource.data)
         && (!('anonymous' in request.resource.data) || request.resource.data.anonymous is bool)
         && (!('approval' in request.resource.data) || request.resource.data.approval is bool)
         && (!('emailsOnly' in request.resource.data) || request.resource.data.emailsOnly is bool)
@@ -72,18 +68,43 @@ service cloud.firestore {
 
       allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());
 
-      // Los administradores (creador y nombrados) pueden cerrar/reabrir, cambiar título o descripción, hacerla
-      // anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate y su aviso (tbNote),
-      // el plazo para votar, el tope de personas y el contador (al aceptar o rechazar solicitudes). Solo el creador
-      // cambia su nombre visible, nombra o quita administradores y pasa la votación a otra persona (al salir de
-      // ella o eliminar su cuenta).
+      // Qué se vota: casillas y opciones. Las de días tienen como mucho 4 opciones por día; las de opciones libres
+      // («options»), de 2 a 30, y sus casillas son esas mismas opciones.
+      function validShape(d) {
+        return d.slots is list && d.slots.size() > 0 && d.slots.size() <= 400
+          && d.options is list
+          && (d.type == 'options'
+              ? d.options.size() >= 2 && d.options.size() <= 30 && d.slots.size() == d.options.size()
+              : d.options.size() <= 4)
+          && (!('months' in d) || (d.months is list && d.months.size() <= 60));
+      }
+
+      // Los administradores (creador y nombrados) pueden cerrar/reabrir, editarla (título, descripción y, sin
+      // desempate, lo que se vota; nunca el tipo), hacerla anónima (nunca al revés, para no destapar votos hechos
+      // como anónimos), el desempate y su aviso (tbNote), el plazo para votar, el tope de personas y el contador (al
+      // aceptar o rechazar solicitudes). Solo el creador cambia su nombre visible, nombra o quita administradores y
+      // pasa la votación a otra persona (al salir de ella o eliminar su cuenta).
+      // Al editar, la app no deja quitar lo que ya tiene votos (las reglas no pueden leer todos los votos).
       function ownerUpdate() {
         let d = request.resource.data;
         let old = resource.data;
         let keys = d.diff(old).affectedKeys();
         let creator = old.ownerUid == request.auth.uid;
         return isAdminOf(old)
-          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'tbNote', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid', 'founder', 'founderName'])
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'tbNote', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid', 'founder', 'founderName',
+                           'months', 'slots', 'hours', 'hourStep', 'hoursByDay', 'options'])
+          && (!keys.hasAny(['title']) || (d.title is string && d.title.size() > 0 && d.title.size() <= 120))
+          && (!keys.hasAny(['description']) || (d.description is string && d.description.size() <= 300))
+          // Lo que se vota solo cambia sin desempate (ni abierto ni finalizado): el recuento ya estaría hecho.
+          && (!keys.hasAny(['months', 'slots', 'hours', 'hourStep', 'hoursByDay', 'options'])
+              || (old.get('tiebreak', null) == null && validShape(d)))
+          // Desempate finalizado: el resultado es definitivo. La votación ya no se reabre ni el desempate se quita;
+          // si terminó sin ganadora, solo se puede repetir entre sus mismas opciones.
+          && (old.get('tiebreak', null) == null || old.tiebreak.get('done', false) == false
+              || (!keys.hasAny(['closed'])
+                  && (!keys.hasAny(['tiebreak'])
+                      || (d.tiebreak != null && d.tiebreak.get('done', false) == false
+                          && d.tiebreak.candidates.hasOnly(old.tiebreak.candidates)))))
           && (!keys.hasAny(['ownerName', 'admins', 'ownerUid', 'founder', 'founderName']) || creator)
           // El creador original (founder) solo se apunta al pasar la votación, y una vez.
           && (!keys.hasAny(['founder', 'founderName'])
@@ -178,9 +199,11 @@ service cloud.firestore {
             || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null);
         }
 
+        // `sys`: aviso de un cambio en la votación, que solo escribe quien la administra (al editarla).
         function validMsg() {
           let d = request.resource.data;
-          return d.keys().hasOnly(['uid', 'name', 'text', 'at'])
+          return d.keys().hasOnly(['uid', 'name', 'text', 'at', 'sys'])
+            && (!('sys' in d) || (d.sys == true && isAdminOf(pollData(pollId))))
             && d.uid == request.auth.uid
             && d.name is string && d.name.size() > 0 && d.name.size() <= 100
             && d.text is string && d.text.size() > 0 && d.text.size() <= 500

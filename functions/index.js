@@ -1,5 +1,7 @@
-// Avisos de Votaciones: Cloud Functions que mandan web push (FCM) cuando pasa algo en una votación.
-// Los mensajes son solo de datos: el aviso lo compone app/public/firebase-messaging-sw.js.
+// Avisos de Votaciones: Cloud Functions que mandan avisos (FCM) cuando pasa algo en una votación.
+// - Navegador: mensajes solo de datos; el aviso lo compone app/public/firebase-messaging-sw.js.
+// - App de Android (token con platform "android"): con bloque «notification», para que Android lo pinte aunque la
+//   app esté cerrada, en el canal «avisos» (ver app/src/lib/push.ts y el AndroidManifest.xml).
 // Los dispositivos están en users/{uid}/tokens/{token} y las preferencias en users/{uid}.notify.
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
@@ -16,6 +18,7 @@ const SITE = "https://hilemos.web.app";
 const pollUrl = id => `${SITE}/#/v/${id}`;
 const DEAD_TOKEN = new Set(["messaging/registration-token-not-registered", "messaging/invalid-registration-token"]);
 const DEADLINE_EVERY_MIN = 15;
+const ANDROID_CHANNEL = "avisos";
 
 /** Manda el aviso a los dispositivos de `uids` que no hayan apagado ese tipo (`pref`) y limpia los caducados. */
 async function notify(uids, { title, body, url, tag }, pref) {
@@ -23,19 +26,36 @@ async function notify(uids, { title, body, url, tag }, pref) {
   await Promise.all([...new Set(uids)].filter(Boolean).map(async uid => {
     const [profile, tokens] = await Promise.all([db.doc(`users/${uid}`).get(), db.collection(`users/${uid}/tokens`).get()]);
     if (profile.get(`notify.${pref}`) === false) return;
-    tokens.forEach(t => targets.push({ uid, token: t.id }));
+    tokens.forEach(t => targets.push({ uid, token: t.id, android: t.get("platform") === "android" }));
   }));
-  for (let i = 0; i < targets.length; i += 500) {
-    const batch = targets.slice(i, i + 500);
-    const res = await getMessaging().sendEachForMulticast({
-      tokens: batch.map(t => t.token),
-      data: { title: String(title), body: String(body), url: String(url), tag: String(tag) },
-      webpush: { headers: { TTL: "86400", Urgency: "normal" } },
-    });
-    await Promise.all(res.responses.map((r, k) => (!r.success && DEAD_TOKEN.has(r.error?.code)
-      ? db.doc(`users/${batch[k].uid}/tokens/${batch[k].token}`).delete()
-      : null)));
+  const data = { title: String(title), body: String(body), url: String(url), tag: String(tag) };
+  const web = { data, webpush: { headers: { TTL: "86400", Urgency: "normal" } } };
+  const android = {
+    data,
+    notification: { title: data.title, body: data.body },
+    android: { ttl: 86400000, notification: { channelId: ANDROID_CHANNEL, tag: data.tag } },
+  };
+  for (const [kind, list] of [[web, targets.filter(t => !t.android)], [android, targets.filter(t => t.android)]]) {
+    for (let i = 0; i < list.length; i += 500) {
+      const batch = list.slice(i, i + 500);
+      const res = await getMessaging().sendEachForMulticast({ ...kind, tokens: batch.map(t => t.token) });
+      await Promise.all(res.responses.map((r, k) => (!r.success && DEAD_TOKEN.has(r.error?.code)
+        ? db.doc(`users/${batch[k].uid}/tokens/${batch[k].token}`).delete()
+        : null)));
+    }
   }
+}
+
+/** Cuántas opciones quedaron en cabeza en el desempate `tb` (1 = hay ganadora; 0 = nadie votó). */
+async function tiebreakWinners(pollId, tb) {
+  const s = await db.collection(`polls/${pollId}/votes`).get();
+  const counts = Object.fromEntries((tb.candidates || []).map(c => [c, 0]));
+  s.docs.forEach(d => {
+    const v = d.get("tb");
+    if (!d.get("status") && v && v.id === tb.id && v.pick in counts) counts[v.pick]++;
+  });
+  const max = Math.max(0, ...Object.values(counts));
+  return max ? Object.values(counts).filter(n => n === max).length : 0;
 }
 
 /** Participantes aceptados (quien está pendiente o rechazado no recibe avisos de la votación). */
@@ -50,20 +70,24 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!after) return;
+  // Antes de leer nada: cada casilla que se pulsa dispara esta función, y casi nunca hay que avisar.
+  const requested = !before && after.status === "pending";
+  const accepted = before?.status === "pending" && !after.status;
+  const firstVote = !(before?.picks || []).length && (after.picks || []).length > 0 && !after.status;
+  if (!requested && !accepted && !firstVote) return;
   const { pollId, uid } = event.params;
   const poll = (await db.doc(`polls/${pollId}`).get()).data();
   if (!poll) return;
   const msg = { title: poll.title || "Votación", url: pollUrl(pollId) };
   const name = after.name || "Alguien";
 
-  if (!before && after.status === "pending" && uid !== poll.ownerUid) {
+  if (requested && uid !== poll.ownerUid) {
     return notify([poll.ownerUid], { ...msg, body: `${name} quiere entrar en la votación`, tag: `members-${pollId}` }, "members");
   }
-  if (before?.status === "pending" && !after.status) {
+  if (accepted) {
     return notify([uid], { ...msg, body: "Te han aceptado: ya puedes votar", tag: `members-${pollId}` }, "members");
   }
-  const firstVote = !(before?.picks || []).length && (after.picks || []).length > 0;
-  if (firstVote && !after.status && uid !== poll.ownerUid) {
+  if (firstVote && uid !== poll.ownerUid) {
     return notify([poll.ownerUid], { ...msg, body: `${name} ha votado`, tag: `votes-${pollId}` }, "votes");
   }
 });
@@ -76,7 +100,12 @@ export const onPollUpdated = onDocumentUpdated("polls/{pollId}", async event => 
   const { pollId } = event.params;
   let body = "";
   if (after.tiebreak && !after.tiebreak.done && before.tiebreak?.id !== after.tiebreak.id) body = "Hay un desempate: elige una de las empatadas";
-  else if (before.tiebreak && !before.tiebreak.done && after.tiebreak?.done) body = "Ya hay ganadora del desempate";
+  else if (before.tiebreak && !before.tiebreak.done && after.tiebreak?.done) {
+    // Finalizar el desempate con una ganadora deja el resultado definitivo (no se reabre).
+    body = (await tiebreakWinners(pollId, after.tiebreak)) === 1
+      ? "Ya hay resultado definitivo: mira la opción ganadora"
+      : "El desempate ha terminado sin ganadora";
+  }
   else if (!before.closed && after.closed) body = "Se ha cerrado la votación: mira el resultado";
   else if (before.closed && !after.closed) body = "Se ha vuelto a abrir: puedes cambiar tu voto";
   if (!body) return;

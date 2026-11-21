@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { parseRoute, useHashPath } from "../state/route";
-import { onPushMessage } from "../lib/push";
+import { onPushMessage, pushActiveHere } from "../lib/push";
 import { Avatar } from "./Avatar";
 import { LogoMark } from "./LogoMark";
 import { Icon } from "./Icon";
@@ -13,7 +13,9 @@ import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
 import { PollPage } from "../pages/poll/PollPage";
+import { EditPoll } from "../pages/poll/EditPoll";
 import { Profile } from "../pages/Profile";
+import { Legal } from "../pages/Legal";
 
 export function Shell() {
   const { store, user } = useSession();
@@ -35,14 +37,14 @@ export function Shell() {
 
   // Con la app abierta el navegador no pinta el aviso: se muestra como aviso flotante.
   useEffect(() => {
-    if (store.mode !== "firebase" || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (store.mode !== "firebase" || !pushActiveHere()) return;
     let off: (() => void) | undefined, alive = true;
     onPushMessage(toast).then(u => { if (alive) off = u; else u(); }).catch(() => { /* sin avisos en este navegador */ });
     return () => { alive = false; off?.(); };
   }, [store, toast]);
 
-  // El menú lateral se muestra dentro de una votación y al crear una.
-  const withSidebar = route.name === "create" || route.name === "poll";
+  // El menú lateral se muestra dentro de una votación y al crear o editar una.
+  const withSidebar = route.name === "create" || route.name === "poll" || route.name === "edit";
 
   useEffect(() => {
     if (route.name === "unknown") location.replace("#/");
@@ -74,6 +76,8 @@ export function Shell() {
     case "create": page = <Create />; break;
     case "profile": page = <Profile />; break;
     case "poll": page = <PollPage key={route.id} id={route.id} />; break;
+    case "edit": page = <EditPoll key={route.id} id={route.id} />; break;
+    case "legal": page = <Legal doc={route.doc} />; break;
   }
 
   return (
@@ -96,7 +100,7 @@ export function Shell() {
         </div>
       </header>
       <div className="layout">
-        <Sidebar activeId={route.name === "poll" ? route.id : null} onNavigate={() => setDrawer(false)} />
+        <Sidebar activeId={route.name === "poll" || route.name === "edit" ? route.id : null} onNavigate={() => setDrawer(false)} />
         <main id="view" key={path}>{page}</main>
       </div>
       <div className="sb-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />

@@ -1,7 +1,9 @@
 // Desempate: la tarjeta para votar (una sola opción entre las empatadas) y su ajuste cuando alguien deja de
 // participar, con un aviso que ven todos.
 import { useEffect, useRef, type ReactNode } from "react";
-import { plural, slotLabel, tiebreakShift, unitParts, type Person, type Tally, type TiebreakTally } from "../../lib/model";
+import {
+  plural, tiebreakShift, tiebreakUnsolved, unitLabel, unitParts, type Person, type Tally, type TiebreakTally,
+} from "../../lib/model";
 import type { Poll, Vote } from "../../lib/types";
 import { cls } from "../../lib/util";
 import { useSession } from "../../state/session";
@@ -9,11 +11,7 @@ import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
 
 /** «🍽️ Comida · Viernes 18 de diciembre» (o solo la casilla, si la votación no es de días). */
-function unitText(poll: Poll, T: Tally, u: string) {
-  const { slot, optId } = unitParts(u);
-  const o = T.opts.find(x => x.id === optId);
-  return poll.type === "days" && o ? `${o.icon} ${o.name} · ${slotLabel(poll, slot)}` : slotLabel(poll, slot);
-}
+export const unitText = (poll: Poll, _T: Tally, u: string) => unitLabel(poll, u);
 
 function AvatarStack({ uids, byUid }: { uids: string[]; byUid: Record<string, Person> }) {
   const ps = uids.map(u => byUid[u]).filter(Boolean);
@@ -26,7 +24,11 @@ function AvatarStack({ uids, byUid }: { uids: string[]; byUid: Record<string, Pe
   );
 }
 
-/** Tarjeta del desempate. `canManage`: quien administra la votación ve el pie para finalizarlo, repetirlo o quitarlo. */
+/**
+ * Tarjeta del desempate. `canManage`: quien administra la votación ve el pie para finalizarlo o anularlo mientras
+ * está abierto. Finalizado con ganadora es definitivo; sin ganadora (sigue el empate o nadie votó) solo se puede
+ * repetir.
+ */
 export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFinish, onRepeat, onCancel, remind }: {
   poll: Poll; T: Tally; TB: TiebreakTally; myTb: Vote["tb"]; canManage: boolean; byUid: Record<string, Person>;
   onVote: (u: string) => void; onFinish: () => void; onRepeat: () => void; onCancel: () => void; remind: ReactNode;
@@ -34,7 +36,7 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
   const done = !!TB.done;
   const myPick = myTb?.id === TB.id ? myTb.pick : null;
   const winner = done && TB.leaders.length === 1 ? TB.leaders[0] : null;
-  const stillTied = done && TB.leaders.length > 1;
+  const unsolved = tiebreakUnsolved(TB);
   // Si alguien se salió y cambió el empate, lo ven todos al entrar (la votación llega ya ajustada: ver
   // withTiebreakAdjusted). A quien había elegido una opción que sale se le pide que vuelva a elegir.
   let note: ReactNode = null;
@@ -49,7 +51,7 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
   let sub: ReactNode;
   if (done) {
     sub = winner
-      ? <>Ganadora: <strong>{unitText(poll, T, winner)}</strong> ({plural(TB.max, ["voto", "votos"])}).</>
+      ? <>Resultado definitivo: <strong>{unitText(poll, T, winner)}</strong> ({plural(TB.max, ["voto", "votos"])}).</>
       : TB.total ? "Sigue el empate entre las opciones marcadas." : "Nadie votó en el desempate.";
   } else {
     sub = <>Hay empate en el primer puesto. Elige <strong>una sola</strong> opción{myPick ? " (puedes cambiarla mientras siga abierto)" : ""}.</>;
@@ -58,7 +60,7 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
     <section className={`tiebreak ${done ? "done" : ""}`}>
       <div className="tb-head">
         <h2><Icon name="scale" /> Desempate{(TB.round || 1) > 1 ? ` · ronda ${TB.round}` : ""}</h2>
-        <span className="tb-state">{done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
+        <span className="tb-state">{winner ? "Definitivo" : done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
       </div>
       <p className="tb-sub">{sub}</p>
       {note && <p className="tb-note"><Icon name="users" /><span>{note}</span></p>}
@@ -80,15 +82,17 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
           );
         })}
       </div>
-      {canManage && (
+      {/* Finalizado ya no se quita: con ganadora es definitivo y sin ella solo se repite. */}
+      {canManage && (!done || unsolved) && (
         <div className="tb-actions">
-          {done ? <>
-            {stillTied && <button className="btn small" onClick={onRepeat}><Icon name="scale" /> Repetir entre las empatadas</button>}
-            <button className="link-btn danger" onClick={onCancel}>Quitar desempate</button>
-          </> : <>
-            <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
-            <button className="link-btn danger" onClick={onCancel}>Anular</button>
-          </>}
+          {done
+            ? <button className="btn small" onClick={onRepeat}>
+              <Icon name="scale" /> {TB.leaders.length > 1 ? "Repetir entre las empatadas" : "Repetir el desempate"}
+            </button>
+            : <>
+              <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
+              <button className="link-btn danger" onClick={onCancel}>Anular</button>
+            </>}
         </div>
       )}
     </section>

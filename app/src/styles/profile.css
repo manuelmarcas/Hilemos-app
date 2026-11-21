@@ -26,3 +26,4 @@
 .pf-mail-sent .ic{color:var(--brand)}
 /* «Eliminar mi cuenta»: zona de peligro, con el borde teñido de danger */
 .step.pf-danger{border-color:color-mix(in srgb,var(--danger) 35%,var(--line))}
+.pf-legal{display:flex;flex-wrap:wrap;gap:8px}

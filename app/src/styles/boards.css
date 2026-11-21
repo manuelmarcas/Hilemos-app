@@ -186,7 +186,38 @@
 }
 .hcell:disabled{cursor:default}
 .hcell.off{opacity:var(--opacity-off);background:var(--soft)}
-/* Estado "votado" y "más votado" para semanas, meses y horas */
-.wrow.on,.mtile.on,.hcell.on{background:var(--c0);border-color:var(--c0-edge);color:var(--c0-ink)}
+/* Opciones libres: una fila por opción, con su emoji, su nombre y el recuento */
+.choices-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:10px;
+  box-shadow:var(--shadow-card);
+  margin-bottom:20px;
+}
+@container view (min-width:820px){.choices-card{padding:14px}}
+.choices{display:grid;gap:8px}
+@container view (min-width:680px){.choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.choice{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:56px;
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:12px;
+  cursor:pointer;
+  color:var(--ink);
+  padding:8px 12px;
+  text-align:left;
+  min-width:0;
+}
+.choice:disabled{cursor:default}
+.choice-icon{font-size:1.35rem;line-height:1;flex:none}
+.choice-name{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.choice .count{flex:none}
+/* Estado "votado" y "más votado" para semanas, meses, horas y opciones libres */
+.wrow.on,.mtile.on,.hcell.on,.choice.on{background:var(--c0);border-color:var(--c0-edge);color:var(--c0-ink)}
 .wrow.on .wnum{color:var(--c0-ink)}
-.wrow.best,.mtile.best,.hcell.best{box-shadow:var(--best-ring);border-color:var(--best)}
+.wrow.best,.mtile.best,.hcell.best,.choice.best{box-shadow:var(--best-ring);border-color:var(--best)}

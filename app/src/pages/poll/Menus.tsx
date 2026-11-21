@@ -38,12 +38,13 @@ export function CalendarMenu({ cal }: { cal: CalEvent }) {
 }
 
 /**
- * Menú ⋯ junto al título, para quien administra la votación: cerrar o reabrir, acceso y plazas, hacerla anónima,
- * duplicarla y (solo el creador, `onDelete`) eliminarla.
+ * Menú ⋯ junto al título, para quien administra la votación: editarla, cerrar o reabrir (sin `onCloseOrReopen`, con
+ * el resultado ya definitivo, no se ofrece), acceso y plazas, hacerla anónima, duplicarla y (solo el creador,
+ * `onDelete`) eliminarla.
  */
-export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete, onDuplicate, onAccess }: {
-  closed: boolean; anonymous: boolean; onCloseOrReopen: () => void; onAnon: () => void; onDelete?: () => void;
-  onDuplicate: () => void; onAccess?: () => void;
+export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, onDelete, onDuplicate, onAccess }: {
+  closed: boolean; anonymous: boolean; onCloseOrReopen?: () => void; onEdit: () => void; onAnon: () => void;
+  onDelete?: () => void; onDuplicate: () => void; onAccess?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -58,9 +59,14 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onAnon, onDelete
         title="Opciones de la votación" onClick={() => setOpen(o => !o)}><Icon name="more" /></button>
       {open && (
         <div className="pm-menu" role="menu" aria-label="Opciones de la votación">
-          <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
-            <Icon name={closed ? "unlock" : "lock"} />{closed ? "Reabrir votación" : "Cerrar votación"}
+          <button role="menuitem" className="pm-item" onClick={pick(onEdit)}>
+            <Icon name="edit" />Editar votación
           </button>
+          {onCloseOrReopen && (
+            <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
+              <Icon name={closed ? "unlock" : "lock"} />{closed ? "Reabrir votación" : "Cerrar votación"}
+            </button>
+          )}
           {onAccess && (
             <button role="menuitem" className="pm-item" onClick={pick(onAccess)}>
               <Icon name="settings" />Acceso y plazas

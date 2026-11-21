@@ -2,7 +2,8 @@
 import type { ReactNode } from "react";
 import { LogoMark } from "./LogoMark";
 
-export function GateCard({ children }: { children: ReactNode }) {
+/** `footer`: debajo de la tarjeta (en la entrada, los enlaces a la privacidad y las condiciones). */
+export function GateCard({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
     <div id="gate">
       <div className="gate-card">
@@ -10,6 +11,7 @@ export function GateCard({ children }: { children: ReactNode }) {
         <h1><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></h1>
         {children}
       </div>
+      {footer}
     </div>
   );
 }

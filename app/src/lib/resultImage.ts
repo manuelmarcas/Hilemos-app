@@ -62,8 +62,9 @@ interface Row { rank: number; what: string; votes: number; tbWinner: boolean }
 
 function rowsOf(poll: PollData, T: Tally, TB: TiebreakTally | null): Row[] {
   const tbWinner = TB?.done && TB.leaders.length === 1 ? TB.leaders[0] : null;
+  // En las de opciones libres, la casilla ya lleva el emoji de la opción.
   const tag = (optIcon: string, optName: string) =>
-    poll.type === "days" ? `${optIcon} ${optName}`.trim() : TYPE[poll.type].emoji;
+    poll.type === "days" ? `${optIcon} ${optName}`.trim() : poll.type === "options" ? "" : TYPE[poll.type].emoji;
   return T.top.slice(0, 3).map(e => ({
     rank: e.rank,
     what: `${tag(e.opt.icon, e.opt.name)} ${slotLabel(poll, e.slot)}`.trim(),
@@ -78,7 +79,7 @@ function tbRow(poll: PollData, T: Tally, TB: TiebreakTally | null): Row | null {
   const key = TB.leaders[0];
   const { slot, optId } = unitParts(key);
   const opt = T.opts.find(o => o.id === optId);
-  const label = poll.type === "days" && opt ? `${opt.icon} ${opt.name}`.trim() : TYPE[poll.type].emoji;
+  const label = poll.type === "days" && opt ? `${opt.icon} ${opt.name}`.trim() : poll.type === "options" ? "" : TYPE[poll.type].emoji;
   return { rank: 1, what: `${label} ${slotLabel(poll, slot)}`.trim(), votes: TB.counts[key] || 0, tbWinner: true };
 }
 

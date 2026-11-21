@@ -1,13 +1,19 @@
-// Pantalla "Nueva votación".
+// Pantalla "Nueva votación". Con `edit`, la misma pantalla sirve para editar una votación: se cambian el nombre y
+// la descripción, y se pueden añadir días, horas u opciones, pero no quitar lo que ya tiene votos ni cambiar el
+// tipo (para eso está duplicarla). Cada cambio se avisa en el chat.
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
-import { TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, parseEmails, plural, fmtDeadline } from "../lib/model";
-import type { PollAccess, PollData, PollType } from "../lib/types";
+import {
+  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
+  fmtDeadline, lostVotedUnit, unitLabel, unitParts,
+} from "../lib/model";
+import { describeChanges } from "../lib/changes";
+import type { Poll, PollAccess, PollData, PollType, Votes } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
-import { takeTemplate } from "../state/duplicate";
+import { editTemplate, takeTemplate, type TemplateOption } from "../state/duplicate";
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
@@ -22,7 +28,24 @@ const PRESETS: Record<number, [string, string][]> = {
   4: [["Mañana", "🌅"], ["Mediodía", "☀️"], ["Tarde", "🌇"], ["Noche", "🌙"]],
 };
 
-interface Opt { name: string; icon: string; touched: boolean } // touched = icono elegido a mano
+interface Opt { id?: string; name: string; icon: string; touched: boolean } // touched = icono elegido a mano
+
+/** Opción libre del formulario. `key`: para React (las filas se quitan y se añaden); `id`: la ya guardada, al editar. */
+interface Choice { key: string; id?: string; name: string; icon: string }
+let choiceSeq = 0;
+const newChoice = (c?: TemplateOption): Choice => ({ key: `ch${++choiceSeq}`, name: "", icon: "", ...c });
+const CHOICE_EXAMPLES = ["Restaurante italiano", "Asador", "Japonés"];
+
+/** Id nuevo con `prefix` que no esté en `used` (o1, o2… / c1, c2…). Lo añade a `used`. */
+function freshId(prefix: string, used: Set<string>) {
+  let n = 1;
+  while (used.has(`${prefix}${n}`)) n++;
+  used.add(`${prefix}${n}`);
+  return `${prefix}${n}`;
+}
+
+/** Votación que se edita (en vez de crear una nueva) y sus votos, para no dejar quitar lo que ya tiene votos. */
+export interface EditTarget { id: string; poll: Poll; votes: Votes }
 
 const applyPresets = (opts: Opt[], count: number) =>
   opts.map((o, i) => (!o.touched && PRESETS[count][i] ? { ...o, icon: PRESETS[count][i][1] } : o));
@@ -70,13 +93,17 @@ function HourDropdown({ day, options, chosen, onToggle }: {
   );
 }
 
-export function Create() {
+export function Create({ edit }: { edit?: EditTarget } = {}) {
   const { store, user, library, lastGroup, setLastGroup } = useSession();
   const { toast, openEmoji, closeEmoji } = useUi();
   const now = useRef(new Date()).current;
   const groups = library.data?.groups || null;
 
-  const [tpl] = useState(takeTemplate); // datos de la votación que se está duplicando (o null)
+  // Datos de la votación que se está editando o duplicando (o null).
+  const [tpl] = useState(() => (edit ? editTemplate(edit.poll) : takeTemplate()));
+  const editing = !!edit;
+  // Con un desempate (abierto o finalizado) solo se cambian el nombre y la descripción: el recuento ya está hecho.
+  const nameOnly = !!edit?.poll.tiebreak;
 
   const [title, setTitle] = useState(tpl?.title || "");
   const [description, setDescription] = useState(tpl?.description || "");
@@ -89,8 +116,10 @@ export function Create() {
   const [opts, setOpts] = useState<Opt[]>(() => applyPresets(
     Array.from({ length: MAX_OPTIONS }, (_, i) => {
       const o = tpl?.opts[i];
-      return { name: o?.name || "", icon: o?.icon || "", touched: !!o?.icon };
+      return { id: o?.id, name: o?.name || "", icon: o?.icon || "", touched: !!o?.icon };
     }), tpl?.count || 1));
+  const [choices, setChoices] = useState<Choice[]>(() =>
+    (tpl?.choices.length ? tpl.choices.map(c => newChoice(c)) : [newChoice(), newChoice()]));
   const [from, setFrom] = useState(tpl?.from || "09:00");
   const [to, setTo] = useState(tpl?.to || "21:00");
   const [step, setStep] = useState(tpl?.step || 60);
@@ -113,6 +142,28 @@ export function Create() {
   const descRef = useRef<HTMLTextAreaElement>(null);
   const newGroupRef = useRef<HTMLInputElement>(null);
   const optRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const choiceRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const focusChoice = useRef<string | null>(null); // fila recién añadida, para llevarle el foco
+  useEffect(() => {
+    const k = focusChoice.current;
+    if (k) { focusChoice.current = null; choiceRefs.current[k]?.focus(); }
+  }, [choices]);
+
+  // ---------- Al editar: lo que ya tiene votos no se puede quitar ----------
+  const lockedSlots = new Set<string>(); // días (también en las de horas), semanas, meses u opciones libres con votos
+  const lockedOpts = new Set<string>();  // opciones de cada día con votos
+  const lockedHours = new Set<string>(); // «díaThora» con votos (votaciones por horas)
+  if (edit) {
+    for (const v of Object.values(edit.votes)) {
+      for (const p of v?.picks || []) {
+        const { slot, optId } = unitParts(p);
+        if (edit.poll.type === "hours") { lockedHours.add(slot); lockedSlots.add(slot.split("T")[0]); }
+        else lockedSlots.add(slot);
+        lockedOpts.add(optId);
+      }
+    }
+  }
+  const LOCKED = "Lo que ya tiene votos no se puede quitar.";
 
   useEffect(() => { titleRef.current?.focus(); }, []);
   useEffect(() => () => closeEmoji(), [closeEmoji]);
@@ -137,6 +188,7 @@ export function Create() {
   }
 
   function removeDayHour(day: string, h: string) {
+    if (lockedHours.has(`${day}T${h}`)) { setStatus(`Las ${h} del ${D.fmtDayShort(day)} ya tienen votos: no se pueden quitar.`); return; }
     setHoursByDay(m => ({ ...m, [day]: (m[day] || []).filter(x => x !== h) }));
   }
 
@@ -161,11 +213,16 @@ export function Create() {
     return [...set].sort();
   }
 
-  // Al quitar un mes, se quitan los días/semanas que ya no se ven.
+  // Al quitar un mes, se quitan los días/semanas que ya no se ven (al editar, no si alguno tiene votos).
   function toggleMonth(k: string) {
     const nextMonths = toggled(months, k);
     const ok = new Set<string>();
     nextMonths.forEach(mk => { const { y, m } = D.parseMonth(mk); D.monthWeeks(y, m).forEach(w => ok.add(w.key)); });
+    const loses = type === "months" ? lockedSlots.has(k) && !nextMonths.has(k)
+      : type === "weeks" ? [...weeks].some(w => lockedSlots.has(w) && !ok.has(w))
+      : [...days].some(d => lockedSlots.has(d) && !nextMonths.has(D.monthOfDay(d)));
+    if (loses) { setStatus(`${D.cap(D.fmtMonth(k))} tiene votos: no se puede quitar.`); return; }
+    setStatus("");
     setMonths(nextMonths);
     setDays(ds => new Set([...ds].filter(d => nextMonths.has(D.monthOfDay(d)))));
     setWeeks(ws => new Set([...ws].filter(w => ok.has(w))));
@@ -183,21 +240,30 @@ export function Create() {
     }
     turnOn ? next.add(key) : next.delete(key);
     last.current = key;
+    // Al editar, lo que ya tiene votos se queda aunque caiga dentro del rango.
+    let kept = false;
+    set.forEach(k => { if (lockedSlots.has(k) && !next.has(k)) { next.add(k); kept = true; } });
+    setStatus(kept ? LOCKED : "");
     return next;
   }
 
   function quick(kind: string) {
+    // Al editar se quedan los ya pasados (no se pueden tocar) y los que tienen votos.
+    const fixed = (s: Set<string>, past: (k: string) => boolean) => [...s].filter(k => lockedSlots.has(k) || past(k));
     if (type === "weeks") {
-      setWeeks(new Set(kind === "all" ? selectableWeeks() : []));
+      setWeeks(new Set([...(kind === "all" ? selectableWeeks() : []), ...fixed(weeks, w => D.weekEndKey(w) < today)]));
     } else {
       const weekend = (k: string) => D.dowMon(D.parseDay(k)) >= 5;
       const pick: Record<string, (k: string) => boolean> = { all: () => true, none: () => false, weekdays: k => !weekend(k), weekends: weekend };
-      setDays(new Set(selectableDays().filter(pick[kind])));
+      setDays(new Set([...selectableDays().filter(pick[kind]), ...fixed(days, d => d < today)]));
     }
     last.current = null;
   }
 
   function changeCount(n: number) {
+    const lost = opts.slice(n, count).find(o => o.id && lockedOpts.has(o.id));
+    if (lost) { setStatus(`La opción «${lost.icon} ${lost.name}» ya tiene votos: no se puede quitar.`); return; }
+    setStatus("");
     setCount(n);
     closeEmoji();
     setOpts(o => applyPresets(o, n));
@@ -206,11 +272,40 @@ export function Create() {
   const setOpt = (i: number, patch: Partial<Opt>) =>
     setOpts(o => o.map((x, j) => (j === i ? { ...x, ...patch, touched: x.touched || "icon" in patch } : x)));
 
+  // ---------- Opciones libres ----------
+  const setChoice = (key: string, patch: Partial<Choice>) =>
+    setChoices(cs => cs.map(c => (c.key === key ? { ...c, ...patch } : c)));
+  function addChoice() {
+    if (choices.length >= MAX_CHOICES) return;
+    const c = newChoice();
+    focusChoice.current = c.key;
+    setChoices(cs => [...cs, c]);
+  }
+  function removeChoice(c: Choice) {
+    if (c.id && lockedSlots.has(c.id)) { setStatus(`La opción «${c.name}» ya tiene votos: no se puede quitar.`); return; }
+    if (choices.length <= MIN_CHOICES) return;
+    setStatus("");
+    setChoices(cs => cs.filter(x => x.key !== c.key));
+  }
+
   // ---------- Validación y envío ----------
 
   function validate(): [string, string] | null {
     if (!title.trim()) return ["Ponle un nombre a la votación.", "#f-title"];
-    if (validGroupId === "__new" && !newGroup.trim()) return ["Escribe el nombre del grupo nuevo (o elige otro).", "#f-newgroup"];
+    if (!editing && validGroupId === "__new" && !newGroup.trim()) return ["Escribe el nombre del grupo nuevo (o elige otro).", "#f-newgroup"];
+    if (nameOnly) return null;
+    if (type === "options") {
+      const empty = choices.findIndex(c => !c.name.trim());
+      if (empty >= 0) return [`Ponle nombre a la opción ${empty + 1} o quítala.`, `[data-choice="${empty}"]`];
+      if (choices.length < MIN_CHOICES) return [`Escribe al menos ${MIN_CHOICES} opciones.`, "#sec-choices"];
+      const seen = new Map<string, number>();
+      for (const [i, c] of choices.entries()) {
+        const k = c.name.trim().toLocaleLowerCase("es");
+        if (seen.has(k)) return [`Las opciones ${seen.get(k)! + 1} y ${i + 1} se llaman igual.`, `[data-choice="${i}"]`];
+        seen.set(k, i);
+      }
+      return null;
+    }
     if (!months.size) return ["Elige al menos un mes.", "#sec-months"];
     if ((type === "days" || type === "hours") && !days.size) return ["Elige al menos un día.", "#sec-slots"];
     if (type === "weeks" && !weeks.size) return ["Elige al menos una semana.", "#sec-slots"];
@@ -225,6 +320,7 @@ export function Create() {
       const missing = sortedHourDays.find(d => !(hoursByDay[d]?.length));
       if (missing) return [`Añade al menos una hora para el ${D.cap(D.fmtDayShort(missing))}.`, "#sec-hours"];
     }
+    if (editing) return null; // el acceso, el plazo y el máximo se cambian desde la votación
     if (access === "emails") {
       if (parsed.invalid.length) return [`Revisa ${parsed.invalid.length === 1 ? "este correo" : "estos correos"}: ${parsed.invalid.slice(0, 3).join(", ")}${parsed.invalid.length > 3 ? "…" : ""}`, "#f-emails"];
       if (!parsed.emails.length) return ["Escribe al menos un correo que pueda entrar.", "#f-emails"];
@@ -254,35 +350,86 @@ export function Create() {
     return Number.isInteger(n) && n >= 2 && n <= MAX_PEOPLE ? n : null;
   })();
 
-  async function submit() {
-    if (busy) return;
-    const err = validate();
-    if (err) {
-      setStatus(err[0]);
-      const el = root.current?.querySelector<HTMLElement>(err[1]);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        if (el.matches("input, textarea")) el.focus({ preventScroll: true });
-      }
-      return;
-    }
-    setStatus("");
-    const createdAt = Date.now();
-    const poll: PollData = {
-      v: 1,
-      title: title.trim(),
-      description: description.trim(),
-      type,
-      months: sortedMonths,
-      slots: type === "months" ? sortedMonths : type === "weeks" ? [...weeks].sort() : [...days].sort(),
+  // Qué se vota: casillas, horas y opciones, tal como se guardan.
+  function structure(): Pick<PollData, "months" | "slots" | "hours" | "hourStep" | "hourList" | "hoursByDay" | "options"> {
+    // Las opciones ya guardadas conservan su id (los votos van a él); las nuevas toman uno que no haya usado
+    // nunca la votación (tampoco una opción que se acaba de quitar: sería otra opción con el mismo id).
+    const used = new Set([...opts.map(o => o.id), ...choices.map(c => c.id), ...(edit?.poll.options || []).map(o => o.id)]
+      .filter((x): x is string => !!x));
+    const choiceOpts = choices.map(c => ({ id: c.id || freshId("c", used), name: c.name.trim(), icon: c.icon || DEFAULT_CHOICE_ICON }));
+    return {
+      months: type === "options" ? [] : sortedMonths,
+      slots: type === "options" ? choiceOpts.map(o => o.id)
+        : type === "months" ? sortedMonths : type === "weeks" ? [...weeks].sort() : [...days].sort(),
       hours: type === "hours" && !isList ? hourSlots : [],
       hourStep: type === "hours" && !isList ? step : 0,
       ...(type === "hours" && isList
         ? { hourList: true, hoursByDay: Object.fromEntries(sortedHourDays.map(d => [d, hoursByDay[d] || []])) }
         : {}),
       options: type === "days"
-        ? opts.slice(0, count).map((o, i) => ({ id: `o${i + 1}`, name: o.name.trim(), icon: o.icon }))
-        : [],
+        ? opts.slice(0, count).map(o => ({ id: o.id || freshId("o", used), name: o.name.trim(), icon: o.icon }))
+        : type === "options" ? choiceOpts : [],
+    };
+  }
+
+  function showError(err: [string, string]) {
+    setStatus(err[0]);
+    const el = root.current?.querySelector<HTMLElement>(err[1]);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (el.matches("input, textarea")) el.focus({ preventScroll: true });
+    }
+  }
+
+  // Guarda la edición: solo los campos que cambian, y un aviso en el chat por cada cambio.
+  async function saveEdit(target: EditTarget) {
+    const old = target.poll;
+    const next: PollData = { ...old, title: title.trim(), description: description.trim(), ...(nameOnly ? {} : structure()) };
+    // Por si alguien ha votado mientras se editaba: lo que ya tiene votos no se puede quitar.
+    const lost = lostVotedUnit(old, next, target.votes);
+    if (lost) { setStatus(`«${unitLabel(old, lost)}» ya tiene votos: no se puede quitar.`); return; }
+    const keys = ["title", "description", "months", "slots", "hours", "hourStep", "hoursByDay", "options"] as const;
+    const patch: Partial<PollData> = {};
+    for (const k of keys) {
+      if (JSON.stringify(old[k] ?? null) !== JSON.stringify(next[k] ?? null)) (patch as Record<string, unknown>)[k] = next[k];
+    }
+    if (!Object.keys(patch).length) { toast("No has cambiado nada"); navigate(`/v/${target.id}`); return; }
+    setBusy(true);
+    try {
+      await store.updatePoll(target.id, patch);
+    } catch (e) {
+      setStatus("No se pudieron guardar los cambios. " + errMsg(e));
+      setBusy(false);
+      return;
+    }
+    const at = Date.now();
+    const notes = describeChanges(old, next);
+    try {
+      for (const [i, text] of notes.entries()) {
+        await store.sendChat(target.id, { uid: user.uid, name: user.name, text, at: at + i, sys: true });
+      }
+    } catch {
+      toast("Cambios guardados, pero no se pudieron avisar en el chat");
+      navigate(`/v/${target.id}`);
+      return;
+    }
+    toast(notes.length ? "Cambios guardados y avisados en el chat" : "Cambios guardados");
+    navigate(`/v/${target.id}`);
+  }
+
+  async function submit() {
+    if (busy) return;
+    const err = validate();
+    if (err) { showError(err); return; }
+    setStatus("");
+    if (edit) { await saveEdit(edit); return; }
+    const createdAt = Date.now();
+    const poll: PollData = {
+      v: 1,
+      title: title.trim(),
+      description: description.trim(),
+      type,
+      ...structure(),
       anonymous,
       ...(deadlineTs ? { deadline: deadlineTs } : {}),
       maxPeople: maxPeople ?? MAX_PEOPLE,
@@ -315,16 +462,19 @@ export function Create() {
 
   // ---------- Secciones ----------
 
+  // Al editar no se cambia el tipo; el acceso, el plazo y la privacidad tienen su sitio en la votación.
+  const structural = !nameOnly;
   const visible = {
     name: true,
-    type: true,
-    months: true,
-    slots: type !== "months",
-    opts: type === "days",
-    hours: type === "hours",
-    privacy: true,
-    deadline: true,
-    access: true,
+    type: !editing,
+    months: structural && type !== "options",
+    slots: structural && type !== "months" && type !== "options",
+    opts: structural && type === "days",
+    hours: structural && type === "hours",
+    choices: structural && type === "options",
+    privacy: !editing,
+    deadline: !editing,
+    access: !editing,
   };
   const numbers: Partial<Record<keyof typeof visible, number>> = {};
   let n = 0;
@@ -343,18 +493,21 @@ export function Create() {
   );
 
   const summaryParts = [TYPE[type].name];
-  if (type === "months") summaryParts.push(plural(months.size, ["mes", "meses"]));
+  if (type === "options") summaryParts.push(plural(choices.length, ["opción", "opciones"]));
+  else if (type === "months") summaryParts.push(plural(months.size, ["mes", "meses"]));
   else if (type === "weeks") summaryParts.push(plural(weeks.size, ["semana", "semanas"]));
   else summaryParts.push(plural(days.size, ["día", "días"]));
   if (type === "days") summaryParts.push(plural(count, ["opción", "opciones"]) + " por día");
   if (type === "hours") summaryParts.push(isList
     ? plural(listHoursCount, ["hora", "horas"]) + " en total"
     : plural(hourSlots.length, ["franja", "franjas"]) + " por día");
-  summaryParts.push(anonymous ? "anónima" : "votos visibles");
-  if (deadlineTs) summaryParts.push(`hasta el ${fmtDeadline(deadlineTs)}`);
-  if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
-  if (access === "approval") summaryParts.push("con aprobación");
-  summaryParts.push(`máx. ${maxPeople ?? MAX_PEOPLE} personas`);
+  if (!editing) {
+    summaryParts.push(anonymous ? "anónima" : "votos visibles");
+    if (deadlineTs) summaryParts.push(`hasta el ${fmtDeadline(deadlineTs)}`);
+    if (access === "emails") summaryParts.push(`solo ${plural(parsed.emails.length, ["correo", "correos"])}`);
+    if (access === "approval") summaryParts.push("con aprobación");
+    summaryParts.push(`máx. ${maxPeople ?? MAX_PEOPLE} personas`);
+  }
 
   const starts: string[] = [], ends: string[] = [];
   for (let t = 0; t < 1440; t += 30) starts.push(D.hhmm(t));
@@ -365,9 +518,18 @@ export function Create() {
   return (
     <>
       <div className="page-head">
-        <a className="back" href="#/"><Icon name="back" /> Volver</a>
-        <h1>Nueva votación</h1>
-        {user.anon && store.mode === "firebase" && (
+        <a className="back" href={edit ? `#/v/${edit.id}` : "#/"}><Icon name="back" /> Volver</a>
+        <h1>{editing ? "Editar votación" : "Nueva votación"}</h1>
+        {editing && (
+          <p className="sub">
+            {nameOnly
+              ? "Hay un desempate, así que solo se pueden cambiar el nombre y la descripción."
+              : <>Puedes añadir {type === "options" ? "opciones" : type === "hours" ? "días y horas" : type === "days" ? "días y opciones" : TYPE[type].unit[1]}, pero
+                no quitar lo que ya tiene votos. El tipo de votación no se cambia: para eso, duplícala.</>}
+            {" "}Cada cambio se avisará en el chat.
+          </p>
+        )}
+        {!editing && user.anon && store.mode === "firebase" && (
           <p className="sub anon-note">
             Has entrado sin cuenta: para gestionar esta votación (cerrarla, desempatar o eliminarla) desde otro
             dispositivo o después de cerrar sesión, necesitarás tu clave de acceso. Si prefieres no depender de ella,
@@ -389,7 +551,7 @@ export function Create() {
               value={description} onChange={e => setDescription(e.target.value)} />
             <EmojiButton field={() => descRef.current} setValue={setDescription} />
           </div>
-          <div className="group-pick">
+          <div className="group-pick" hidden={editing}>
             <label htmlFor="f-group">Guardar en el grupo</label>
             <GroupSelect id="f-group" className="input" groups={groups} value={validGroupId}
               extra={[{ value: "__new", label: "＋ Crear grupo nuevo…" }]}
@@ -402,7 +564,7 @@ export function Create() {
           </div>
         </section>
 
-        <section className="step" id="sec-type">
+        <section className="step" id="sec-type" hidden={!visible.type}>
           <h2><span className="num">{numbers.type}</span>¿Qué se vota?</h2>
           <div className="types">
             {TYPES.map(t => typeCard(type === t.id, t.icon, t.name, t.desc, () => {
@@ -413,7 +575,7 @@ export function Create() {
           </div>
         </section>
 
-        <section className="step" id="sec-months">
+        <section className="step" id="sec-months" hidden={!visible.months}>
           <h2><span className="num">{numbers.months}</span>Meses</h2>
           <p className="hint">
             {type === "months"
@@ -430,8 +592,8 @@ export function Create() {
               {D.MNAMES.map((name, m) => {
                 const k = D.monthKey(year, m);
                 return (
-                  <button key={k} type="button" className={`chip month-chip ${months.has(k) ? "on" : ""}`} aria-pressed={months.has(k)}
-                    disabled={k < cur} onClick={() => toggleMonth(k)}>{D.cap(name)}</button>
+                  <button key={k} type="button" className={cls("chip month-chip", months.has(k) && "on", type === "months" && lockedSlots.has(k) && "locked")}
+                    aria-pressed={months.has(k)} disabled={k < cur} onClick={() => toggleMonth(k)}>{D.cap(name)}</button>
                 );
               })}
             </div>
@@ -439,7 +601,7 @@ export function Create() {
               {sortedMonths.length
                 ? sortedMonths.map(k => (
                   <span key={k} className="tag">{D.cap(D.fmtMonth(k))}
-                    <button type="button" aria-label={`Quitar ${D.fmtMonth(k)}`} onClick={() => toggleMonth(k)}>×</button>
+                    {k >= cur && <button type="button" aria-label={`Quitar ${D.fmtMonth(k)}`} onClick={() => toggleMonth(k)}>×</button>}
                   </span>
                 ))
                 : <span className="muted">Ningún mes seleccionado.</span>}
@@ -470,6 +632,7 @@ export function Create() {
                   </>}
                   <span className="count-note">
                     {plural(isWeeks ? weeks.size : days.size, isWeeks ? ["semana seleccionada", "semanas seleccionadas"] : ["día seleccionado", "días seleccionados"])}
+                    {lockedSlots.size > 0 && <> · con punto: ya tienen votos</>}
                   </span>
                 </div>
                 <div className="pick-months">
@@ -482,7 +645,7 @@ export function Create() {
                           <div className="pweek-head"><span></span>{D.DOW.map(x => <span key={x}>{x}</span>)}</div>
                           <div className="pweeks">
                             {D.monthWeeks(y, m).map(w => (
-                              <button key={w.key} type="button" className={`pweek ${weeks.has(w.key) ? "on" : ""}`} aria-pressed={weeks.has(w.key)}
+                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} aria-pressed={weeks.has(w.key)}
                                 disabled={D.weekEndKey(w.key) < today}
                                 onClick={(e: MouseEvent) => setWeeks(toggleRange(weeks, w.key, selectableWeeks(), e.shiftKey))}>
                                 <span className="wnum">S{w.num}</span>
@@ -499,7 +662,7 @@ export function Create() {
                       const k = D.dayKey(y, m, d);
                       const we = D.dowMon(new Date(y, m, d)) >= 5;
                       cells.push(
-                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we")} aria-pressed={days.has(k)}
+                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} aria-pressed={days.has(k)}
                           disabled={k < today} onClick={(e: MouseEvent) => setDays(toggleRange(days, k, selectableDays(), e.shiftKey))}>{d}</button>,
                       );
                     }
@@ -512,7 +675,10 @@ export function Create() {
 
         <section className="step" id="sec-opts" hidden={!visible.opts}>
           <h2><span className="num">{numbers.opts}</span>Opciones de cada día</h2>
-          <p className="hint">Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.</p>
+          <p className="hint">
+            Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.
+            {lockedOpts.size > 0 && type === "days" && " Las que ya tienen votos se pueden renombrar, pero no quitar."}
+          </p>
           <div>
             {visible.opts && <>
               <div className="seg" role="group" aria-label="Opciones por día">
@@ -564,8 +730,8 @@ export function Create() {
         <section className="step" id="sec-hours" hidden={!visible.hours}>
           <h2><span className="num">{numbers.hours}</span>Horas</h2>
           <div className="hour-mode" role="group" aria-label="Cómo se eligen las horas">
-            <button type="button" className={cls("chip", !isList && "on")} aria-pressed={!isList} onClick={() => setHourMode("range")}>Franjas periódicas</button>
-            <button type="button" className={cls("chip", isList && "on")} aria-pressed={isList} onClick={() => setHourMode("list")}>Horas sueltas</button>
+            <button type="button" className={cls("chip", !isList && "on")} aria-pressed={!isList} disabled={editing && isList} onClick={() => setHourMode("range")}>Franjas periódicas</button>
+            <button type="button" className={cls("chip", isList && "on")} aria-pressed={isList} disabled={editing && !isList} onClick={() => setHourMode("list")}>Horas sueltas</button>
           </div>
           <p className="hint">
             {isList
@@ -589,8 +755,11 @@ export function Create() {
                         <div className="hour-chips">
                           {chosen.length
                             ? chosen.map(h => (
-                              <span key={h} className="tag">{h}
-                                <button type="button" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
+                              <span key={h} className={cls("tag", lockedHours.has(`${d}T${h}`) && "locked")}
+                                title={lockedHours.has(`${d}T${h}`) ? "Ya tiene votos: no se puede quitar" : undefined}>{h}
+                                {!lockedHours.has(`${d}T${h}`) && (
+                                  <button type="button" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
+                                )}
                               </span>
                             ))
                             : <span className="muted">Todavía no hay ninguna hora.</span>}
@@ -609,7 +778,7 @@ export function Create() {
                 <label>Hasta<select className="input" value={to} onChange={e => setTo(e.target.value)}>
                   {ends.map(v => <option key={v} value={v}>{v}</option>)}
                 </select></label>
-                <label>Cada<select className="input" value={step} onChange={e => setStep(Number(e.target.value))}>
+                <label>Cada<select className="input" value={step} disabled={editing} onChange={e => setStep(Number(e.target.value))}>
                   {([[30, "30 minutos"], [60, "1 hora"], [120, "2 horas"]] as const).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select></label>
               </div>
@@ -618,12 +787,63 @@ export function Create() {
                   ? hourSlots.map(h => <span key={h} className="chip static">{h}</span>)
                   : <span className="status">Con ese rango no cabe ninguna franja.</span>}
               </div>
-              <p className="hint hint-after">{plural(hourSlots.length, ["franja", "franjas"])} por día.</p>
+              <p className="hint hint-after">
+                {plural(hourSlots.length, ["franja", "franjas"])} por día.
+                {editing && " La duración de cada franja no se puede cambiar; las franjas que ya tienen votos tienen que quedar dentro del rango."}
+              </p>
             </>}
           </div>
         </section>
 
-        <section className="step" id="sec-privacy">
+        <section className="step" id="sec-choices" hidden={!visible.choices}>
+          <h2><span className="num">{numbers.choices}</span>Opciones</h2>
+          <p className="hint">
+            Escribe las opciones que se podrán votar, de {MIN_CHOICES} a {MAX_CHOICES}. El icono es opcional: si no eliges
+            ninguno, se pone {DEFAULT_CHOICE_ICON}.{lockedSlots.size > 0 && type === "options" && " Las que ya tienen votos se pueden renombrar, pero no quitar."}
+          </p>
+          {visible.choices && <>
+            <div className="opt-rows choice-rows">
+              {choices.map((c, i) => {
+                const locked = !!c.id && lockedSlots.has(c.id);
+                return (
+                  <div key={c.key} className="opt-row choice-row">
+                    <button type="button" className={cls("icon-pick", !c.icon && "default")} aria-label={`Elegir icono de la opción ${i + 1}`}
+                      aria-expanded="false" title="Elegir icono (opcional)"
+                      onClick={e => {
+                        const anchor = e.currentTarget;
+                        openEmoji({ anchor, onPick: emoji => { setChoice(c.key, { icon: emoji }); anchor.focus(); } });
+                      }}>{c.icon || DEFAULT_CHOICE_ICON}</button>
+                    <div className="emoji-field">
+                      <input ref={el => { choiceRefs.current[c.key] = el; }} className="input" data-choice={i} maxLength={60}
+                        value={c.name} placeholder={i < CHOICE_EXAMPLES.length ? `Ej.: ${CHOICE_EXAMPLES[i]}` : "Otra opción"}
+                        aria-label={`Nombre de la opción ${i + 1}`} autoComplete="off"
+                        onChange={e => setChoice(c.key, { name: e.target.value })}
+                        onKeyDown={e => {
+                          // Intro en la última fila añade otra, como en una lista.
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          if (i === choices.length - 1 && c.name.trim()) addChoice();
+                          else if (i < choices.length - 1) choiceRefs.current[choices[i + 1].key]?.focus();
+                        }} />
+                      <EmojiButton field={() => choiceRefs.current[c.key]} setValue={v => setChoice(c.key, { name: v })} />
+                    </div>
+                    <button type="button" className="icon-btn choice-del" aria-label={`Quitar la opción ${i + 1}`}
+                      title={locked ? "Ya tiene votos: no se puede quitar" : "Quitar la opción"}
+                      disabled={locked || choices.length <= MIN_CHOICES} onClick={() => removeChoice(c)}>
+                      <Icon name="close" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            {choices.length < MAX_CHOICES && (
+              <button type="button" className="btn small choice-add" onClick={addChoice}><Icon name="plus" /> Añadir opción</button>
+            )}
+            <p className="hint hint-after">{plural(choices.length, ["opción", "opciones"])} de {MAX_CHOICES} como mucho.</p>
+          </>}
+        </section>
+
+        <section className="step" id="sec-privacy" hidden={!visible.privacy}>
           <h2><span className="num">{numbers.privacy}</span>¿Quién ve los votos?</h2>
           <div className="privacy">
             {typeCard(!anonymous, "eye", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
@@ -631,7 +851,7 @@ export function Create() {
           </div>
         </section>
 
-        <section className="step" id="sec-deadline">
+        <section className="step" id="sec-deadline" hidden={!visible.deadline}>
           <h2><span className="num">{numbers.deadline}</span>¿Hasta cuándo se vota?</h2>
           <p className="hint">
             Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
@@ -655,7 +875,7 @@ export function Create() {
           {!!deadlineTs && <p className="hint hint-after">Se podrá votar hasta el {fmtDeadline(deadlineTs)}.</p>}
         </section>
 
-        <section className="step" id="sec-access">
+        <section className="step" id="sec-access" hidden={!visible.access}>
           <h2><span className="num">{numbers.access}</span>¿Quién puede unirse?</h2>
           <div className="access-pick">
             {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
@@ -685,7 +905,9 @@ export function Create() {
 
         <div className="create-bar">
           <div className="create-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
-          <button type="button" className="btn primary big" disabled={busy} onClick={submit}>{busy ? "Creando…" : "Crear votación"}</button>
+          <button type="button" className="btn primary big" disabled={busy} onClick={submit}>
+            {editing ? (busy ? "Guardando…" : "Guardar cambios") : (busy ? "Creando…" : "Crear votación")}
+          </button>
           <div className="status" role="alert">{status}</div>
         </div>
       </div>

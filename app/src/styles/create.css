@@ -176,3 +176,15 @@
 .access-emails,.access-max{margin-top:16px}
 .access-emails .hint,.access-max .hint{margin:6px 0 0}
 .access-max .input{width:8em}
+/* Opciones libres: icono (opcional), nombre y quitar; el icono por defecto se ve más apagado */
+.choice-row{flex-wrap:nowrap}
+.icon-pick.default{opacity:.6}
+.choice-del{flex:none}
+.choice-add{margin-top:12px}
+/* Al editar, lo que ya tiene votos no se puede quitar: un punto en la esquina lo marca */
+.pday.locked,.pweek.locked,.month-chip.locked{position:relative}
+.pday.locked::after,.pweek.locked::after,.month-chip.locked::after{
+  content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;
+  background:currentColor;opacity:.8;
+}
+.tag.locked{padding-right:12px}

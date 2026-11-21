@@ -1,5 +1,5 @@
-// Rutas con #: #/, #/nueva, #/perfil y #/v/<id>. Se mantiene el formato de la web
-// original para que los enlaces ya compartidos sigan funcionando.
+// Rutas con #: #/, #/nueva, #/perfil, #/v/<id>, #/v/<id>/editar, #/privacidad y #/condiciones. Se mantiene el
+// formato de la web original para que los enlaces ya compartidos sigan funcionando.
 import { useSyncExternalStore } from "react";
 
 const subscribe = (cb: () => void) => {
@@ -15,14 +15,24 @@ export type Route =
   | { name: "create" }
   | { name: "profile" }
   | { name: "poll"; id: string }
+  | { name: "edit"; id: string }
+  | { name: "legal"; doc: LegalDoc }
   | { name: "unknown" };
+
+/** Páginas legales: se ven también sin sesión (enlazadas desde la entrada). */
+export type LegalDoc = "privacidad" | "condiciones";
+/** La ruta es una página legal (App la muestra sin pedir sesión). */
+export const legalDoc = (path: string): LegalDoc | null =>
+  path === "/privacidad" ? "privacidad" : path === "/condiciones" ? "condiciones" : null;
 
 export function parseRoute(path: string): Route {
   if (path === "/") return { name: "home" };
   if (path === "/nueva") return { name: "create" };
   if (path === "/perfil") return { name: "profile" };
-  const m = path.match(/^\/v\/([A-Za-z0-9_-]+)$/);
-  if (m) return { name: "poll", id: m[1] };
+  const doc = legalDoc(path);
+  if (doc) return { name: "legal", doc };
+  const m = path.match(/^\/v\/([A-Za-z0-9_-]+)(\/editar)?$/);
+  if (m) return m[2] ? { name: "edit", id: m[1] } : { name: "poll", id: m[1] };
   return { name: "unknown" };
 }
 

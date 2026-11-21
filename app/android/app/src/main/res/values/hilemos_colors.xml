@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de marca (brand del design system): tinte del icono de los avisos. -->
+    <color name="hilemos_brand">#5E2A59</color>
+</resources>

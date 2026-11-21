@@ -61,6 +61,7 @@ vacía para marcarla (Gratis, Premium o Gratis con límite).
 | Votación por horas | Franjas periódicas (cada 30 minutos, 1 hora o 2 horas) u horas sueltas distintas en cada día. | Gratis | |
 | Votación por semanas | Se vota la semana entera. | Gratis | |
 | Votación por meses | Se vota el mes entero. | Gratis | |
+| Votación de opciones libres | Una lista sin fechas (restaurante, regalo, destino…), de 2 a 30 opciones con nombre y emoji opcional. | Gratis | |
 | Varios meses y atajos | Elegir varios meses; marcar todos, de lunes a viernes o fines de semana. | Gratis | |
 | Opciones por día | De 1 a 4 opciones por día, con vista previa de la casilla. | Gratis (posible límite: 2 gratis, 4 premium) | |
 | Título y descripción | Con selector de emojis en el ordenador. | Gratis | |
@@ -71,6 +72,7 @@ vacía para marcarla (Gratis, Premium o Gratis con límite).
 | Solo estos correos | Solo entran los correos de una lista (hasta 150). | Premium | |
 | Grupo al crearla | Se guarda directamente en uno de sus grupos. | Gratis | |
 | Duplicar | Crear otra igual, como plantilla (sin el plazo). | Gratis | |
+| Editar | Nombre y descripción siempre; añadir días, horas u opciones (sin quitar lo que tiene votos). Cada cambio se avisa en el chat. | Gratis | |
 
 ### 2.3 Votar
 
@@ -87,7 +89,7 @@ vacía para marcarla (Gratis, Premium o Gratis con límite).
 | --- | --- | --- | --- |
 | Más votadas | Las 5 mejores (los empates comparten puesto) y quién votó cada una. | Gratis | |
 | La más votada en el calendario | Un borde verde en la mejor casilla de cada opción. | Gratis | |
-| Desempate | Cada persona elige una sola de las empatadas; se puede finalizar, repetir entre las que siguen empatadas o anular. | Gratis | |
+| Desempate | Cada persona elige una sola de las empatadas; abierto se puede anular; finalizado con ganadora es definitivo (no se reabre); sin ganadora, solo se repite. | Gratis | |
 | Desempate que se ajusta solo | Si alguien se va y cambia el empate, se ajusta solo al momento y quien entra ve un aviso de lo que ha pasado. | Gratis | |
 | Imagen del resultado | Una tarjeta PNG para compartir, con la marca Hilemos. | Gratis (premium: sin marca o personalizada) | |
 | Añadir al calendario | Google Calendar o un archivo .ics para Apple, Outlook y otros. | Gratis | |
@@ -143,7 +145,8 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 | --- | --- | --- | --- |
 | Web y Android | La misma app, también instalable. | Gratis | |
 | Mala conexión | Guarda una copia local: abre más rápido y aguanta cortes. | Gratis | |
-| Avisos push | Alguien vota; cierre, desempate o fin del plazo; solicitudes. Cada uno se activa o desactiva en el perfil. Está hecho, pero **no activo**: necesita el plan Blaze de Firebase y desplegar las Cloud Functions. | Gratis los esenciales; premium los recordatorios (ver §6) | |
+| Avisos push | Alguien vota; cierre, desempate o fin del plazo; solicitudes. Cada uno se activa o desactiva en el perfil. Hechos en la web y en la app de Android, pero **no activos**: necesitan el plan Blaze de Firebase, la clave VAPID y desplegar las Cloud Functions. | Gratis los esenciales; premium los recordatorios (ver §6) | |
+| Privacidad y condiciones | Política de privacidad y condiciones de uso, enlazadas desde la entrada y el perfil. | Gratis (obligatorio) | |
 
 ---
 
@@ -230,23 +233,23 @@ o la aprobación no tiene que suscribirse.
 
 ### Imprescindibles antes de publicar en la tienda o de cobrar
 
-1. **Política de privacidad, condiciones de uso y contacto.** La Play Store y el RGPD las exigen; al cobrar, también
-   las condiciones de pago y de devolución.
-2. **Editar una votación ya creada**: título, descripción y añadir días u opciones. Quitarlos tiene que avisar si
-   ya tienen votos. Hoy solo se puede duplicar.
-3. **Elegir la ganadora y anunciarla.** Un paso final que cierre la votación, avise a todos del resultado y les
-   ofrezca añadirlo al calendario. Es el momento en que el plan queda cerrado.
+1. ~~Política de privacidad y condiciones de uso~~ (hechas). Falta una **dirección de contacto** en la política
+   (el RGPD la pide) y, al cobrar, las condiciones de pago y de devolución.
+2. ~~Editar una votación ya creada~~ (hecho: no se puede quitar lo que tiene votos y los cambios se avisan en el chat).
+3. ~~Elegir la ganadora~~: descartado. La ganadora la deciden los votos; finalizar el desempate deja el resultado
+   definitivo y avisa a todos.
 4. **Protección contra abusos:**
    - App Check, para que solo la app use la base de datos;
    - un límite de cuentas sin registro por dispositivo (bots);
    - denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios).
-5. **Activar los avisos push.** Ya están hechos: falta pasar a Blaze y desplegar las funciones.
+5. **Activar los avisos push.** Ya están hechos, también en la app de Android: falta pasar a Blaze, poner la clave
+   VAPID y desplegar las funciones.
 
 ### Muy útiles
 
 6. **«Si hace falta».** Además de «sí», una respuesta tibia: ayuda a encontrar fechas cuando nada encaja.
 7. **Recordatorios automáticos**: a quien falta por votar y antes de que acabe el plazo. Buen candidato a premium.
-8. **Votaciones de opciones libres**, sin fechas: restaurante, regalo, destino… Abre muchos más usos.
+8. ~~Votaciones de opciones libres~~ (hecho).
 9. **Ocultar los resultados hasta votar o hasta el cierre**, para que nadie vote lo que ya va ganando.
 10. **Exportar los resultados** (Excel/CSV o PDF). Buen candidato a premium.
 11. **Una nota con el voto** («llego a las 22:00», «solo por la tarde»).

@@ -1,4 +1,5 @@
-// Duplicar una votación: se deja una plantilla y "Nueva votación" la recoge al abrirse.
+// Duplicar una votación: se deja una plantilla y "Nueva votación" la recoge al abrirse. Editarla usa la misma
+// plantilla, pero con todo lo que ya tiene (también lo pasado) y con los ids de sus opciones.
 import { useCallback } from "react";
 import * as D from "../lib/dates";
 import { MAX_PEOPLE, hoursForDay } from "../lib/model";
@@ -7,7 +8,10 @@ import { navigate } from "./route";
 import { useSession } from "./session";
 import { useUi } from "./ui";
 
-/** Datos con los que se abre "Nueva votación" al duplicar (sin votos ni fechas pasadas). */
+/** Opción de la plantilla. `id` solo al editar: así una opción que se renombra sigue siendo la misma. */
+export interface TemplateOption { id?: string; name: string; icon: string }
+
+/** Datos con los que se abre "Nueva votación" al duplicar (sin votos ni fechas pasadas) o al editar. */
 export interface CreateTemplate {
   title: string;
   description: string;
@@ -16,7 +20,10 @@ export interface CreateTemplate {
   days: string[];
   weeks: string[];
   count: number;
-  opts: { name: string; icon: string }[];
+  /** Opciones de cada día (votaciones de días). */
+  opts: TemplateOption[];
+  /** Opciones libres (votaciones de opciones). */
+  choices: TemplateOption[];
   from: string;
   to: string;
   step: number;
@@ -42,18 +49,22 @@ let pending: { tpl: CreateTemplate; at: number } | null = null;
 export const takeTemplate = (): CreateTemplate | null =>
   pending && Date.now() - pending.at < 5000 ? pending.tpl : null;
 
-function templateFromPoll(poll: Poll, extra: { groupId: string | null; emails?: string[] }): CreateTemplate {
+/** `edit`: para editarla, con todo lo que tiene (también lo pasado), el mismo nombre y los ids de las opciones. */
+function templateFromPoll(poll: Poll, extra: { groupId: string | null; emails?: string[]; edit?: boolean }): CreateTemplate {
   const today = D.todayKey();
-  const months = poll.months.filter(m => m >= D.currentMonthKey());
-  const days = poll.type === "days" || poll.type === "hours" ? poll.slots.filter(k => k >= today) : [];
-  const weeks = poll.type === "weeks" ? poll.slots.filter(w => D.weekEndKey(w) >= today) : [];
+  const edit = !!extra.edit;
+  const months = poll.months.filter(m => edit || m >= D.currentMonthKey());
+  const days = poll.type === "days" || poll.type === "hours" ? poll.slots.filter(k => edit || k >= today) : [];
+  const weeks = poll.type === "weeks" ? poll.slots.filter(w => edit || D.weekEndKey(w) >= today) : [];
   const options = poll.options || [];
+  const opt = (o: { id: string; name: string; icon: string }): TemplateOption =>
+    (edit ? { id: o.id, name: o.name, icon: o.icon } : { name: o.name, icon: o.icon });
   const hours = poll.hours || [];
   const step = STEPS.includes(poll.hourStep || 0) ? (poll.hourStep as number) : 60;
   const hoursByDay: Record<string, string[]> = {};
   if (poll.hourList) days.forEach(d => { const hs = hoursForDay(poll, d); if (hs.length) hoursByDay[d] = [...hs].sort(); });
   return {
-    title: poll.title.length + SUFFIX.length > TITLE_MAX
+    title: edit ? poll.title : poll.title.length + SUFFIX.length > TITLE_MAX
       ? poll.title.slice(0, TITLE_MAX - SUFFIX.length - 1) + "…" + SUFFIX
       : poll.title + SUFFIX,
     description: poll.description || "",
@@ -61,8 +72,9 @@ function templateFromPoll(poll: Poll, extra: { groupId: string | null; emails?: 
     months,
     days,
     weeks,
-    count: options.length || 1,
-    opts: options.map(o => ({ name: o.name, icon: o.icon })),
+    count: poll.type === "days" ? options.length || 1 : 1,
+    opts: poll.type === "days" ? options.map(opt) : [],
+    choices: poll.type === "options" ? options.map(opt) : [],
     from: hours[0] || "09:00",
     to: hours.length ? D.hhmm(D.minutesOf(hours[hours.length - 1]) + step) : "21:00",
     step,
@@ -75,6 +87,9 @@ function templateFromPoll(poll: Poll, extra: { groupId: string | null; emails?: 
     groupId: extra.groupId || "",
   };
 }
+
+/** Plantilla para editar la votación `poll` (ver Create con `edit`). */
+export const editTemplate = (poll: Poll) => templateFromPoll(poll, { groupId: null, edit: true });
 
 /** Abre "Nueva votación" con los datos de `poll` ya rellenados. */
 export function useDuplicate() {

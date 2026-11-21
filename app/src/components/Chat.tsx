@@ -1,4 +1,5 @@
-// Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía.
+// Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía. Además de los
+// mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as D from "../lib/dates";
 import { MAX_CHAT, isPresent } from "../lib/model";
@@ -7,6 +8,7 @@ import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
 import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
+import { Icon } from "./Icon";
 
 function fmtWhen(at: number) {
   const dt = new Date(at);
@@ -87,6 +89,16 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
                 // quedó en el mensaje: su nombre sin dueño. Así, si vuelve, sus mensajes recuperan su nombre.
                 const v = votes[m.uid];
                 const name = isPresent(v) ? v!.name || m.name : m.name;
+                if (m.sys) {
+                  // Aviso de un cambio: «Ana ha añadido el martes 16 de diciembre».
+                  return (
+                    <div key={m.id} className="chat-sys">
+                      <Icon name="edit" />
+                      <p><strong>{own ? user.name : name}</strong> {m.text}</p>
+                      <span className="chat-when">{fmtWhen(m.at)}</span>
+                    </div>
+                  );
+                }
                 return (
                   <div key={m.id} className={cls("chat-msg", own && "own")}>
                     <Avatar name={name} photo={own ? user.photo : v?.photo} size={28} seed={m.uid} />

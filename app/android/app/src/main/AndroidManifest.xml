@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Avisos (Firebase Cloud Messaging, plugin @capacitor/push-notifications): icono pequeño, color y canal por
+             defecto. El canal «avisos» lo crea la app al activarlos (app/src/lib/push.ts) y las Cloud Functions lo
+             usan al mandarlos (functions/index.js). -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_hilemos" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/hilemos_brand" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="avisos" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
