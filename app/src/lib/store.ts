@@ -93,6 +93,25 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       anon: isKeyOnly(u),
       hasName: !!u.displayName || (u.isAnonymous && !!anonName),
     };
+  // Escucha datos del propio usuario (users/{uid}/…), que siempre puede leer. Justo al entrar (sobre todo al juntar
+  // dos formas de entrar en la misma cuenta) Firestore puede recibir la primera lectura antes que la sesión y
+  // rechazarla con permission-denied, y la escucha se corta. En ese caso se renueva la sesión y se reintenta
+  // (hasta 3 veces) antes de dar el error.
+  function ownSnapshot(uid: string, q: import("firebase/firestore").Query<DocumentData>,
+    next: (s: QuerySnapshot<DocumentData>) => void, onErr?: (e: unknown) => void) {
+    let unsub = () => {}, stopped = false, tries = 0, timer = 0;
+    const start = () => {
+      unsub = F.onSnapshot(q, next, async e => {
+        const own = auth.currentUser?.uid === uid;
+        if (stopped || (e as { code?: string })?.code !== "permission-denied" || !own || tries >= 3) { onErr?.(e); return; }
+        tries++;
+        await auth.currentUser?.getIdToken(true).catch(() => {});
+        if (!stopped) timer = window.setTimeout(start, 400 * tries);
+      });
+    };
+    start();
+    return () => { stopped = true; clearTimeout(timer); unsub(); };
+  }
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
   const chatCol = (id: string) => F.collection(db, "polls", id, "chat");
@@ -294,8 +313,17 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
 
     // ----- Perfil -----
     async getProfile(uid) {
-      const s = await F.getDoc(F.doc(db, "users", uid));
-      return s.exists() ? (s.data() as Profile) : null;
+      // Mismo reintento que ownSnapshot: justo al entrar, la primera lectura puede llegar antes que la sesión.
+      for (let tries = 0; ; tries++) {
+        try {
+          const s = await F.getDoc(F.doc(db, "users", uid));
+          return s.exists() ? (s.data() as Profile) : null;
+        } catch (e) {
+          if ((e as { code?: string })?.code !== "permission-denied" || auth.currentUser?.uid !== uid || tries >= 2) throw e;
+          await auth.currentUser?.getIdToken(true).catch(() => {});
+          await new Promise(r => setTimeout(r, 400 * (tries + 1)));
+        }
+      }
     },
     saveProfile: (uid, data) => F.setDoc(F.doc(db, "users", uid), data, { merge: true }),
 
@@ -307,8 +335,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     watchLibrary(uid, cb, onErr) {
       let polls: Library["polls"] | null = null, groups: Library["groups"] | null = null;
       const emit = () => { if (polls && groups) cb({ polls, groups }); };
-      const u1 = F.onSnapshot(libCol(uid), s => { polls = toMap<LibraryEntry>(s); emit(); }, onErr);
-      const u2 = F.onSnapshot(groupsCol(uid), s => { groups = toMap<Group>(s); emit(); }, onErr);
+      const u1 = ownSnapshot(uid, libCol(uid), s => { polls = toMap<LibraryEntry>(s); emit(); }, onErr);
+      const u2 = ownSnapshot(uid, groupsCol(uid), s => { groups = toMap<Group>(s); emit(); }, onErr);
       return () => { u1(); u2(); };
     },
     saveLibraryEntry: (uid, pollId, data) => F.setDoc(F.doc(libCol(uid), pollId), data, { merge: true }),

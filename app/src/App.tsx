@@ -56,8 +56,8 @@ export function App() {
       const mine = ++seq;
       if (!authUser) { setUser(null); return; }
       // El perfil (nombre e imagen elegidos por el usuario) tiene prioridad sobre los datos de Google.
-      let profile = null;
-      try { profile = await store.getProfile(authUser.uid); } catch { /* sin perfil: datos de Google */ }
+      let profile = null, profileRead = false;
+      try { profile = await store.getProfile(authUser.uid); profileRead = true; } catch { /* sin perfil: datos de Google */ }
       const photo = typeof profile?.photo === "string" ? profile.photo : authUser.photo;
       // Miniatura para los votos (los perfiles guardados antes de existir `thumb` no la tienen).
       const thumb = typeof profile?.thumb === "string" ? profile.thumb : await makeThumb(photo).catch(() => "");
@@ -69,7 +69,8 @@ export function App() {
         photo,
         thumb,
         hideRemoveWarning: !!profile?.hideRemoveWarning,
-        needsName: !profile?.name && !authUser.hasName,
+        // Solo si se ha podido leer el perfil: si falló la lectura, no se sabe si tiene nombre.
+        needsName: profileRead && !profile?.name && !authUser.hasName,
       });
     });
   }, [store]);
