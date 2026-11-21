@@ -88,7 +88,7 @@ vacía para marcarla (Gratis, Premium o Gratis con límite).
 | Más votadas | Las 5 mejores (los empates comparten puesto) y quién votó cada una. | Gratis | |
 | La más votada en el calendario | Un borde verde en la mejor casilla de cada opción. | Gratis | |
 | Desempate | Cada persona elige una sola de las empatadas; se puede finalizar, repetir entre las que siguen empatadas o anular. | Gratis | |
-| Desempate que se ajusta solo | Si alguien se va y cambia el empate, se recalcula al abrir la votación un administrador. | Gratis | |
+| Desempate que se ajusta solo | Si alguien se va y cambia el empate, se recalcula al abrir la votación un administrador, y todos ven un aviso de lo que ha pasado. | Gratis | |
 | Imagen del resultado | Una tarjeta PNG para compartir, con la marca Hilemos. | Gratis (premium: sin marca o personalizada) | |
 | Añadir al calendario | Google Calendar o un archivo .ics para Apple, Outlook y otros. | Gratis | |
 | Avisar a quien falta | Un mensaje con los nombres de quien falta por votar, para WhatsApp o el menú de compartir. | Gratis | |
@@ -99,7 +99,7 @@ vacía para marcarla (Gratis, Premium o Gratis con límite).
 | --- | --- | --- | --- |
 | Tabla de participantes | Lo que ha votado cada uno, desplegable por persona. | Gratis | |
 | Buscador y filtros | A partir de 10 personas: buscar y filtrar por quién ha votado y quién no. | Gratis | |
-| «Se fueron» | Quien salió con la votación cerrada, aparte; sus votos siguen contando. | Gratis | |
+| «Se fueron» | Quien salió con la votación cerrada, aparte; sus votos siguen contando. Si vuelve con el enlace, recupera su nombre en sus votos y en el chat. | Gratis | |
 | Cerrar y reabrir | Al reabrir se anula el desempate. | Gratis | |
 | Hacerla anónima después | Sin vuelta atrás, para no destapar votos. | Gratis | |
 | Administradores | El creador nombra coorganizadores que gestionan como él, salvo eliminarla y nombrar a otros. | Premium | |

@@ -83,6 +83,7 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 
 ## Componentes
 
+- Aviso del desempate (`.tb-note`): cuando cambia porque alguien deja de participar, lo ven todos. Va en `tie-soft` con texto `tie-ink`, como el estado del desempate: dentro de su tarjeta, bajo la explicación, o, si el desempate se quitó, suelto en su lugar (`.tb-note-solved`, con borde `tie`).
 - «Se fueron» (`GonePeople`, en «Participantes»): quienes salieron cuando ya no se podía votar, con sus votos y un nombre sin dueño. Va debajo de la tabla, plegado tras un botón con el mismo triángulo que despliega los votos de una persona, en `muted`, y su tabla en `muted` con los avatares en gris: cuentan en los totales, pero ya no están.
 - Clave de acceso (`AccessKeyDialog`): la clave va en `.key-box`, monoespaciada en `brand-strong` sobre `brand-soft` con borde discontinuo de `brand`, para que se vea como algo que hay que guardar. Debajo, «Copiar» y «Compartir»; el diálogo no se cierra hasta marcar «La he guardado».
 

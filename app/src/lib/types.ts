@@ -16,6 +16,17 @@ export interface Tiebreak {
   finishedAt?: number;
 }
 
+/**
+ * Aviso para todos de que el desempate cambió solo porque alguien dejó de participar (lo escribe TiebreakGuard).
+ * `solved`: ya no había empate y se quitó el desempate; si no, el desempate `tb` sigue solo entre `n` opciones.
+ */
+export interface TiebreakNote {
+  at: number;
+  solved: boolean;
+  tb?: number;
+  n?: number;
+}
+
 /** Documento `polls/{id}` tal como se guarda. */
 export interface PollData {
   v?: number;
@@ -35,6 +46,7 @@ export interface PollData {
   options?: PollOption[];
   anonymous?: boolean;
   tiebreak?: Tiebreak | null;
+  tbNote?: TiebreakNote | null;
   ownerUid: string;
   /** Administradores nombrados por el creador (uids): gestionan la votación como él, salvo eliminarla y
    *  nombrar o quitar administradores. */

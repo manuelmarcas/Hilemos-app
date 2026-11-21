@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin,
+  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -19,7 +19,7 @@ import { Chat } from "../../components/Chat";
 import { Icon } from "../../components/Icon";
 import { BoardDays, BoardHours, BoardMonths, BoardWeeks, type BoardProps } from "./Boards";
 import { Legend, Summary, instructions } from "./Summary";
-import { TiebreakCard, TiebreakGuard } from "./Tiebreak";
+import { TiebreakCard, TiebreakGuard, TiebreakSolvedNote } from "./Tiebreak";
 import { GonePeople, PeopleList, PeopleTable, type PeopleFilter } from "./People";
 import { AccessPanel, BlockedView, Requests, WaitingView } from "./Access";
 import { CalendarMenu, OwnerMenu } from "./Menus";
@@ -148,8 +148,9 @@ export function PollPage({ id }: { id: string }) {
         });
       return;
     }
-    // Nombre y miniatura se copian en el voto; solo se reescriben si han cambiado.
-    if (me.name !== user.name || (me.photo || "") !== user.thumb) {
+    // Nombre y miniatura se copian en el voto; solo se reescriben si han cambiado o si vuelve después de haberse ido
+    // (joinPoll le quita «gone»: sus votos y sus mensajes vuelven a llevar su nombre).
+    if (me.gone || me.name !== user.name || (me.photo || "") !== user.thumb) {
       store.joinPoll(id, participant).catch(e => setStatus("No se pudo registrar tu participación. " + errMsg(e)));
     }
     addToMenu();
@@ -183,6 +184,13 @@ export function PollPage({ id }: { id: string }) {
   // «Participantes» va aparte, en «Se fueron».
   const present = T.people.filter(p => !p.gone);
   const gone = T.people.filter(p => p.gone);
+  // Quien la creó y se fue sale con su nombre sin dueño; si ha vuelto, con el suyo.
+  const founderBack = !!poll.founder && isPresent(shown[poll.founder]);
+  const creator = poll.founder
+    ? founderBack ? (poll.founder === user.uid ? "ti" : shown[poll.founder].name) : poll.founderName || "alguien"
+    : poll.ownerUid === user.uid ? "ti" : poll.ownerName || "alguien";
+  // El aviso de que el desempate cambió porque alguien se fue deja de valer cuando un administrador lo cambia.
+  const clearTbNote = poll.tbNote ? { tbNote: null } : {};
   const mine = new Set(votes[user.uid]?.picks || []);
   const isOwner = poll.ownerUid === user.uid;
   // Administra (creador o nombrado): gestiona la votación. Eliminarla y nombrar administradores, solo el creador.
@@ -250,7 +258,9 @@ export function PollPage({ id }: { id: string }) {
       danger: true,
     }))) return;
     // Al reabrir se quita un plazo ya pasado: si no, la votación quedaría abierta pero sin poder votar.
-    await store.updatePoll(id, poll.closed ? { closed: false, tiebreak: null, ...(expired ? { deadline: 0 } : {}) } : { closed: true });
+    await store.updatePoll(id, poll.closed
+      ? { closed: false, tiebreak: null, ...clearTbNote, ...(expired ? { deadline: 0 } : {}) }
+      : { closed: true });
     toast(poll.closed ? "Votación reabierta" : "Votación cerrada");
   });
 
@@ -272,7 +282,7 @@ export function PollPage({ id }: { id: string }) {
       message: `Se cerrará la votación principal y cada participante podrá elegir solo una de las ${leaders.length} opciones empatadas en el primer puesto.`,
       confirmLabel: "Abrir desempate",
     }))) return;
-    await store.updatePoll(id, { closed: true, tiebreak: { id: Date.now(), candidates: leaders.slice(0, 50).map(e => e.key), done: false, round: 1 } });
+    await store.updatePoll(id, { closed: true, tiebreak: { id: Date.now(), candidates: leaders.slice(0, 50).map(e => e.key), done: false, round: 1 }, ...clearTbNote });
     toast("Desempate abierto");
   });
 
@@ -293,7 +303,7 @@ export function PollPage({ id }: { id: string }) {
       message: `Nueva ronda solo entre las ${TB.leaders.length} opciones que siguen empatadas. Cada persona vuelve a elegir una.`,
       confirmLabel: "Repetir desempate",
     }))) return;
-    await store.updatePoll(id, { tiebreak: { id: Date.now(), candidates: TB.leaders, done: false, round: (poll.tiebreak?.round || 1) + 1 } });
+    await store.updatePoll(id, { tiebreak: { id: Date.now(), candidates: TB.leaders, done: false, round: (poll.tiebreak?.round || 1) + 1 }, ...clearTbNote });
     toast("Nueva ronda de desempate");
   });
 
@@ -304,7 +314,7 @@ export function PollPage({ id }: { id: string }) {
       confirmLabel: poll.tiebreak?.done ? "Quitar" : "Anular",
       danger: true,
     }))) return;
-    await store.updatePoll(id, { tiebreak: null });
+    await store.updatePoll(id, { tiebreak: null, ...clearTbNote });
     toast("Desempate anulado");
   });
 
@@ -378,7 +388,7 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-head">
         <div className="poll-title">
           <div className="kicker">
-            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {poll.founder ? poll.founderName || "alguien" : isOwner ? "ti" : poll.ownerName || "alguien"} · <Icon name="users" /> {plural(present.length, ["participante", "participantes"])}
+            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {creator} · <Icon name="users" /> {plural(present.length, ["participante", "participantes"])}
             {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
           <div className="mode-line">
@@ -434,6 +444,7 @@ export function PollPage({ id }: { id: string }) {
         <div className="legend"><Legend poll={poll} T={T} /></div>
       </div>
       <div className="status" id="poll-status" role="alert">{status}</div>
+      <TiebreakSolvedNote poll={poll} T={T} />
       {TB && (
         <TiebreakCard poll={poll} T={T} TB={TB} myTb={votes[user.uid]?.tb} canManage={admin} byUid={byUid}
           onVote={tiebreakVote} onFinish={tbFinish} onRepeat={tbRepeat} onCancel={tbCancel}

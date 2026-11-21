@@ -71,9 +71,12 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
   con el plazo pasado), se quedan con ese nombre y van aparte, plegados, en **«Se fueron»** de «Participantes» (los
   totales siguen cuadrando; las cabeceras solo cuentan a quien sigue). Si se iba durante un desempate, el primer
   administrador que abre la votación lo recalcula: sin empate se quita y queda la ganadora; con empate entre menos
-  opciones, sigue solo entre esas; con el mismo empate, no cambia nada. Si vuelve a entrar con el enlace, recupera su
-  nombre y sus votos (si se quedaron). Una votación que ya no existe solo se quita de la lista. Si era la última
-  votación de un grupo, el grupo también se borra.
+  opciones, sigue solo entre esas; con el mismo empate, no cambia nada. **Todos ven un aviso de lo que ha pasado**
+  (en la tarjeta del desempate o, si se quitó, en su lugar), y quien no administra ve, hasta que se ajuste, que el
+  empate ha cambiado. Si vuelve a entrar con el enlace, vuelve a ser él: sus votos (si se quedaron) y sus mensajes
+  recuperan su nombre, y si la creó vuelve a salir como «Creador», aunque la sigue gestionando el «Delegado». Una
+  votación que ya no existe solo se quita de la lista. Si era la última votación de un grupo, el grupo también se
+  borra.
 - Quien sale de una votación que creó la cede a un administrador al azar o, si no hay, a otro participante (si no
   queda nadie, se borra). Quien la hereda es su **«Delegado»**, con todos los poderes del creador. Quien se fue
   (`gone` en su voto) no hereda, no se le cuenta como «falta por votar» ni aparece en las solicitudes.
@@ -108,7 +111,7 @@ index.html        Redirección de GitHub Pages a la dirección única
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana o meses votables), `hours` y `hourStep` (solo horas), `options` (solo días), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
 | `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `updatedAt` |
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |

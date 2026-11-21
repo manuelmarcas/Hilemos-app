@@ -31,11 +31,12 @@ const short = (t: string | undefined) => {
  */
 function leaveMessage(p: Poll, uid: string, vote: Vote | null, group: string | null) {
   const status = vote ? memberStatus(vote) : null;
+  const keeps = status === "accepted" && keepsVotesOnLeave(p);
   const out: string[] = [];
   if (status === "pending") {
     out.push("Se retirará tu solicitud para entrar.");
   } else if (status === "accepted") {
-    if (keepsVotesOnLeave(p)) {
+    if (keeps) {
       out.push("Ya no se puede votar, así que tus votos se quedan, pero con un nombre sin dueño.");
     } else if (p.tiebreak && !p.tiebreak.done) {
       out.push("Hay un desempate abierto, así que se borrarán tus votos (también el del desempate). Si con eso cambia " +
@@ -48,12 +49,19 @@ function leaveMessage(p: Poll, uid: string, vote: Vote | null, group: string | n
     out.push("Si escribiste en el chat, tus mensajes se quedan, también con un nombre sin dueño.");
   }
   if (p.ownerUid === uid) {
-    out.push("Como la creaste, pasará a un administrador o a otro participante al azar; si no queda nadie, se borrará.");
+    out.push("Como la creaste, pasará a un administrador o a otro participante al azar (si no queda nadie, se " +
+      "borrará). Si vuelves, entrarás como participante.");
   } else if (isAdmin(p, uid)) {
     out.push("Dejarás de ser administrador.");
   }
   if (group) out.push(`Era la última votación del grupo «${group}», así que el grupo también se eliminará.`);
-  out.push(p.approval ? "Para volver, tendrás que pedir entrar otra vez con el enlace." : "Podrás volver a entrar con el enlace.");
+  // Cómo volver. Con los votos que se quedan, su voto sigue ahí y al volver recupera su nombre (joinPoll); si no,
+  // entra de nuevo (con aprobación, pidiéndolo otra vez). Sus mensajes del chat recuperan su nombre al volver a estar.
+  if (keeps) out.push("Si vuelves a entrar con el enlace, recuperarás tu nombre y tus votos.");
+  else if (p.approval) out.push("Para volver, tendrás que pedir entrar otra vez con el enlace.");
+  else out.push(status === "accepted"
+    ? "Podrás volver a entrar con el enlace, y tus mensajes recuperarán tu nombre."
+    : "Podrás volver a entrar con el enlace.");
   return out.join(" ");
 }
 

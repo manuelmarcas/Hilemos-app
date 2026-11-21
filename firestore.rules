@@ -73,16 +73,17 @@ service cloud.firestore {
       allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());
 
       // Los administradores (creador y nombrados) pueden cerrar/reabrir, cambiar título o descripción, hacerla
-      // anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate, el plazo para votar,
-      // el tope de personas y el contador (al aceptar o rechazar solicitudes). Solo el creador cambia su nombre
-      // visible, nombra o quita administradores y pasa la votación a otra persona (al eliminar su cuenta).
+      // anónima (nunca al revés, para no destapar votos hechos como anónimos), el desempate y su aviso (tbNote),
+      // el plazo para votar, el tope de personas y el contador (al aceptar o rechazar solicitudes). Solo el creador
+      // cambia su nombre visible, nombra o quita administradores y pasa la votación a otra persona (al salir de
+      // ella o eliminar su cuenta).
       function ownerUpdate() {
         let d = request.resource.data;
         let old = resource.data;
         let keys = d.diff(old).affectedKeys();
         let creator = old.ownerUid == request.auth.uid;
         return isAdminOf(old)
-          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid', 'founder', 'founderName'])
+          && keys.hasOnly(['closed', 'title', 'description', 'ownerName', 'anonymous', 'tiebreak', 'tbNote', 'maxPeople', 'members', 'deadline', 'admins', 'ownerUid', 'founder', 'founderName'])
           && (!keys.hasAny(['ownerName', 'admins', 'ownerUid', 'founder', 'founderName']) || creator)
           // El creador original (founder) solo se apunta al pasar la votación, y una vez.
           && (!keys.hasAny(['founder', 'founderName'])
@@ -103,6 +104,13 @@ service cloud.firestore {
                   && d.tiebreak.candidates is list
                   && d.tiebreak.candidates.size() >= 2
                   && d.tiebreak.candidates.size() <= 50))
+          // Aviso para todos de que el desempate cambió porque alguien dejó de participar (o null al quitarlo).
+          && (!keys.hasAny(['tbNote'])
+              || d.tbNote == null
+              || (d.tbNote is map
+                  && d.tbNote.keys().hasOnly(['at', 'solved', 'tb', 'n'])
+                  && d.tbNote.at is int
+                  && d.tbNote.solved is bool))
           && (!keys.hasAny(['maxPeople', 'members'])
               || ('maxPeople' in resource.data
                   && d.maxPeople is int && d.maxPeople >= 2 && d.maxPeople <= 150

@@ -1,7 +1,7 @@
 // Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as D from "../lib/dates";
-import { MAX_CHAT } from "../lib/model";
+import { MAX_CHAT, isPresent } from "../lib/model";
 import type { ChatMessage, Poll, Votes } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
@@ -83,12 +83,16 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
               ? <p className="muted">Todavía no hay mensajes. Escribe el primero.</p>
               : msgs.map(m => {
                 const own = m.uid === user.uid;
+                // Quien sigue en la votación sale con el nombre de su voto (el de ahora); quien se fue, con el que
+                // quedó en el mensaje: su nombre sin dueño. Así, si vuelve, sus mensajes recuperan su nombre.
+                const v = votes[m.uid];
+                const name = isPresent(v) ? v!.name || m.name : m.name;
                 return (
                   <div key={m.id} className={cls("chat-msg", own && "own")}>
-                    <Avatar name={m.name} photo={own ? user.photo : votes[m.uid]?.photo} size={28} seed={m.uid} />
+                    <Avatar name={name} photo={own ? user.photo : v?.photo} size={28} seed={m.uid} />
                     <div className="chat-body">
                       <div className="chat-head">
-                        <span className="chat-name">{own ? "Tú" : m.name}</span>
+                        <span className="chat-name">{own ? "Tú" : name}</span>
                         <span className="chat-when">{fmtWhen(m.at)}</span>
                       </div>
                       <p className="chat-text">{m.text}</p>

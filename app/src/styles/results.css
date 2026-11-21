@@ -145,6 +145,15 @@ tr.open td{border-bottom-color:transparent}
 .tb-sub{margin:8px 0 12px;font-size:.92rem;color:var(--muted);line-height:1.45}
 .tb-sub strong{color:var(--ink)}
 .tb-tools{margin:0 0 12px}
+/* Aviso de que el desempate cambió porque alguien dejó de participar (lo ven todos): dentro de la tarjeta o, si el
+   desempate se quitó, suelto donde estaba */
+.tb-note{
+  display:flex;gap:8px;align-items:flex-start;margin:0 0 12px;padding:10px 12px;border-radius:12px;
+  background:var(--tie-soft);color:var(--tie-ink);font-size:.88rem;line-height:1.45;
+}
+.tb-note .ic{flex:none;margin-top:2px}
+.tb-note strong{color:inherit}
+.tb-note-solved{margin:0 0 20px;border:1px solid var(--tie)}
 .tb-tools:empty{display:none}
 .tb-options{display:grid;gap:8px}
 @container view (min-width:680px){.tb-options{grid-template-columns:repeat(2,minmax(0,1fr))}}

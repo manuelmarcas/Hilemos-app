@@ -202,10 +202,19 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   borra la votación si no queda nadie (su chat no se puede borrar desde la app y se queda); si era administrador, se
   quita de `admins`. Sus votos: `keepsVotesOnLeave` (`model.ts`) decide si se quedan (cerrada o plazo pasado, sin
   desempate abierto: con el nombre sin dueño, sin foto y `gone`) o se borran (con tope, junto con `members - 1`).
-  `TiebreakGuard` (`pages/poll/Tiebreak.tsx`) ajusta el desempate al abrir la votación un administrador.
+- `TiebreakGuard` (`pages/poll/Tiebreak.tsx`) ajusta el desempate al abrir la votación un administrador
+  (`tiebreakShift` en `model.ts` dice si el empate ya no es el del desempate) y, en la misma escritura, deja
+  `tbNote` para que todos sepan qué ha pasado: `TiebreakSolvedNote` (se quitó el desempate) o el aviso de
+  `TiebreakCard` (sigue entre menos opciones; a quien había elegido una que sale, se le pide que vuelva a elegir).
+  Mientras no se ajusta, quien no administra ve en la tarjeta que el empate ha cambiado. Las acciones de los
+  administradores que cambian el desempate (reabrir, abrir otro, repetir, anular) quitan `tbNote`; en las reglas,
+  `tbNote` solo lo escriben administradores y con esa forma.
 - En «Participantes», quien tiene `gone` va aparte en «Se fueron» (`GonePeople`, plegado y en gris): sus votos cuentan
-  en los totales, pero la cabecera, la pestaña y la imagen de resultados solo cuentan a quien sigue. Si vuelve a
-  entrar, `joinPoll` le quita `gone` y recupera su nombre.
+  en los totales, pero la cabecera, la pestaña y la imagen de resultados solo cuentan a quien sigue.
+- Volver: al abrir otra vez la votación, `joinPoll` le quita `gone` y pone su nombre y su foto en el voto. El chat
+  muestra a quien sigue en la votación (`isPresent`) con el nombre de su voto, y a quien se fue, con el nombre
+  guardado en el mensaje (el sin dueño): así sus mensajes recuperan su nombre al volver, sin reescribirlos. «Creada
+  por» hace lo mismo con `founder`.
 - `deleteAccount` (`store/firebase.ts`): `leave()` en cada votación de su lista y después borra su lista, grupos,
   dispositivos de avisos y perfil, y la cuenta.
 - `prepareDeleteAccount`: Firebase solo deja borrar una cuenta si se entró hace poco. Con Google se vuelve a pedir

@@ -51,6 +51,8 @@ export const memberStatus = (v?: Vote | null): MemberStatus =>
 export const acceptedVotes = (votes: Votes): Votes =>
   Object.fromEntries(Object.entries(votes).filter(([, v]) => !v?.status));
 export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
+/** Sigue en la votación (aceptado y sin haberse ido): su voto lleva su nombre y su foto de ahora. */
+export const isPresent = (v?: Vote | null) => !!v && !v.status && !v.gone;
 /** Administra la votación: el creador o alguien que él ha nombrado administrador. */
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
 
@@ -215,6 +217,18 @@ export function tally(poll: PollData, votes: Votes): Tally {
   const leaders = ranking.filter(e => e.rank === 1);
 
   return { opts, slots, valid, counts, voters, best, ranking, top, leaders, people };
+}
+
+/**
+ * Empatadas en el primer puesto que no coinciden con las del desempate abierto: alguien dejó de participar (salió,
+ * eliminó su cuenta o le rechazaron) y sus votos ya no cuentan. null si el desempate está al día. Ver TiebreakGuard.
+ */
+export function tiebreakShift(poll: PollData, T: Tally): string[] | null {
+  const tb = poll.tiebreak;
+  if (!poll.closed || !tb || tb.done) return null;
+  const leaders = T.leaders.map(e => e.key).slice(0, 50);
+  const same = leaders.length === tb.candidates.length && leaders.every(k => tb.candidates.includes(k));
+  return same ? null : leaders;
 }
 
 export interface TiebreakTally {

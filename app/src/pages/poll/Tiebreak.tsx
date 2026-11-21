@@ -1,10 +1,10 @@
-// Desempate: la tarjeta para votar (una sola opción entre las empatadas) y su ajuste cuando alguien se va.
+// Desempate: la tarjeta para votar (una sola opción entre las empatadas) y su ajuste cuando alguien deja de
+// participar, con un aviso que ven todos.
 import { useEffect, useRef, type ReactNode } from "react";
-import { plural, slotLabel, unitParts, type Person, type Tally, type TiebreakTally } from "../../lib/model";
+import { plural, slotLabel, tiebreakShift, unitParts, type Person, type Tally, type TiebreakTally } from "../../lib/model";
 import type { Poll, Vote } from "../../lib/types";
 import { cls } from "../../lib/util";
 import { useSession } from "../../state/session";
-import { useUi } from "../../state/ui";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
 
@@ -35,6 +35,20 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
   const myPick = myTb?.id === TB.id ? myTb.pick : null;
   const winner = done && TB.leaders.length === 1 ? TB.leaders[0] : null;
   const stillTied = done && TB.leaders.length > 1;
+  // Si alguien dejó de participar y cambió el empate, lo ven todos: si ya se ajustó (tbNote, lo escribe
+  // TiebreakGuard), qué ha pasado; si no, que se ajustará al abrirla quien la administra (a él ya se le ajusta solo).
+  let note: ReactNode = null;
+  if (!done && !canManage && tiebreakShift(poll, T)) {
+    note = "Alguien ha dejado de participar y con eso ha cambiado el empate. El desempate se ajustará en cuanto " +
+      "abra la votación quien la administra.";
+  } else if (!done && poll.tbNote && !poll.tbNote.solved && poll.tbNote.tb === TB.id) {
+    const lost = myTb?.id === TB.id && !TB.candidates.includes(myTb.pick);
+    note = <>
+      Alguien ha dejado de participar y con eso ha cambiado el empate: el desempate sigue solo entre
+      las {TB.candidates.length} opciones que siguen empatadas.
+      {lost && <> <strong>Tu elección ya no está entre ellas: vuelve a elegir.</strong></>}
+    </>;
+  }
   let sub: ReactNode;
   if (done) {
     sub = winner
@@ -50,6 +64,7 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
         <span className="tb-state">{done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
       </div>
       <p className="tb-sub">{sub}</p>
+      {note && <p className="tb-note"><Icon name="users" /><span>{note}</span></p>}
       {/* Como en «Participantes»: el aviso va encima de la lista a la que se refiere, no con los botones de gestión. */}
       {!done && <div className="tb-tools">{remind}</div>}
       <div className="tb-options">
@@ -84,31 +99,47 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
 }
 
 /**
- * Si alguien sale (o elimina su cuenta) durante un desempate, sus votos se borran y el empate puede cambiar.
- * Quien sale no puede tocar el desempate (no es administrador), así que lo ajusta el primer administrador que abre
- * la votación: sin empate, se quita el desempate y queda la ganadora; con empate entre menos opciones, sigue solo
- * entre esas (los votos ya hechos a las que siguen valen); si el empate es el mismo, no cambia nada.
+ * Si alguien deja de participar durante un desempate (sale, elimina su cuenta o le rechazan), sus votos dejan de
+ * contar y el empate puede cambiar. Quien sale no puede tocar el desempate (no es administrador), así que lo ajusta
+ * el primer administrador que abre la votación: sin empate, se quita el desempate y queda la ganadora; con empate
+ * entre menos opciones, sigue solo entre esas (los votos ya hechos a las que siguen valen); si el empate es el mismo,
+ * no cambia nada. A la vez deja un aviso (tbNote) para que todos sepan qué ha pasado: TiebreakCard y
+ * TiebreakSolvedNote.
  */
 export function TiebreakGuard({ id, poll, T, active }: { id: string; poll: Poll; T: Tally; active: boolean }) {
   const { store } = useSession();
-  const { toast } = useUi();
   const tb = poll.tiebreak;
-  const leaders = T.leaders.map(e => e.key).slice(0, 50);
+  const leaders = tiebreakShift(poll, T);
   const busy = useRef(false);
-  const leadersKey = leaders.join("|");
-  const candKey = tb?.candidates.join("|") || "";
+  const leadersKey = leaders?.join("|") || "";
   useEffect(() => {
-    if (!active || !poll.closed || !tb || tb.done || busy.current) return;
-    const cands = tb.candidates;
-    if (leaders.length === cands.length && leaders.every(k => cands.includes(k))) return;
+    if (!active || !tb || !leaders || busy.current) return;
     busy.current = true;
     const solved = leaders.length < 2;
-    store.updatePoll(id, { tiebreak: solved ? null : { ...tb, candidates: leaders } })
-      .then(() => toast(solved
-        ? "Alguien ha salido y ya no hay empate: se ha quitado el desempate y queda la ganadora."
-        : "Alguien ha salido: el desempate sigue solo entre las opciones que quedan empatadas."))
+    const at = Date.now();
+    store.updatePoll(id, solved
+      ? { tiebreak: null, tbNote: { at, solved: true } }
+      : { tiebreak: { ...tb, candidates: leaders }, tbNote: { at, solved: false, tb: tb.id, n: leaders.length } })
       .catch(() => { /* lo intentará el siguiente administrador */ })
       .finally(() => { busy.current = false; });
-  }, [active, poll.closed, tb?.id, tb?.done, candKey, leadersKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active, tb?.id, leadersKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
+}
+
+/**
+ * Aviso para todos cuando el desempate se quitó porque alguien dejó de participar y ya no había empate (tbNote).
+ * Se ve mientras la votación siga cerrada y sin desempate.
+ */
+export function TiebreakSolvedNote({ poll, T }: { poll: Poll; T: Tally }) {
+  if (!poll.closed || poll.tiebreak || !poll.tbNote?.solved) return null;
+  const winner = T.leaders.length === 1 ? unitText(poll, T, T.leaders[0].key) : null;
+  return (
+    <p className="tb-note tb-note-solved" role="status">
+      <Icon name="scale" />
+      <span>
+        Alguien dejó de participar durante el desempate y con eso ya no hay empate: se ha quitado el desempate
+        {winner ? <> y gana <strong>{winner}</strong></> : " y gana la más votada"}.
+      </span>
+    </p>
+  );
 }
