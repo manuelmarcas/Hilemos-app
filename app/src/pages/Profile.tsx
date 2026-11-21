@@ -214,7 +214,8 @@ export function Profile() {
             ) : (
               <form className="pf-mail" onSubmit={sendMail}>
                 <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
-                  required value={mail} onChange={e => setMail(e.target.value)} />
+                  required data-error="Escribe tu correo para que te mandemos el enlace."
+                  value={mail} onChange={e => setMail(e.target.value)} />
                 <button className="btn" type="submit" disabled={mailBusy}><Icon name="mail" /> {mailBusy ? "Enviando…" : "Enviarme el enlace"}</button>
               </form>
             )}

@@ -79,6 +79,7 @@ export function EmailLinkFinish({ store, url, onDone }: {
           <form className="gate-anon" onSubmit={submitEmail}>
             <p>Para terminar de entrar, confirma el correo al que te mandamos el enlace.</p>
             <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" required autoFocus
+              data-error="Escribe el correo al que te mandamos el enlace."
               value={email} onChange={e => setEmail(e.target.value)} />
             <button className="btn primary" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
           </form>
@@ -87,6 +88,7 @@ export function EmailLinkFinish({ store, url, onDone }: {
           <form className="gate-anon" onSubmit={submitName}>
             <p><Icon name="check" /> Ya has entrado con tu correo. ¿Cómo quieres que te vean los demás?</p>
             <input className="input" maxLength={40} placeholder="Tu nombre" autoComplete="nickname" required autoFocus
+              data-error="Escribe el nombre que verán los demás."
               value={name} onChange={e => setName(e.target.value)} />
             <button className="btn primary" type="submit" disabled={busy}>Continuar</button>
           </form>

@@ -46,6 +46,7 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 
 - Al pasar el ratón: fondo `hover`. Elegido: relleno `brand` en chips y en el círculo del desempate; relleno de la opción (`c0`…`c3`) en las casillas del calendario, con `aria-pressed="true"`.
 - Desplegables: siempre `<select class="input">` (nunca el aspecto del sistema). Llevan la flecha propia (`--chevron`, en `muted`) y, donde el navegador lo permite (`appearance:base-select`: Chrome, Edge y la app de Android), la lista abierta es una tarjeta `card` con `shadow-pop`, filas como las del menú ⋯ y la elegida en `brand-strong` sobre `brand-soft`; abierto, el campo se pone en `brand-soft`.
+- Campos con un fallo: nunca la burbuja del navegador («Completa este campo»). `src/lib/fieldErrors.ts` la sustituye en toda la app: el campo pasa a borde `danger` y debajo sale un aviso `card` con borde `danger`, `shadow-pop`, flecha hacia el campo y un «!» en `on-danger` sobre `danger`. Se quita al escribir. El texto sale de `data-error` en el campo («Escribe tu nombre: es el que verán los demás.»); si no hay, uno genérico según el fallo. Tampoco se usan `alert`, `prompt` ni `confirm` del navegador: avisos flotantes y `ConfirmDialog`.
 - Foco de teclado: anillo sólido de 2px en `focus`, separado 2px. Tiene más de 3:1 sobre `bg` y `card` en los dos temas.
 - Transiciones de .15s solo en fondo, borde y la flecha de «N votos»; el aviso flotante aparece en .2s. Sin animaciones decorativas.
 

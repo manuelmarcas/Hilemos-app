@@ -239,6 +239,28 @@ button,input,select,textarea{font:inherit}
   font-size:1rem;
 }
 .input:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+/* Campo con un fallo (lib/fieldErrors.ts): borde y foco en danger hasta que se escribe en él */
+.input.field-invalid{border-color:var(--danger)}
+.input.field-invalid:focus{outline-color:var(--danger);border-color:var(--danger)}
+/* Aviso del fallo, bajo el campo, en vez de la burbuja del navegador */
+.field-error{
+  position:fixed;z-index:1000;
+  display:flex;align-items:flex-start;gap:8px;
+  padding:9px 12px;border-radius:var(--radius-md);
+  background:var(--card);color:var(--ink);border:1px solid var(--danger);
+  box-shadow:var(--shadow-pop);
+  font-size:.88rem;font-weight:600;line-height:1.35;text-align:left;
+  animation:field-error-in .15s ease-out;
+}
+.field-error::before{
+  content:"";position:absolute;top:-6px;left:18px;width:10px;height:10px;
+  background:var(--card);border-left:1px solid var(--danger);border-top:1px solid var(--danger);transform:rotate(45deg);
+}
+.field-error-ic{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-top:.5px;
+  border-radius:999px;background:var(--danger);color:var(--on-danger);font-size:.75rem;font-weight:800;
+}
+@keyframes field-error-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .input.big{font-size:1.1rem;padding:12px 14px}
 .input.small{width:auto;padding:6px 10px;font-size:.88rem}
 textarea.input{resize:vertical;font-size:.95rem}

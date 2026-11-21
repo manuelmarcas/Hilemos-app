@@ -38,7 +38,7 @@ export function AccessKeyDialog() {
         </p>
         <div className="key-box" aria-label="Clave de acceso">{k.key}</div>
         <div className="key-btns">
-          <button className="btn" onClick={async () => { if (await copyText(k.key, "Copia tu clave de acceso:")) toast("Clave copiada"); }}>
+          <button className="btn" onClick={async () => { toast(await copyText(k.key) ? "Clave copiada" : "No se pudo copiar: mantén pulsada la clave para seleccionarla y cópiala a mano"); }}>
             <Icon name="copy" /> Copiar
           </button>
           {canShareLink() && (

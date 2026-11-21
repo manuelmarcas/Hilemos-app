@@ -96,6 +96,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
         {demo ? (
           <form id="demo-login" onSubmit={demoLogin}>
             <input id="demo-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required autoFocus
+              data-error="Escribe tu nombre para entrar."
               value={name} onChange={e => setName(e.target.value)} />
             <button className="btn primary" type="submit">Entrar</button>
           </form>
@@ -121,7 +122,8 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
               <form className="gate-anon" onSubmit={sendLink}>
                 <label className="gate-label" htmlFor="email-input">Entra con tu correo, sin contraseña</label>
                 <input id="email-input" className="input" type="email" autoComplete="email" placeholder="tu@correo.com"
-                  required autoFocus value={email} onChange={e => setEmail(e.target.value)} />
+                  required autoFocus data-error="Escribe tu correo para que te mandemos el enlace."
+                  value={email} onChange={e => setEmail(e.target.value)} />
                 <p className="gate-anon-note">Te mandaremos un enlace: al pulsarlo, entras. Sirve en cualquier dispositivo.</p>
                 <button className="btn primary" type="submit" disabled={busy}>{busy ? "Enviando…" : "Enviarme el enlace"}</button>
               </form>
@@ -131,6 +133,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
                 <label className="gate-label" htmlFor="key-input">Tu clave de acceso</label>
                 <input id="key-input" className="input key-input" maxLength={30} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
                   autoComplete="off" autoCapitalize="characters" spellCheck={false} autoFocus required
+                  data-error="Escribe o pega tu clave de acceso."
                   value={key} onChange={e => setKey(e.target.value)} />
                 <button className="btn primary" type="submit" disabled={busy}>{busy ? "Comprobando…" : "Entrar con mi clave"}</button>
               </form>
@@ -139,6 +142,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
               <div className="gate-or"><span>o sin registrarte</span></div>
               <form className="gate-anon" onSubmit={anonLogin}>
                 <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
+                  data-error="Escribe tu nombre: es el que verán los demás."
                   aria-label="Tu nombre" value={name} onChange={e => setName(e.target.value)} />
                 <p className="gate-anon-note">
                   <Icon name="key" /> Al continuar, Hilemos te dará una <strong>clave de acceso</strong>. Guárdala: es lo

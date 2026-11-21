@@ -46,13 +46,22 @@ export function firstGrapheme(s: string | undefined) {
   return [...s][0];
 }
 
-export async function copyText(text: string, label = "Copia este enlace:") {
+export async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    window.prompt(label, text);
-    return false;
+    // Sin portapapeles moderno (p. ej. sin HTTPS): el método clásico, sin ventanas del navegador.
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    (document.querySelector("dialog[open]") || document.body).append(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch { ok = false; }
+    ta.remove();
+    return ok;
   }
 }
 

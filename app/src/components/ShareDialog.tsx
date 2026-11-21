@@ -73,7 +73,7 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
       <p className="dlg-sub">{title}</p>
       <div className="share-link">
         <input className="input" readOnly value={url} aria-label="Enlace de la votación" />
-        <button className="btn primary" onClick={async () => { if (await copyText(url)) toast("Enlace copiado"); }}>Copiar</button>
+        <button className="btn primary" onClick={async () => { toast(await copyText(url) ? "Enlace copiado" : "No se pudo copiar: selecciona el enlace y cópialo a mano"); }}>Copiar</button>
       </div>
       <div className="qr-box" id="qr-box">
         {!qr ? <span className="muted">Generando QR…</span>
