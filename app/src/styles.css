@@ -840,6 +840,21 @@ button.opt:not(:disabled):not(.on):hover{background:var(--hover)}
   .cell.n4{min-height:132px}
   .opt{flex-direction:row;gap:5px;font-size:.8rem}
 }
+/* Con una sola opción, esa opción es la casilla entera: el icono y el contador crecen para llenarla (con el tamaño
+   de cuatro opciones se quedaban perdidos en medio). Con dos, un poco; con tres o cuatro ya van justos. */
+.cell.n1 .opt{flex-direction:column;gap:5px}
+.cell.n1 .opt .label{font-size:1.5rem}
+.cell.n1 .count{min-width:20px;height:20px;padding:0 6px;font-size:.74rem}
+.cell.n2 .opt .label{font-size:1.1rem}
+.cell.n2 .count{min-width:18px;height:18px;font-size:.7rem}
+@container view (min-width:820px){
+  .cell.n1 .opt{gap:7px}
+  .cell.n1 .opt .label{font-size:1.9rem}
+  .cell.n1 .count{min-width:24px;height:24px;font-size:.82rem}
+  .cell.n2 .opt .label{font-size:1.2rem}
+}
+/* La vista previa de «Nueva votación» es una casilla suelta, más ancha que las del calendario. */
+.cell.preview.n1 .opt .label{font-size:2rem}
 
 /* Semanas */
 .whead,.wrow{display:grid;grid-template-columns:2.6em repeat(7,minmax(0,1fr)) 2.4em;align-items:center;text-align:center}
