@@ -101,10 +101,13 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
           </form>
         ) : (
           <>
-            <button className="google-btn" id="login" onClick={login}>
-              <GoogleIcon />
-              Entrar con Google
-            </button>
+            {/* Al pedir la clave solo se ve su formulario: Google despistaría (es otra cuenta distinta). */}
+            {mode !== "key" && (
+              <button className="google-btn" id="login" onClick={login}>
+                <GoogleIcon />
+                Entrar con Google
+              </button>
+            )}
             {mode === "main" && (
               <button className="btn gate-alt" onClick={() => go("email")}><Icon name="mail" /> Entrar con tu correo</button>
             )}
