@@ -7,6 +7,7 @@ import { onPushMessage } from "../lib/push";
 import { Avatar } from "./Avatar";
 import { LogoMark } from "./LogoMark";
 import { Icon } from "./Icon";
+import { AccessKeyDialog } from "./AccessKeyDialog";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -17,11 +18,11 @@ export function Shell() {
   const { store, user } = useSession();
   const { toast, confirm } = useUi();
 
-  // Sin cuenta, cerrar la sesión es irreversible: ese usuario solo existe en este dispositivo.
+  // Sin cuenta, para volver a entrar hace falta la clave de acceso: se recuerda antes de salir.
   const logout = async () => {
     if (user.anon && store.mode === "firebase" && !(await confirm({
-      title: "¿Salir sin guardar tu cuenta?",
-      message: "Has entrado sin cuenta: si sales, no podrás volver a entrar como «" + user.name + "» y perderás tus votaciones y la posibilidad de cambiar tus votos. Para conservarlos, guárdalos antes en tu cuenta de Google desde «Tu perfil».",
+      title: "¿Salir de tu cuenta sin registro?",
+      message: "Para volver a entrar como «" + user.name + "» necesitarás tu clave de acceso (en «Entrar con tu clave»). Si no la tienes guardada, crea una nueva en «Tu perfil» antes de salir: sin ella perderás tus votaciones y no podrás cambiar tus votos.",
       confirmLabel: "Salir",
       danger: true,
     }))) return;
@@ -98,6 +99,7 @@ export function Shell() {
         <main id="view" key={path}>{page}</main>
       </div>
       <div className="sb-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />
+      <AccessKeyDialog />
     </div>
   );
 }

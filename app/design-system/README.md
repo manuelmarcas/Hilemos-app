@@ -82,4 +82,6 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 
 ## Componentes
 
+- Clave de acceso (`AccessKeyDialog`): la clave va en `.key-box`, monoespaciada en `brand-strong` sobre `brand-soft` con borde discontinuo de `brand`, para que se vea como algo que hay que guardar. Debajo, «Copiar» y «Compartir»; el diálogo no se cierra hasta marcar «La he guardado».
+
 Los nombres de clase de `styles.css` (`.btn`, `.chip`, `.cell`, `.opt`, `.summary-row`, `.tiebreak`…) son los que usa la app: es la referencia viva de los componentes, no una copia aparte.

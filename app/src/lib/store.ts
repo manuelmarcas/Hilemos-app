@@ -17,6 +17,28 @@ import { CHAT_LIMIT, MAX_CHAT } from "./model";
 import { isNative } from "./native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
+// ----- Clave de acceso (cuentas sin registro) -----
+// Quien entra sin cuenta recibe una clave de 20 caracteres, p. ej. 7KQ2-M9XF-4TBD-HR8P-W3NC. Sin servidor: la app
+// la guarda como una cuenta interna de correo y contraseña vinculada a su uid. Los 8 primeros caracteres forman un
+// correo ficticio (7kq2m9xf@clave.hilemos.web.app, que no recibe nada) y los 12 últimos son la contraseña, que
+// Firebase guarda cifrada. Entrar con la clave es entrar con ese correo y contraseña: mismo uid, mismos datos.
+// Firebase bloquea un tiempo a quien falla muchas veces. Las reglas tratan esas cuentas como «sin cuenta».
+export const KEY_DOMAIN = "clave.hilemos.web.app";
+const KEY_ABC = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // sin 0/O ni 1/I/L: no se confunden al copiarla a mano
+const KEY_ID = 8, KEY_SECRET = 12;
+export const isKeyEmail = (e?: string | null) => !!e && e.toLowerCase().endsWith("@" + KEY_DOMAIN);
+function randomKeyChars(n: number) {
+  let out = "";
+  const buf = new Uint8Array(1);
+  while (out.length < n) {
+    crypto.getRandomValues(buf);
+    if (buf[0] < 248) out += KEY_ABC[buf[0] % KEY_ABC.length]; // 248 = 8 × 31: sin sesgo
+  }
+  return out;
+}
+const keyEmail = (id: string) => `${id.toLowerCase()}@${KEY_DOMAIN}`;
+const formatKey = (k: string) => k.match(/.{4}/g)!.join("-");
+
 export async function createFirebaseStore(config: FirebaseOptions): Promise<Store> {
   // Firebase se carga aparte: el modo demo no lo descarga.
   const [{ initializeApp }, A, F] = await Promise.all([
@@ -59,8 +81,11 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       uid: u.uid,
       name: u.displayName || (u.isAnonymous && anonName) || "Alguien",
       photo: u.photoURL || "",
-      email: (u.email || "").toLowerCase(),
-      anon: u.isAnonymous,
+      // El correo ficticio de la clave de acceso no es un correo de verdad.
+      email: isKeyEmail(u.email) ? (u.providerData.find(p => p.providerId === "google.com")?.email || "").toLowerCase()
+        : (u.email || "").toLowerCase(),
+      // Sin cuenta: la sesión anónima y la cuenta interna de la clave de acceso (sin Google).
+      anon: u.isAnonymous || u.providerData.every(p => p.providerId === "password" && isKeyEmail(p.email)),
     };
   const pollRef = (id: string) => F.doc(db, "polls", id);
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
@@ -92,9 +117,47 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async linkGoogle() {
       const u = auth.currentUser;
       if (!u) throw new Error("No hay ninguna sesión abierta.");
-      if (native) await A.linkWithCredential(u, await googleCredential());
-      else await A.linkWithPopup(u, provider);
-      await u.reload();
+      let cred: import("firebase/auth").AuthCredential | null;
+      if (native) {
+        cred = await googleCredential();
+        await A.linkWithCredential(u, cred);
+      } else {
+        cred = A.GoogleAuthProvider.credentialFromResult(await A.linkWithPopup(u, provider));
+      }
+      // Se vuelve a entrar con Google (mismo uid) para que la sesión deje de contar como «sin cuenta».
+      if (cred) await A.signInWithCredential(auth, cred);
+      const cur = auth.currentUser || u;
+      // Con Google ya no hace falta la clave de acceso: se quita su cuenta interna (la clave deja de valer) y,
+      // si el correo de la cuenta era el ficticio, se pone el de Google (si Firebase no deja cambiarlo
+      // directamente, manda un correo para confirmarlo).
+      if (cur.providerData.some(p => p.providerId === "password" && isKeyEmail(p.email))) await A.unlink(cur, "password");
+      const gmail = cur.providerData.find(p => p.providerId === "google.com")?.email;
+      if (gmail && isKeyEmail(cur.email)) {
+        try { await A.updateEmail(cur, gmail); }
+        catch { await A.verifyBeforeUpdateEmail(cur, gmail).catch(() => {}); }
+      }
+      await cur.reload();
+    },
+    async createAccessKey() {
+      const u = auth.currentUser;
+      if (!u) throw new Error("No hay ninguna sesión abierta.");
+      // Clave nueva: la anterior se quita (su correo ficticio deja de existir) y se vincula otra.
+      if (u.providerData.some(p => p.providerId === "password" && isKeyEmail(p.email))) await A.unlink(u, "password");
+      for (let tries = 0; ; tries++) {
+        const id = randomKeyChars(KEY_ID), secret = randomKeyChars(KEY_SECRET);
+        try {
+          await A.linkWithCredential(u, A.EmailAuthProvider.credential(keyEmail(id), secret));
+          return formatKey(id + secret);
+        } catch (e) {
+          // Que dos claves compartan los 8 primeros caracteres es casi imposible, pero si pasa se prueba otra.
+          if ((e as { code?: string })?.code !== "auth/email-already-in-use" || tries >= 3) throw e;
+        }
+      }
+    },
+    async signInWithKey(key) {
+      const k = key.toUpperCase().replace(/[^0-9A-Z]/g, "");
+      if (k.length !== KEY_ID + KEY_SECRET) throw Object.assign(new Error("bad key"), { code: "key/format" });
+      await A.signInWithEmailAndPassword(auth, keyEmail(k.slice(0, KEY_ID)), k.slice(KEY_ID));
     },
     async signOut() {
       // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
@@ -289,6 +352,8 @@ export function createDemoStore(): Store {
     },
     // El modo demo no tiene cuentas: su entrada con un nombre ya es la sesión completa.
     async linkGoogle() { throw fail("unavailable"); },
+    async createAccessKey() { throw fail("unavailable"); },
+    async signInWithKey() { throw fail("unavailable"); },
     async signOut() { setUser(null); },
 
     async createPoll(data, access) {

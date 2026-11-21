@@ -170,27 +170,33 @@ fuera de la app.
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
-## Entrar sin cuenta
+## Entrar sin cuenta y clave de acceso
 
 Cualquiera puede usar la app sin registrarse, llegue desde un enlace o desde la portada: en la pantalla de entrada
-escribe su nombre y pulsa «Entrar sin cuenta» (sesión anónima de Firebase, `signInAnonymously`). El nombre se guarda en la
-sesión y en su perfil, así que aguanta una recarga. Requiere activar el método **Anónimo** en Firebase
-Authentication; si no está activado, la pantalla lo dice.
+escribe su nombre, lee que se le dará una **clave de acceso** y pulsa «Continuar sin cuenta» (sesión anónima de
+Firebase, `signInAnonymously`). Requiere los métodos **Anónimo** y **Correo electrónico/contraseña** activados en
+Firebase Authentication.
 
-- Internamente se le identifica por el uid de la sesión anónima (el nombre es solo lo que ven los demás y lo puede
-  cambiar en «Tu perfil», como cualquiera). Firebase guarda la sesión en el navegador (o en la app), así que al volver
-  a abrir sigue dentro con el mismo uid: sus votaciones están en `users/{uid}/polls` y sus votos en
-  `polls/{id}/votes/{uid}`, igual que con Google.
-- La sesión anónima vive en ese navegador: si borra los datos o cambia de dispositivo, pierde su lista de
-  votaciones y ya no puede cambiar su voto (seguirá contado, con su nombre). Si la votación tiene tope, su plaza
-  sigue ocupada.
-- En «Tu perfil → Tu cuenta» puede pasar la sesión a su cuenta de Google (`linkWithPopup`): conserva el uid, así
-  que no pierde votos ni votaciones. Si esa cuenta ya se usó en la app, Firebase lo rechaza y la app lo explica.
+- Internamente se le identifica por su uid (el nombre es solo lo que ven los demás y lo puede cambiar en «Tu perfil»).
+  Firebase guarda la sesión en el navegador o en la app, así que al volver a abrir sigue dentro con el mismo uid:
+  sus votaciones están en `users/{uid}/polls` y sus votos en `polls/{id}/votes/{uid}`, igual que con Google.
+- **Clave de acceso** (`createAccessKey` / `signInWithKey` en `src/lib/store.ts`, sin servidor): al entrar se genera
+  una clave aleatoria de 20 caracteres (`7KQ2-M9XF-4TBD-HR8P-W3NC`, sin 0/O ni 1/I/L) y se vincula al uid como una
+  cuenta interna de correo y contraseña: los 8 primeros caracteres forman un correo ficticio
+  (`7kq2m9xf@clave.hilemos.web.app`, que no recibe nada) y los 12 últimos son la contraseña, que Firebase guarda
+  cifrada. El diálogo `AccessKeyDialog` la enseña una sola vez (copiar o compartir) y no se cierra hasta marcar
+  «La he guardado». Con «¿Ya tienes una clave de acceso?» se vuelve a la misma cuenta en cualquier dispositivo
+  (mayúsculas, minúsculas y guiones dan igual). Firebase bloquea un rato a quien falla muchas veces.
+- En «Tu perfil → Tu cuenta» puede **crear una clave nueva** (se quita la cuenta interna anterior, así que la clave
+  vieja deja de valer) o **guardar la cuenta en Google** (`linkWithPopup`): conserva el uid y se quita la clave,
+  que ya no hace falta. Si esa cuenta de Google ya se usó en la app, Firebase lo rechaza y la app lo explica.
+- Sin la clave (o Google), si borra los datos, desinstala o cambia de dispositivo, pierde su lista de votaciones y
+  ya no puede cambiar su voto (seguirá contado, con su nombre). «Salir» lo recuerda antes de cerrar la sesión.
 - Las votaciones **con aprobación** y **solo estos correos** siguen necesitando Google: el creador tiene que poder
-  identificar a cada persona. Las reglas lo impiden (`anon()`) y la app lo explica en vez de dar un error.
-- Quien entra sin cuenta **también puede crear** votaciones. La pantalla «Nueva votación» le avisa de que solo podrá
-  gestionarlas desde ese dispositivo y le sugiere guardar la cuenta en Google.
-- «Salir» sin cuenta pide confirmación: después no se puede volver a entrar como ese usuario.
+  identificar a cada persona. Las reglas lo impiden (`anon()`, que reconoce la sesión anónima y los correos de
+  `@clave.hilemos.web.app`) y la app lo explica en vez de dar un error.
+- Quien entra sin cuenta **también puede crear** votaciones. «Nueva votación» le avisa de que solo podrá
+  gestionarlas desde esa cuenta.
 - Si una votación restringida le pide Google, primero se intenta guardar la sesión en esa cuenta (conserva todo) y,
   si la cuenta ya existía, se entra con ella.
 - Contra el abuso con bots: Firebase limita las altas por IP (Authentication › Configuración › Cuota de registro).

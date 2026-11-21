@@ -167,6 +167,10 @@ export interface Store {
   signIn(opts?: { name?: string; anonymous?: boolean }): Promise<unknown>;
   /** Convierte una sesión sin cuenta en cuenta de Google conservando el uid (y con él los votos). */
   linkGoogle(): Promise<void>;
+  /** Crea la clave de acceso de la cuenta sin registro (anula la anterior). Devuelve «XXXX-XXXX-XXXX-XXXX-XXXX». */
+  createAccessKey(): Promise<string>;
+  /** Vuelve a entrar en una cuenta sin registro con su clave de acceso. */
+  signInWithKey(key: string): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */

@@ -12,7 +12,9 @@ export const publicHost = () => (isNative() ? new URL(PUBLIC_ORIGIN).host : loca
 export const canShareLink = () => isNative() || typeof navigator.share === "function";
 
 /** Abre el menú de compartir del sistema. Si la persona lo cierra sin compartir, no pasa nada. */
-export async function shareLink(data: { title: string; text: string; url: string }) {
+export async function shareLink(data: { title: string; text: string; url?: string }) {
+  // Sin enlace (p. ej. la clave de acceso) se comparte solo el texto.
+  if (!data.url) data = { title: data.title, text: data.text };
   try {
     if (isNative()) {
       const { Share } = await import("@capacitor/share");

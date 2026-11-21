@@ -11,6 +11,13 @@ const ERRORS: Record<string, string> = {
   "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication (Configuración > Dominios autorizados).",
   "auth/operation-not-allowed": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
   "auth/admin-restricted-operation": "Entrar sin cuenta no está activado en Firebase (Authentication > Métodos de acceso > Anónimo).",
+  "key/format": "La clave tiene 20 letras y números, como 7KQ2-M9XF-4TBD-HR8P-W3NC.",
+  "auth/invalid-credential": "Esa clave no es válida. Revisa que esté bien copiada; si creaste otra después, solo vale la última.",
+  "auth/invalid-login-credentials": "Esa clave no es válida. Revisa que esté bien copiada; si creaste otra después, solo vale la última.",
+  "auth/wrong-password": "Esa clave no es válida. Revisa que esté bien copiada; si creaste otra después, solo vale la última.",
+  "auth/user-not-found": "Esa clave no es válida. Revisa que esté bien copiada; si creaste otra después, solo vale la última.",
+  "auth/too-many-requests": "Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.",
+  "auth/user-disabled": "Esta cuenta está desactivada.",
   "messaging/permission-blocked": "Has bloqueado los avisos en este navegador. Permítelos en los ajustes del sitio.",
   "messaging/unsupported-browser": "Este navegador no admite avisos.",
   "messaging/failed-service-worker-registration": "No se pudo preparar el navegador para recibir avisos.",
@@ -32,12 +39,12 @@ export function firstGrapheme(s: string | undefined) {
   return [...s][0];
 }
 
-export async function copyText(text: string) {
+export async function copyText(text: string, label = "Copia este enlace:") {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    window.prompt("Copia este enlace:", text);
+    window.prompt(label, text);
     return false;
   }
 }

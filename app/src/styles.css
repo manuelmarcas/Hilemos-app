@@ -98,6 +98,26 @@ button,input,select,textarea{font:inherit}
 .gate-or::before,.gate-or::after{content:"";flex:1;height:1px;background:var(--line)}
 .gate-anon .input{min-width:0;text-align:center}
 .gate-card .gate-anon-note{font-size:.82rem;line-height:1.45;margin:2px 0 0}
+.gate-label{font-size:.88rem;font-weight:600;color:var(--ink);margin-top:2px}
+.gate-card .gate-anon-note .ic{color:var(--brand)}
+.gate-switch{justify-self:center;font-size:.84rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.gate-switch:hover{text-decoration:underline}
+.key-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
+.key-input::placeholder{letter-spacing:.08em}
+/* Clave de acceso recién creada (AccessKeyDialog) */
+.dlg-key{width:min(440px, calc(100% - 32px))}
+.dlg-key h2{display:flex;align-items:center;gap:8px;padding-right:0}
+.key-box{
+  margin:16px 0 10px;padding:14px 12px;
+  border:2px dashed color-mix(in srgb,var(--brand) 45%,transparent);border-radius:12px;
+  background:var(--brand-soft);color:var(--brand-strong);
+  font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:clamp(1.05rem,5vw,1.35rem);font-weight:700;
+  letter-spacing:.08em;text-align:center;user-select:all;overflow-wrap:anywhere;
+}
+.key-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.key-check{margin:16px 0 0;font-weight:600}
+.dlg-key .dlg-actions{margin-top:14px}
+.pf-account-or{margin-top:18px}
 
 /* ---------- Estructura ---------- */
 /* Red de seguridad: nada de lo que haya dentro puede sacar la página de la pantalla. Es clip y no hidden

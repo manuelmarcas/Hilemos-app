@@ -1,9 +1,12 @@
-// Pantalla de entrada: login con Google, sin cuenta (solo un nombre) o, en modo demo, con un nombre.
+// Pantalla de entrada: login con Google, sin cuenta (un nombre y, después, una clave de acceso), con esa clave
+// para volver a la misma cuenta o, en modo demo, con un nombre.
 import { useState, type FormEvent } from "react";
 import type { Store } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { useHashPath } from "../state/route";
 import { LogoMark } from "./LogoMark";
+import { Icon } from "./Icon";
+import { makeAccessKey } from "../state/accessKey";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -19,6 +22,8 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [withKey, setWithKey] = useState(false); // formulario «Entrar con tu clave»
+  const [key, setKey] = useState("");
   const invited = path.startsWith("/v/");
 
   const login = async () => {
@@ -42,6 +47,21 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     try { await store.signIn({ name: n, anonymous: true }); }
     catch (err) {
       setStatus("No se pudo entrar sin cuenta. " + errMsg(err));
+      setBusy(false);
+      return;
+    }
+    // Ya hay sesión (la app pasa a la pantalla principal): se crea la clave y la enseña AccessKeyDialog.
+    makeAccessKey(store);
+  };
+
+  const keyLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!key.trim() || busy) return;
+    setBusy(true);
+    setStatus("");
+    try { await store.signInWithKey(key); }
+    catch (err) {
+      setStatus(errMsg(err));
       setBusy(false);
     }
   };
@@ -70,17 +90,34 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
               <GoogleIcon />
               Entrar con Google
             </button>
-            <form className="gate-anon" onSubmit={anonLogin}>
-              <div className="gate-or"><span>o</span></div>
-              <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
-                value={name} onChange={e => setName(e.target.value)} />
-              <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar sin cuenta"}</button>
-              <p className="gate-anon-note">
-                Solo con tu nombre, sin registrarte. Tus votaciones y tus votos se quedan en este dispositivo: si
-                cambias de móvil o borras los datos del navegador, los pierdes. Puedes guardarlos en tu cuenta de
-                Google cuando quieras desde «Tu perfil». En las votaciones privadas o con aprobación hace falta Google.
-              </p>
-            </form>
+            <div className="gate-or"><span>o</span></div>
+            {withKey ? (
+              <form className="gate-anon" onSubmit={keyLogin}>
+                <label className="gate-label" htmlFor="key-input">Tu clave de acceso</label>
+                <input id="key-input" className="input key-input" maxLength={30} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+                  autoComplete="off" autoCapitalize="characters" spellCheck={false} autoFocus required
+                  value={key} onChange={e => setKey(e.target.value)} />
+                <button className="btn" type="submit" disabled={busy}>{busy ? "Comprobando…" : "Entrar con mi clave"}</button>
+                <button type="button" className="link-btn gate-switch" onClick={() => { setWithKey(false); setStatus(""); }}>
+                  <Icon name="back" /> Entrar sin cuenta o con Google
+                </button>
+              </form>
+            ) : (
+              <form className="gate-anon" onSubmit={anonLogin}>
+                <label className="gate-label" htmlFor="anon-name">Entra sin registrarte, solo con un nombre</label>
+                <input id="anon-name" className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
+                  value={name} onChange={e => setName(e.target.value)} />
+                <p className="gate-anon-note">
+                  <Icon name="key" /> Al continuar, Hilemos te dará una <strong>clave de acceso</strong>. Guárdala: es lo
+                  único que te permitirá volver a entrar con esta cuenta si cierras sesión, desinstalas la app o
+                  cambias de móvil. En las votaciones privadas o con aprobación hace falta Google.
+                </p>
+                <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Continuar sin cuenta"}</button>
+                <button type="button" className="link-btn gate-switch" onClick={() => { setWithKey(true); setStatus(""); }}>
+                  ¿Ya tienes una clave de acceso? Entra con ella
+                </button>
+              </form>
+            )}
           </>
         )}
         <div id="gate-status" role="alert">{status}</div>

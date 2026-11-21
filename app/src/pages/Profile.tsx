@@ -8,6 +8,7 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { Avatar } from "../components/Avatar";
 import { Icon, type IconName } from "../components/Icon";
+import { makeAccessKey } from "../state/accessKey";
 
 const THEMES: [ThemePref, IconName, string, string][] = [
   ["auto", "themeAuto", "Automático", "Como tu dispositivo"],
@@ -23,7 +24,7 @@ const NOTIFY: [keyof NotifyPrefs, string][] = [
 
 export function Profile() {
   const { store, user, updateUser, library } = useSession();
-  const { toast } = useUi();
+  const { toast, confirm } = useUi();
   const [name, setName] = useState(user.name || "");
   const [photo, setPhoto] = useState(user.photo || "");
   const [busy, setBusy] = useState(false);
@@ -87,6 +88,15 @@ export function Profile() {
         : "No se pudo guardar tu cuenta. " + errMsg(e));
       setLinking(false);
     }
+  }
+
+  async function newKey() {
+    if (!(await confirm({
+      title: "¿Crear una clave nueva?",
+      message: "La clave que tengas ahora dejará de valer. Tendrás que guardar la nueva.",
+      confirmLabel: "Crear clave nueva",
+    }))) return;
+    makeAccessKey(store);
   }
 
   async function save() {
@@ -167,10 +177,17 @@ export function Profile() {
         {user.anon && store.mode === "firebase" && (
           <section className="step" id="pf-account">
             <h2>Tu cuenta</h2>
+            <h3 className="pref-label">Clave de acceso</h3>
             <p className="hint">
-              Has entrado sin cuenta, así que tus votaciones y tus votos viven solo en este dispositivo: si borras los
-              datos del navegador o cambias de móvil, los pierdes. Guárdalos en tu cuenta de Google y los tendrás en
-              cualquier sitio, sin perder nada de lo que ya has votado.
+              Has entrado sin registrarte. Para volver a entrar con esta cuenta si cierras sesión, desinstalas la app o
+              cambias de móvil, necesitas tu clave de acceso. Por seguridad no se puede volver a ver: si no la
+              tienes guardada, crea una nueva (la anterior dejará de valer).
+            </p>
+            <button className="btn" id="pf-key" onClick={newKey}><Icon name="key" /> Crear una clave nueva</button>
+            <h3 className="pref-label pf-account-or">O guárdala en Google</h3>
+            <p className="hint">
+              Con tu cuenta de Google no necesitas clave: entras con Google en cualquier sitio, sin perder nada de lo
+              que ya has votado.
             </p>
             <button className="btn" id="pf-link" disabled={linking} onClick={linkGoogle}>
               {linking ? "Guardando…" : "Guardar en mi cuenta de Google"}
