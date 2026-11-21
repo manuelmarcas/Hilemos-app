@@ -208,6 +208,12 @@ export interface Store {
    * su perfil, su lista, sus grupos y la cuenta de inicio de sesión.
    */
   deleteAccount(uid: string): Promise<void>;
+  /**
+   * Sale de la votación (y la quita de su lista). Abierta o con un desempate abierto: sus votos se borran y su plaza
+   * queda libre. Cerrada: sus votos se quedan con un nombre sin dueño. Si era el creador, la votación pasa a un
+   * administrador o participante al azar (o se borra si no queda nadie).
+   */
+  leavePoll(id: string, uid: string, opts: { name: string; dropGroupId?: string | null }): Promise<void>;
   signOut(): Promise<void>;
 
   /** Crea la votación y, si se dan, guarda aparte sus correos permitidos. */

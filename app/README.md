@@ -176,6 +176,9 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   (`PeopleTable`). `isAdmin(poll, uid)` en `model.ts` decide quién gestiona la votación; eliminarla y los
   administradores son solo del creador (`isOwner`). En las reglas, `isAdminOf()`; un administrador solo puede
   quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado del creador.
+- `leave()` en `store.ts` (usada por `leavePoll` y `deleteAccount`) decide con `keepsVotesOnLeave` (`model.ts`) si los
+  votos se quedan (cerrada o plazo pasado, sin desempate abierto: nombre sin dueño y `gone`) o se borran (con tope,
+  junto con `members - 1`). `TiebreakGuard` (`Poll.tsx`) ajusta el desempate al abrir la votación un administrador.
 - `deleteAccount` (`store.ts`), sin servidor: en cada votación de su lista renombra su voto y sus mensajes del chat
   con `ghostName()` (las reglas dejan cambiar solo el nombre de los mensajes propios) y quita su foto; si era el
   creador, pasa `ownerUid` a un administrador o participante aceptado al azar (las reglas exigen que tenga voto y

@@ -4,7 +4,7 @@ import * as D from "../lib/dates";
 import {
   TYPE, TOP_N, tally, tiebreakTally, unitKey, unitParts, slotLabel, slotShort, pollRange, plural, hoursForDay,
   MAX_PEOPLE, MAX_EMAILS, PEOPLE_FILTER_FROM, isRestricted, memberStatus, acceptedVotes, hasLimit, isFull, parseEmails,
-  deadlinePassed, fmtDeadline, isAdmin,
+  deadlinePassed, fmtDeadline, isAdmin, keepsVotesOnLeave,
   type Person, type Tally, type TiebreakTally,
 } from "../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../lib/types";
@@ -326,6 +326,21 @@ export function PollPage({ id }: { id: string }) {
     toast(isAdm ? `${name} ya no es administrador` : `${name} ahora es administrador`);
   });
 
+  // Salir de la votación (también el creador: pasa a otra persona). Ver keepsVotesOnLeave y store.leavePoll.
+  const leave = () => act(async () => {
+    const keeps = keepsVotesOnLeave(poll) && memberStatus(votes[user.uid]) === "accepted";
+    const message = [
+      keeps ? "La votación ya está cerrada, así que tus votos se quedan, pero con un nombre sin dueño."
+        : "Se borrarán tus votos y tu plaza quedará libre.",
+      isOwner ? "Como la creaste, pasará a un administrador o a otro participante al azar; si no queda nadie, se borrará." : "",
+      "Podrás volver a entrar con el enlace.",
+    ].filter(Boolean).join(" ");
+    if (!(await confirm({ title: "¿Salir de la votación?", message, confirmLabel: "Salir", danger: true }))) return;
+    await store.leavePoll(id, user.uid, { name: user.name, dropGroupId: groupToDrop(lib, id) });
+    toast("Has salido de la votación");
+    navigate("/");
+  });
+
   const remove = () => act(async () => {
     if (!(await confirm({
       title: `¿Eliminar «${poll.title}»?`,
@@ -462,8 +477,46 @@ export function PollPage({ id }: { id: string }) {
         <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"}
           seenAt={chatSeenAt} onUnread={setChatUnread} onSeen={markChatSeen} />
       </div>
+      {votes[user.uid] && (
+        <div className="poll-leave">
+          <button type="button" className="link-btn danger" onClick={leave}>Salir de la votación</button>
+        </div>
+      )}
+      <TiebreakGuard id={id} poll={poll} T={T} active={admin && votesLoaded && !ownOnly} />
     </>
   );
+}
+
+// ---------- Desempate cuando alguien se va ----------
+
+/**
+ * Si alguien sale (o elimina su cuenta) durante un desempate, sus votos se borran y el empate puede cambiar.
+ * Quien sale no puede tocar el desempate (no es administrador), así que lo ajusta el primer administrador que abre
+ * la votación: sin empate, se quita el desempate y queda la ganadora; con empate entre menos opciones, sigue solo
+ * entre esas (los votos ya hechos a las que siguen valen); si el empate es el mismo, no cambia nada.
+ */
+function TiebreakGuard({ id, poll, T, active }: { id: string; poll: Poll; T: Tally; active: boolean }) {
+  const { store } = useSession();
+  const { toast } = useUi();
+  const tb = poll.tiebreak;
+  const leaders = T.leaders.map(e => e.key).slice(0, 50);
+  const busy = useRef(false);
+  const leadersKey = leaders.join("|");
+  const candKey = tb?.candidates.join("|") || "";
+  useEffect(() => {
+    if (!active || !poll.closed || !tb || tb.done || busy.current) return;
+    const cands = tb.candidates;
+    if (leaders.length === cands.length && leaders.every(k => cands.includes(k))) return;
+    busy.current = true;
+    const solved = leaders.length < 2;
+    store.updatePoll(id, { tiebreak: solved ? null : { ...tb, candidates: leaders } })
+      .then(() => toast(solved
+        ? "Alguien ha salido y ya no hay empate: se ha quitado el desempate y queda la ganadora."
+        : "Alguien ha salido: el desempate sigue solo entre las opciones que quedan empatadas."))
+      .catch(() => { /* lo intentará el siguiente administrador */ })
+      .finally(() => { busy.current = false; });
+  }, [active, poll.closed, tb?.id, tb?.done, candKey, leadersKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
 }
 
 // ---------- Pestañas bajo el calendario ----------

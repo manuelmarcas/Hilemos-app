@@ -13,7 +13,7 @@
 
 import type { FirebaseOptions } from "firebase/app";
 import type { QuerySnapshot, DocumentSnapshot, DocumentData } from "firebase/firestore";
-import { CHAT_LIMIT, MAX_CHAT, ghostName, isAdmin } from "./model";
+import { CHAT_LIMIT, MAX_CHAT, ghostName, hasLimit, isAdmin, keepsVotesOnLeave } from "./model";
 import { isNative, PUBLIC_ORIGIN } from "./native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote, Votes } from "./types";
 
@@ -113,6 +113,71 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     return () => { stopped = true; clearTimeout(timer); unsub(); };
   }
   const pollRef = (id: string) => F.doc(db, "polls", id);
+  type DocRef = import("firebase/firestore").DocumentReference;
+  const commitIn = async (refs: DocRef[], op: (b: import("firebase/firestore").WriteBatch, r: DocRef) => void) => {
+    for (let i = 0; i < refs.length; i += 450) {
+      const b = F.writeBatch(db);
+      refs.slice(i, i + 450).forEach(r => op(b, r));
+      await b.commit();
+    }
+  };
+
+  /**
+   * Deja una votación (al salir de ella o al eliminar la cuenta). `ghost`: solo al eliminar la cuenta, el nombre sin
+   * dueño para sus mensajes del chat y para el creador original. `name`: su nombre, si solo sale.
+   */
+  async function leave(id: string, uid: string, { ghost, name }: { ghost?: string; name: string }) {
+    const snap = await F.getDoc(pollRef(id)).catch(() => null);
+    if (!snap?.exists()) return;
+    const poll = snap.data() as PollData;
+    if (ghost) {
+      try {
+        const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
+        await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
+      } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
+    }
+    if (poll.ownerUid === uid) {
+      // La votación pasa a un administrador al azar o, si no hay, a cualquier participante aceptado que siga.
+      const all = await F.getDocs(votesCol(id));
+      const accepted = all.docs.filter(d => d.id !== uid && !d.get("status") && !d.get("gone"));
+      const admins = poll.admins || [];
+      const pool = accepted.filter(d => admins.includes(d.id));
+      const from = pool.length ? pool : accepted;
+      if (!from.length) {
+        // No queda nadie: se borra la votación con sus votos (el chat no se puede borrar desde la app).
+        await commitIn(all.docs.map(d => d.ref), (b, r) => b.delete(r));
+        const b = F.writeBatch(db);
+        b.delete(accessRef(id));
+        b.delete(pollRef(id));
+        await b.commit();
+        return;
+      }
+      const heir = from[Math.floor(Math.random() * from.length)];
+      // El creador original se recuerda aunque la votación pase de mano varias veces.
+      await F.updateDoc(pollRef(id), {
+        ownerUid: heir.id, ownerName: heir.get("name") || "Alguien", admins: admins.filter(a => a !== heir.id),
+        ...(poll.founder ? {} : { founder: uid, founderName: ghost || name }),
+      });
+    } else if (poll.admins?.includes(uid)) {
+      await F.updateDoc(pollRef(id), { admins: F.arrayRemove(uid) }).catch(() => {});
+    }
+    // Sus votos: con la votación cerrada se quedan con un nombre sin dueño; abierta (o en desempate), se borran y
+    // su plaza queda libre (con tope, el contador baja a la vez, como exigen las reglas).
+    const vref = F.doc(votesCol(id), uid);
+    const v = await F.getDoc(vref).catch(() => null);
+    if (!v?.exists()) return;
+    const status = v.get("status");
+    const sad = { name: ghost || ghostName(), photo: "", gone: true };
+    if (status === "rejected") { await F.updateDoc(vref, sad).catch(() => {}); return; } // no puede salir
+    if (status === "pending" || !keepsVotesOnLeave(poll)) {
+      const b = F.writeBatch(db);
+      b.delete(vref);
+      if (hasLimit(poll)) b.update(pollRef(id), { members: F.increment(-1) });
+      await b.commit();
+    } else {
+      await F.updateDoc(vref, sad);
+    }
+  }
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
   const chatCol = (id: string) => F.collection(db, "polls", id, "chat");
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
@@ -244,52 +309,12 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async deleteAccount(uid) {
       const u = auth.currentUser;
       if (!u || u.uid !== uid) throw new Error("No hay ninguna sesión abierta.");
-      const commitIn = async (refs: import("firebase/firestore").DocumentReference[], op: (b: import("firebase/firestore").WriteBatch, r: import("firebase/firestore").DocumentReference) => void) => {
-        for (let i = 0; i < refs.length; i += 450) {
-          const b = F.writeBatch(db);
-          refs.slice(i, i + 450).forEach(r => op(b, r));
-          await b.commit();
-        }
-      };
+      // En cada votación de su lista: sus mensajes y (si se quedan) sus votos pasan a un nombre sin dueño.
       const entries = await F.getDocs(libCol(uid));
       for (const entry of entries.docs) {
-        const id = entry.id;
-        const snap = await F.getDoc(pollRef(id)).catch(() => null);
-        if (!snap?.exists()) continue;
-        const poll = snap.data() as PollData;
         const ghost = ghostName();
-        // Mensajes del chat y voto: el mismo nombre sin dueño en toda la votación, sin foto.
-        try {
-          const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
-          await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
-        } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
-        await F.updateDoc(F.doc(votesCol(id), uid), { name: ghost, photo: "", gone: true }).catch(() => {});
-        if (poll.ownerUid === uid) {
-          // La votación pasa a un administrador al azar o, si no hay, a cualquier participante aceptado.
-          const all = await F.getDocs(votesCol(id));
-          // Nunca alguien que también se fue: la votación se quedaría sin nadie que la gestione.
-          const accepted = all.docs.filter(d => d.id !== uid && !d.get("status") && !d.get("gone"));
-          const admins = poll.admins || [];
-          const pool = accepted.filter(d => admins.includes(d.id));
-          const from = pool.length ? pool : accepted;
-          if (from.length) {
-            const heir = from[Math.floor(Math.random() * from.length)];
-            // El creador original se recuerda (con su nombre sin dueño) aunque la votación pase de mano varias veces.
-            await F.updateDoc(pollRef(id), {
-              ownerUid: heir.id, ownerName: heir.get("name") || "Alguien", admins: admins.filter(a => a !== heir.id),
-              ...(poll.founder ? {} : { founder: uid, founderName: ghost }),
-            });
-          } else {
-            // No queda nadie: se borra la votación con sus votos (el chat no se puede borrar desde la app).
-            await commitIn(all.docs.map(d => d.ref), (b, r) => b.delete(r));
-            const b = F.writeBatch(db);
-            b.delete(accessRef(id));
-            b.delete(pollRef(id));
-            await b.commit();
-          }
-        } else if (poll.admins?.includes(uid)) {
-          await F.updateDoc(pollRef(id), { admins: F.arrayRemove(uid) }).catch(() => {});
-        }
+        // Si una votación falla (p. ej. ya no existe o no hay acceso), se sigue con las demás.
+        await leave(entry.id, uid, { ghost, name: ghost }).catch(() => {});
       }
       // Sus datos: lista, grupos, dispositivos de avisos y perfil.
       for (const col of [libCol(uid), groupsCol(uid), F.collection(db, "users", uid, "tokens")]) {
@@ -301,6 +326,13 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       // los datos ya no están.
       if (native) await (await nativeAuth()).signOut().catch(() => {});
       try { await u.delete(); } catch { await A.signOut(auth); }
+    },
+    async leavePoll(id, uid, { name, dropGroupId }) {
+      await leave(id, uid, { name });
+      const b = F.writeBatch(db);
+      b.delete(F.doc(libCol(uid), id));
+      if (dropGroupId) b.delete(F.doc(groupsCol(uid), dropGroupId));
+      await b.commit();
     },
     async signOut() {
       // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
@@ -352,7 +384,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     async joinPoll(id, user, opts = {}) {
       const ref = F.doc(votesCol(id), user.uid);
       const base: Vote = { name: user.name, photo: user.photo, seenAt: Date.now() };
-      if (!opts.isNew) return F.setDoc(ref, base, { merge: true });
+      // Si había salido de la votación (cerrada) y vuelve, deja de contar como ido.
+      if (!opts.isNew) return F.setDoc(ref, { ...base, gone: F.deleteField() }, { merge: true });
       // Entrar por primera vez: con tope, el voto y el contador de la votación cambian juntos (lo exigen las reglas).
       const batch = F.writeBatch(db);
       batch.set(ref, opts.pending ? { ...base, status: "pending" } : base);
@@ -474,6 +507,32 @@ export function createDemoStore(): Store {
   const fail = (code: string) => Object.assign(new Error(code), { code });
   const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
   const lib = (db: DemoDb, uid: string) => (db.users[uid] ||= { polls: {}, groups: {} });
+  function demoLeave(db: DemoDb, id: string, uid: string, { ghost, name }: { ghost?: string; name: string }) {
+    const p = db.polls[id];
+    if (!p) return;
+    if (ghost) for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = ghost;
+    if (p.ownerUid === uid) {
+      const accepted = Object.entries(db.votes[id] || {}).filter(([u, x]) => u !== uid && !x.status && !x.gone);
+      const admins = p.admins || [];
+      const pool = accepted.filter(([u]) => admins.includes(u));
+      const from = pool.length ? pool : accepted;
+      if (!from.length) { delete db.polls[id]; delete db.votes[id]; return; }
+      const [heir, hv] = from[Math.floor(Math.random() * from.length)];
+      Object.assign(p, { ownerUid: heir, ownerName: hv.name || "Alguien", admins: admins.filter(a => a !== heir),
+        ...(p.founder ? {} : { founder: uid, founderName: ghost || name }) });
+    } else if (p.admins?.includes(uid)) {
+      p.admins = p.admins.filter(a => a !== uid);
+    }
+    const v = db.votes[id]?.[uid];
+    if (!v) return;
+    if (v.status === "rejected") { Object.assign(v, { name: ghost || ghostName(), photo: "", gone: true }); return; }
+    if (v.status === "pending" || !keepsVotesOnLeave(p)) {
+      delete db.votes[id][uid];
+      if (hasLimit(p)) p.members = Math.max(0, (p.members || 0) - 1);
+    } else {
+      Object.assign(v, { name: ghost || ghostName(), photo: "", gone: true });
+    }
+  }
 
   // El usuario demo vive en sessionStorage: cada pestaña puede ser una persona distinta.
   let user: AuthUser | null = null;
@@ -514,31 +573,20 @@ export function createDemoStore(): Store {
     async prepareDeleteAccount() { return "ok"; },
     async deleteAccount(uid) {
       const db = load();
-      for (const [id, p] of Object.entries(db.polls)) {
-        const v = db.votes[id]?.[uid];
+      for (const id of Object.keys(db.users[uid]?.polls || {})) {
         const ghost = ghostName();
-        if (v) { v.name = ghost; v.photo = ""; v.gone = true; }
-        for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = v?.name || ghost;
-        if (p.ownerUid === uid) {
-          const accepted = Object.entries(db.votes[id] || {}).filter(([u, x]) => u !== uid && !x.status && !x.gone);
-          const admins = p.admins || [];
-          const pool = accepted.filter(([u]) => admins.includes(u));
-          const from = pool.length ? pool : accepted;
-          if (from.length) {
-            const [heir, hv] = from[Math.floor(Math.random() * from.length)];
-            Object.assign(p, { ownerUid: heir, ownerName: hv.name || "Alguien", admins: admins.filter(a => a !== heir),
-              ...(p.founder ? {} : { founder: uid, founderName: ghost }) });
-          } else {
-            delete db.polls[id];
-            delete db.votes[id];
-          }
-        } else if (p.admins?.includes(uid)) {
-          p.admins = p.admins.filter(a => a !== uid);
-        }
+        demoLeave(db, id, uid, { ghost, name: ghost });
       }
       delete db.users[uid];
       write(db);
       setUser(null);
+    },
+    async leavePoll(id, uid, { name, dropGroupId }) {
+      const db = load();
+      demoLeave(db, id, uid, { name });
+      delete lib(db, uid).polls[id];
+      if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
+      write(db);
     },
     async signOut() { setUser(null); },
 

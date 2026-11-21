@@ -128,6 +128,9 @@ button,input,select,textarea{font:inherit}
 .key-check{margin:16px 0 0;font-weight:600}
 .dlg-key .dlg-actions{margin-top:14px}
 .pref-label.pf-account-or{margin-top:26px}
+/* «Salir de la votación», al final de la votación: discreto, como acción destructiva de bloque */
+.poll-leave{margin:28px 0 8px;padding-top:14px;border-top:1px solid var(--line);text-align:center}
+.poll-leave .link-btn{font-size:.86rem}
 /* «Eliminar mi cuenta»: zona de peligro, con el borde teñido de danger */
 .step.pf-danger{border-color:color-mix(in srgb,var(--danger) 35%,var(--line))}
 .pf-mail{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}

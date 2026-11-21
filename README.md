@@ -60,8 +60,14 @@ ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en e
 - **Administradores**: en «Participantes», el creador puede nombrar administradores («Hacer admin») y quitarlos.
   Gestionan la votación como él (cerrar y reabrir, desempates, solicitudes, acceso y plazo), pero no pueden
   eliminarla ni nombrar a otros administradores. Llevan la etiqueta «Admin» (y el creador, «Creador»).
-- **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sus votos y mensajes se quedan con un
-  nombre sin dueño al azar («Un suspiro», «Una sombra lejana»…) y sin foto; las votaciones que creó pasan a un
+- **Salir de la votación** (al final de cada una) y **eliminar la cuenta** siguen la misma regla con sus votos: si la
+  votación está abierta o con un desempate abierto, se borran y su plaza queda libre; si ya está cerrada (o con el
+  plazo pasado), se quedan con un nombre sin dueño. Si se iba durante un desempate, el primer administrador que abre
+  la votación lo recalcula: sin empate se quita y queda la ganadora; con empate entre menos opciones, sigue solo
+  entre esas; con el mismo empate, no cambia nada. Quien sale de una votación que creó la cede como al eliminar la
+  cuenta.
+- **Eliminar mi cuenta** (al final de «Tu perfil»; Google Play lo exige): sus mensajes (y sus votos, si se quedan)
+  pasan a un nombre sin dueño al azar («Un suspiro», «Una sombra lejana»…) y sin foto; las votaciones que creó pasan a un
   administrador al azar o, si no hay, a otro participante (si no queda nadie, se borran); y se borran su perfil, su
   lista, sus grupos y la cuenta. Quien hereda una votación es su **«Delegado»**, con todos los poderes del creador, y
   «Creador» se queda en el nombre sin dueño. Quien se fue (`gone` en su voto) no hereda, no se le cuenta como

@@ -61,6 +61,13 @@ export const GHOST_NAMES = [
   "Polvo de estrellas", "Una hoja que se llevó el viento", "Un abrazo pendiente", "La última luz de la tarde",
 ];
 export const ghostName = () => GHOST_NAMES[Math.floor(Math.random() * GHOST_NAMES.length)];
+
+/**
+ * Si quien se va de la votación deja sus votos: solo si ya no se puede votar (cerrada o con el plazo pasado) y no
+ * hay un desempate abierto. Si no, sus votos se borran (y en un desempate puede deshacerse el empate).
+ */
+export const keepsVotesOnLeave = (p: PollData) =>
+  (!!p.closed || deadlinePassed(p)) && !(p.tiebreak && !p.tiebreak.done);
 export const isFull = (p: PollData) => hasLimit(p) && (p.members || 0) >= (p.maxPeople as number);
 
 // ----- Plazo para votar -----
