@@ -71,7 +71,7 @@ En las tablas:
 | 2.2.8 | Título y descripción | Con selector de emojis en el ordenador. | Gratis | No | Gratis |
 | 2.2.9 | Votación anónima | Solo se ven los totales, no quién votó qué. | Gratis | No | Gratis |
 | 2.2.10 | Plazo para votar | Se cierra sola en el día y la hora elegidos. Ya está hecho. | Premium | ★★ | Premium |
-| 2.2.11 | Máximo de personas | De 2 a 150 por votación; se puede cambiar después. | Gratis con límite (p. ej. 25 gratis) | ★★★ | Gratis hasta 15 (pendiente: 15 o 20); premium hasta 150 |
+| 2.2.11 | Máximo de personas | De 2 a 150 por votación; se puede cambiar después. | Gratis con límite (p. ej. 25 gratis) | ★★★ | Gratis hasta 20; premium hasta 150 |
 | 2.2.12 | Con aprobación | El organizador acepta o rechaza a cada persona que entra. | Premium | ★★★ | Premium |
 | 2.2.13 | Solo estos correos | Solo entran los correos de una lista (hasta 150). | Premium | ★★★ | Premium |
 | 2.2.14 | Grupo al crearla | Se guarda directamente en uno de sus grupos. | Gratis | No | Gratis |
@@ -111,7 +111,7 @@ En las tablas:
 | 2.5.6 | Administradores | El creador nombra coorganizadores que gestionan como él, salvo eliminarla y nombrar a otros. | Premium | ★★★ | Premium |
 | 2.5.7 | Delegado | Si el creador se va, la votación pasa a un administrador o a otro participante. | Gratis (es una garantía) | No | Gratis; con preferencia por un administrador con premium (§8) |
 | 2.5.8 | Solicitudes | Aceptar, rechazar o volver a admitir (en las de aprobación). | Va con 2.2.12 | ★★★ (con 2.2.12) | Va con 2.2.12; aceptar y rechazar sigue funcionando aunque el gestor no tenga premium (§8) |
-| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. Hoy se pueden quitar correos de la lista; quien ya había entrado con un correo quitado sigue dentro y puede votar: solo deja de poder volver a entrar si sale. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. La lista solo se amplía; se pueden quitar los correos que aún no han entrado (para corregir errores al escribirlos), pero no los de quien ya está dentro. |
+| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. Hoy se pueden quitar correos de la lista; quien ya había entrado con un correo quitado sigue dentro y puede votar: solo deja de poder volver a entrar si sale. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Los correos que aún no han entrado se pueden quitar (para corregir errores al escribirlos). Quitar el de alguien que ya está dentro depende de 7.20: si se puede sacar a gente, quitar su correo lo saca (con confirmación); si no, no se puede quitar. |
 | 2.5.10 | Quitar el plazo | Con la votación abierta, deja de tener fecha de cierre. Si el plazo ya ha pasado, reabrir la votación quita el plazo y se pueden volver a cambiar los votos. | Va con 2.2.10 | ★★ (con 2.2.10) | Pendiente de probarla |
 | 2.5.11 | Eliminar la votación | La borra para todos. | Gratis | No | Gratis |
 | 2.5.12 | Salir de la votación | Avisa de lo que pasa con los votos según el estado de la votación. | Gratis | No | Gratis |
@@ -160,27 +160,33 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 3.1 | **Votaciones abiertas a la vez** | 3 abiertas; las cerradas no cuentan | No castiga a quien organiza de vez en cuando; se libera cerrando una | Cerrar y reabrir para esquivarlo (se arregla contando también al reabrir) | No: un contador en el perfil y las reglas | ★★★ | Sí, 3 abiertas. Caso por caso en §9. |
 | 3.2 | **Votaciones creadas al mes** | 3 al mes | Muy fácil de explicar | Castiga los picos (Navidad, verano); el contador vuelve a cero cada mes | No: un contador con el mes, en las reglas | ★★ (mejor 3.1) | No como límite. Los picos se cubren con la suscripción mensual (4.1). |
-| 3.3 | **Personas por votación** | 25 gratis; 150 en premium | Pagan los grupos grandes: asociaciones, clubes, empresas, bodas | Un grupo grande de amigos se topa con él | No: ya existen `maxPeople` y `members` | ★★★ | Sí: 15 gratis (pendiente: 15 o 20); 150 en premium |
+| 3.3 | **Personas por votación** | 25 gratis; 150 en premium | Pagan los grupos grandes: asociaciones, clubes, empresas, bodas | Un grupo grande de amigos se topa con él | No: ya existen `maxPeople` y `members` | ★★★ | Sí: 20 gratis; 150 en premium |
 | 3.4 | **Funciones de control** | Aprobación, solo correos, administradores y plazo en premium | Lo básico sigue completo; paga quien necesita control | Hay que elegir bien qué es «avanzado» | No: las reglas miran el plan al crear o cambiar | ★★★ | Sí |
 | 3.5 | **Opciones por día** | 2 gratis; 4 en premium | Sencillo | Diferencia poco y puede frustrar al crear | No | ★ | No: si la votación pasa a alguien sin premium no se podrían quitar opciones que ya tienen votos |
-| 3.6 | **Caducidad** | Las gratuitas se borran N meses después del último movimiento | Ahorra almacenamiento | Molesta a quien quiere recordar; hay que avisar antes | Sí: una tarea programada | ★ | Sí: caducan las gestionadas por alguien sin premium; las de premium, no. Pendiente: cuántos meses. |
+| 3.6 | **Caducidad** | Las gratuitas se borran N meses después del último movimiento | Ahorra almacenamiento | Molesta a quien quiere recordar; hay que avisar antes | Sí: una tarea programada | ★ | Sí: caducan las gestionadas por alguien sin premium; las de premium, no. Pendiente: cuántos meses (propuesta: 12 meses sin movimiento, con aviso 30 días antes). |
 | 3.7 | **Marca en lo compartido** | Imagen del resultado con «Hecho con Hilemos» | Publicidad gratis cada vez que se comparte | Ninguno serio | No | ★★ | Sí |
-| 3.8 | **Tope de abiertas a la vez también en premium** | 50 abiertas | Nadie paga un mes para «fabricar» votaciones para otros a gran escala; quien organiza tanto encaja en el plan de organizaciones (4.3) | Casi nadie lo notará | No: el mismo contador de 3.1 | — | Propuesta, pendiente |
+| 3.8 | **Tope de abiertas a la vez también en premium** | 50 abiertas | Nadie paga un mes para «fabricar» votaciones para otros a gran escala; quien organiza tanto encaja en el plan de organizaciones (4.3) | Casi nadie lo notará | No: el mismo contador de 3.1 | — | Sí, 50 abiertas |
 
-**Decisión: 3.1 + 3.3 + 3.4 + 3.6 + 3.7.**
+**Decisión: 3.1 + 3.3 + 3.4 + 3.6 + 3.7 + 3.8.**
 
-- 3 votaciones abiertas a la vez (50 en premium, si se acepta 3.8).
-- Hasta 15 personas por votación (150 en premium).
+- 3 votaciones abiertas a la vez (50 en premium).
+- Hasta 20 personas por votación (150 en premium).
 - Aprobación, solo correos, administradores y plazo, en premium.
 - Las votaciones gratuitas caducan; las de premium, no.
 - La imagen del resultado lleva la marca.
 - Votar, resultados, desempate, chat, grupos y compartir: gratis y sin límite.
 
-**Sobre las 15 personas.** Cubre de sobra a un grupo de amigos, pero se queda corto para una cena familiar de
-Navidad o un equipo con suplentes, que es justo el público de la primera votación. El problema no lo ve quien
-organiza (sabe el límite al crearla), sino la persona número 16, que encuentra la votación llena; y quien organiza
-solo puede arreglarlo pagando, con prisa. Con 20 se cubren casi todas las reuniones familiares y siguen pagando los
-grupos de verdad grandes (asociaciones, bodas, empresas). Recomiendo 20, pero 15 también es defendible.
+**Sobre la caducidad (3.6).** Propuesta: 12 meses sin movimiento (un voto, un mensaje o un cambio), estén abiertas
+o cerradas, con un aviso 30 días antes en la app y por push.
+
+- **12 y no 6:** muchas votaciones se repiten cada año (la cena de Navidad, el viaje de verano). Con 6 meses, la del
+  año pasado ya no estaría cuando se quiere consultar o duplicar.
+- **Sin movimiento y no desde el cierre:** las gratuitas no tienen plazo y muchas nunca se cierran. Contando desde el
+  cierre, esas no caducarían nunca.
+- **El aviso es el momento de pasarse a premium:** «Esta votación se borrará el 3 de marzo. Con premium se guarda».
+  Un mensaje en el chat también la mantiene, y está bien que sea así.
+- **El ahorro es pequeño**, porque se guarda poco (6.3). Lo que aporta es incentivo para premium y no guardar datos
+  personales sin necesidad, que es lo que pide el RGPD.
 
 ---
 
@@ -259,8 +265,9 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.9 | Ocultar los resultados hasta votar o hasta el cierre | Para que nadie vote lo que ya va ganando. Lo elige el creador al crear la votación. | Pendiente | ★★ | Sí, premium; opción del creador al crearla |
 | 7.10 | Exportar los resultados | Excel/CSV o PDF. | Pendiente | ★★★ | |
 | 7.11 | Una nota con el voto | «Llego a las 22:00», «solo por la tarde». | Pendiente | ★ | No |
-| 7.12 | Zona horaria | En las votaciones por horas, para grupos en varios países. Propuesta: la votación guarda la zona de quien la crea; quien la abre desde otra zona ve «hora de Madrid» y, al lado, su hora local. | Pendiente | ★ | Pendiente (propuesta: la zona del creador) |
+| 7.12 | Zona horaria | En las votaciones por horas, para grupos en varios países. Propuesta: la votación guarda la zona de quien la crea; quien la abre desde otra zona ve «hora de Madrid» y, al lado, su hora local. | Pendiente | ★ | Sí: la zona del creador |
 | 7.13 | Límite de elecciones por persona | «Elige como mucho 3». | Pendiente | ★ | No: libertad para elegir |
+| 7.20 | Sacar a alguien de la votación | Un administrador saca a un participante: sus votos dejan de contar, se libera su plaza y no puede volver a entrar con el enlace. Sirve si el enlace llega a quien no debía o si alguien molesta en el chat. Casi está hecho por debajo: es el estado «rechazado» de las votaciones con aprobación aplicado a alguien ya aceptado. Falta el botón, liberar su plaza y el aviso en el chat. | Pendiente | No: es moderación, y las tiendas la piden (7.4) | Pendiente (propuesta: gratis) |
 | **Más adelante** | | | | | |
 | 7.14 | Entrar con Apple | Obligatorio para publicar en la App Store si se ofrece entrar con Google. | Pendiente | No | |
 | 7.15 | Otros idiomas | Inglés y catalán, por ejemplo. | Pendiente | No | |
@@ -359,7 +366,7 @@ heredero con premium, la app tiene que poder leer ese dato de los administradore
 
 Cada persona tiene en su perfil un contador de las votaciones abiertas que **gestiona** (las que ha creado o
 heredado). Las votaciones en las que solo participa, o de las que es administrador, no cuentan. El límite es 3 sin
-premium (y 50 con premium, si se acepta 3.8).
+premium (y 50 con premium, 3.8).
 
 | Qué pasa | Contador | Si ya está en el límite |
 | --- | --- | --- |
