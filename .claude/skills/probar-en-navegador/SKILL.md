@@ -73,6 +73,21 @@ anterior hace lo mismo (en otro puerto). Hoy salieron así fallos del propio scr
 recarga, crear un grupo deja el filtro puesto, el Chrome de escritorio tiene menú de compartir) y uno real que ya
 existía (el foco del cajón del móvil).
 
+## En la app de Android (móvil de verdad)
+
+`recorrido-android.mjs <carpeta>` pasa el recorrido en la app instalada en un móvil: Playwright se conecta al WebView
+por DevTools (`adb forward` a `webview_devtools_remote_<pid>`, solo en compilaciones de depuración) y `adb` hace lo
+del sistema: toques y gestos reales, Atrás, teclado, girar, tema del móvil, menú de compartir, Calendar, enlaces
+desde fuera y segundo plano. Usa el modo demo y varias personas en el mismo WebView: cambia la sesión
+(`sessionStorage`) en `go()`. Lista de casos y estado: `docs/pruebas-app-android.md`.
+
+- Compilar el APK con el JDK 21 (`JAVA_HOME` = Temurin 21; Gradle 8.14 no acepta el JDK 25 de Android Studio):
+  `npm run android` y `cd android && ./gradlew assembleDebug`, e instalar con `adb install -r`.
+- Móvil por wifi: «Depuración inalámbrica» → `adb pair <ip:puerto> <código>` y `adb connect <ip:puerto>`; con dos
+  dispositivos en la lista, `ADB_SERIAL=<ip:puerto>`.
+- Que no se bloquee la pantalla a mitad: `adb shell svc power stayon usb`, y al acabar `svc power stayon false`.
+- El usuario no debe usar el móvil mientras corre (cinco minutos).
+
 ## Trucos del modo demo y de Playwright
 
 - **Cada pestaña es una sesión**: dos páginas del mismo contexto son dos personas que comparten datos (así se prueba
