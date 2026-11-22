@@ -331,7 +331,7 @@ nunca paga (1.1).
 | --- | --- |
 | Cerrar, reabrir (si cabe en su límite de abiertas, §9), desempatar y eliminar | Subir el máximo de personas por encima del límite gratuito |
 | Editar título, descripción, días u opciones | Nombrar administradores nuevos (los que ya había siguen) |
-| Aceptar y rechazar solicitudes, para no dejar a nadie fuera | Poner un plazo nuevo o alargarlo |
+| Aceptar y rechazar solicitudes, para no dejar a nadie fuera, y sacar a alguien (7.20) | Poner un plazo nuevo o alargarlo |
 | Añadir correos a la lista: no aumenta las plazas, que es lo que se paga | Activar la aprobación, la lista de correos o los resultados ocultos si no estaban |
 | Quitar el plazo, bajar el máximo o quitar administradores | — |
 
