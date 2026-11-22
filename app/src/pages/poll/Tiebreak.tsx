@@ -38,16 +38,10 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
   const winner = done && TB.leaders.length === 1 ? TB.leaders[0] : null;
   const unsolved = tiebreakUnsolved(TB);
   // Si alguien se salió y cambió el empate, lo ven todos al entrar (la votación llega ya ajustada: ver
-  // withTiebreakAdjusted). A quien había elegido una opción que sale se le pide que vuelva a elegir.
-  let note: ReactNode = null;
-  if (!done && poll.tbNote && !poll.tbNote.solved && poll.tbNote.tb === TB.id) {
-    const lost = myTb?.id === TB.id && !TB.candidates.includes(myTb.pick);
-    note = <>
-      Han cambiado los votos porque una persona se ha salido de la votación: el desempate sigue solo entre
-      las {TB.candidates.length} opciones que siguen empatadas.
-      {lost && <> <strong>Tu elección ya no está entre ellas: vuelve a elegir.</strong></>}
-    </>;
-  }
+  // withTiebreakAdjusted).
+  const note = !done && poll.tbNote && !poll.tbNote.solved && poll.tbNote.tb === TB.id
+    ? `Han cambiado los votos porque una persona se ha salido de la votación: el desempate sigue solo entre las ${TB.candidates.length} opciones que siguen empatadas.`
+    : null;
   let sub: ReactNode;
   if (done) {
     sub = winner
