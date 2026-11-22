@@ -39,12 +39,12 @@ export function CalendarMenu({ cal }: { cal: CalEvent }) {
 
 /**
  * Menú ⋯ junto al título, para quien administra la votación: editarla, cerrar o reabrir (sin `onCloseOrReopen`, con
- * el resultado ya definitivo, no se ofrece), acceso y plazas, hacerla anónima, duplicarla y (solo el creador,
- * `onDelete`) eliminarla.
+ * el resultado ya definitivo, no se ofrece), acceso y plazas, gestionar participantes, hacerla anónima, duplicarla,
+ * exportar los resultados y (solo el creador, `onDelete`) eliminarla.
  */
-export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, onDelete, onDuplicate, onAccess }: {
+export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, onDelete, onDuplicate, onAccess, onPeople, onExport }: {
   closed: boolean; anonymous: boolean; onCloseOrReopen?: () => void; onEdit: () => void; onAnon: () => void;
-  onDelete?: () => void; onDuplicate: () => void; onAccess?: () => void;
+  onDelete?: () => void; onDuplicate: () => void; onAccess?: () => void; onPeople: () => void; onExport: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -72,6 +72,9 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
               <Icon name="settings" />Acceso y plazas
             </button>
           )}
+          <button role="menuitem" className="menu__item" onClick={pick(onPeople)}>
+            <Icon name="users" />Gestionar participantes
+          </button>
           {!anonymous && (
             <button role="menuitem" className="menu__item" onClick={pick(onAnon)}>
               <Icon name="incognito" />Hacer anónima
@@ -79,6 +82,9 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
           )}
           <button role="menuitem" className="menu__item" onClick={pick(onDuplicate)}>
             <Icon name="copy" />Duplicar votación
+          </button>
+          <button role="menuitem" className="menu__item" onClick={pick(onExport)}>
+            <Icon name="download" />Exportar resultados
           </button>
           {onDelete && <>
             <div className="menu__sep" role="separator" />

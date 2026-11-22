@@ -198,15 +198,21 @@ export function createDemoStore(): Store {
       }
       write(db);
     },
-    async setMemberStatus(id, uid, status, { from, counted }) {
+    async setMemberStatus(id, uid, status, { from, counted, removed, dropAdmin }) {
       const db = load();
       const p = db.polls[id];
       const v = db.votes[id]?.[uid];
       if (!p || !v) throw fail("not-found");
-      if (!isAdmin(p, me()) || uid === p.ownerUid) throw fail("permission-denied");
-      if (status === "accepted") delete v.status; else v.status = status;
+      if (!isAdmin(p, me()) || uid === p.ownerUid || uid === me()) throw fail("permission-denied");
+      // A un administrador solo le cambia el estado (le saca) el creador, como en las reglas.
+      if (p.admins?.includes(uid) && p.ownerUid !== me()) throw fail("permission-denied");
+      if (status === "accepted") { delete v.status; delete v.removed; } else {
+        v.status = status;
+        if (status === "rejected" && removed) v.removed = true;
+      }
       const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
       if (counted && delta) p.members = (p.members || 0) + delta;
+      if (dropAdmin) p.admins = (p.admins || []).filter(a => a !== uid);
       write(db);
     },
     async saveVote(id, uid, data) {

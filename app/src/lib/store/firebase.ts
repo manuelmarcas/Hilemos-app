@@ -389,12 +389,18 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       if (opts.counted) batch.update(pollRef(id), { members: F.increment(1) });
       await batch.commit();
     },
-    async setMemberStatus(id, uid, status, { from, counted }) {
+    async setMemberStatus(id, uid, status, { from, counted, removed, dropAdmin }) {
       const batch = F.writeBatch(db);
-      batch.update(F.doc(votesCol(id), uid), { status: status === "accepted" ? F.deleteField() : status });
+      batch.update(F.doc(votesCol(id), uid), status === "accepted"
+        ? { status: F.deleteField(), removed: F.deleteField() }
+        : { status, ...(status === "rejected" && removed ? { removed: true } : {}) });
       // Los rechazados no ocupan plaza: al rechazar se resta 1 y al readmitir se vuelve a sumar.
       const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
-      if (counted && delta) batch.update(pollRef(id), { members: F.increment(delta) });
+      const pollPatch = {
+        ...(counted && delta ? { members: F.increment(delta) } : {}),
+        ...(dropAdmin ? { admins: F.arrayRemove(uid) } : {}),
+      };
+      if (Object.keys(pollPatch).length) batch.update(pollRef(id), pollPatch);
       await batch.commit();
     },
     // Voto, voto del desempate y nombre/foto del participante: todo va en su documento, sin tocar el resto.

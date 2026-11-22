@@ -258,7 +258,7 @@ service cloud.firestore {
 
         allow update: if signedIn() && (selfUpdate() || ownerSetsStatus());
 
-        // Cada uno cambia su nombre, foto y votos, pero no su estado; pendiente o rechazado no puede votar.
+        // Cada uno cambia su nombre, foto y votos, pero no su estado (ni si le sacaron); pendiente o rechazado no puede votar.
         function selfUpdate() {
           let d = request.resource.data;
           let old = resource.data;
@@ -267,20 +267,24 @@ service cloud.firestore {
             && validTiebreakVote(old.get('tb', null))
             && (pollData(pollId).get('closed', false) == false || d.get('picks', []) == old.get('picks', []))
             && d.get('status', null) == old.get('status', null)
+            && d.get('removed', false) == old.get('removed', false)
             && (old.get('status', null) == null
                 || (d.get('picks', []) == old.get('picks', []) && d.get('tb', null) == old.get('tb', null)));
         }
 
         // Un administrador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona
-        // (nunca al creador).
+        // (nunca al creador). Sacar a alguien de la votación es rechazarle con `removed`; a otro administrador solo
+        // le saca el creador.
         function ownerSetsStatus() {
           let d = request.resource.data;
           let p = pollData(pollId);
           return isAdminOf(p)
             && request.auth.uid != uid
             && uid != p.ownerUid
-            && d.diff(resource.data).affectedKeys().hasOnly(['status'])
-            && (!('status' in d) || d.status in ['pending', 'rejected']);
+            && (!(uid in p.get('admins', [])) || p.ownerUid == request.auth.uid)
+            && d.diff(resource.data).affectedKeys().hasOnly(['status', 'removed'])
+            && (!('status' in d) || d.status in ['pending', 'rejected'])
+            && (!('removed' in d) || (d.removed == true && d.get('status', null) == 'rejected'));
         }
 
         // Cada uno puede salir (restando 1 al contador si lo hay), salvo si le han rechazado;

@@ -74,11 +74,7 @@
 }
 .poll-tabs__panel{min-width:0}
 .person{display:inline-flex;align-items:center;gap:8px}
-/* Nombre del participante y, para el creador, «Hacer admin» / «Quitar admin» a la derecha */
-.people-table__person{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
-.people-table__admin{flex:none;font-size:.78rem;text-decoration:none;padding:2px 6px;border-radius:6px}
-.people-table__admin:hover{background:var(--hover);text-decoration:underline}
-/* «Creador» y «Admin» junto al nombre */
+/* «Creador», «Delegado» y «Admin» junto al nombre */
 .role-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);
   font-size:.68rem;font-weight:700;letter-spacing:.02em;vertical-align:1px}
 .role-tag--owner{background:var(--brand-soft);color:var(--brand-strong)}

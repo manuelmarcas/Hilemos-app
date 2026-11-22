@@ -110,7 +110,7 @@ export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void
           <label className="field-label access-panel__label" htmlFor="ap-emails">Correos que pueden entrar</label>
           <textarea id="ap-emails" className="input" rows={4} value={emailsText} disabled={!loaded}
             onChange={e => setEmailsText(e.target.value)} spellCheck={false} />
-          <p className="hint access-panel__hint">Quitar un correo no echa a quien ya ha entrado: solo impide que entren nuevas personas con él.</p>
+          <p className="hint access-panel__hint">Quitar un correo no saca a quien ya ha entrado con él: solo impide que entren nuevas personas. Para sacar a alguien, usa «Gestionar participantes».</p>
         </>
       )}
       <div className="status" role="alert">{err}</div>
@@ -136,13 +136,19 @@ function AccessHead({ poll }: { poll: Poll }) {
   );
 }
 
-/** Quien ha pedido entrar en una votación con aprobación y aún no está aceptado. */
-export function WaitingView({ poll, status }: { poll: Poll; status: MemberStatus }) {
+/**
+ * Quien no participa (todavía o ya): ha pedido entrar en una votación con aprobación y aún no está aceptado, no le
+ * han aceptado o le han sacado de la votación (`removed`).
+ */
+export function WaitingView({ poll, status, removed }: { poll: Poll; status: MemberStatus; removed?: boolean }) {
   const owner = poll.ownerName || "Quien la creó";
   return <>
     <AccessHead poll={poll} />
     <div className={bem("notice", { [status]: true })} role="status">
-      {status === "rejected" ? <>
+      {removed ? <>
+        <h2 className="notice__title"><Icon name="ban" /> Te han sacado de esta votación</h2>
+        <p>Quien la administra te ha sacado, así que ya no puedes votar, ver los resultados ni escribir en el chat.</p>
+      </> : status === "rejected" ? <>
         <h2 className="notice__title"><Icon name="ban" /> No te han aceptado</h2>
         <p>{owner} no ha aceptado tu solicitud para esta votación, así que no puedes votar ni ver los resultados.</p>
       </> : <>

@@ -196,10 +196,46 @@ await check("Avisar a quien falta (Cris entra sin votar)", async () => {
   await ana.locator("#ptabbtn-people").click();
   expect(await ana.getByRole("link", { name: /Avisar a quien falta/ }).count() >= 1, "no aparece");
 });
-await check("Nombrar administradora a Bea", async () => {
-  await ana.locator(".people-table__row:has-text('Bea') .people-table__admin").click();
-  await yes(ana);
+const managePanel = p => p.locator("section[aria-label='Gestionar participantes']");
+const managedRow = (p, name) => managePanel(p).locator("li", { hasText: name });
+await check("Nombrar administradora a Bea (Gestionar participantes, un clic)", async () => {
+  await go(ana, days);
+  await ana.getByRole("button", { name: "Opciones de la votación" }).click();
+  await ana.getByRole("menuitem", { name: "Gestionar participantes" }).click();
+  await btn(managedRow(ana, "Bea"), "Hacer admin").click();
+  await managedRow(ana, "Bea").getByText("Admin", { exact: true }).waitFor();
+  await ana.locator("#ptabbtn-people").click();
   await ana.waitForSelector(".people-table__row:has-text('Bea') .role-tag:has-text('Admin')");
+  expect(await ana.getByRole("button", { name: "Hacer admin" }).count() === 1, "la tabla no debe tener botones de admin");
+});
+await check("Sacar a Cris y volver a admitirle", async () => {
+  await btn(managedRow(ana, "Cris"), "Sacar").click();
+  expect((await dialogText(ana)).includes("¿Sacar a Cris de la votación?"), "sin confirmación");
+  await yes(ana);
+  await managePanel(ana).getByText("Sacados").waitFor();
+  expect(await ana.locator(".people-table__row:has-text('Cris')").count() === 0, "Cris sigue en la tabla");
+  await btn(managedRow(ana, "Cris"), "Volver a admitir").click();
+  await ana.waitForSelector(".people-table__row:has-text('Cris')");
+  await btn(managePanel(ana), "Cerrar").click();
+  await ana.locator("#ptabbtn-chat").click();
+  await ana.waitForSelector(".chat__sys:has-text('ha sacado a Cris')");
+  await ana.locator("#ptabbtn-people").click();
+});
+await check("Exportar resultados en CSV, Excel y PDF", async () => {
+  const sizes = [];
+  for (const [name, ext] of [["CSV", "csv"], ["Excel", "xlsx"], ["PDF", "pdf"]]) {
+    await ana.getByRole("button", { name: "Opciones de la votación" }).click();
+    await ana.getByRole("menuitem", { name: "Exportar resultados" }).click();
+    const [dl] = await Promise.all([ana.waitForEvent("download"), ana.locator("dialog[open] button", { hasText: name }).click()]);
+    expect(dl.suggestedFilename().endsWith("." + ext), "nombre: " + dl.suggestedFilename());
+    const file = `${OUT}/export.${ext}`;
+    await dl.saveAs(file);
+    sizes.push(`${ext} ${fs.statSync(file).size} B`);
+  }
+  expect(fs.readFileSync(`${OUT}/export.csv`, "utf8").includes("Bea"), "el CSV no lleva a Bea");
+  expect(fs.readFileSync(`${OUT}/export.pdf`).subarray(0, 5).toString() === "%PDF-", "no es un PDF");
+  expect(fs.readFileSync(`${OUT}/export.xlsx`).subarray(0, 2).toString() === "PK", "no es un .xlsx");
+  return sizes.join(", ");
 });
 await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
   await ana.locator(".people-table__row:has-text('Bea') .person__btn").click();

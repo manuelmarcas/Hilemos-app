@@ -98,6 +98,28 @@
 .dialog--confirm .dialog__title{padding-right:0;font-size:1.12rem;line-height:1.35;overflow-wrap:anywhere}
 .dialog__msg{margin:10px 0 0;color:var(--muted);line-height:1.5;font-size:.94rem}
 .dialog__actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+/* «Exportar resultados»: un botón grande por formato, con lo que trae */
+.export-dialog__list{display:grid;gap:8px}
+.export-dialog__option{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  width:100%;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  background:var(--card);
+  color:var(--ink);
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.export-dialog__option:hover:not(:disabled){background:var(--hover);border-color:var(--brand)}
+.export-dialog__option:disabled{opacity:var(--opacity-disabled);cursor:default}
+.export-dialog__icon{--icon-size:22px;--icon-color:var(--brand);margin-top:2px}
+.export-dialog__text{display:grid;gap:2px;min-width:0}
+.export-dialog__name{font-size:1rem;color:var(--brand-strong)}
+.export-dialog__desc{font-size:.86rem;color:var(--muted);line-height:1.4}
 @media (max-width:420px){.dialog__btn{flex:1}}
 /* Avisos con "Deshacer" y cuenta atrás */
 .undo-stack{

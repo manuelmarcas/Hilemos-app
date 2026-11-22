@@ -7,6 +7,7 @@ import { publicHost } from "./native";
 import { pollOptions, unitParts } from "./model";
 import type { PollData } from "./types";
 import { slugify } from "./util";
+import { downloadBlob } from "./files";
 
 export interface CalEvent {
   uid: string;
@@ -97,12 +98,7 @@ function icsFile(e: CalEvent) {
 }
 
 export function downloadIcs(e: CalEvent) {
-  const url = URL.createObjectURL(new Blob([icsFile(e)], { type: "text/calendar;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${slugify(e.title) || "votacion"}.ics`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10000); // revocarlo antes de que el navegador lo lea cancela la descarga
+  downloadBlob(new Blob([icsFile(e)], { type: "text/calendar;charset=utf-8" }), `${slugify(e.title) || "votacion"}.ics`);
 }
 
 export function googleCalendarUrl(e: CalEvent) {

@@ -67,6 +67,13 @@ src/lib/fieldErrors.ts     Avisos de campos con el estilo de la app (en vez de l
 src/lib/ics.ts             Añadir al calendario (Google, .ics)
 src/lib/push.ts            Avisos push (pendiente de las Cloud Functions)
 src/lib/resultImage.ts     Tarjeta de resultados en PNG para compartir
+src/lib/canvas.ts          Ayudas de dibujo (fuentes, colores de los tokens, texto recortado) para la tarjeta y el PDF
+src/lib/exportData.ts      Exportar: la votación como tabla, el CSV y el libro de Excel (puro, con tests)
+src/lib/xlsx.ts            .xlsx mínimo sin librerías (XML dentro de un ZIP sin comprimir)
+src/lib/pdf.ts             PDF mínimo sin librerías (una imagen JPEG por página A4)
+src/lib/resultPdf.ts       Informe de resultados en PDF, dibujado en canvas
+src/lib/exportResults.ts   Genera la exportación elegida y la guarda
+src/lib/files.ts           Descargar un archivo (o compartirlo, en la app)
 src/lib/theme.ts           Tema claro/oscuro
 src/lib/native.ts          Integración con Capacitor (Android)
 src/lib/config.ts          Configuración de Firebase
@@ -201,6 +208,24 @@ si lo hubo— y el enlace, y la comparte con `navigator.share`; si el navegador 
 descarga. Los colores salen de los tokens del tema, así que la tarjeta sale en claro o en oscuro según el que esté
 puesto, y en las anónimas nunca aparecen nombres. Está en `src/lib/resultImage.ts`, sin dependencias nuevas.
 
+## Exportar resultados
+
+Menú ⋯ → «Exportar resultados» (`pages/poll/ExportDialog.tsx`, administradores). `exportTable` (`lib/exportData.ts`)
+convierte la votación en una fila por casilla (también las que no tienen votos, en el orden del calendario) con sus
+votos, su puesto, sus votos del desempate y quién la votó, más la lista de participantes con su papel. De ahí salen:
+
+- **CSV** (`toCsv`): con punto y coma y la marca de UTF-8, que es lo que espera Excel en español; una columna por
+  persona con «Sí» donde votó. Lo que empieza por `= + - @` lleva un apóstrofo delante para que la hoja de cálculo no
+  lo tome por una fórmula (los nombres los escribe cualquiera).
+- **Excel** (`toXlsx` con `lib/xlsx.ts`, sin librerías): «Resultados» (clasificación, ganadora resaltada y quién votó),
+  «Votos» (matriz con ✓) y «Participantes», con filas y columnas fijas y los colores del tema claro.
+- **PDF** (`lib/resultPdf.ts` + `lib/pdf.ts`): se dibuja en `canvas` como la tarjeta del resultado (mismas fuentes y
+  emojis, tema claro) y cada página A4 va como JPEG dentro de un PDF escrito a mano. Se carga solo al pedirlo.
+
+En las anónimas solo hay totales, sin nombres. En la web se descarga; en la app se comparte (`saveFile` en
+`lib/files.ts`), porque allí las descargas no funcionan. En el plan de pago, el CSV será gratis y el Excel y el PDF,
+premium (ver `docs/funcionalidades-y-planes.md`); de momento no hay planes y todo está disponible.
+
 ## Plazo para votar
 
 Al crear una votación se puede poner un plazo opcional (paso «¿Hasta cuándo se vota?»): día y, si se quiere, hora.
@@ -219,10 +244,18 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 
 ## Administradores y eliminar la cuenta
 
-- `polls/{id}.admins` (uids): los nombra y los quita solo el creador, desde la tabla de «Participantes»
-  (`PeopleTable`). `isAdmin(poll, uid)` en `model.ts` decide quién gestiona la votación; eliminarla y los
-  administradores son solo del creador (`isOwner`). En las reglas, `isAdminOf()`; un administrador solo puede
-  quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado del creador.
+- `polls/{id}.admins` (uids): los nombra y los quita solo quien gestiona la votación, con un clic, desde
+  «Gestionar participantes» (`pages/poll/ManagePeople.tsx`, menú ⋯). `isAdmin(poll, uid)` en `model.ts` decide quién
+  gestiona la votación; eliminarla y los administradores son solo del creador (`isOwner`). En las reglas,
+  `isAdminOf()`; un administrador solo puede quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado
+  del creador. `managedPeople` (`model.ts`) decide qué puede hacer cada uno con cada persona del panel, y `roleOf`, su
+  etiqueta («Creador», «Delegado» o «Admin»).
+- **Sacar a alguien**: `setMemberStatus(id, uid, "rejected", { removed: true, dropAdmin })` deja su voto como rechazado
+  con `removed: true` (y, si era administrador, le quita de `admins` en la misma escritura); con tope, el contador baja
+  1. Como cualquier rechazado, sus votos dejan de contar (`acceptedVotes`), no entra en el chat y no puede borrar su voto
+  para volver a entrar. Ve «Te han sacado de esta votación» (`WaitingView`, también en las abiertas). Volver a admitirle
+  quita `status` y `removed`. En las reglas (`ownerSetsStatus`), a otro administrador solo le saca el creador, y nadie
+  puede quitarse `removed` a sí mismo. Las solicitudes (`Requests`) no muestran a los sacados: se readmiten desde el panel.
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
   saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
   cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el

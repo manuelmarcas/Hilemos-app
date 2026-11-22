@@ -42,6 +42,8 @@ export const MAX_PEOPLE = 150;
 export const PEOPLE_FILTER_FROM = 10;
 /** Correos permitidos como mucho en una votación privada. */
 export const MAX_EMAILS = MAX_PEOPLE;
+/** Administradores nombrados como mucho (sin contar al creador); el mismo tope que las reglas. */
+export const MAX_ADMINS = 20;
 
 // ----- Chat -----
 /** Mensajes que se traen de una votación: solo los últimos, que esto no es WhatsApp. */
@@ -61,6 +63,53 @@ export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 export const isPresent = (v?: Vote | null) => !!v && !v.status && !v.gone;
 /** Administra la votación: el creador o alguien que él ha nombrado administrador. */
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
+/** Un administrador le sacó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
+export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
+
+export type Role = "creator" | "delegate" | "admin";
+/** Papel en la votación. Si el creador se fue, sigue siendo «Creador» (con su nombre sin dueño) y quien la gestiona es «Delegado». */
+export function roleOf(p: PollData, uid: string): Role | null {
+  if (uid === p.founder) return "creator";
+  if (uid === p.ownerUid) return p.founder ? "delegate" : "creator";
+  return p.admins?.includes(uid) ? "admin" : null;
+}
+export const ROLE_NAME: Record<Role, string> = { creator: "Creador", delegate: "Delegado", admin: "Admin" };
+
+export interface ManagedPerson {
+  uid: string;
+  name: string;
+  photo: string;
+  role: Role | null;
+  /** Puede nombrarle o quitarle de administrador (solo quien gestiona la votación, y nunca a sí mismo). */
+  canToggleAdmin: boolean;
+  /** Puede sacarle: cualquier administrador, salvo a quien la gestiona, a sí mismo y, si no es el gestor, a otro administrador. */
+  canRemove: boolean;
+}
+
+/**
+ * «Gestionar participantes», visto por `me`: quienes siguen dentro (primero quien la gestiona, después los
+ * administradores y el resto por nombre) y quienes han sido sacados (para volver a admitirlos).
+ */
+export function managedPeople(p: PollData, votes: Votes, me: string): { inside: ManagedPerson[]; removed: ManagedPerson[] } {
+  const owner = p.ownerUid === me;
+  const admins = p.admins || [];
+  const order = (x: ManagedPerson) => (x.uid === p.ownerUid ? 0 : x.role === "admin" ? 1 : 2);
+  const person = (uid: string, v: Vote): ManagedPerson => {
+    const role = roleOf(p, uid);
+    const mine = uid === me || uid === p.ownerUid;
+    return {
+      uid, name: v.name || "Alguien", photo: v.photo || "", role,
+      canToggleAdmin: owner && !mine,
+      canRemove: isAdmin(p, me) && !mine && (owner || !admins.includes(uid)),
+    };
+  };
+  const all = Object.entries(votes).filter(([, v]) => v && !v.gone);
+  const byName = (a: ManagedPerson, b: ManagedPerson) => order(a) - order(b) || a.name.localeCompare(b.name, "es");
+  return {
+    inside: all.filter(([, v]) => !v.status).map(([u, v]) => person(u, v)).sort(byName),
+    removed: all.filter(([, v]) => isRemoved(v)).map(([u, v]) => person(u, v)).sort(byName),
+  };
+}
 
 /** Nombres para quien se va (sale de la votación o elimina su cuenta): alguien que estuvo y ya no está. */
 const GHOST_NAMES = [
@@ -319,6 +368,9 @@ export function tiebreakTally(poll: Poll, votes: Votes): TiebreakTally | null {
  * desempate (las reglas no dejan reabrir ninguna votación con un desempate finalizado).
  */
 export const isFinal = (TB: TiebreakTally | null) => !!TB?.done && TB.leaders.length === 1;
+/** La ganadora, si no queda empate: la del desempate finalizado o, sin desempate, la única más votada. */
+export const winnerKey = (T: Tally, TB: TiebreakTally | null) =>
+  TB ? (isFinal(TB) ? TB.leaders[0] : null) : (T.leaders.length === 1 ? T.leaders[0].key : null);
 /** Desempate finalizado sin ganadora única (sigue el empate o nadie votó): solo se puede repetir. */
 export const tiebreakUnsolved = (TB: TiebreakTally | null) => !!TB?.done && TB.leaders.length !== 1;
 /** Entre qué opciones se repite un desempate sin ganadora: las que siguen empatadas o, si nadie votó, las mismas. */

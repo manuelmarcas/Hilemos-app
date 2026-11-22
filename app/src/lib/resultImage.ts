@@ -4,59 +4,12 @@ import { publicHost, shareFileNative } from "./native";
 import { TYPE, plural, slotLabel, unitParts } from "./model";
 import type { Poll, PollData } from "./types";
 import type { Tally, TiebreakTally } from "./model";
-import tokens from "../../design-system/tokens.json";
+import { DISPLAY, SANS, clamp, currentColors, fontsReady, lines, roundRect } from "./canvas";
+import { downloadBlob } from "./files";
+import { slugify } from "./util";
 
 const SIZE = 1080;
 const PAD = 112;
-const DISPLAY = '"Bricolage Grotesque", system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-const SANS = 'Figtree, system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-
-// Colores que usa la tarjeta. Si la hoja de estilos no está disponible al dibujar, los del tema claro de tokens.json.
-const USED = ["bg", "card", "soft", "line", "ink", "muted", "brand", "brand-strong", "best", "best-soft", "on-best", "tie-soft", "tie-ink"];
-const FALLBACK: Record<string, string> = Object.fromEntries(USED.map(n => {
-  const t = tokens.color.tokens.find(x => x.name === n);
-  return [`--${n}`, typeof t?.value === "object" ? t.value.light : String(t?.value ?? "")];
-}));
-
-function theme() {
-  const cs = getComputedStyle(document.documentElement);
-  const read = (name: string) => cs.getPropertyValue(name).trim() || FALLBACK[name];
-  return Object.fromEntries(Object.keys(FALLBACK).map(k => [k, read(k)])) as Record<string, string>;
-}
-
-function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  g.beginPath();
-  g.moveTo(x + r, y);
-  g.arcTo(x + w, y, x + w, y + h, r);
-  g.arcTo(x + w, y + h, x, y + h, r);
-  g.arcTo(x, y + h, x, y, r);
-  g.arcTo(x, y, x + w, y, r);
-  g.closePath();
-}
-
-function clamp(g: CanvasRenderingContext2D, text: string, maxWidth: number) {
-  if (g.measureText(text).width <= maxWidth) return text;
-  let s = text;
-  while (s && g.measureText(`${s}…`).width > maxWidth) s = s.slice(0, -1).trimEnd();
-  return `${s}…`;
-}
-
-function lines(g: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const out: string[] = [];
-  let line = "";
-  let left = 0;
-  for (const [i, w] of words.entries()) {
-    const next = line ? `${line} ${w}` : w;
-    if (g.measureText(next).width <= maxWidth || !line) { line = next; continue; }
-    out.push(line);
-    line = w;
-    if (out.length === maxLines) { left = words.length - i; break; }
-  }
-  if (out.length < maxLines && line) out.push(line);
-  const last = out.length - 1;
-  return out.map((l, i) => clamp(g, i === last && left > 0 ? `${l}…` : l, maxWidth));
-}
 
 interface Row { rank: number; what: string; votes: number; tbWinner: boolean }
 
@@ -83,23 +36,14 @@ function tbRow(poll: PollData, T: Tally, TB: TiebreakTally | null): Row | null {
   return { rank: 1, what: `${label} ${slotLabel(poll, slot)}`.trim(), votes: TB.counts[key] || 0, tbWinner: true };
 }
 
-async function fonts() {
-  try {
-    await document.fonts.ready;
-    return document.fonts.check(`800 68px "Bricolage Grotesque"`);
-  } catch {
-    return false;
-  }
-}
-
 export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null): Promise<Blob> {
-  const ok = await fonts();
+  const ok = await fontsReady();
   const display = ok ? DISPLAY : SANS;
   const c = document.createElement("canvas");
   c.width = c.height = SIZE;
   const g = c.getContext("2d");
   if (!g) throw new Error("Este navegador no puede generar la imagen.");
-  const t = theme();
+  const t = currentColors();
 
   g.fillStyle = t["--bg"];
   g.fillRect(0, 0, SIZE, SIZE);
@@ -212,13 +156,10 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
   });
 }
 
-const slugFile = (s: string) => (s || "votacion").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
-  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "votacion";
-
 /** Comparte la tarjeta y, si el navegador no puede, la descarga (en la app siempre se comparte). */
 export async function shareResultCard(poll: Poll, T: Tally, TB: TiebreakTally | null): Promise<"shared" | "downloaded"> {
   const blob = await resultCard(poll, T, TB);
-  const name = `resultado-${slugFile(poll.title)}-${D.todayKey()}.png`;
+  const name = `resultado-${slugify(poll.title) || "votacion"}-${D.todayKey()}.png`;
   if (await shareFileNative(blob, name, poll.title, `Resultado de «${poll.title}»`)) return "shared";
   const file = new File([blob], name, { type: "image/png" });
   if (navigator.canShare?.({ files: [file] })) {
@@ -230,11 +171,6 @@ export async function shareResultCard(poll: Poll, T: Tally, TB: TiebreakTally | 
       if ((e as DOMException)?.name === "AbortError") return "shared";
     }
   }
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  downloadBlob(blob, name);
   return "downloaded";
 }

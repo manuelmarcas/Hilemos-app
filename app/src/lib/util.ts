@@ -144,6 +144,9 @@ export function bem(base: string, mods: Record<string, unknown> = {}, ...mixes: 
   return cls(base, ...Object.entries(mods).filter(([, on]) => on).map(([m]) => `${base}--${m}`), ...mixes);
 }
 
+/** Texto para buscar sin distinguir mayúsculas ni tildes («Álvaro» → «alvaro»). */
+export const searchKey = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 /** Texto en minúsculas, sin tildes ni símbolos, para nombres de archivo e identificadores («Cena de Navidad» → «cena-de-navidad»). */
-export const slugify = (s: string, max = 40) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+export const slugify = (s: string, max = 40) => searchKey(s)
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, max);

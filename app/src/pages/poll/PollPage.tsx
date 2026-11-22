@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, withTiebreakAdjusted, isFinal, repeatCandidates,
+  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -22,6 +22,8 @@ import { Legend, Summary, instructions } from "./Summary";
 import { TiebreakCard, TiebreakGuard, TiebreakSolvedNote, unitText } from "./Tiebreak";
 import { GonePeople, PeopleList, PeopleTable, type PeopleFilter } from "./People";
 import { AccessPanel, BlockedView, Requests, WaitingView } from "./Access";
+import { ManagePeople } from "./ManagePeople";
+import { ExportDialog } from "./ExportDialog";
 import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
 
@@ -43,6 +45,8 @@ export function PollPage({ id }: { id: string }) {
   const [myLoaded, setMyLoaded] = useState(false);
   const [blocked, setBlocked] = useState<"" | "full" | "noaccess" | "needsaccount">("");
   const [accessOpen, setAccessOpen] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   // Buscador y filtro de la tabla de participantes (cuando hay muchos).
   const [peopleQuery, setPeopleQuery] = useState("");
   const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
@@ -167,7 +171,11 @@ export function PollPage({ id }: { id: string }) {
   if (blocked) return <BlockedView poll={poll} kind={blocked} email={user.email} onRetry={retryJoin} />;
   if (ownOnly && !canReadAll) {
     if (!myLoaded || !myVote) return <div className="loading">Cargando votación…</div>;
-    return <WaitingView poll={poll} status={memberStatus(myVote)} />;
+    return <WaitingView poll={poll} status={memberStatus(myVote)} removed={isRemoved(myVote)} />;
+  }
+  // En las abiertas, a quien han sacado le llegan todos los votos, pero ya no participa.
+  if (votes[user.uid]?.status === "rejected" && !isAdmin(poll, user.uid)) {
+    return <WaitingView poll={poll} status="rejected" removed={isRemoved(votes[user.uid])} />;
   }
 
   const t = TYPE[poll.type];
@@ -180,7 +188,8 @@ export function PollPage({ id }: { id: string }) {
   // lo guarda el primer administrador que la abre (TiebreakGuard).
   const view = withTiebreakAdjusted(poll, T);
   const TB = tiebreakTally(view, accepted);
-  const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone).map(([uid, v]) => ({ uid, ...v }))
+  // A quien se sacó de la votación se le vuelve a admitir desde «Gestionar participantes», no desde las solicitudes.
+  const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone && !v.removed).map(([uid, v]) => ({ uid, ...v }))
     .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
   // Quien se fue con la votación cerrada deja sus votos (con un nombre sin dueño): cuentan en los totales, pero en
@@ -351,21 +360,40 @@ export function PollPage({ id }: { id: string }) {
     toast(to === "accepted" ? "Aceptado: ya puede votar" : to === "rejected" ? "Solicitud rechazada" : "Solicitud pendiente");
   });
 
-  // El creador nombra o quita administradores (desde «Participantes»).
+  // ---------- «Gestionar participantes» ----------
+
+  // Quien gestiona la votación nombra o quita administradores con un clic (se deshace igual de fácil).
   const toggleAdmin = (uid: string, name: string) => act(async () => {
     const isAdm = admins.includes(uid);
-    if (!(await confirm(isAdm ? {
-      title: `¿Quitar a ${name} como administrador?`,
-      message: "Seguirá en la votación como participante, pero ya no podrá gestionarla.",
-      confirmLabel: "Quitar administrador",
-      danger: true,
-    } : {
-      title: `¿Nombrar a ${name} administrador?`,
-      message: "Podrá gestionar la votación como tú: cerrarla y reabrirla, abrir desempates, aceptar solicitudes y cambiar el acceso y el plazo. No podrá eliminarla ni nombrar a otros administradores.",
-      confirmLabel: "Nombrar administrador",
-    }))) return;
     await store.updatePoll(id, { admins: isAdm ? admins.filter(a => a !== uid) : [...admins, uid] });
     toast(isAdm ? `${name} ya no es administrador` : `${name} ahora es administrador`);
+  });
+
+  // Aviso en el chat de quién entra o sale por decisión de un administrador, como los cambios al editar.
+  const chatNotice = (text: string) =>
+    store.sendChat(id, { uid: user.uid, name: user.name, text, at: Date.now(), sys: true }).catch(() => { /* el cambio ya está hecho */ });
+
+  // Sacar a alguien: queda rechazado (sus votos dejan de contar y no puede volver a entrar) y deja libre su plaza.
+  const removeMember = (uid: string, name: string) => act(async () => {
+    if (!(await confirm({
+      title: `¿Sacar a ${name} de la votación?`,
+      // La plaza solo importa si quien la creó puso un máximo (sin él, el tope es el general), como al salir.
+      message: `Sus votos dejarán de contar${hasLimit(poll) && (poll.maxPeople as number) < MAX_PEOPLE ? " y su plaza quedará libre" : ""}. No podrá volver a entrar ` +
+        "con el enlace ni escribir en el chat; sus mensajes se quedan. Podrás volver a admitirle desde aquí.",
+      confirmLabel: "Sacar de la votación",
+      cancelLabel: "No sacar",
+      danger: true,
+    }))) return;
+    await store.setMemberStatus(id, uid, "rejected",
+      { from: "accepted", counted: hasLimit(poll), removed: true, dropAdmin: admins.includes(uid) });
+    await chatNotice(`ha sacado a ${name} de la votación`);
+    toast(`${name} ya no está en la votación`);
+  });
+
+  const readmit = (uid: string, name: string) => act(async () => {
+    await store.setMemberStatus(id, uid, "accepted", { from: "rejected", counted: hasLimit(poll) });
+    await chatNotice(`ha vuelto a admitir a ${name}`);
+    toast(`${name} vuelve a estar en la votación`);
   });
 
   // Salir de la votación (también el creador: pasa a otra persona). El aviso y la salida, en listActions.
@@ -386,9 +414,7 @@ export function PollPage({ id }: { id: string }) {
   });
 
   // Solo hay fecha para el calendario si no queda empate: la ganadora del desempate o la única más votada.
-  const winner = TB
-    ? (TB.done && TB.leaders.length === 1 ? TB.leaders[0] : null)
-    : (T.leaders.length === 1 ? T.leaders[0].key : null);
+  const winner = winnerKey(T, TB);
   const cal = winner ? calendarEvent(poll, id, winner, pollUrl(id)) : null;
 
   // ---------- Pantalla ----------
@@ -424,7 +450,8 @@ export function PollPage({ id }: { id: string }) {
                 onEdit={() => navigate(`/v/${id}/editar`)}
                 onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
                 onDuplicate={() => duplicate(poll)}
-                onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
+                onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined}
+                onPeople={() => setPeopleOpen(true)} onExport={() => setExportOpen(true)} />
             )}
           </div>
           {poll.description && <p className="poll-head__desc">{poll.description}</p>}
@@ -443,6 +470,11 @@ export function PollPage({ id }: { id: string }) {
         </div>
       </div>
       {admin && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
+      {admin && exportOpen && <ExportDialog poll={view} T={T} TB={TB} toast={toast} onClose={() => setExportOpen(false)} />}
+      {admin && peopleOpen && (
+        <ManagePeople poll={poll} votes={shown} me={user.uid} onToggleAdmin={toggleAdmin} onRemove={removeMember}
+          onReadmit={readmit} onClose={() => setPeopleOpen(false)} />
+      )}
       {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (final ? (
         <div className="closed-banner closed-banner--final">
@@ -509,7 +541,7 @@ export function PollPage({ id }: { id: string }) {
           {(people, empty) => (
             <div className="people-panel__scroll">
               <PeopleTable poll={poll} T={T} people={people} empty={empty} me={user.uid} openPeople={openPeople}
-                onToggle={k => toggleIn(setOpenPeople, k)} onToggleAdmin={isOwner ? toggleAdmin : undefined} />
+                onToggle={k => toggleIn(setOpenPeople, k)} />
             </div>
           )}
         </PeopleList>

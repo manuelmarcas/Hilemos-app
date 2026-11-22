@@ -96,8 +96,11 @@ export interface Vote {
   tb?: { id: number; pick: string } | null;
   seenAt?: number;
   updatedAt?: number;
-  /** Solo en votaciones con aprobación: pendiente o rechazado. Sin campo = aceptado. */
+  /** Pendiente (solo en votaciones con aprobación) o rechazado. Sin campo = aceptado. */
   status?: "pending" | "rejected";
+  /** Rechazado porque un administrador le sacó de la votación (ya estaba dentro), no porque no se aceptara su
+   *  solicitud. Solo con `status: "rejected"`; al volver a admitirle se quita. */
+  removed?: boolean;
   /** Se fue (salió de la votación ya cerrada o eliminó su cuenta): el voto se queda con un nombre sin dueño. No
    *  hereda la votación ni se le avisa. Si vuelve a entrar, recupera su nombre y deja de contar como ido. */
   gone?: boolean;
@@ -258,7 +261,13 @@ export interface Store {
    */
   joinPoll(id: string, user: Participant, opts?: { isNew?: boolean; counted?: boolean; pending?: boolean }): Promise<void>;
   /** El creador acepta, rechaza o vuelve a dejar pendiente a alguien (y ajusta el contador si hace falta). */
-  setMemberStatus(id: string, uid: string, status: MemberStatus, opts: { from: MemberStatus; counted: boolean }): Promise<void>;
+  /**
+   * Acepta, rechaza o deja pendiente a alguien (solo administradores). `counted`: la votación tiene tope (el contador
+   * baja al rechazar y sube al readmitir). `removed`: al rechazar, se le saca de la votación (ya estaba dentro).
+   * `dropAdmin`: era administrador y deja de serlo en la misma escritura (solo el creador).
+   */
+  setMemberStatus(id: string, uid: string, status: MemberStatus,
+    opts: { from: MemberStatus; counted: boolean; removed?: boolean; dropAdmin?: boolean }): Promise<void>;
   saveVote(id: string, uid: string, data: Vote): Promise<void>;
   saveTiebreakVote(id: string, uid: string, data: Vote): Promise<void>;
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;

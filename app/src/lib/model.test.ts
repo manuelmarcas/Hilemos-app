@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  TOP_N, acceptedVotes, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, keepsVotesOnLeave, lostVotedUnit,
-  memberStatus, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, slotKeys, tally, tiebreakShift,
-  tiebreakTally, tiebreakUnsolved, unitParts, validUnits, withTiebreakAdjusted,
+  TOP_N, acceptedVotes, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, lostVotedUnit,
+  managedPeople, memberStatus, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
 
@@ -345,5 +345,74 @@ describe("textos de la votación", () => {
     expect(pollRange(days({ slots: ["2025-12-16"] }))).toBe("Se vota el martes 16 de diciembre.");
     expect(pollRange({ ...days(), type: "months", slots: ["2026-01", "2025-12"] }))
       .toBe("Se vota entre diciembre 2025 y enero 2026.");
+  });
+});
+
+describe("papeles y «Gestionar participantes»", () => {
+  const votes: Votes = {
+    owner: vote("Olga", []), adm: vote("Adri", []), bea: vote("Bea", []), ana: vote("Ana", []),
+    fuera: vote("Fermín", [], { status: "rejected", removed: true }),
+    pend: vote("Pepa", [], { status: "pending" }),
+    rech: vote("Rita", [], { status: "rejected" }),
+    ido: vote("Ido", [], { gone: true }),
+  };
+  const poll = days({ admins: ["adm"] });
+
+  it("roleOf: creador, delegado (si el creador se fue) y admin", () => {
+    expect(roleOf(poll, "owner")).toBe("creator");
+    expect(roleOf(poll, "adm")).toBe("admin");
+    expect(roleOf(poll, "bea")).toBeNull();
+    const passed = days({ ownerUid: "bea", founder: "ido", admins: ["adm"] });
+    expect(roleOf(passed, "bea")).toBe("delegate");
+    expect(roleOf(passed, "ido")).toBe("creator");
+  });
+
+  it("isRemoved: solo quien fue sacado, no a quien se rechazó al pedir entrar", () => {
+    expect(isRemoved(votes.fuera)).toBe(true);
+    expect(isRemoved(votes.rech)).toBe(false);
+    expect(isRemoved(votes.ana)).toBe(false);
+  });
+
+  it("el creador ve primero a quien la gestiona y a los administradores; puede nombrar y sacar a todos menos a sí mismo", () => {
+    const { inside, removed } = managedPeople(poll, votes, "owner");
+    expect(inside.map(p => p.uid)).toEqual(["owner", "adm", "ana", "bea"]);
+    expect(removed.map(p => p.uid)).toEqual(["fuera"]);
+    const by = Object.fromEntries(inside.map(p => [p.uid, p]));
+    expect(by.owner.canToggleAdmin || by.owner.canRemove).toBe(false);
+    expect(by.adm.canToggleAdmin && by.adm.canRemove).toBe(true);
+    expect(by.ana.canToggleAdmin && by.ana.canRemove).toBe(true);
+  });
+
+  it("un administrador saca a participantes, pero no nombra administradores ni saca a otro administrador", () => {
+    const poll2 = days({ admins: ["adm", "bea"] });
+    const by = Object.fromEntries(managedPeople(poll2, votes, "adm").inside.map(p => [p.uid, p]));
+    expect(by.ana.canRemove).toBe(true);
+    expect(by.ana.canToggleAdmin).toBe(false);
+    expect(by.bea.canRemove).toBe(false);
+    expect(by.owner.canRemove).toBe(false);
+    expect(by.adm.canRemove).toBe(false);
+  });
+
+  it("un participante no puede hacer nada", () => {
+    const { inside } = managedPeople(poll, votes, "ana");
+    expect(inside.some(p => p.canRemove || p.canToggleAdmin)).toBe(false);
+  });
+});
+
+describe("winnerKey (la ganadora)", () => {
+  it("sin desempate, la única más votada; con empate, ninguna", () => {
+    expect(winnerKey(tally(days(), { a: vote("A", ["2025-12-15|c"]) }), null)).toBe("2025-12-15|c");
+    expect(winnerKey(tally(days(), { a: vote("A", ["2025-12-15|c", "2025-12-16|c"]) }), null)).toBeNull();
+  });
+
+  it("con desempate, solo la del desempate finalizado con una en cabeza", () => {
+    const votes: Votes = {
+      a: vote("A", ["2025-12-15|c", "2025-12-16|c"], { tb: { id: 1, pick: "2025-12-16|c" } }),
+    };
+    const open = days({ closed: true, tiebreak: { id: 1, candidates: ["2025-12-15|c", "2025-12-16|c"], done: false } });
+    const done = { ...open, tiebreak: { ...open.tiebreak!, done: true } };
+    const T = tally(open, votes);
+    expect(winnerKey(T, tiebreakTally(open, votes))).toBeNull();
+    expect(winnerKey(T, tiebreakTally(done, votes))).toBe("2025-12-16|c");
   });
 });

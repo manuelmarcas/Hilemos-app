@@ -57,7 +57,8 @@ function leaveMessage(p: Poll, uid: string, vote: Vote | null, group: string | n
   if (group) out.push(`Era la última votación del grupo «${group}», así que el grupo también se eliminará.`);
   // Cómo volver. Con los votos que se quedan, su voto sigue ahí y al volver recupera su nombre (joinPoll); si no,
   // entra de nuevo (con aprobación, pidiéndolo otra vez). Sus mensajes del chat recuperan su nombre al volver a estar.
-  if (keeps) out.push("Si vuelves a entrar con el enlace, recuperarás tu nombre y tus votos.");
+  if (status === "rejected") out.push("Solo se quitará de tu lista: no puedes volver a entrar.");
+  else if (keeps) out.push("Si vuelves a entrar con el enlace, recuperarás tu nombre y tus votos.");
   else if (p.approval) out.push("Para volver, tendrás que pedir entrar otra vez con el enlace.");
   else out.push(status === "accepted"
     ? "Podrás volver a entrar con el enlace, y tus mensajes recuperarán tu nombre."

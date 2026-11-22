@@ -69,9 +69,17 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
   (la app los necesita para el recuento), así que alguien con conocimientos técnicos podría consultarlos.
 - El creador puede **cerrar/reabrir** la votación (cerrada ya no admite cambios) y **eliminarla**;
   cerrar y eliminar piden confirmación.
-- **Administradores**: en «Participantes», el creador puede nombrar administradores («Hacer admin») y quitarlos.
-  Gestionan la votación como él (cerrar y reabrir, desempates, solicitudes, acceso y plazo), pero no pueden
-  eliminarla ni nombrar a otros administradores. Llevan la etiqueta «Admin» (y el creador, «Creador»).
+- **Gestionar participantes** (menú ⋯ de la votación): quien la gestiona nombra o quita administradores con un clic
+  («Hacer admin» / «Quitar admin»). Gestionan la votación como él (cerrar y reabrir, desempates, solicitudes, acceso y
+  plazo), pero no pueden eliminarla ni nombrar a otros administradores. Cualquier administrador puede **sacar a
+  alguien** (con confirmación): sus votos dejan de contar, su plaza queda libre, no puede volver a entrar con el
+  enlace ni escribir en el chat (sus mensajes se quedan) y el chat avisa («Ana ha sacado a Luis de la votación»). A otro
+  administrador solo le saca el creador, y al creador nadie. Los sacados aparecen aparte, en «Sacados», para volver a
+  admitirlos. En la tabla de «Participantes» solo quedan las etiquetas: «Creador», «Delegado» y «Admin».
+- **Exportar resultados** (menú ⋯, administradores): **CSV** para guardar la votación (una fila por casilla, con sus
+  votos, su puesto y una columna por persona), **Excel** con formato (hojas «Resultados», «Votos» y «Participantes») y
+  un **informe en PDF** para presentar o imprimir (ganadora, clasificación con quién votó cada opción, desempate y
+  participantes). En las anónimas no salen nombres. En la app de Android se comparten con el menú del sistema.
 - **Salir de la votación**: al final de cada votación, en su menú ⋯ de «Mis votaciones» y del menú lateral, y
   deslizándola hacia la izquierda en el móvil. Siempre pide confirmación (no se puede deshacer) con un aviso de lo que
   pasará según cómo esté la votación. Quien sale pasa a un nombre sin dueño al azar («Un suspiro», «Una sombra
@@ -172,7 +180,7 @@ index.html                    Redirección de GitHub Pages a hilemos.web.app (no
 | `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana, meses votables o, en las de opciones, los ids de las opciones), `hours` y `hourStep` (solo horas), `options` (opciones de cada día en las de días; las opciones libres en las de `type: "options"`), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
 | `polls/{pollId}/chat/{msgId}` | Mensajes del chat: `uid`, `name`, `text`, `at` y `sys` (aviso automático de un cambio al editar la votación; solo lo escriben los administradores) |
-| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected` en las votaciones con aprobación), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `updatedAt` |
+| `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected`: pendiente de aprobación, rechazado o sacado), `removed` (lo sacó un administrador ya estando dentro), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `updatedAt` |
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |
 | `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |
 | `users/{uid}/groups/{groupId}` | Grupos privados del usuario: `name`, `createdAt` |
