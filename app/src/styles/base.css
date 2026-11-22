@@ -121,10 +121,9 @@ button,input,select,textarea{font:inherit}
   line-height:1.4;
 }
 .demo-banner__link{color:var(--tie-ink);font-weight:700;margin-left:6px}
-/* Arranque de la app (mientras se sabe si hay sesión): el logotipo, que respira, y el círculo debajo. Sigue a la
-   pantalla de arranque de Android. */
+/* Arranque de la app (mientras se sabe si hay sesión): el logotipo, con el ojo abierto girando como un círculo de
+   carga. Sigue a la pantalla de arranque de Android. */
 .boot{
-  --spinner-size:24px;
   min-height:60vh;
   display:flex;
   flex-direction:column;
@@ -134,11 +133,13 @@ button,input,select,textarea{font:inherit}
   color:var(--muted);
   padding:16px;
 }
-.boot__logo{color:var(--logo);animation:boot-breathe 1.6s ease-in-out infinite}
-@keyframes boot-breathe{50%{transform:scale(.94);opacity:.8}}
+.boot__logo{color:var(--logo)}
+/* Gira sobre su propio centro (fill-box), no sobre el del dibujo. */
+.boot__eye{transform-box:fill-box;transform-origin:center;animation:spinner-turn .9s linear infinite}
 @media (prefers-reduced-motion:reduce){
   .spinner{animation-duration:2s}
-  .skeleton__card::after,.boot__logo{animation:none}
+  .boot__eye{animation-duration:2.4s}
+  .skeleton__card::after{animation:none}
 }
 a.menu__item{text-decoration:none}
 button.cell__opt:not(:disabled):not(.cell__opt--on):hover{background:var(--hover)}

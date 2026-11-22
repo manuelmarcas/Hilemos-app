@@ -150,7 +150,8 @@ function scan(expr, f) {
 for (const f of files.filter(f => /\.tsx?$/.test(f))) {
   const src = fs.readFileSync(f, "utf8");
   const r = rel(f);
-  for (const m of src.matchAll(/className=(?:"([^"]*)"|\{)/g)) {
+  // También las propiedades que acaban en ClassName (eyeClassName…): llevan una clase a un elemento de dentro.
+  for (const m of src.matchAll(/[cC]lassName=(?:"([^"]*)"|\{)/g)) {
     if (m[1] !== undefined) scan(`"${m[1]}"`, r);
     else scan(balanced(src, m.index + m[0].length - 1), r);
   }

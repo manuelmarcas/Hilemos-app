@@ -78,13 +78,14 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 - El botón de emoji (carita) junto a título, descripción, opciones y chat solo aparece con ratón (`hover:hover` y `pointer:fine`): en el móvil y la tableta el teclado ya trae emojis.
 - El icono va antes del texto y nunca solo, salvo en botones con `aria-label` (⋯, ☰, carita). La única otra excepción son las casillas del calendario, cuyo significado explica la leyenda.
 - Cargando (`src/components/Loading.tsx`): nunca un texto suelto. Mientras se espera algo:
-  - **Al arrancar la app**, el logotipo lila, que respira, y el círculo que gira debajo.
+  - **Al arrancar la app**, el logotipo lila con el ojo abierto (el de la derecha) girando como un círculo de carga
+    (`LogoMark` con `eyeClassName`).
   - **Una pantalla o una zona**, `Loading`: el círculo y el texto debajo («Cargando votación…»).
   - **La lista de votaciones**, `PollListSkeleton`: tarjetas vacías con un brillo que pasa.
   - **Un botón que espera** («Entrando con Google…», «Creando…»), `Spinner` delante del texto, y el resto de
     botones que harían otra cosa, desactivados.
   - El círculo es `line-strong` con el tramo que gira en `brand` (`on-brand` sobre un relleno `brand`). Con movimiento
-    reducido gira más despacio y el brillo y la respiración se paran.
+    reducido el círculo y el ojo giran más despacio y el brillo se para.
 - Al abrir una pantalla con formulario (nueva votación, editar), el primer campo solo recibe el foco con ratón
   (`hasMouse()`): en el móvil abriría el teclado sin que nadie lo haya pedido.
 - Logotipo: un calendario blanco con cara que guiña un ojo y saca la lengua, sobre fondo `brand`. El original (de Recraft) está en `logo/logo-recraft-original.svg`; los que usa la app salen de él:

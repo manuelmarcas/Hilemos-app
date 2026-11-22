@@ -142,6 +142,6 @@ app ya registra el dispositivo (se arregló el fallo que lo impedía).*
   foco. En el móvil tapaba media pantalla, y el primer Atrás solo cerraba el teclado. Ahora el título solo recibe el
   foco con ratón (`hasMouse()` en `src/lib/util.ts`).
 - **Descartado: el tema automático** sí sigue al sistema (apartado 7).
-- **Hecho: pantallas de carga.** Hay indicadores en el arranque, en «Entrar con Google» y las demás formas de entrar,
+- **Hecho: pantallas de carga.** Hay indicadores en el arranque (el ojo del logo gira), en «Entrar con Google» y las demás formas de entrar,
   en la lista de votaciones (tarjetas de esqueleto), en la votación, en «Editar», en el menú lateral, en el chat y en
   «Crear votación».
