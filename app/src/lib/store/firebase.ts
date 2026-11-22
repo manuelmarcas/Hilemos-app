@@ -138,11 +138,13 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     };
 
   // En la app: el selector de cuentas de Google del móvil, que devuelve la credencial para el SDK web.
-  const nativeAuth = async () => (await import("@capacitor-firebase/authentication")).FirebaseAuthentication;
+  // El módulo y no el plugin: una promesa no puede resolverse con un plugin de Capacitor (lo toma por un método
+  // nativo al mirar si tiene .then() y falla). Igual en push.ts.
+  const nativeAuth = () => import("@capacitor-firebase/authentication");
   async function googleCredential() {
     let idToken: string | undefined;
     try {
-      idToken = (await (await nativeAuth()).signInWithGoogle()).credential?.idToken;
+      idToken = (await (await nativeAuth()).FirebaseAuthentication.signInWithGoogle()).credential?.idToken;
     } catch (e) {
       // Cerrar el selector de cuentas no es un error que haya que explicar con detalle.
       if (/cancel/i.test(String((e as Error)?.message || e))) throw Object.assign(new Error("cancelado"), { code: "auth/popup-closed-by-user" });
@@ -222,7 +224,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     async signOut() {
       // En la app también se cierra la cuenta de Google del selector, para poder elegir otra la próxima vez.
-      if (native) await (await nativeAuth()).signOut().catch(() => {});
+      if (native) await (await nativeAuth()).FirebaseAuthentication.signOut().catch(() => {});
       await A.signOut(auth);
     },
     async linkGoogle() {
@@ -336,7 +338,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       await F.deleteDoc(userRef(uid));
       // Y la cuenta de inicio de sesión. Si Firebase no lo deja (sesión antigua), al menos se cierra la sesión:
       // los datos ya no están.
-      if (native) await (await nativeAuth()).signOut().catch(() => {});
+      if (native) await (await nativeAuth()).FirebaseAuthentication.signOut().catch(() => {});
       try { await u.delete(); } catch { await A.signOut(auth); }
     },
 

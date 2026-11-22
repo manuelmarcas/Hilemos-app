@@ -39,7 +39,9 @@ async function messaging() {
   return { M, instance: M.getMessaging(getApp()) };
 }
 
-const nativePush = async () => (await import("@capacitor/push-notifications")).PushNotifications;
+// Devuelve el módulo y no el plugin: una promesa no puede resolverse con un plugin de Capacitor, porque al mirar si
+// tiene .then() lo toma por un método nativo y falla («PushNotifications.then() is not implemented»).
+const nativePush = () => import("@capacitor/push-notifications");
 
 /** Qué se le puede ofrecer a esta persona en este dispositivo. */
 export async function pushState(store: Store): Promise<PushState> {
@@ -47,7 +49,7 @@ export async function pushState(store: Store): Promise<PushState> {
   if (isNative()) {
     if (!fcmVapidKey) return "unconfigured";
     try {
-      const { receive } = await (await nativePush()).checkPermissions();
+      const { receive } = await (await nativePush()).PushNotifications.checkPermissions();
       if (receive === "denied") return "denied";
       return receive === "granted" && savedToken() ? "on" : "off";
     } catch {
@@ -64,7 +66,7 @@ export async function pushState(store: Store): Promise<PushState> {
 
 /** Token de Android: se pide el registro y llega por un evento (o un error). */
 async function nativeToken(): Promise<string> {
-  const P = await nativePush();
+  const P = (await nativePush()).PushNotifications;
   // Android 8+: los avisos van a un canal; con nombre propio se pueden ajustar en los ajustes del móvil.
   await P.createChannel({ id: CHANNEL, name: "Avisos de las votaciones", importance: 4, visibility: 1 }).catch(() => {});
   return new Promise<string>((resolve, reject) => {
@@ -82,7 +84,7 @@ export async function enablePush(store: Store, uid: string): Promise<boolean> {
   if (!fcmVapidKey) return false;
   let token: string;
   if (isNative()) {
-    const P = await nativePush();
+    const P = (await nativePush()).PushNotifications;
     let { receive } = await P.checkPermissions();
     if (receive !== "granted" && receive !== "denied") receive = (await P.requestPermissions()).receive;
     if (receive !== "granted") return false;
@@ -106,7 +108,7 @@ export async function disablePush(store: Store, uid: string) {
   saveToken(null);
   if (token) await store.removePushToken(uid, token).catch(() => { /* ya no estaba */ });
   if (isNative()) {
-    await (await nativePush()).unregister().catch(() => { /* ya no estaba registrado */ });
+    await (await nativePush()).PushNotifications.unregister().catch(() => { /* ya no estaba registrado */ });
     return;
   }
   const m = await messaging();
@@ -122,7 +124,7 @@ export function pushActiveHere() {
 /** Avisos que llegan con la app abierta: ni el navegador ni Android los pintan, así que van al aviso flotante. */
 export async function onPushMessage(cb: (text: string) => void): Promise<() => void> {
   if (isNative()) {
-    const h = await (await nativePush()).addListener("pushNotificationReceived", n => {
+    const h = await (await nativePush()).PushNotifications.addListener("pushNotificationReceived", n => {
       const text = [n.title || n.data?.title, n.body || n.data?.body].filter(Boolean).join(": ");
       if (text) cb(text);
     });
@@ -140,7 +142,7 @@ export async function onPushMessage(cb: (text: string) => void): Promise<() => v
 /** App de Android: al pulsar un aviso, abre su votación (la dirección viene en data.url: …/#/v/<id>). */
 export async function initNativePushTaps() {
   try {
-    await (await nativePush()).addListener("pushNotificationActionPerformed", ({ notification }) => {
+    await (await nativePush()).PushNotifications.addListener("pushNotificationActionPerformed", ({ notification }) => {
       const url = notification.data?.url;
       if (typeof url !== "string") return;
       const { hash } = new URL(url, location.href);
