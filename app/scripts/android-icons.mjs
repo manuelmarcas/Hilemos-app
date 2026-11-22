@@ -45,10 +45,12 @@ await png("assets/icon-background.png", 0, BG);      // capa trasera: el morado 
 await splash("assets/splash.png", "#f6f4f7");        // bg del design system
 await splash("assets/splash-dark.png", "#1b1619");
 
+// capacitor-assets reformatea el AndroidManifest.xml sin cambiar nada: se guarda y se deja como estaba.
+const MANIFEST = "android/app/src/main/AndroidManifest.xml";
+const manifest = fs.readFileSync(MANIFEST, "utf8");
 execSync(`npx capacitor-assets generate --android --iconBackgroundColor "${BG}" --iconBackgroundColorDark "${BG}"` +
   ` --splashBackgroundColor "#f6f4f7" --splashBackgroundColorDark "#1b1619"`, { stdio: "inherit" });
-// capacitor-assets reformatea el AndroidManifest.xml sin cambiar nada: se deja como estaba.
-try { execSync("git checkout -- android/app/src/main/AndroidManifest.xml", { stdio: "ignore" }); } catch { /* sin git */ }
+fs.writeFileSync(MANIFEST, manifest);
 
 // Calendario vectorial: ocupa el 44 % del lienzo de 108dp (dos tercios de lo que se ve del icono), dentro de la zona
 // que ninguna máscara recorta.
@@ -102,3 +104,40 @@ const adaptive = `<?xml version="1.0" encoding="utf-8"?>
 `;
 for (const f of ["ic_launcher", "ic_launcher_round"]) fs.writeFileSync(`${RES}/mipmap-anydpi-v26/${f}.xml`, adaptive);
 console.log(`Iconos de Android generados (fondo ${BG}, ${cal.length} trazos del calendario).`);
+
+// Icono de la aplicación (android:icon de <application>): el logotipo lila sobre blanco, el de la pantalla de
+// entrada. Es el que muestran el selector de cuentas de Google y los ajustes del móvil. El lanzador usa el del
+// <activity> (el morado de arriba), así que el icono de la pantalla de inicio no cambia.
+{
+  const lila = fs.readFileSync("design-system/logo/logo-lila.svg", "utf8");
+  const lp = [...lila.matchAll(/<path fill="([^"]+)" d="([^"]+)"/g)].map(m => ({ fill: m[1], d: m[2] }));
+  const hex = f => (f.length === 7 ? f.toUpperCase() : f);
+  fs.writeFileSync(`${RES}/drawable/ic_app_logo.xml`, `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generado por scripts/android-icons.mjs desde design-system/logo/logo-lila.svg: capa delantera del icono de la
+     aplicación (selector de cuentas de Google, ajustes). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="${VP}" android:viewportHeight="${VP}">
+    <group android:translateX="${VP / 2 - CX}" android:translateY="${VP / 2 - CY}">
+${lp.map(p => `        <path android:fillColor="${hex(p.fill)}" android:pathData="${p.d}"/>`).join("\n")}
+    </group>
+</vector>
+`);
+  fs.writeFileSync(`${RES}/mipmap-anydpi-v26/ic_app.xml`, `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generado por scripts/android-icons.mjs: icono de la aplicación (selector de cuentas de Google, ajustes), el
+     logotipo lila sobre blanco. El del lanzador es ic_launcher. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:color="#FFFFFF" />
+    <foreground android:drawable="@drawable/ic_app_logo" />
+</adaptive-icon>
+`);
+  // Android 7 (sin iconos adaptativos): PNG por densidad.
+  const body = lp.map(p => `<path fill="${p.fill}" d="${p.d}"/>`).join("");
+  for (const [dir, px] of [["mdpi", 48], ["hdpi", 72], ["xhdpi", 96], ["xxhdpi", 144], ["xxxhdpi", 192]]) {
+    const s = px * 0.66, k = s / BOX, o = (px - s) / 2;
+    const doc = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}"><rect width="${px}" height="${px}" rx="${px * 0.2}" fill="#ffffff"/>` +
+      `<g transform="translate(${o},${o}) scale(${k}) translate(${-X0},${-Y0})">${body}</g></svg>`;
+    await sharp(Buffer.from(doc)).png().toFile(`${RES}/mipmap-${dir}/ic_app.png`);
+  }
+}
+console.log("Icono de la aplicación (lila) generado.");
