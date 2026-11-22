@@ -87,8 +87,23 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 
 ## Componentes
 
-- Aviso del desempate (`.tb-note`): cuando cambia porque alguien deja de participar, lo ven todos. Va en `tie-soft` con texto `tie-ink`, como el estado del desempate: dentro de su tarjeta, bajo la explicación, o, si el desempate se quitó, suelto en su lugar (`.tb-note-solved`, con borde `tie`).
+- Aviso del desempate (`.tie-note`): cuando cambia porque alguien deja de participar, lo ven todos. Va en `tie-soft` con texto `tie-ink`, como el estado del desempate: dentro de su tarjeta, bajo la explicación, o, si el desempate se quitó, suelto en su lugar (`.tie-note--solved`, con borde `tie`).
 - «Se fueron» (`GonePeople`, en «Participantes»): quienes salieron cuando ya no se podía votar, con sus votos y un nombre sin dueño. Va debajo de la tabla, plegado tras un botón con el mismo triángulo que despliega los votos de una persona, en `muted`, y su tabla en `muted` con los avatares en gris: cuentan en los totales, pero ya no están.
 - Clave de acceso (`AccessKeyDialog`): la clave va en `.key-box`, monoespaciada en `brand-strong` sobre `brand-soft` con borde discontinuo de `brand`, para que se vea como algo que hay que guardar. Debajo, «Copiar» y «Compartir»; el diálogo no se cierra hasta marcar «La he guardado».
 
-Los nombres de clase de `src/styles/` (`.btn`, `.chip`, `.cell`, `.opt`, `.summary-row`, `.tiebreak`…) son los que usa la app: es la referencia viva de los componentes, no una copia aparte.
+Los nombres de clase de `src/styles/` (`.btn`, `.chip`, `.cell`, `.cell__opt`, `.summary-row`, `.tiebreak`…) son los que usa la app: es la referencia viva de los componentes, no una copia aparte.
+
+## CSS: convención BEM
+
+Todas las clases siguen BEM: `bloque`, `bloque__elemento` y `--modificador` (`.poll-card`, `.poll-card__title`, `.poll-card--gone`).
+
+- **Un archivo por zona** en `src/styles/` (controles, crear, tableros, chat…), importados en orden desde `index.css`. El bloque vive en un solo archivo; si un bloque se usa en varias pantallas (`.legend`, `.count`), va en el de la zona donde nació, y sus modificadores con él.
+- **Modificadores de una sola clase** (`.btn--primary`, nunca `.btn.btn--primary`) y siempre junto a la clase base en el HTML: `class="btn btn--primary"`. Así todo pesa lo mismo (una clase) y manda el orden. Si un estado del control (`:hover`, `:disabled`) le ganaría a un modificador, el modificador lo nombra también: `.chip--on:hover:not(:disabled)`, `.picker__day--locked:disabled`.
+- **Un bloque no retoca el interior de otro** (nada de `.chat__form .btn` ni `.btn .icon`):
+  - Si un control necesita algo especial dentro de un bloque, lleva también una clase de ese bloque (mezcla): `class="btn chat__send"` y se estila `.chat__send`. La regla de la mezcla va detrás de la del control (mismo peso, gana el orden).
+  - Si es el tamaño o el color de algo que va dentro, el bloque de fuera fija una variable y el de dentro la usa: `--icon-size` y `--icon-color` (iconos), `--count-size`, `--count-font`, `--count-bg`, `--count-ink`, `--count-pad` y `--count-flex` (contador de votos).
+- **Sin ids ni etiquetas en los estilos**: los títulos y campos llevan su clase de elemento (`.step__title`, `.gate__input`). Se admiten etiquetas solo en texto con formato dentro de un bloque (`strong`, `b`, `em`, `p`, `li`), en las filas y celdas de una tabla (`.people-table th`) y en el reinicio de `base.css`. Los ids se quedan para JavaScript, `aria-*` y los enlaces del formulario.
+- **Estados ARIA**: lo que ya refleja un atributo (`[aria-expanded="true"]`, `[aria-selected="true"]`, `:disabled`) se estila con él en vez de duplicarlo con un modificador.
+- **Estados de la página**: van en `<body class="page">`: `page--with-sidebar` (hay menú lateral) y `page--drawer-open` (cajón abierto en el móvil).
+- **En los componentes**: `bem("picker__day", { on, locked })` da `picker__day picker__day--on…` (`src/lib/util.ts`); con mezclas, `bem("btn", { primary: true }, "chat__send")`. Para listas de clases sueltas, `cls(…)`.
+- **Comprobarlo**: `node .claude/skills/limpieza-codigo/scripts/selectores-bem.mjs` (selectores fuera de BEM) y `node .claude/skills/limpieza-codigo/scripts/clases-css.mjs` (clases sin usar o sin estilo).

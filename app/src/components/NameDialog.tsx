@@ -30,16 +30,16 @@ export function NameDialog() {
   };
 
   return (
-    <Dialog className="dlg dlg-confirm" dismissable={false} onClose={() => {}}
+    <Dialog className="dialog dialog--confirm" dismissable={false} onClose={() => {}}
       onOpen={dlg => dlg.querySelector<HTMLInputElement>("input")?.focus()}>
-      <h2>¿Cómo quieres que te vean los demás?</h2>
-      <p className="dlg-msg">Es el nombre que saldrá en las votaciones y en la tabla de participantes. Puedes cambiarlo cuando quieras en «Tu perfil».</p>
+      <h2 className="dialog__title">¿Cómo quieres que te vean los demás?</h2>
+      <p className="dialog__msg">Es el nombre que saldrá en las votaciones y en la tabla de participantes. Puedes cambiarlo cuando quieras en «Tu perfil».</p>
       <form onSubmit={save}>
-        <input className="input name-dlg-input" maxLength={40} placeholder="Tu nombre" autoComplete="nickname" required
+        <input className="input dialog__field" maxLength={40} placeholder="Tu nombre" autoComplete="nickname" required
           data-error="Escribe el nombre que verán los demás." value={name} onChange={e => setName(e.target.value)} />
         <div className="status" role="alert">{status}</div>
-        <div className="dlg-actions">
-          <button className="btn primary" type="submit" disabled={busy}>{busy ? "Guardando…" : "Guardar"}</button>
+        <div className="dialog__actions">
+          <button className="btn btn--primary dialog__btn" type="submit" disabled={busy}>{busy ? "Guardando…" : "Guardar"}</button>
         </div>
       </form>
     </Dialog>

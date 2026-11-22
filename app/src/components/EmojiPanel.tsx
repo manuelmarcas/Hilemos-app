@@ -80,7 +80,7 @@ export function EmojiPanel({ req, onClose }: { req: EmojiRequest; onClose: () =>
     loadLib().then(({ Picker, i18n }) => {
       if (!alive || !body.current) return;
       const picker = new Picker({ locale: "es", dataSource: dataUrl, i18n });
-      picker.classList.add(isDark() ? "dark" : "light");
+      picker.classList.add("emoji-panel__picker", isDark() ? "dark" : "light");
       picker.addEventListener("emoji-click", e => {
         if (!req.keepOpen) close.current();
         if (e.detail.unicode) req.onPick(e.detail.unicode);
@@ -92,17 +92,17 @@ export function EmojiPanel({ req, onClose }: { req: EmojiRequest; onClose: () =>
   }, [req]);
 
   return createPortal(
-    <div ref={panel} className={`emoji-panel${sheet ? " sheet" : ""}`} role="dialog" aria-label="Elegir emoji">
-      <div className="emoji-panel-head">
+    <div ref={panel} className={`emoji-panel${sheet ? " emoji-panel--sheet" : ""}`} role="dialog" aria-label="Elegir emoji">
+      <div className="emoji-panel__head">
         <span>Elige un emoji</span>
-        <button type="button" className="emoji-panel-x" aria-label="Cerrar" onClick={() => close.current()}>×</button>
+        <button type="button" className="emoji-panel__close" aria-label="Cerrar" onClick={() => close.current()}>×</button>
       </div>
-      <div className="emoji-panel-body">
+      <div className="emoji-panel__body">
         {/* React no pinta nada dentro de este contenedor: ahí se mete el <emoji-picker>. */}
         <div ref={body} style={{ display: "contents" }} />
-        {state === "loading" && <div className="emoji-panel-msg">Cargando emojis…</div>}
+        {state === "loading" && <div className="emoji-panel__msg">Cargando emojis…</div>}
         {state === "error" && (
-          <div className="emoji-panel-msg">No se pudieron cargar los emojis. Comprueba tu conexión o usa el teclado de emojis del dispositivo.</div>
+          <div className="emoji-panel__msg">No se pudieron cargar los emojis. Comprueba tu conexión o usa el teclado de emojis del dispositivo.</div>
         )}
       </div>
     </div>,

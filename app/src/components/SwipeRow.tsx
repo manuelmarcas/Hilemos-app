@@ -1,7 +1,7 @@
 // Fila que se desliza con el dedo (móvil): hacia la derecha o la izquierda lanza una acción.
 // Con ratón no hace nada (en el ordenador las mismas acciones están en el botón ⋯).
 import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
-import { cls } from "../lib/util";
+import { bem, cls } from "../lib/util";
 
 export interface SwipeAction {
   icon: ReactNode;
@@ -75,16 +75,16 @@ export function SwipeRow({ right, left, children }: {
   const showing = dx > 0 ? right : dx < 0 ? left : null;
 
   return (
-    <div ref={box} className={cls("swipe", dx !== 0 && "swiping")}>
+    <div ref={box} className={cls("swipe", dx !== 0 && "swipe--swiping")}>
       {showing && (
-        <div className={cls("swipe-bg", `tone-${showing.tone}`, dx > 0 ? "from-left" : "from-right", armed && "armed")}
+        <div className={bem("swipe__bg", { [showing.tone]: true, "from-left": dx > 0, "from-right": dx <= 0, armed })}
           style={{ "--p": progress.toFixed(3) } as CSSProperties} aria-hidden="true">
-          <span className="swipe-ic">{showing.icon}</span>
-          <span className="swipe-lbl">{showing.label}</span>
+          <span className="swipe__icon">{showing.icon}</span>
+          <span className="swipe__label">{showing.label}</span>
         </div>
       )}
       <div
-        className="swipe-fg"
+        className="swipe__fg"
         style={{ transform: dx ? `translateX(${dx}px)` : undefined, transition: animating ? "transform .22s ease" : "none" }}
         onTransitionEnd={() => setAnimating(false)}
         onPointerDown={onDown}

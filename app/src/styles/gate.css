@@ -1,6 +1,6 @@
 /* Pantallas sin sesión: entrada (Google, correo, sin cuenta o con la clave) y la de completar el enlace del correo. */
 
-#gate{
+.gate{
   min-height:90vh;
   display:flex;
   flex-direction:column;
@@ -8,7 +8,7 @@
   justify-content:center;
   padding:24px 16px;
 }
-.gate-card{
+.gate__card{
   background:var(--card);
   border-radius:20px;
   padding:40px 28px;
@@ -18,10 +18,10 @@
   box-shadow:0 20px 50px -20px rgba(69,29,66,.3);
   border:1px solid var(--line);
 }
-.gate-logo{display:block;width:72px;height:72px;margin:0 auto 12px;color:var(--logo)}
-.gate-card h1{font-size:1.9rem;font-weight:800;letter-spacing:-.01em;margin:0 0 8px;color:var(--ink)}
-.gate-card p{color:var(--muted);font-size:.95rem;line-height:1.5;margin:0 0 26px}
-.google-btn{
+.gate__logo{display:block;width:72px;height:72px;margin:0 auto 12px;color:var(--logo)}
+.gate__title{font-size:1.9rem;font-weight:800;letter-spacing:-.01em;margin:0 0 8px;color:var(--ink)}
+.gate__card p{color:var(--muted);font-size:.95rem;line-height:1.5;margin:0 0 26px}
+.gate__google{
   display:inline-flex;
   align-items:center;
   gap:10px;
@@ -37,29 +37,29 @@
   cursor:pointer;
   transition:box-shadow .15s, transform .05s;
 }
-.google-btn:hover{box-shadow:0 4px 14px rgba(0,0,0,.12)}
-.google-btn:active{transform:scale(.98)}
-.google-btn svg{width:20px;height:20px;flex:none}
-#demo-login{display:flex;gap:8px}
-#gate-status{color:var(--danger);font-size:.88rem;margin-top:14px;min-height:1.2em}
-.gate-anon{display:grid;gap:8px;min-width:0}
-.gate-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.82rem;margin:18px 0 2px}
-.gate-or::before,.gate-or::after{content:"";flex:1;height:1px;background:var(--line)}
-.gate-anon .input{min-width:0;text-align:center}
-.gate-card .gate-anon-note{font-size:.82rem;line-height:1.45;margin:2px 0 0}
+.gate__google:hover{box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.gate__google:active{transform:scale(.98)}
+.gate__google svg{width:20px;height:20px;flex:none}
+.gate__demo{display:flex;gap:8px}
+.gate__status{color:var(--danger);font-size:.88rem;margin-top:14px;min-height:1.2em}
+.gate__form{display:grid;gap:8px;min-width:0}
+.gate__or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.82rem;margin:18px 0 2px}
+.gate__or::before,.gate__or::after{content:"";flex:1;height:1px;background:var(--line)}
+.gate__input{min-width:0;text-align:center}
+.gate__card .gate__note{font-size:.82rem;line-height:1.45;margin:2px 0 0}
 /* Segunda forma de entrar (correo), con el mismo tamaño que la de Google */
-.btn.gate-alt{width:100%;margin-top:10px;padding:13px 18px;font-size:1rem}
-.gate-card .google-btn + .gate-anon,.gate-card .google-btn + .gate-sent{margin-top:20px}
-.gate-alt .ic{color:var(--brand)}
-.gate-key-btn{margin-top:14px}
-.gate-key-btn .ic{color:var(--brand)}
-.gate-card .gate-sent p{margin:12px 0 0;color:var(--ink);font-size:.92rem}
-.gate-sent .ic{color:var(--brand)}
-.gate-card > .gate-switch{margin-top:14px}
-.gate-label{font-size:.88rem;font-weight:600;color:var(--ink);margin-top:2px}
-.gate-card .gate-anon-note .ic{color:var(--brand)}
-.gate-switch{justify-self:center;display:inline-flex;align-items:center;gap:4px}
-.key-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
-.key-input::placeholder{letter-spacing:.08em}
+.btn.gate__alt{width:100%;margin-top:10px;padding:13px 18px;font-size:1rem}
+.gate__card .gate__google + .gate__form,.gate__card .gate__google + .gate__sent{margin-top:20px}
+.gate__alt{--icon-color:var(--brand)}
+.gate__key-btn{margin-top:14px}
+.gate__key-btn{--icon-color:var(--brand)}
+.gate__card .gate__sent p{margin:12px 0 0;color:var(--ink);font-size:.92rem}
+.gate__sent{--icon-color:var(--brand)}
+.gate__card > .gate__switch{margin-top:14px}
+.gate__label{font-size:.88rem;font-weight:600;color:var(--ink);margin-top:2px}
+.gate__note{--icon-color:var(--brand)}
+.gate__switch{justify-self:center;display:inline-flex;align-items:center;gap:4px}
+.gate__key-input{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}
+.gate__key-input::placeholder{letter-spacing:.08em}
 /* Debajo de la tarjeta de entrada: los enlaces a las condiciones y la privacidad */
-.gate-legal{max-width:420px;margin:16px 0 0;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.5}
+.gate__legal{max-width:420px;margin:16px 0 0;text-align:center;color:var(--muted);font-size:.82rem;line-height:1.5}

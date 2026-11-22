@@ -9,7 +9,7 @@ import {
 } from "../lib/model";
 import { describeChanges } from "../lib/changes";
 import type { Poll, PollAccess, PollData, PollType, Votes } from "../lib/types";
-import { cls, errMsg } from "../lib/util";
+import { bem, cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
@@ -71,19 +71,19 @@ function HourDropdown({ day, options, chosen, onToggle }: {
 
   return (
     <div className="hour-dd" ref={wrap}>
-      <button type="button" ref={btn} className="input hour-dd-btn" aria-haspopup="listbox" aria-expanded={open}
+      <button type="button" ref={btn} className="input hour-dd__btn" aria-haspopup="listbox" aria-expanded={open}
         aria-label={`Horas del ${D.fmtDayShort(day)}`} onClick={() => setOpen(o => !o)}>
-        <span className="hour-dd-label">{label}</span>
-        <span className="hour-dd-arrow" aria-hidden="true">▾</span>
+        <span className="hour-dd__label">{label}</span>
+        <span className="hour-dd__arrow" aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="hour-dd-menu" role="listbox" aria-multiselectable="true" aria-label={`Horas del ${D.fmtDayShort(day)}`}>
+        <div className="hour-dd__menu" role="listbox" aria-multiselectable="true" aria-label={`Horas del ${D.fmtDayShort(day)}`}>
           {options.map(h => {
             const on = chosen.includes(h);
             return (
-              <button key={h} type="button" role="option" aria-selected={on} className={cls("hour-dd-opt", on && "on")}
+              <button key={h} type="button" role="option" aria-selected={on} className={cls("hour-dd__opt", on && "hour-dd__opt--on")}
                 onClick={() => onToggle(h)}>
-                <span className="hour-dd-check" aria-hidden="true">{on && <Icon name="check" />}</span>{h}
+                <span className="hour-dd__check" aria-hidden="true">{on && <Icon name="check" />}</span>{h}
               </button>
             );
           })}
@@ -166,7 +166,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const LOCKED = "Lo que ya tiene votos no se puede quitar.";
   const lockTip = (on: boolean) => (on ? "Tiene votos: no se puede quitar" : undefined);
   // Leyenda del rojo suave con el que se marca, al editar, lo que ya tiene votos.
-  const lockKey = (text: string) => <p className="lock-key"><span className="lock-sw" aria-hidden="true"></span>{text}</p>;
+  const lockKey = (text: string) => <p className="lock-key"><span className="lock-key__swatch" aria-hidden="true"></span>{text}</p>;
 
   useEffect(() => { titleRef.current?.focus(); }, []);
   useEffect(() => () => closeEmoji(), [closeEmoji]);
@@ -507,10 +507,10 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const isWeeks = type === "weeks";
 
   const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string) => (
-    <button key={key} type="button" className={`type-card ${on ? "on" : ""}`} aria-pressed={on} onClick={onClick}>
-      <span className="type-icon"><Icon name={icon} /></span>
-      <span className="type-name">{name}</span>
-      <span className="type-desc">{desc}</span>
+    <button key={key} type="button" className={`type-card ${on ? "type-card--on" : ""}`} aria-pressed={on} onClick={onClick}>
+      <span className="type-card__icon"><Icon name={icon} /></span>
+      <span className="type-card__name">{name}</span>
+      <span className="type-card__desc">{desc}</span>
     </button>
   );
 
@@ -540,10 +540,10 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   return (
     <>
       <div className="page-head">
-        <a className="back" href={edit ? `#/v/${edit.id}` : "#/"}><Icon name="back" /> Volver</a>
-        <h1>{editing ? "Editar votación" : "Nueva votación"}</h1>
+        <a className="page-head__back" href={edit ? `#/v/${edit.id}` : "#/"}><Icon name="back" /> Volver</a>
+        <h1 className="page-head__title">{editing ? "Editar votación" : "Nueva votación"}</h1>
         {editing && (
-          <p className="sub">
+          <p className="subtitle">
             {nameOnly
               ? "Hay un desempate, así que solo se pueden cambiar el nombre y la descripción."
               : <>Puedes añadir {type === "options" ? "opciones" : type === "hours" ? "días y horas" : type === "days" ? "días y opciones" : TYPE[type].unit[1]}, pero
@@ -552,7 +552,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           </p>
         )}
         {!editing && user.anon && store.mode === "firebase" && (
-          <p className="sub anon-note">
+          <p className="subtitle subtitle--anon">
             Has entrado sin cuenta: para gestionar esta votación (cerrarla, desempatar o eliminarla) desde otro
             dispositivo o después de cerrar sesión, necesitarás tu clave de acceso. Si prefieres no depender de ella,
             guarda tu cuenta con tu correo o con Google en <a href="#/perfil">«Tu perfil»</a>.
@@ -561,34 +561,34 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
       </div>
       <div className="create" ref={root}>
         <section className="step" id="sec-name">
-          <h2><span className="num">{numbers.name}</span>Nombre</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.name}</span>Nombre</h2>
           <div className="emoji-field">
-            <input ref={titleRef} id="f-title" className="input big" maxLength={120} placeholder="Ej.: Cena de Navidad 2026 🎄"
+            <input ref={titleRef} id="f-title" className="input input--big emoji-field__input" maxLength={120} placeholder="Ej.: Cena de Navidad 2026 🎄"
               autoComplete="off" value={title} onChange={e => setTitle(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") e.preventDefault(); }} />
             <EmojiButton field={() => titleRef.current} setValue={setTitle} />
           </div>
-          <div className="emoji-field area">
-            <textarea ref={descRef} className="input" maxLength={300} rows={2} placeholder="Descripción (opcional)"
+          <div className="emoji-field emoji-field--area">
+            <textarea ref={descRef} className="input emoji-field__input" maxLength={300} rows={2} placeholder="Descripción (opcional)"
               value={description} onChange={e => setDescription(e.target.value)} />
             <EmojiButton field={() => descRef.current} setValue={setDescription} />
           </div>
-          <div className="group-pick" hidden={editing}>
+          <div className="create__group" hidden={editing}>
             <label htmlFor="f-group">Guardar en el grupo</label>
-            <GroupSelect id="f-group" className="input" groups={groups} value={validGroupId}
+            <GroupSelect id="f-group" className="input create__group-select" groups={groups} value={validGroupId}
               extra={[{ value: "__new", label: "＋ Crear grupo nuevo…" }]}
               onChange={v => {
                 setGroupId(v);
                 if (v === "__new") requestAnimationFrame(() => newGroupRef.current?.focus());
               }} />
-            <input ref={newGroupRef} id="f-newgroup" className="input" maxLength={40} placeholder="Nombre del nuevo grupo" autoComplete="off"
+            <input ref={newGroupRef} id="f-newgroup" className="input create__group-input" maxLength={40} placeholder="Nombre del nuevo grupo" autoComplete="off"
               hidden={validGroupId !== "__new"} value={newGroup} onChange={e => setNewGroup(e.target.value)} />
           </div>
         </section>
 
         <section className="step" id="sec-type" hidden={!visible.type}>
-          <h2><span className="num">{numbers.type}</span>¿Qué se vota?</h2>
-          <div className="types">
+          <h2 className="step__title"><span className="step__num">{numbers.type}</span>¿Qué se vota?</h2>
+          <div className="create__types">
             {TYPES.map(t => typeCard(type === t.id, t.icon, t.name, t.desc, () => {
               if (type === t.id) return;
               setType(t.id);
@@ -598,7 +598,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-months" hidden={!visible.months}>
-          <h2><span className="num">{numbers.months}</span>Meses</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.months}</span>Meses</h2>
           <p className="hint">
             {type === "months"
               ? "Elige los meses que se podrán votar. Cambia de año con las flechas."
@@ -610,22 +610,22 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               <strong>{year}</strong>
               <button type="button" className="icon-btn" disabled={year >= minYear + 3} aria-label="Año siguiente" onClick={() => setYear(y => y + 1)}>›</button>
             </div>
-            <div className="month-chips">
+            <div className="create__months">
               {D.MNAMES.map((name, m) => {
                 const k = D.monthKey(year, m);
                 return (
-                  <button key={k} type="button" className={cls("chip month-chip", months.has(k) && "on", type === "months" && lockedSlots.has(k) && "locked")}
+                  <button key={k} type="button" className={cls("chip month-chip", months.has(k) && "chip--on", type === "months" && lockedSlots.has(k) && "month-chip--locked")}
                     data-tip={lockTip(type === "months" && lockedSlots.has(k))}
                     aria-pressed={months.has(k)} disabled={k < cur} onClick={() => toggleMonth(k)}>{D.cap(name)}</button>
                 );
               })}
             </div>
             {type === "months" && lockedSlots.size > 0 && lockKey("En rojo, los meses que ya tienen votos: no se pueden quitar.")}
-            <div className="selected-months">
+            <div className="create__selected-months">
               {sortedMonths.length
                 ? sortedMonths.map(k => (
                   <span key={k} className="tag">{D.cap(D.fmtMonth(k))}
-                    {k >= cur && <button type="button" aria-label={`Quitar ${D.fmtMonth(k)}`} onClick={() => toggleMonth(k)}>×</button>}
+                    {k >= cur && <button type="button" className="tag__remove" aria-label={`Quitar ${D.fmtMonth(k)}`} onClick={() => toggleMonth(k)}>×</button>}
                   </span>
                 ))
                 : <span className="muted">Ningún mes seleccionado.</span>}
@@ -634,7 +634,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-slots" hidden={!visible.slots}>
-          <h2><span className="num">{numbers.slots}</span><span>{isWeeks ? "Semanas" : "Días"}</span></h2>
+          <h2 className="step__title"><span className="step__num">{numbers.slots}</span><span>{isWeeks ? "Semanas" : "Días"}</span></h2>
           <p className="hint">
             {!sortedMonths.length ? "" : isWeeks
               ? "Pulsa en las semanas que se podrán votar. Una semana que cae entre dos meses es la misma en los dos calendarios."
@@ -644,7 +644,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             {visible.slots && (!sortedMonths.length
               ? <div className="empty-box">Primero elige al menos un mes.</div>
               : <>
-                <div className="quick">
+                <div className="create__quick">
                   {isWeeks ? <>
                     <button type="button" className="chip" onClick={() => quick("all")}>Todas</button>
                     <button type="button" className="chip" onClick={() => quick("none")}>Ninguna</button>
@@ -654,43 +654,43 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                     <button type="button" className="chip" onClick={() => quick("weekdays")}>Lunes a viernes</button>
                     <button type="button" className="chip" onClick={() => quick("weekends")}>Fines de semana</button>
                   </>}
-                  <span className="count-note">
+                  <span className="create__count">
                     {plural(isWeeks ? weeks.size : days.size, isWeeks ? ["semana seleccionada", "semanas seleccionadas"] : ["día seleccionado", "días seleccionados"])}
                   </span>
                 </div>
                 {lockedSlots.size > 0 && lockKey(`En rojo, ${isWeeks ? "las semanas" : "los días"} que ya tienen votos: no se pueden quitar.`)}
-                <div className="pick-months">
+                <div className="picker">
                   {sortedMonths.map(mk => {
                     const { y, m } = D.parseMonth(mk);
                     if (isWeeks) {
                       return (
-                        <div key={mk} className="pick-month">
-                          <h3>{D.fmtMonth(mk)}</h3>
-                          <div className="pweek-head"><span></span>{D.DOW.map(x => <span key={x}>{x}</span>)}</div>
-                          <div className="pweeks">
+                        <div key={mk} className="picker__month">
+                          <h3 className="picker__month-title">{D.fmtMonth(mk)}</h3>
+                          <div className="picker__week-head"><span></span>{D.DOW.map(x => <span key={x}>{x}</span>)}</div>
+                          <div className="picker__weeks">
                             {D.monthWeeks(y, m).map(w => (
-                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} data-tip={lockTip(lockedSlots.has(w.key))} aria-pressed={weeks.has(w.key)}
+                              <button key={w.key} type="button" className={cls("picker__week", weeks.has(w.key) && "picker__week--on", lockedSlots.has(w.key) && "picker__week--locked")} data-tip={lockTip(lockedSlots.has(w.key))} aria-pressed={weeks.has(w.key)}
                                 disabled={D.weekEndKey(w.key) < today}
                                 onClick={(e: MouseEvent) => setWeeks(toggleRange(weeks, w.key, selectableWeeks(), e.shiftKey))}>
-                                <span className="wnum">S{w.num}</span>
-                                {w.days.map(d => <span key={d.key} className={`wd ${d.inMonth ? "" : "out"}`}>{d.d}</span>)}
+                                <span className="picker__week-num">S{w.num}</span>
+                                {w.days.map(d => <span key={d.key} className={bem("picker__week-day", { out: !d.inMonth })}>{d.d}</span>)}
                               </button>
                             ))}
                           </div>
                         </div>
                       );
                     }
-                    const cells = D.DOW.map(x => <div key={`h${x}`} className="dow">{x}</div>);
+                    const cells = D.DOW.map(x => <div key={`h${x}`} className="picker__dow">{x}</div>);
                     for (let i = 0, first = D.dowMon(new Date(y, m, 1)); i < first; i++) cells.push(<div key={`e${i}`}></div>);
                     for (let d = 1, nd = D.daysInMonth(y, m); d <= nd; d++) {
                       const k = D.dayKey(y, m, d);
                       const we = D.dowMon(new Date(y, m, d)) >= 5;
                       cells.push(
-                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} data-tip={lockTip(lockedSlots.has(k))} aria-pressed={days.has(k)}
+                        <button key={k} type="button" className={cls("picker__day", days.has(k) && "picker__day--on", we && "picker__day--we", lockedSlots.has(k) && "picker__day--locked")} data-tip={lockTip(lockedSlots.has(k))} aria-pressed={days.has(k)}
                           disabled={k < today} onClick={(e: MouseEvent) => setDays(toggleRange(days, k, selectableDays(), e.shiftKey))}>{d}</button>,
                       );
                     }
-                    return <div key={mk} className="pick-month"><h3>{D.fmtMonth(mk)}</h3><div className="pgrid">{cells}</div></div>;
+                    return <div key={mk} className="picker__month"><h3 className="picker__month-title">{D.fmtMonth(mk)}</h3><div className="picker__grid">{cells}</div></div>;
                   })}
                 </div>
               </>)}
@@ -698,7 +698,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-opts" hidden={!visible.opts}>
-          <h2><span className="num">{numbers.opts}</span>Opciones de cada día</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.opts}</span>Opciones de cada día</h2>
           <p className="hint">
             Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.
             {lockedOpts.size > 0 && type === "days" && " Las que ya tienen votos (en rojo) se pueden renombrar, pero no quitar."}
@@ -707,22 +707,22 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             {visible.opts && <>
               <div className="seg" role="group" aria-label="Opciones por día">
                 {[1, 2, 3, 4].map(k => (
-                  <button key={k} type="button" className={count === k ? "on" : ""} aria-pressed={count === k} onClick={() => changeCount(k)}>{k}</button>
+                  <button key={k} type="button" className={bem("seg__btn", { on: count === k })} aria-pressed={count === k} onClick={() => changeCount(k)}>{k}</button>
                 ))}
-                <span className="seg-label">{count === 1 ? "opción" : "opciones"} por día</span>
+                <span className="seg__label">{count === 1 ? "opción" : "opciones"} por día</span>
               </div>
-              <div className="opt-layout">
-                <div className="opt-rows">
+              <div className="opt-editor">
+                <div className="opt-editor__rows">
                   {shownOpts.map((o, i) => (
-                    <div key={i} className={cls("opt-row", !!o.id && lockedOpts.has(o.id) && "locked")} data-tip={lockTip(!!o.id && lockedOpts.has(o.id))}>
-                      <span className={`opt-swatch sw c${i}`}></span>
-                      <button type="button" className="icon-pick" aria-label={`Elegir icono de la opción ${i + 1}`} aria-expanded="false" data-tip="Elegir icono"
+                    <div key={i} className={cls("opt-editor__row", !!o.id && lockedOpts.has(o.id) && "opt-editor__row--locked")} data-tip={lockTip(!!o.id && lockedOpts.has(o.id))}>
+                      <span className={`opt-editor__swatch swatch swatch--c${i}`}></span>
+                      <button type="button" className="icon-pick opt-editor__icon" aria-label={`Elegir icono de la opción ${i + 1}`} aria-expanded="false" data-tip="Elegir icono"
                         onClick={e => {
                           const anchor = e.currentTarget;
                           openEmoji({ anchor, onPick: emoji => { setOpt(i, { icon: emoji }); anchor.focus(); } });
                         }}>{o.icon || <Icon name="plus" />}</button>
-                      <div className="emoji-field">
-                        <input ref={el => { optRefs.current[i] = el; }} className="input" id={`f-opt-${i}`} data-opt-name={i} maxLength={30}
+                      <div className="emoji-field opt-editor__field">
+                        <input ref={el => { optRefs.current[i] = el; }} className="input emoji-field__input opt-editor__input" id={`f-opt-${i}`} data-opt-name={i} maxLength={30}
                           value={o.name} placeholder={`Ej.: ${PRESETS[count][i][0]}`} aria-label={`Nombre de la opción ${i + 1}`} autoComplete="off"
                           onChange={e => setOpt(i, { name: e.target.value })} />
                         <EmojiButton field={() => optRefs.current[i]} setValue={v => setOpt(i, { name: v })} />
@@ -730,19 +730,19 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                     </div>
                   ))}
                 </div>
-                <div className="opt-preview">
-                  <div className="preview-label">Vista previa</div>
-                  <div className={`cell n${count} preview`}>
-                    <div className="day">22</div>
+                <div className="opt-editor__preview">
+                  <div className="opt-editor__preview-label">Vista previa</div>
+                  <div className={`cell cell--n${count} cell--preview`}>
+                    <div className="cell__day">22</div>
                     {shownOpts.map((o, i) => (
-                      <span key={i} className={`opt c${i} ${i % 2 === 0 ? "on" : ""}`}>
-                        <span className="label">{o.icon}</span><span className="count">{[3, 1, 2, 0][i]}</span>
+                      <span key={i} className={bem("cell__opt", { [`c${i}`]: true, on: i % 2 === 0 })}>
+                        <span className="cell__label">{o.icon}</span><span className="count">{[3, 1, 2, 0][i]}</span>
                       </span>
                     ))}
                   </div>
-                  <div className="legend mini">
+                  <div className="legend legend--mini">
                     {shownOpts.map((o, i) => (
-                      <span key={i} className="lg"><span className={`sw c${i}`}></span>{o.icon} {o.name || <em className="muted">{PRESETS[count][i][0]}</em>}</span>
+                      <span key={i} className="legend__item"><span className={`swatch swatch--c${i}`}></span>{o.icon} {o.name || <em className="muted">{PRESETS[count][i][0]}</em>}</span>
                     ))}
                   </div>
                 </div>
@@ -752,10 +752,10 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-hours" hidden={!visible.hours}>
-          <h2><span className="num">{numbers.hours}</span>Horas</h2>
-          <div className="hour-mode" role="group" aria-label="Cómo se eligen las horas">
-            <button type="button" className={cls("chip", !isList && "on")} aria-pressed={!isList} disabled={editing && isList} onClick={() => setHourMode("range")}>Franjas periódicas</button>
-            <button type="button" className={cls("chip", isList && "on")} aria-pressed={isList} disabled={editing && !isList} onClick={() => setHourMode("list")}>Horas sueltas</button>
+          <h2 className="step__title"><span className="step__num">{numbers.hours}</span>Horas</h2>
+          <div className="create__hour-mode" role="group" aria-label="Cómo se eligen las horas">
+            <button type="button" className={cls("chip", !isList && "chip--on")} aria-pressed={!isList} disabled={editing && isList} onClick={() => setHourMode("range")}>Franjas periódicas</button>
+            <button type="button" className={cls("chip", isList && "chip--on")} aria-pressed={isList} disabled={editing && !isList} onClick={() => setHourMode("list")}>Horas sueltas</button>
           </div>
           <p className="hint">
             {isList
@@ -766,23 +766,23 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             {visible.hours && isList && <>
               {!sortedHourDays.length
                 ? <div className="empty-box">Primero elige los días en el paso «{numbers.slots}. Días».</div>
-                : <div className="hour-day-rows">
+                : <div className="hour-days">
                   {sortedHourDays.map(d => {
                     const chosen = hoursByDay[d] || [];
                     return (
-                      <div key={d} className="hour-day-row">
-                        <div className="hour-day-head">
-                          <span className="hour-day-label">{D.cap(D.fmtDayShort(d))}</span>
+                      <div key={d} className="hour-days__row">
+                        <div className="hour-days__head">
+                          <span className="hour-days__label">{D.cap(D.fmtDayShort(d))}</span>
                           <HourDropdown day={d} options={starts} chosen={chosen}
                             onToggle={h => (chosen.includes(h) ? removeDayHour(d, h) : addDayHour(d, h))} />
                         </div>
-                        <div className="hour-chips">
+                        <div className="hour-chips hour-days__chips">
                           {chosen.length
                             ? chosen.map(h => (
-                              <span key={h} className={cls("tag", lockedHours.has(`${d}T${h}`) && "locked")}
+                              <span key={h} className={cls("tag hour-chips__tag", lockedHours.has(`${d}T${h}`) && "tag--locked")}
                                 data-tip={lockTip(lockedHours.has(`${d}T${h}`))}>{h}
                                 {!lockedHours.has(`${d}T${h}`) && (
-                                  <button type="button" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
+                                  <button type="button" className="tag__remove" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
                                 )}
                               </span>
                             ))
@@ -792,26 +792,26 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                     );
                   })}
                 </div>}
-              <p className="hint hint-after">{plural(listHoursCount, ["hora", "horas"])} en total.</p>
+              <p className="hint hint--after">{plural(listHoursCount, ["hora", "horas"])} en total.</p>
             </>}
             {visible.hours && !isList && <>
               <div className="hours-form">
-                <label>Desde<select className="input" value={from} onChange={e => setFrom(e.target.value)}>
+                <label className="hours-form__field">Desde<select className="input" value={from} onChange={e => setFrom(e.target.value)}>
                   {starts.map(v => <option key={v} value={v}>{v}</option>)}
                 </select></label>
-                <label>Hasta<select className="input" value={to} onChange={e => setTo(e.target.value)}>
+                <label className="hours-form__field">Hasta<select className="input" value={to} onChange={e => setTo(e.target.value)}>
                   {ends.map(v => <option key={v} value={v}>{v}</option>)}
                 </select></label>
-                <label>Cada<select className="input" value={step} disabled={editing} onChange={e => setStep(Number(e.target.value))}>
+                <label className="hours-form__field">Cada<select className="input" value={step} disabled={editing} onChange={e => setStep(Number(e.target.value))}>
                   {([[30, "30 minutos"], [60, "1 hora"], [120, "2 horas"]] as const).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select></label>
               </div>
               <div className="hour-chips">
                 {hourSlots.length
-                  ? hourSlots.map(h => <span key={h} className="chip static">{h}</span>)
+                  ? hourSlots.map(h => <span key={h} className="chip chip--static">{h}</span>)
                   : <span className="status">Con ese rango no cabe ninguna franja.</span>}
               </div>
-              <p className="hint hint-after">
+              <p className="hint hint--after">
                 {plural(hourSlots.length, ["franja", "franjas"])} por día.
                 {editing && " La duración de cada franja no se puede cambiar; las franjas que ya tienen votos tienen que quedar dentro del rango."}
               </p>
@@ -820,25 +820,25 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-choices" hidden={!visible.choices}>
-          <h2><span className="num">{numbers.choices}</span>Opciones</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.choices}</span>Opciones</h2>
           <p className="hint">
             Escribe las opciones que se podrán votar, de {MIN_CHOICES} a {MAX_CHOICES}. El icono es opcional: si no eliges
             ninguno, se pone {DEFAULT_CHOICE_ICON}.{lockedSlots.size > 0 && type === "options" && " Las que ya tienen votos (en rojo) se pueden renombrar, pero no quitar."}
           </p>
           {visible.choices && <>
-            <div className="opt-rows choice-rows">
+            <div className="opt-editor__rows">
               {choices.map((c, i) => {
                 const locked = !!c.id && lockedSlots.has(c.id);
                 return (
-                  <div key={c.key} className={cls("opt-row choice-row", locked && "locked")} data-tip={lockTip(locked)}>
-                    <button type="button" className={cls("icon-pick", !c.icon && "default")} aria-label={`Elegir icono de la opción ${i + 1}`}
+                  <div key={c.key} className={cls("opt-editor__row opt-editor__row--choice", locked && "opt-editor__row--locked")} data-tip={lockTip(locked)}>
+                    <button type="button" className={cls("icon-pick opt-editor__icon", !c.icon && "icon-pick--default")} aria-label={`Elegir icono de la opción ${i + 1}`}
                       aria-expanded="false" data-tip="Elegir icono (opcional)"
                       onClick={e => {
                         const anchor = e.currentTarget;
                         openEmoji({ anchor, onPick: emoji => { setChoice(c.key, { icon: emoji }); anchor.focus(); } });
                       }}>{c.icon || DEFAULT_CHOICE_ICON}</button>
-                    <div className="emoji-field">
-                      <input ref={el => { choiceRefs.current[c.key] = el; }} className="input" data-choice={i} maxLength={60}
+                    <div className="emoji-field opt-editor__field">
+                      <input ref={el => { choiceRefs.current[c.key] = el; }} className="input emoji-field__input opt-editor__input" data-choice={i} maxLength={60}
                         value={c.name} placeholder={i < CHOICE_EXAMPLES.length ? `Ej.: ${CHOICE_EXAMPLES[i]}` : "Otra opción"}
                         aria-label={`Nombre de la opción ${i + 1}`} autoComplete="off"
                         onChange={e => setChoice(c.key, { name: e.target.value })}
@@ -851,7 +851,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                         }} />
                       <EmojiButton field={() => choiceRefs.current[c.key]} setValue={v => setChoice(c.key, { name: v })} />
                     </div>
-                    <button type="button" className="icon-btn choice-del" aria-label={`Quitar la opción ${i + 1}`}
+                    <button type="button" className="icon-btn opt-editor__del" aria-label={`Quitar la opción ${i + 1}`}
                       data-tip={locked ? "Tiene votos: no se puede quitar" : "Quitar la opción"}
                       disabled={locked || choices.length <= MIN_CHOICES} onClick={() => removeChoice(c)}>
                       <Icon name="close" />
@@ -861,81 +861,81 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               })}
             </div>
             {choices.length < MAX_CHOICES && (
-              <button type="button" className="btn small choice-add" onClick={addChoice}><Icon name="plus" /> Añadir opción</button>
+              <button type="button" className="btn btn--small opt-editor__add" onClick={addChoice}><Icon name="plus" /> Añadir opción</button>
             )}
-            <p className="hint hint-after">{plural(choices.length, ["opción", "opciones"])} de {MAX_CHOICES} como mucho.</p>
+            <p className="hint hint--after">{plural(choices.length, ["opción", "opciones"])} de {MAX_CHOICES} como mucho.</p>
           </>}
         </section>
 
         <section className="step" id="sec-privacy" hidden={!visible.privacy}>
-          <h2><span className="num">{numbers.privacy}</span>¿Quién ve los votos?</h2>
-          <div className="privacy">
+          <h2 className="step__title"><span className="step__num">{numbers.privacy}</span>¿Quién ve los votos?</h2>
+          <div className="create__privacy">
             {typeCard(!anonymous, "eye", "Votos visibles", "Cada participante puede ver qué ha votado cada persona.", () => setAnonymous(false), "vis")}
             {typeCard(anonymous, "incognito", "Anónima", "Solo se ven los totales. Más adelante no se podrá hacer visible.", () => setAnonymous(true), "anon")}
           </div>
         </section>
 
         <section className="step" id="sec-deadline" hidden={!visible.deadline}>
-          <h2><span className="num">{numbers.deadline}</span>¿Hasta cuándo se vota?</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.deadline}</span>¿Hasta cuándo se vota?</h2>
           <p className="hint">
             Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
             plazo. Si lo dejas vacío, sigue abierta hasta que la cierres.
           </p>
           <div className="deadline-form">
-            <label htmlFor="f-deadline">Último día
+            <label className="deadline-form__field" htmlFor="f-deadline">Último día
               <input id="f-deadline" className="input" type="date" min={today} value={deadlineDay}
                 onChange={e => setDeadlineDay(e.target.value)} />
             </label>
-            <label htmlFor="f-deadline-time">Hora <span className="muted">(opcional)</span>
+            <label className="deadline-form__field" htmlFor="f-deadline-time">Hora <span className="muted">(opcional)</span>
               <input id="f-deadline-time" className="input" type="time" step={300} value={deadlineTime}
                 disabled={!deadlineDay} onChange={e => setDeadlineTime(e.target.value)} />
             </label>
             {deadlineDay && (
-              <button type="button" className="link-btn" onClick={() => { setDeadlineDay(""); setDeadlineTime(""); }}>
+              <button type="button" className="link-btn deadline-form__clear" onClick={() => { setDeadlineDay(""); setDeadlineTime(""); }}>
                 Quitar el plazo
               </button>
             )}
           </div>
-          {!!deadlineTs && <p className="hint hint-after">Se podrá votar hasta el {fmtDeadline(deadlineTs)}.</p>}
+          {!!deadlineTs && <p className="hint hint--after">Se podrá votar hasta el {fmtDeadline(deadlineTs)}.</p>}
         </section>
 
         <section className="step" id="sec-access" hidden={!visible.access}>
-          <h2><span className="num">{numbers.access}</span>¿Quién puede unirse?</h2>
-          <div className="access-pick">
+          <h2 className="step__title"><span className="step__num">{numbers.access}</span>¿Quién puede unirse?</h2>
+          <div className="create__access">
             {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
             {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
             {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
           </div>
           {access === "emails" && (
-            <div className="access-emails">
+            <div className="create__access-emails">
               <label className="field-label" htmlFor="f-emails">Correos que pueden entrar</label>
               <textarea id="f-emails" className="input" rows={3} value={emailsText} onChange={e => setEmailsText(e.target.value)}
                 placeholder="ana@gmail.com, carlos@gmail.com…" autoComplete="off" spellCheck={false} />
-              <p className="hint">
+              <p className="hint create__access-hint">
                 Sepáralos con comas, espacios o saltos de línea. Tú siempre puedes entrar.
                 {parsed.emails.length > 0 && <> <strong>{plural(parsed.emails.length, ["correo válido", "correos válidos"])}</strong>.</>}
-                {parsed.invalid.length > 0 && <span className="warn"> No son correos: {parsed.invalid.slice(0, 3).join(", ")}{parsed.invalid.length > 3 ? "…" : ""}.</span>}
+                {parsed.invalid.length > 0 && <span className="hint__warn"> No son correos: {parsed.invalid.slice(0, 3).join(", ")}{parsed.invalid.length > 3 ? "…" : ""}.</span>}
                 {store.mode === "demo" && <> En el modo demo, el correo de cada persona es su nombre@demo.test (por ejemplo, ana@demo.test).</>}
               </p>
             </div>
           )}
-          <div className="access-max">
+          <div className="create__access-max">
             <label className="field-label" htmlFor="f-max">Máximo de personas <span className="muted">(contándote a ti)</span></label>
-            <input id="f-max" className="input small" type="number" inputMode="numeric" min={2} max={MAX_PEOPLE}
+            <input id="f-max" className="input input--small create__max-input" type="number" inputMode="numeric" min={2} max={MAX_PEOPLE}
               value={maxText} onChange={e => setMaxText(e.target.value)} placeholder={String(MAX_PEOPLE)} />
-            <p className="hint">Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación.</p>
+            <p className="hint create__access-hint">Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación.</p>
           </div>
         </section>
 
         <div className="create-bar">
-          <div className="create-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
-          <div className="create-actions">
-            {edit && <button type="button" className="btn big" disabled={busy} onClick={() => cancelEdit(edit)}>Cancelar</button>}
-            <button type="button" className="btn primary big" disabled={busy} onClick={submit}>
+          <div className="create-bar__summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
+          <div className="create-bar__actions">
+            {edit && <button type="button" className="btn btn--big create-bar__btn" disabled={busy} onClick={() => cancelEdit(edit)}>Cancelar</button>}
+            <button type="button" className="btn btn--primary btn--big create-bar__btn" disabled={busy} onClick={submit}>
               {editing ? (busy ? "Guardando…" : "Guardar cambios") : (busy ? "Creando…" : "Crear votación")}
             </button>
           </div>
-          <div className="status" role="alert">{status}</div>
+          <div className="status create-bar__status" role="alert">{status}</div>
         </div>
       </div>
     </>

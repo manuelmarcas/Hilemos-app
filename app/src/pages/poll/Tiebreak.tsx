@@ -17,9 +17,9 @@ function AvatarStack({ uids, byUid }: { uids: string[]; byUid: Record<string, Pe
   const ps = uids.map(u => byUid[u]).filter(Boolean);
   if (!ps.length) return null;
   return (
-    <span className="av-stack" data-tip={ps.map(p => p.name).join(", ")} role="img" aria-label={ps.map(p => p.name).join(", ")}>
-      {ps.slice(0, 5).map(p => <Avatar key={p.uid} name={p.name} photo={p.photo} size={22} seed={p.uid} />)}
-      {ps.length > 5 && <span className="av-more">+{ps.length - 5}</span>}
+    <span className="avatar-stack" data-tip={ps.map(p => p.name).join(", ")} role="img" aria-label={ps.map(p => p.name).join(", ")}>
+      {ps.slice(0, 5).map(p => <Avatar key={p.uid} name={p.name} photo={p.photo} size={22} seed={p.uid} className="avatar-stack__item" />)}
+      {ps.length > 5 && <span className="avatar-stack__more">+{ps.length - 5}</span>}
     </span>
   );
 }
@@ -51,25 +51,25 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
     sub = <>Hay empate en el primer puesto. Elige <strong>una sola</strong> opción{myPick ? " (puedes cambiarla mientras siga abierto)" : ""}.</>;
   }
   return (
-    <section className={`tiebreak ${done ? "done" : ""}`}>
-      <div className="tb-head">
-        <h2><Icon name="scale" /> Desempate{(TB.round || 1) > 1 ? ` · ronda ${TB.round}` : ""}</h2>
-        <span className="tb-state">{winner ? "Definitivo" : done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
+    <section className={`tiebreak ${done ? "tiebreak--done" : ""}`}>
+      <div className="tiebreak__head">
+        <h2 className="tiebreak__title"><Icon name="scale" /> Desempate{(TB.round || 1) > 1 ? ` · ronda ${TB.round}` : ""}</h2>
+        <span className="tiebreak__state">{winner ? "Definitivo" : done ? "Finalizado" : `Abierto · ${plural(TB.total, ["voto", "votos"])}`}</span>
       </div>
-      <p className="tb-sub">{sub}</p>
-      {note && <p className="tb-note"><Icon name="users" /><span>{note}</span></p>}
+      <p className="tiebreak__sub">{sub}</p>
+      {note && <p className="tie-note"><Icon name="users" className="tie-note__icon" /><span>{note}</span></p>}
       {/* Como en «Participantes»: el aviso va encima de la lista a la que se refiere, no con los botones de gestión. */}
-      {!done && <div className="tb-tools">{remind}</div>}
-      <div className="tb-options">
+      {!done && <div className="tiebreak__tools">{remind}</div>}
+      <div className="tiebreak__options">
         {TB.candidates.map(u => {
           const { optId } = unitParts(u);
           const idx = Math.max(0, T.opts.findIndex(o => o.id === optId));
           const isWin = done && TB.max > 0 && TB.leaders.includes(u);
           return (
-            <button key={u} className={cls("tb-opt", u === myPick && "on", isWin && "win")} aria-pressed={u === myPick}
+            <button key={u} className={cls("tiebreak__option", u === myPick && "tiebreak__option--on", isWin && "tiebreak__option--win")} aria-pressed={u === myPick}
               disabled={done} onClick={() => onVote(u)}>
-              <span className="tb-radio" aria-hidden="true"></span>
-              <span className="tb-label">{poll.type === "days" && <span className={`sw c${idx}`}></span>}{unitText(poll, T, u)}</span>
+              <span className="tiebreak__radio" aria-hidden="true"></span>
+              <span className="tiebreak__label">{poll.type === "days" && <span className={`swatch swatch--c${idx}`}></span>}{unitText(poll, T, u)}</span>
               {!poll.anonymous && <AvatarStack uids={TB.voters[u]} byUid={byUid} />}
               <span className="count">{TB.counts[u]}</span>
             </button>
@@ -78,14 +78,14 @@ export function TiebreakCard({ poll, T, TB, myTb, canManage, byUid, onVote, onFi
       </div>
       {/* Finalizado ya no se quita: con ganadora es definitivo y sin ella solo se repite. */}
       {canManage && (!done || unsolved) && (
-        <div className="tb-actions">
+        <div className="tiebreak__actions">
           {done
-            ? <button className="btn small" onClick={onRepeat}>
+            ? <button className="btn btn--small" onClick={onRepeat}>
               <Icon name="scale" /> {TB.leaders.length > 1 ? "Repetir entre las empatadas" : "Repetir el desempate"}
             </button>
             : <>
-              <button className="btn small primary" onClick={onFinish}>Finalizar desempate</button>
-              <button className="link-btn danger" onClick={onCancel}>Anular</button>
+              <button className="btn btn--small btn--primary" onClick={onFinish}>Finalizar desempate</button>
+              <button className="link-btn link-btn--danger" onClick={onCancel}>Anular</button>
             </>}
         </div>
       )}
@@ -129,8 +129,8 @@ export function TiebreakSolvedNote({ poll, T }: { poll: Poll; T: Tally }) {
   if (!poll.closed || poll.tiebreak || !poll.tbNote?.solved) return null;
   const winner = T.leaders.length === 1 ? unitText(poll, T, T.leaders[0].key) : null;
   return (
-    <p className="tb-note tb-note-solved" role="status">
-      <Icon name="scale" />
+    <p className="tie-note tie-note--solved" role="status">
+      <Icon name="scale" className="tie-note__icon" />
       <span>
         Han cambiado los votos porque una persona se ha salido de la votación y ya no hay empate, así que el
         desempate ya no hace falta{winner ? <>: gana <strong>{winner}</strong></> : " y gana la más votada"}.

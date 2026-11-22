@@ -120,12 +120,12 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   };
 
   const formHTML = () => form && (
-    <form className="sb-form" id="sb-form" onSubmit={submit}>
-      <input ref={gnameRef} className="input" id="sb-gname" maxLength={40} placeholder="Nombre del grupo" autoComplete="off"
+    <form className="sidebar__form" id="sb-form" onSubmit={submit}>
+      <input ref={gnameRef} className="input sidebar__form-input" id="sb-gname" maxLength={40} placeholder="Nombre del grupo" autoComplete="off"
         value={form.value} onChange={e => setForm(f => f && { ...f, value: e.target.value })} />
-      <div className="sb-form-btns">
-        <button className="btn small primary" type="submit">{form.mode === "rename" ? "Guardar" : "Crear grupo"}</button>
-        <button className="btn small" type="button" onClick={() => setForm(null)}>Cancelar</button>
+      <div className="sidebar__form-btns">
+        <button className="btn btn--small btn--primary" type="submit">{form.mode === "rename" ? "Guardar" : "Crear grupo"}</button>
+        <button className="btn btn--small" type="button" onClick={() => setForm(null)}>Cancelar</button>
       </div>
     </form>
   );
@@ -134,9 +134,9 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   let total = 0;
   let archivedCount = 0;
   if (library.error) {
-    body = <div className="sb-empty error">{errMsg(library.error)}</div>;
+    body = <div className="sidebar__empty sidebar__empty--error">{errMsg(library.error)}</div>;
   } else if (!lib) {
-    body = <div className="sb-empty">Cargando…</div>;
+    body = <div className="sidebar__empty">Cargando…</div>;
   } else {
     const groups = sortedGroups(lib.groups);
     // Orden estable (por fecha en que se añadió) para que el menú no salte al ir abriendo votaciones.
@@ -157,18 +157,18 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       const cur = validGroup(e.groupId);
       const targets: [string, string][] = [...groups.map(g => [g.id, g.name] as [string, string]), ["", "Sin grupo"]];
       return (
-        <div className="sb-menu">
-          <div className="sb-menu-label">Mover a</div>
+        <div className="sidebar__menu">
+          <div className="sidebar__menu-label">Mover a</div>
           {targets.map(([gid, name]) => (
-            <button key={gid || "_none"} className="sb-menu-item" disabled={gid === cur}
+            <button key={gid || "_none"} className="sidebar__menu-item" disabled={gid === cur}
               onClick={() => { setMenu(null); run(() => move(e.id, gid)); }}>
               {gid === cur && <><Icon name="check" /> </>}{name}
             </button>
           ))}
-          <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}><Icon name="plus" /> Grupo nuevo…</button>
-          <div className="sb-menu-sep" />
-          <button className="sb-menu-item" onClick={() => archivePoll(e.id)}><Icon name="archive" /> Archivar</button>
-          <button className="sb-menu-item danger" onClick={() => leavePoll(e.id)}><Icon name="leave" /> Salir de la votación</button>
+          <button className="sidebar__menu-item" onClick={() => { setMenu(null); setForm({ mode: "new", moveId: e.id, value: "" }); }}><Icon name="plus" /> Grupo nuevo…</button>
+          <div className="sidebar__menu-sep" />
+          <button className="sidebar__menu-item" onClick={() => archivePoll(e.id)}><Icon name="archive" /> Archivar</button>
+          <button className="sidebar__menu-item sidebar__menu-item--danger" onClick={() => leavePoll(e.id)}><Icon name="leave" /> Salir de la votación</button>
         </div>
       );
     };
@@ -186,47 +186,47 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       const renaming = form?.mode === "rename" && form.gid === s.gid;
       const hint = isGroup ? "Vacío. Arrastra aquí votaciones o usa ⋯ para moverlas." : "Arrastra aquí para sacarlas de su grupo.";
       return (
-        <section key={s.gid || "_none"} className={cls("sb-group", dropOver === s.gid && "drop-over")} data-drop={s.gid}
+        <section key={s.gid || "_none"} className={cls("sidebar__group", dropOver === s.gid && "sidebar__group--drop")} data-drop={s.gid}
           onDragOver={e => onDragOver(e, s.gid)} onDragLeave={e => onDragLeave(e, s.gid)} onDrop={e => onDrop(e, s.gid)}>
-          <div className="sb-ghead">
-            <button className="sb-gtoggle" aria-expanded={open} onClick={() => toggleCollapse(s.gid)}>
-              <span className="sb-caret" aria-hidden="true">{open ? "▾" : "▸"}</span>
-              <span className="sb-gname">{s.name}</span>
-              <span className="sb-count">{s.items.length}</span>
+          <div className="sidebar__group-head">
+            <button className="sidebar__group-toggle" aria-expanded={open} onClick={() => toggleCollapse(s.gid)}>
+              <span className="sidebar__caret" aria-hidden="true">{open ? "▾" : "▸"}</span>
+              <span className="sidebar__group-name">{s.name}</span>
+              <span className="sidebar__count">{s.items.length}</span>
             </button>
             {isGroup && (
-              <button className="sb-more" aria-label={`Opciones del grupo ${s.name}`} aria-expanded={gmenuOpen}
+              <button className="sidebar__more" aria-label={`Opciones del grupo ${s.name}`} aria-expanded={gmenuOpen}
                 onClick={() => { setMenu(gmenuOpen ? null : { type: "group", id: s.gid }); setForm(null); }}><Icon name="more" /></button>
             )}
           </div>
           {gmenuOpen && (
-            <div className="sb-menu">
-              <button className="sb-menu-item" onClick={() => { setMenu(null); setForm({ mode: "rename", gid: s.gid, value: lib.groups[s.gid]?.name || "" }); }}>Renombrar</button>
-              <button className="sb-menu-item danger" onClick={() => removeGroup(s.gid)}>Eliminar grupo</button>
+            <div className="sidebar__menu">
+              <button className="sidebar__menu-item" onClick={() => { setMenu(null); setForm({ mode: "rename", gid: s.gid, value: lib.groups[s.gid]?.name || "" }); }}>Renombrar</button>
+              <button className="sidebar__menu-item sidebar__menu-item--danger" onClick={() => removeGroup(s.gid)}>Eliminar grupo</button>
             </div>
           )}
           {renaming && formHTML()}
           {open && (
-            <ul className="sb-list">
+            <ul className="sidebar__list">
               {shown.length ? shown.map(e => {
                 const isActive = e.id === activeId;
                 const pOpen = menu?.type === "poll" && menu.id === e.id;
                 return (
-                  <li key={e.id} className={cls("sb-li", isActive && "active")}>
-                    <div className="sb-row">
-                      <a className="sb-item" href={`#/v/${e.id}`} draggable data-poll={e.id} aria-current={isActive ? "page" : undefined}
+                  <li key={e.id} className={cls("sidebar__item", isActive && "sidebar__item--active")}>
+                    <div className="sidebar__row">
+                      <a className="sidebar__link" href={`#/v/${e.id}`} draggable data-poll={e.id} aria-current={isActive ? "page" : undefined}
                         onClick={() => { setMenu(null); setForm(null); }}
                         onDragStart={ev => onDragStart(ev, e.id)} onDragEnd={endDrag}>
-                        <span className="sb-ic"><Icon name={(e.type && TYPE[e.type]?.icon) || "vote"} /></span>
-                        <span className="sb-title">{e.title || "Votación"}</span>
+                        <span className="sidebar__icon"><Icon name={(e.type && TYPE[e.type]?.icon) || "vote"} /></span>
+                        <span className="sidebar__title">{e.title || "Votación"}</span>
                       </a>
-                      <button className="sb-more" aria-label={`Organizar «${e.title || "votación"}»`} aria-expanded={pOpen}
+                      <button className="sidebar__more" aria-label={`Organizar «${e.title || "votación"}»`} aria-expanded={pOpen}
                         onClick={() => { setMenu(pOpen ? null : { type: "poll", id: e.id }); setForm(null); }}><Icon name="more" /></button>
                     </div>
                     {pOpen && pollMenu(e)}
                   </li>
                 );
-              }) : <li className="sb-hint">{hint}</li>}
+              }) : <li className="sidebar__hint">{hint}</li>}
             </ul>
           )}
         </section>
@@ -234,24 +234,24 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
     }).filter(Boolean);
 
     body = sections.length ? sections : total
-      ? <div className="sb-empty">Ninguna votación coincide con «{query}».</div>
-      : <div className="sb-empty">Aún no tienes votaciones.</div>;
+      ? <div className="sidebar__empty">Ninguna votación coincide con «{query}».</div>
+      : <div className="sidebar__empty">Aún no tienes votaciones.</div>;
   }
 
   return (
-    <aside className={cls("sidebar", dragging && "dragging")} id="sidebar" aria-label="Mis votaciones" onKeyDown={onKeyDown}
+    <aside className={cls("sidebar", dragging && "sidebar--dragging")} id="sidebar" aria-label="Mis votaciones" onKeyDown={onKeyDown}
       onClick={e => { if ((e.target as HTMLElement).closest("a")) onNavigate(); }}>
-      <div className="sb-head">
-        <a className="btn primary sb-new" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
-        <input className="input sb-search" type="search" placeholder="Buscar votación…" autoComplete="off"
+      <div className="sidebar__head">
+        <a className="btn btn--primary sidebar__new" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
+        <input className="input sidebar__search" type="search" placeholder="Buscar votación…" autoComplete="off"
           aria-label="Buscar votación" value={query} onChange={e => { setQuery(e.target.value); setMenu(null); }} />
       </div>
-      <nav className="sb-body" id="sb-body" aria-label="Mis votaciones">{body}</nav>
-      <div className="sb-foot" id="sb-foot">
+      <nav className="sidebar__body" id="sb-body" aria-label="Mis votaciones">{body}</nav>
+      <div className="sidebar__foot" id="sb-foot">
         {lib && !library.error && (form?.mode === "new" ? formHTML()
-          : <button className="sb-add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>)}
+          : <button className="sidebar__add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>)}
         {lib && archivedCount > 0 && (
-          <a className="sb-all" href="#/" onClick={() => setHomeFilter("archived")}><Icon name="archive" /> Archivadas ({archivedCount})</a>
+          <a className="sidebar__all" href="#/" onClick={() => setHomeFilter("archived")}><Icon name="archive" /> Archivadas ({archivedCount})</a>
         )}
       </div>
     </aside>

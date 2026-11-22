@@ -33,10 +33,10 @@ export function UndoStack({ items, onUndo, onExpire }: {
       {items.map(it => {
         const left = Math.min(it.seconds, Math.max(0, Math.ceil((it.until - now) / 1000)));
         return (
-          <div key={it.id} className="undo-bar" style={{ "--undo-ms": `${it.seconds * 1000}ms` } as CSSProperties}>
-            <span className="undo-text">{it.text}</span>
-            <button type="button" className="undo-btn" onClick={() => onUndo(it)}>
-              Deshacer <span className="undo-count" aria-label={`${left} segundos`}>{left}</span>
+          <div key={it.id} className="undo" style={{ "--undo-ms": `${it.seconds * 1000}ms` } as CSSProperties}>
+            <span className="undo__text">{it.text}</span>
+            <button type="button" className="undo__btn" onClick={() => onUndo(it)}>
+              Deshacer <span className="undo__count" aria-label={`${left} segundos`}>{left}</span>
             </button>
           </div>
         );

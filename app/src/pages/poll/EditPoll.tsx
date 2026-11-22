@@ -23,7 +23,7 @@ export function EditPoll({ id }: { id: string }) {
   }, [store, id, admin]);
 
   const back = <p><a href={`#/v/${id}`}><Icon name="back" /> Volver a la votación</a></p>;
-  if (error) return <><div className="empty-box error">{error}</div>{back}</>;
+  if (error) return <><div className="empty-box empty-box--error">{error}</div>{back}</>;
   if (poll === undefined || (admin && !votes)) return <div className="loading">Cargando votación…</div>;
   if (!poll) {
     return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;

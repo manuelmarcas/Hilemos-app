@@ -30,7 +30,7 @@ export function RemindMissing({ poll, T, TB, open, me, url }: {
   const where = inTiebreak ? `el desempate de «${poll.title}»` : `«${poll.title}»`;
   const text = `${missing.length === 1 ? "Falta" : "Faltan"} ${who} por votar en ${where}.`;
   return (
-    <a className="btn small" target="_blank" rel="noopener"
+    <a className="btn btn--small" target="_blank" rel="noopener"
       href={`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`}
       onClick={async e => {
         if (!canShareLink()) return;

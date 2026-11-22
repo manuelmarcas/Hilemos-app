@@ -2,9 +2,9 @@
    «Volver», tarjetas numeradas, ayudas y tarjetas para elegir una opción. */
 
 .page-head{margin-bottom:16px}
-.back{font-size:.9rem;text-decoration:none;color:var(--muted)}
-.back:hover{color:var(--brand)}
-.page-head h1{margin:6px 0 0;font-size:1.75rem;color:var(--brand-strong)}
+.page-head__back{font-size:.9rem;text-decoration:none;color:var(--muted)}
+.page-head__back:hover{color:var(--brand)}
+.page-head__title{margin:6px 0 0;font-size:1.75rem;color:var(--brand-strong)}
 .step{
   background:var(--card);
   border:1px solid var(--line);
@@ -14,8 +14,8 @@
   min-width:0;
 }
 @container view (min-width:560px){.step{padding:20px}}
-.step h2{display:flex;align-items:center;gap:10px;font-size:1.08rem;margin:0 0 12px;color:var(--brand-strong)}
-.num{
+.step__title{display:flex;align-items:center;gap:10px;font-size:1.08rem;margin:0 0 12px;color:var(--brand-strong)}
+.step__num{
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -28,7 +28,7 @@
   flex:none;
 }
 .hint{color:var(--muted);font-size:.88rem;margin:-4px 0 12px;line-height:1.45}
-.hint-after{margin:10px 0 0}
+.hint--after{margin:10px 0 0}
 .type-card{
   display:flex;
   flex-direction:column;
@@ -43,24 +43,24 @@
   color:var(--ink);
 }
 .type-card:hover{border-color:var(--line-strong)}
-.type-card.on{border-color:var(--brand);background:var(--brand-soft)}
-.type-icon{font-size:1.6rem;display:flex}
-.type-name{font-weight:700}
-.type-desc{font-size:.78rem;color:var(--muted);line-height:1.35}
+.type-card--on,.type-card--on:hover{border-color:var(--brand);background:var(--brand-soft)}
+.type-card__icon{font-size:1.6rem;display:flex}
+.type-card__name{font-weight:700}
+.type-card__desc{font-size:.78rem;color:var(--muted);line-height:1.35}
 .back-link{padding:2px 0;text-decoration:none;color:var(--muted);font-size:.9rem}
 .back-link:hover{color:var(--brand)}
 .field-label{display:block;font-size:.92rem;font-weight:700;color:var(--ink);margin:0 0 6px}
-.hint .warn{color:var(--danger);font-weight:600}
+.hint .hint__warn{color:var(--danger);font-weight:600}
 
 /* Política de privacidad y condiciones de uso: texto para leer, con un ancho cómodo */
 .legal{max-width:760px;display:grid;gap:14px}
-.legal .page-head{margin-bottom:2px}
-.legal-date{margin:6px 0 0;color:var(--muted);font-size:.85rem}
-.legal-sec h2{font-size:1.05rem}
-.legal-sec p,.legal-sec li{font-size:.95rem;line-height:1.6;color:var(--ink)}
-.legal-sec p{margin:0 0 10px}
-.legal-sec p:last-child{margin-bottom:0}
-.legal-sec ul{margin:0 0 10px;padding-left:1.2em;display:grid;gap:6px}
-.legal-sec ul:last-child{margin-bottom:0}
-.legal-other{color:var(--muted);font-size:.9rem;margin:4px 0 0}
-.legal-solo .legal{margin:0 auto}
+.legal__head{margin-bottom:2px}
+.legal__date{margin:6px 0 0;color:var(--muted);font-size:.85rem}
+.legal__title{font-size:1.05rem}
+.legal__section p,.legal__section li{font-size:.95rem;line-height:1.6;color:var(--ink)}
+.legal__section p{margin:0 0 10px}
+.legal__section p:last-child{margin-bottom:0}
+.legal__section ul{margin:0 0 10px;padding-left:1.2em;display:grid;gap:6px}
+.legal__section ul:last-child{margin-bottom:0}
+.legal__other{color:var(--muted);font-size:.9rem;margin:4px 0 0}
+.legal--centered{margin:0 auto}

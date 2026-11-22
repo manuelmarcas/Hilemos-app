@@ -4,6 +4,7 @@
 // Si cambia lo que guarda la app (types.ts, store/), hay que revisar también «Qué datos tratamos».
 import type { MouseEvent, ReactNode } from "react";
 import type { LegalDoc } from "../state/route";
+import { bem } from "../lib/util";
 import { Icon } from "../components/Icon";
 
 const UPDATED = "21 de noviembre de 2026";
@@ -15,12 +16,12 @@ const goBack = (e: MouseEvent) => {
 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="step legal-sec"><h2>{title}</h2>{children}</section>;
+  return <section className="step legal__section"><h2 className="step__title legal__title">{title}</h2>{children}</section>;
 }
 
 function Privacy() {
   return <>
-    <p className="sub">
+    <p className="subtitle">
       Hilemos sirve para que un grupo se ponga de acuerdo en una fecha o una opción. Para eso necesita guardar
       algunos datos tuyos. Aquí te contamos cuáles, para qué y qué puedes hacer con ellos.
     </p>
@@ -152,7 +153,7 @@ function Privacy() {
 
 function Terms() {
   return <>
-    <p className="sub">
+    <p className="subtitle">
       Estas condiciones explican cómo se puede usar Hilemos. Al usar la app las aceptas, junto con la{" "}
       <a href="#/privacidad">política de privacidad</a>.
     </p>
@@ -230,17 +231,18 @@ function Terms() {
   </>;
 }
 
-export function Legal({ doc }: { doc: LegalDoc }) {
+/** `centered`: sin el menú de la app (sin sesión), centrada en la página. */
+export function Legal({ doc, centered }: { doc: LegalDoc; centered?: boolean }) {
   const privacy = doc === "privacidad";
   return (
-    <div className="legal">
-      <div className="page-head">
-        <a className="back" href="#/" onClick={goBack}><Icon name="back" /> Volver</a>
-        <h1>{privacy ? "Política de privacidad" : "Condiciones de uso"}</h1>
-        <p className="legal-date">Última actualización: {UPDATED}</p>
+    <div className={bem("legal", { centered })}>
+      <div className="page-head legal__head">
+        <a className="page-head__back" href="#/" onClick={goBack}><Icon name="back" /> Volver</a>
+        <h1 className="page-head__title">{privacy ? "Política de privacidad" : "Condiciones de uso"}</h1>
+        <p className="legal__date">Última actualización: {UPDATED}</p>
       </div>
       {privacy ? <Privacy /> : <Terms />}
-      <p className="legal-other">
+      <p className="legal__other">
         {privacy
           ? <>Consulta también las <a href="#/condiciones">condiciones de uso</a>.</>
           : <>Consulta también la <a href="#/privacidad">política de privacidad</a>.</>}
@@ -251,5 +253,5 @@ export function Legal({ doc }: { doc: LegalDoc }) {
 
 /** Las mismas páginas sin sesión: sin barra superior ni menú, con el mismo ancho de lectura. */
 export function LegalStandalone({ doc }: { doc: LegalDoc }) {
-  return <div id="app" className="legal-solo"><main id="view"><Legal doc={doc} /></main></div>;
+  return <div id="app" className="app"><main id="view" className="app__view"><Legal doc={doc} centered /></main></div>;
 }

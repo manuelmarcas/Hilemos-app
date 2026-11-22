@@ -77,7 +77,7 @@ export type IconName = keyof typeof ICONS;
 /** Icono de la interfaz. Decorativo (aria-hidden): el texto de al lado, o el aria-label del botón, lo nombra. */
 export function Icon({ name, className }: { name: IconName; className?: string }) {
   return (
-    <svg className={className ? `ic ${className}` : "ic"} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg className={className ? `icon ${className}` : "icon"} viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
       {ICONS[name]}
     </svg>

@@ -46,7 +46,7 @@ export function Home() {
   if (library.error) {
     return <>
       <HomeHead />
-      <div id="home-body"><div className="empty-box error">{errMsg(library.error)}</div></div>
+      <div id="home-body"><div className="empty-box empty-box--error">{errMsg(library.error)}</div></div>
     </>;
   }
   if (!lib) {
@@ -117,37 +117,37 @@ export function Home() {
           ? { icon: <Icon name="trash" />, label: "Quitar", tone: "danger", run: () => leave(e.id) }
           : { icon: <Icon name="leave" />, label: "Salir", tone: "danger", run: () => leave(e.id) }}
       >
-      <div className={`poll-card ${gone ? "is-gone" : ""}`}>
-        <div className="pc-row">
-          <a className="pc-link" href={`#/v/${e.id}`}>
-            <span className="pc-icon"><Icon name={type?.icon || "vote"} /></span>
-            <span className="pc-main">
-              <span className="pc-title">{p?.title || e.title || "Votación"}</span>
-              <span className="pc-meta">{meta}</span>
+      <div className={`poll-card ${gone ? "poll-card--gone" : ""}`}>
+        <div className="poll-card__row">
+          <a className="poll-card__link" href={`#/v/${e.id}`}>
+            <span className="poll-card__icon"><Icon name={type?.icon || "vote"} /></span>
+            <span className="poll-card__main">
+              <span className="poll-card__title">{p?.title || e.title || "Votación"}</span>
+              <span className="poll-card__meta">{meta}</span>
             </span>
-            <span className="pc-badges">
-              {gone && <span className="badge gone">Eliminada</span>}
+            <span className="poll-card__badges">
+              {gone && <span className="badge badge--gone">Eliminada</span>}
               {p?.closed && <span className="badge">Cerrada</span>}
-              {p?.anonymous && <span className="badge anon">Anónima</span>}
-              {owner && <span className="badge mine">Tuya</span>}
-              {!owner && p && isAdmin(p, user.uid) && <span className="badge mine">Admin</span>}
+              {p?.anonymous && <span className="badge badge--anon">Anónima</span>}
+              {owner && <span className="badge badge--mine">Tuya</span>}
+              {!owner && p && isAdmin(p, user.uid) && <span className="badge badge--mine">Admin</span>}
             </span>
           </a>
-          <button className="pc-more" aria-expanded={open} aria-label="Más opciones"
+          <button className="poll-card__more" aria-expanded={open} aria-label="Más opciones"
             onClick={() => { setStatus(""); setExpanded(open ? null : e.id); }}><Icon name="more" /></button>
         </div>
         {open && (
-          <div className="pc-actions">
-            <label>Grupo <GroupSelect className="input small" groups={lib.groups} value={e.groupId || ""}
+          <div className="poll-card__actions">
+            <label className="poll-card__field">Grupo <GroupSelect className="input input--small poll-card__select" groups={lib.groups} value={e.groupId || ""}
               onChange={v => run(() => moveTo(e.id, v || null))} /></label>
             {!gone && (
-              <button className="btn small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
+              <button className="btn btn--small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
-            {p && <button className="btn small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar</button>}
-            <button className="btn small" onClick={() => { setExpanded(null); toggleArchive(); }}>
+            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar</button>}
+            <button className="btn btn--small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>
-            <button className="btn small danger" onClick={() => leave(e.id)}>
+            <button className="btn btn--small btn--danger" onClick={() => leave(e.id)}>
               {gone ? <><Icon name="trash" /> Quitar de mi lista</> : <><Icon name="leave" /> Salir de la votación</>}
             </button>
           </div>
@@ -158,9 +158,9 @@ export function Home() {
   };
 
   const chip = (f: string, label: ReactNode, n: number) => (
-    <button key={f} className={`chip ${filter === f ? "on" : ""}`} aria-pressed={filter === f}
+    <button key={f} className={`chip groups__chip ${filter === f ? "chip--on" : ""}`} aria-pressed={filter === f}
       onClick={() => { setStatus(""); setFilter(f); setForm(null); }}>
-      {label} <span className="n">{n}</span>
+      {label} <span className="chip__count">{n}</span>
     </button>
   );
 
@@ -176,8 +176,8 @@ export function Home() {
       .concat([{ key: "_none", title: "Sin grupo", items: inGroup(null) }])
       .filter(s => s.items.length);
     list = sections.map(s => (
-      <section key={s.key} className="lib-sec">
-        <h2>{s.title} <span className="muted">({s.items.length})</span></h2>
+      <section key={s.key} className="library__section">
+        <h2 className="library__title">{s.title} <span className="muted">({s.items.length})</span></h2>
         <div className="poll-list">{s.items.map(card)}</div>
       </section>
     ));
@@ -198,49 +198,49 @@ export function Home() {
             <button className="link-btn back-link" onClick={() => { setStatus(""); setFilter("all"); }}>
               <Icon name="back" /> Volver a mis votaciones
             </button>
-            <h2><Icon name="archive" /> Archivadas <span className="muted">({archived.length})</span></h2>
+            <h2 className="archived-head__title"><Icon name="archive" /> Archivadas <span className="muted">({archived.length})</span></h2>
           </div>
         ) : (
-        <div className="group-bar">
-          <div className="group-chips">
+        <div className="groups">
+          <div className="groups__chips">
             {chip("all", "Todas", all.length)}
             {groups.map(gr => chip(gr.id, gr.name, inGroup(gr.id).length))}
             {groups.length > 0 && chip("none", "Sin grupo", inGroup(null).length)}
-            <button className="chip ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>
+            <button className="chip chip--ghost" onClick={() => { setStatus(""); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>
           </div>
           {form && (
             <form className="inline-form" onSubmit={submit}>
-              <input ref={nameRef} className="input" maxLength={40} placeholder="Nombre del grupo (ej.: Familia, Trabajo…)"
+              <input ref={nameRef} className="input inline-form__input" maxLength={40} placeholder="Nombre del grupo (ej.: Familia, Trabajo…)"
                 autoComplete="off" value={form.value} onChange={e => setForm(f => f && { ...f, value: e.target.value })} />
-              <button className="btn primary" type="submit">{form.mode === "new" ? "Crear grupo" : "Guardar"}</button>
+              <button className="btn btn--primary" type="submit">{form.mode === "new" ? "Crear grupo" : "Guardar"}</button>
               <button className="btn" type="button" onClick={() => setForm(null)}>Cancelar</button>
             </form>
           )}
           {g && !form && (
-            <div className="group-tools">
+            <div className="groups__tools">
               <strong>{g.name}</strong>
               <button className="link-btn" onClick={() => { setStatus(""); setForm({ mode: "rename", gid: filter, value: g.name || "" }); }}>Renombrar</button>
-              <button className="link-btn danger" onClick={removeGroup}>Eliminar grupo</button>
+              <button className="link-btn link-btn--danger" onClick={removeGroup}>Eliminar grupo</button>
             </div>
           )}
         </div>
         )}
         <div className="status" role="alert">{status}</div>
         {filter === "archived" && archived.length > 0 && (
-          <p className="archived-note">Las archivadas no aparecen en el panel ni en el menú, pero conservan su grupo. Desarchívalas para recuperarlas.</p>
+          <p className="library__archived-note">Las archivadas no aparecen en el panel ni en el menú, pero conservan su grupo. Desarchívalas para recuperarlas.</p>
         )}
         {list}
         {/* Las archivadas no son un grupo: van aparte, al final de la lista. */}
         {filter !== "archived" && archived.length > 0 && (
           <button className="archived-row" onClick={() => { setStatus(""); setFilter("archived"); setForm(null); }}>
             <Icon name="archive" />
-            <span className="archived-row-label">Archivadas</span>
-            <span className="n">{archived.length}</span>
-            <Icon name="back" className="archived-row-go" />
+            <span className="archived-row__label">Archivadas</span>
+            <span className="archived-row__count">{archived.length}</span>
+            <Icon name="back" className="archived-row__go" />
           </button>
         )}
         {(filter === "archived" ? archived.length : all.length) > 0 && (
-          <p className="swipe-hint">
+          <p className="library__swipe-hint">
             Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para salir de ella.
           </p>
         )}
@@ -251,12 +251,12 @@ export function Home() {
 
 function HomeHead() {
   return (
-    <div className="home-head">
+    <div className="home__head">
       <div>
-        <h1>Mis votaciones</h1>
-        <p className="sub">Las que has creado y aquellas en las que participas. Organízalas en grupos.</p>
+        <h1 className="home__title">Mis votaciones</h1>
+        <p className="subtitle">Las que has creado y aquellas en las que participas. Organízalas en grupos.</p>
       </div>
-      <a className="btn primary big" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
+      <a className="btn btn--primary btn--big" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
     </div>
   );
 }

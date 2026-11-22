@@ -27,7 +27,7 @@ function DemoBanner() {
   return (
     <div id="demo-banner" className="demo-banner">
       <strong>Modo demo:</strong> los datos se guardan solo en este navegador. Abre otra pestaña y entra con otro nombre para simular a otra persona.
-      {exit && <a href={exit}>Salir del modo demo</a>}
+      {exit && <a className="demo-banner__link" href={exit}>Salir del modo demo</a>}
     </div>
   );
 }
@@ -83,7 +83,7 @@ export function App() {
   }, []);
 
   let content;
-  if (bootError) content = <div className="boot"><div className="empty-box error">No se pudo cargar la aplicación: {bootError}</div></div>;
+  if (bootError) content = <div className="boot"><div className="empty-box empty-box--error">No se pudo cargar la aplicación: {bootError}</div></div>;
   else if (!store || user === undefined) content = <div className="boot">Cargando…</div>;
   else if (emailLink) {
     content = <EmailLinkFinish store={store} url={emailLink} onDone={() => setEmailLink(null)} />;

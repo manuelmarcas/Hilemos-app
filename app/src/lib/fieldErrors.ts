@@ -50,20 +50,20 @@ function show(el: Field) {
   b.className = "field-error";
   b.id = "field-error";
   b.setAttribute("role", "alert");
-  b.innerHTML = '<span class="field-error-ic" aria-hidden="true">!</span>';
+  b.innerHTML = '<span class="field-error__icon" aria-hidden="true">!</span>';
   b.append(messageFor(el));
   // Dentro de un diálogo modal tiene que ir en el diálogo: lo de fuera queda por debajo.
   (el.closest("dialog") || document.body).append(b);
   place(el, b);
   bubble = b;
   bubbleFor = el;
-  el.classList.add("field-invalid");
+  el.classList.add("input--invalid");
   el.setAttribute("aria-invalid", "true");
   el.setAttribute("aria-describedby", b.id);
 }
 
 function clear(el: Field) {
-  el.classList.remove("field-invalid");
+  el.classList.remove("input--invalid");
   el.removeAttribute("aria-invalid");
   if (el.getAttribute("aria-describedby") === "field-error") el.removeAttribute("aria-describedby");
   hideBubble();
@@ -74,7 +74,7 @@ export function installFieldErrors() {
     const el = e.target as Field;
     if (!(el instanceof HTMLElement)) return;
     e.preventDefault(); // sin burbuja del navegador
-    el.classList.add("field-invalid");
+    el.classList.add("input--invalid");
     // Al enviar un formulario el navegador avisa de todos los campos mal: solo se enseña el primero.
     if (shownThisTick) return;
     shownThisTick = true;
@@ -85,7 +85,7 @@ export function installFieldErrors() {
   // Al escribir en el campo se quita el aviso; al salir de él, la burbuja (el borde rojo sigue hasta que se escribe).
   document.addEventListener("input", e => {
     const el = e.target as Field;
-    if (el instanceof HTMLElement && el.classList.contains("field-invalid")) clear(el);
+    if (el instanceof HTMLElement && el.classList.contains("input--invalid")) clear(el);
   }, true);
   document.addEventListener("focusout", hideBubble, true);
   window.addEventListener("resize", follow);

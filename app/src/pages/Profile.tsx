@@ -187,41 +187,41 @@ export function Profile() {
   return (
     <>
       <div className="page-head">
-        <a className="back" href="#/"><Icon name="back" /> Volver</a>
-        <h1>Tu perfil</h1>
+        <a className="page-head__back" href="#/"><Icon name="back" /> Volver</a>
+        <h1 className="page-head__title">Tu perfil</h1>
       </div>
       <div className="profile">
         <section className="step">
-          <h2>Imagen de perfil</h2>
-          <div className="avatar-edit">
-            <div><Avatar name={name} photo={photo} size={96} seed={user.uid} /></div>
-            <div className="avatar-btns">
+          <h2 className="step__title">Imagen de perfil</h2>
+          <div className="profile__avatar">
+            <div><Avatar name={name} photo={photo} size={96} seed={user.uid} className="profile__avatar-img" /></div>
+            <div className="profile__avatar-btns">
               <button className="btn" onClick={() => fileRef.current?.click()}><Icon name="camera" /> Subir imagen</button>
               {user.googlePhoto && <button className="btn" onClick={() => setPhoto(user.googlePhoto)}>Usar la foto de Google</button>}
-              <button className="btn danger" onClick={() => setPhoto("")}>Quitar imagen</button>
+              <button className="btn btn--danger" onClick={() => setPhoto("")}>Quitar imagen</button>
               <input ref={fileRef} type="file" accept="image/*" hidden
                 onChange={e => { const f = e.target.files?.[0]; e.target.value = ""; onFile(f); }} />
             </div>
           </div>
-          <p className="hint hint-after">Se recorta en cuadrado y se reduce automáticamente. Sin imagen, se muestra tu inicial.</p>
+          <p className="hint hint--after">Se recorta en cuadrado y se reduce automáticamente. Sin imagen, se muestra tu inicial.</p>
         </section>
         <section className="step">
-          <h2><label htmlFor="pf-name">Nombre visible</label></h2>
-          <input ref={nameRef} id="pf-name" className="input big" maxLength={40} value={name} autoComplete="nickname"
+          <h2 className="step__title"><label className="step__label" htmlFor="pf-name">Nombre visible</label></h2>
+          <input ref={nameRef} id="pf-name" className="input input--big" maxLength={40} value={name} autoComplete="nickname"
             onChange={e => setName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); save(); } }} />
-          <p className="hint hint-after">Es el nombre que verán los demás en las votaciones y en la tabla de participantes.</p>
+          <p className="hint hint--after">Es el nombre que verán los demás en las votaciones y en la tabla de participantes.</p>
         </section>
-        <div className="profile-bar">
-          <button className="btn primary big" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
+        <div className="profile__bar">
+          <button className="btn btn--primary btn--big" disabled={busy} onClick={save}>{busy ? "Guardando…" : "Guardar cambios"}</button>
           <div className="status" role="alert">{status}</div>
         </div>
         {/* Correo con el que se entra (Google o enlace al correo): solo para verlo, no se cambia aquí. */}
         {!user.anon && user.email && store.mode === "firebase" && (
           <section className="step">
-            <h2><label htmlFor="pf-email-input">Correo de tu cuenta</label></h2>
+            <h2 className="step__title"><label className="step__label" htmlFor="pf-email-input">Correo de tu cuenta</label></h2>
             <input id="pf-email-input" className="input" type="email" value={user.email} disabled readOnly />
-            <p className="hint hint-after">
+            <p className="hint hint--after">
               Es con el que entras, con Google o con «Entrar con tu correo». No se puede cambiar. Si te invitan a una
               votación privada, tiene que ser con este correo.
             </p>
@@ -229,56 +229,56 @@ export function Profile() {
         )}
         {user.anon && store.mode === "firebase" && (
           <section className="step">
-            <h2>Tu cuenta</h2>
-            <h3 className="pref-label">Clave de acceso</h3>
+            <h2 className="step__title">Tu cuenta</h2>
+            <h3 className="profile__label">Clave de acceso</h3>
             <p className="hint">
               Has entrado sin registrarte. Para volver a entrar con esta cuenta si cierras sesión, desinstalas la app o
               cambias de móvil, necesitas tu clave de acceso. Por seguridad no se puede volver a ver: si no la
               tienes guardada, crea una nueva (la anterior dejará de valer).
             </p>
             <button className="btn" onClick={newKey}><Icon name="key" /> Crear una clave nueva</button>
-            <h3 className="pref-label pf-account-or">O guárdala con tu correo o con Google</h3>
+            <h3 className="profile__label profile__label--gap">O guárdala con tu correo o con Google</h3>
             <p className="hint">
               Así no necesitas clave: entras con tu correo o con Google en cualquier sitio, sin perder nada de lo que ya
               has votado.
             </p>
             {mailSent ? (
-              <p className="hint pf-mail-sent" role="status">
+              <p className="hint profile__mail-sent" role="status">
                 <Icon name="mail" /> Te hemos mandado un enlace a <strong>{mailSent}</strong>. Ábrelo <strong>en este
                 mismo dispositivo</strong> para guardar tu cuenta en ese correo.{" "}
                 <button className="link-btn" onClick={() => setMailSent("")}>Usar otro correo</button>
               </p>
             ) : (
-              <form className="pf-mail" onSubmit={sendMail}>
-                <input className="input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
+              <form className="profile__mail" onSubmit={sendMail}>
+                <input className="input profile__mail-input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
                   required data-error="Escribe tu correo para que te mandemos el enlace."
                   value={mail} onChange={e => setMail(e.target.value)} />
                 <button className="btn" type="submit" disabled={mailBusy}><Icon name="mail" /> {mailBusy ? "Enviando…" : "Enviarme el enlace"}</button>
               </form>
             )}
             {mailErr && <div className="status" role="alert">{mailErr}</div>}
-            <button className="btn pf-google" disabled={linking} onClick={linkGoogle}>
+            <button className="btn profile__google" disabled={linking} onClick={linkGoogle}>
               {linking ? "Guardando…" : "Guardar en mi cuenta de Google"}
             </button>
           </section>
         )}
         <section className="step">
-          <h2>Preferencias</h2>
-          <h3 className="pref-label" id="pf-theme-label">Tema</h3>
+          <h2 className="step__title">Preferencias</h2>
+          <h3 className="profile__label" id="pf-theme-label">Tema</h3>
           <div className="theme-pick" role="group" aria-labelledby="pf-theme-label">
             {THEMES.map(([id, icon, label, desc]) => (
-              <button key={id} type="button" className={`type-card ${theme === id ? "on" : ""}`} aria-pressed={theme === id}
+              <button key={id} type="button" className={`type-card theme-pick__card ${theme === id ? "type-card--on" : ""}`} aria-pressed={theme === id}
                 onClick={() => { setThemePref(id); setTheme(id); }}>
-                <span className="type-icon"><Icon name={icon} /></span>
-                <span className="type-name">{label}</span>
-                <span className="type-desc">{desc}</span>
+                <span className="type-card__icon theme-pick__icon"><Icon name={icon} /></span>
+                <span className="type-card__name">{label}</span>
+                <span className="type-card__desc">{desc}</span>
               </button>
             ))}
           </div>
-          <p className="hint hint-after">Se aplica al momento y se recuerda en este dispositivo.</p>
+          <p className="hint hint--after">Se aplica al momento y se recuerda en este dispositivo.</p>
           {push && push !== "unconfigured" && (push !== "unsupported" || (isIos() && !isStandalone())) && (
-            <div className="pref-block">
-              <h3 className="pref-label" id="pf-notify-label">Avisos</h3>
+            <div className="profile__block">
+              <h3 className="profile__label" id="pf-notify-label">Avisos</h3>
               {push === "unsupported" && (
                 <p className="hint">
                   Para recibir avisos en el iPhone, añade Hilemos a tu pantalla de inicio: pulsa «Compartir» en
@@ -300,10 +300,10 @@ export function Profile() {
                 </button>
               </>}
               {push === "on" && (
-                <div className="notify-opts" role="group" aria-labelledby="pf-notify-label">
+                <div className="profile__notify" role="group" aria-labelledby="pf-notify-label">
                   {NOTIFY.map(([key, label]) => (
-                    <label key={key} className="dlg-check">
-                      <input type="checkbox" checked={notify[key] !== false} onChange={() => toggleNotify(key)} />
+                    <label key={key} className="check profile__notify-item">
+                      <input className="check__box" type="checkbox" checked={notify[key] !== false} onChange={() => toggleNotify(key)} />
                       {label}
                     </label>
                   ))}
@@ -313,22 +313,22 @@ export function Profile() {
           )}
         </section>
         <section className="step">
-          <h2>Privacidad y condiciones</h2>
+          <h2 className="step__title">Privacidad y condiciones</h2>
           <p className="hint">Qué datos guarda Hilemos, para qué y qué puedes hacer con ellos, y las normas de uso de la app.</p>
-          <div className="pf-legal">
+          <div className="profile__legal">
             <a className="btn" href="#/privacidad"><Icon name="lock" /> Política de privacidad</a>
             <a className="btn" href="#/condiciones"><Icon name="vote" /> Condiciones de uso</a>
           </div>
         </section>
-        <section className="step pf-danger">
-          <h2>Eliminar mi cuenta</h2>
+        <section className="step step--danger">
+          <h2 className="step__title">Eliminar mi cuenta</h2>
           <p className="hint">
             Se borrarán tu perfil, tu lista de votaciones y tus grupos. En las votaciones en las que has participado, tus
             votos y mensajes se quedan, pero con un nombre sin dueño (como «Un suspiro») y sin tu foto. Las que creaste
             pasan a un administrador o a otro participante al azar; si no queda nadie, se borran. Si después vuelves a
             entrar, aunque sea con el mismo correo, será con una cuenta nueva, sin nada de lo anterior.
           </p>
-          <button className="btn danger" disabled={deleting} onClick={deleteAccount}>
+          <button className="btn btn--danger" disabled={deleting} onClick={deleteAccount}>
             <Icon name="trash" /> {deleting ? "Eliminando…" : "Eliminar mi cuenta"}
           </button>
           {delMsg && <div className="status" role="alert">{delMsg}</div>}

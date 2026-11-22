@@ -57,17 +57,18 @@ export function Shell() {
   }, [path]);
 
   useEffect(() => {
-    document.body.classList.toggle("with-sidebar", withSidebar);
-    return () => document.body.classList.remove("with-sidebar");
+    document.body.classList.toggle("page--with-sidebar", withSidebar);
+    return () => document.body.classList.remove("page--with-sidebar");
   }, [withSidebar]);
 
   // En móvil el menú lateral es un cajón que se abre con ☰.
   useEffect(() => {
-    document.body.classList.toggle("sb-open", drawer);
-    if (drawer) document.querySelector<HTMLElement>("#sidebar .sb-new")?.focus();
+    document.body.classList.toggle("page--drawer-open", drawer);
+    // Al abrirse, el cajón aún está oculto (visibility:hidden) y no admite el foco: se lo da en el siguiente fotograma.
+    const raf = drawer ? requestAnimationFrame(() => document.querySelector<HTMLElement>("#sidebar .sidebar__new")?.focus()) : 0;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && drawer) setDrawer(false); };
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("sb-open"); };
+    return () => { document.removeEventListener("keydown", onKey); document.body.classList.remove("page--drawer-open"); cancelAnimationFrame(raf); };
   }, [drawer]);
 
   let page = null;
@@ -81,29 +82,29 @@ export function Shell() {
   }
 
   return (
-    <div id="app">
+    <div id="app" className="app">
       <header className="topbar">
-        <div className="topbar-left">
-          <button className="sb-toggle" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
+        <div className="topbar__left">
+          <button className="topbar__drawer" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
             aria-expanded={drawer} onClick={() => setDrawer(d => !d)}><Icon name="menu" /></button>
           <a className="brand" href="#/" aria-label="Hilemos: mis votaciones">
-            <LogoMark className="brand-logo" />
-            <span className="brand-name" aria-hidden="true"><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></span>
+            <LogoMark className="brand__logo" />
+            <span className="brand__name" aria-hidden="true"><span className="wordmark__hile">Hile</span><span className="wordmark__mos">mos</span></span>
           </a>
         </div>
-        <div className="who">
-          <a className="me" href="#/perfil" data-tip="Tu perfil" aria-label={`Tu perfil: ${user.name}`}>
-            <span id="me-avatar" className="me-avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
-            <span id="who-name">{user.name}</span>
+        <div className="topbar__who">
+          <a className="topbar__me" href="#/perfil" data-tip="Tu perfil" aria-label={`Tu perfil: ${user.name}`}>
+            <span id="me-avatar" className="topbar__avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
+            <span id="who-name" className="topbar__name">{user.name}</span>
           </a>
-          <button className="logout-btn" onClick={logout}>Salir</button>
+          <button className="topbar__logout" onClick={logout}>Salir</button>
         </div>
       </header>
-      <div className="layout">
+      <div className="app__layout">
         <Sidebar activeId={route.name === "poll" || route.name === "edit" ? route.id : null} onNavigate={() => setDrawer(false)} />
-        <main id="view" key={path}>{page}</main>
+        <main id="view" className="app__view" key={path}>{page}</main>
       </div>
-      <div className="sb-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />
+      <div className="sidebar-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />
       <AccessKeyDialog />
       <NameDialog />
     </div>

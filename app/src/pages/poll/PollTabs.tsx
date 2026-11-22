@@ -25,18 +25,18 @@ export function PollTabs({ tab, setTab, counts, unread }: {
     refs.current[j]?.focus();
   }
   return (
-    <div className="ptabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
+    <div className="poll-tabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
       {TABS.map((t, i) => {
         const on = tab === t.id, n = counts[t.id];
         const badge = t.id === "chat" && unread > 0 ? unread : 0;
         return (
           <button key={t.id} ref={el => { refs.current[i] = el; }} type="button" role="tab" id={`ptabbtn-${t.id}`}
-            className="ptab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}
+            className="poll-tabs__tab" aria-selected={on} aria-controls={`ptab-${t.id}`} tabIndex={on ? 0 : -1} onClick={() => setTab(t.id)}
             aria-label={badge ? `${t.label}: ${plural(badge, ["mensaje sin leer", "mensajes sin leer"])}` : undefined}>
-            <span className={badge > 0 ? "ptab-ico has-badge" : "ptab-ico"} aria-hidden="true">
-              <Icon name={t.icon} />{badge > 0 && <span className="ptab-badge">{badge > 99 ? "99+" : badge}</span>}
+            <span className={badge > 0 ? "poll-tabs__icon poll-tabs__icon--badge" : "poll-tabs__icon"} aria-hidden="true">
+              <Icon name={t.icon} />{badge > 0 && <span className="poll-tabs__badge">{badge > 99 ? "99+" : badge}</span>}
             </span>
-            <span className="ptab-label">{t.label}{n != null && <span className="n">{n}</span>}</span>
+            <span className="poll-tabs__label">{t.label}{n != null && <span className="poll-tabs__count">{n}</span>}</span>
           </button>
         );
       })}

@@ -69,20 +69,20 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
 
   return (
     <section className="chat">
-      <p className="chat-note">
+      <p className="chat__note">
         {poll.anonymous
           ? "Habla con el grupo aquí mismo. Los votos son anónimos, pero en el chat se ve tu nombre."
           : "Habla con el grupo aquí mismo, sin salir de la votación."}
       </p>
-      <div className="chat-card">
-        <div className="chat-list" ref={list} onScroll={() => {
+      <div className="chat__card">
+        <div className="chat__list" ref={list} onScroll={() => {
           const el = list.current;
           if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
         }}>
           {msgs === null
-            ? <p className="muted">Cargando mensajes…</p>
+            ? <p className="muted chat__empty">Cargando mensajes…</p>
             : !msgs.length
-              ? <p className="muted">Todavía no hay mensajes. Escribe el primero.</p>
+              ? <p className="muted chat__empty">Todavía no hay mensajes. Escribe el primero.</p>
               : msgs.map(m => {
                 const own = m.uid === user.uid;
                 // Quien sigue en la votación sale con el nombre de su voto (el de ahora); quien se fue, con el que
@@ -92,38 +92,38 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
                 if (m.sys) {
                   // Aviso de un cambio: «Ana ha añadido el martes 16 de diciembre».
                   return (
-                    <div key={m.id} className="chat-sys">
-                      <Icon name="edit" />
+                    <div key={m.id} className="chat__sys">
+                      <Icon name="edit" className="chat__sys-icon" />
                       <p><strong>{own ? user.name : name}</strong> {m.text}</p>
-                      <span className="chat-when">{fmtWhen(m.at)}</span>
+                      <span className="chat__when">{fmtWhen(m.at)}</span>
                     </div>
                   );
                 }
                 return (
-                  <div key={m.id} className={cls("chat-msg", own && "own")}>
+                  <div key={m.id} className={cls("chat__msg", own && "chat__msg--own")}>
                     <Avatar name={name} photo={own ? user.photo : v?.photo} size={28} seed={m.uid} />
-                    <div className="chat-body">
-                      <div className="chat-head">
-                        <span className="chat-name">{own ? "Tú" : name}</span>
-                        <span className="chat-when">{fmtWhen(m.at)}</span>
+                    <div className="chat__body">
+                      <div className="chat__head">
+                        <span className="chat__name">{own ? "Tú" : name}</span>
+                        <span className="chat__when">{fmtWhen(m.at)}</span>
                       </div>
-                      <p className="chat-text">{m.text}</p>
+                      <p className="chat__text">{m.text}</p>
                     </div>
                   </div>
                 );
               })}
         </div>
         {canWrite ? (
-          <form className="chat-form" onSubmit={send}>
-            <div className="emoji-field">
-              <input ref={field} className="input" maxLength={MAX_CHAT} placeholder="Escribe un mensaje" autoComplete="off"
+          <form className="chat__form" onSubmit={send}>
+            <div className="emoji-field chat__field">
+              <input ref={field} className="input emoji-field__input" maxLength={MAX_CHAT} placeholder="Escribe un mensaje" autoComplete="off"
                 aria-label="Mensaje" value={text} onChange={e => setText(e.target.value)} />
               <EmojiButton field={() => field.current} setValue={setText} />
             </div>
-            <button className="btn" type="submit" disabled={busy || !text.trim()}>{busy ? "Enviando…" : "Enviar"}</button>
+            <button className="btn chat__send" type="submit" disabled={busy || !text.trim()}>{busy ? "Enviando…" : "Enviar"}</button>
           </form>
         ) : (
-          <p className="chat-note chat-closed">Entra en la votación para escribir en el chat.</p>
+          <p className="chat__note chat__closed">Entra en la votación para escribir en el chat.</p>
         )}
       </div>
       <div className="status" role="alert">{status}</div>

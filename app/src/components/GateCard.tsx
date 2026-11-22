@@ -5,10 +5,10 @@ import { LogoMark } from "./LogoMark";
 /** `footer`: debajo de la tarjeta (en la entrada, los enlaces a la privacidad y las condiciones). */
 export function GateCard({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
-    <div id="gate">
-      <div className="gate-card">
-        <LogoMark className="gate-logo" size={72} />
-        <h1><span className="wm-hile">Hile</span><span className="wm-mos">mos</span></h1>
+    <div id="gate" className="gate">
+      <div className="gate__card">
+        <LogoMark className="gate__logo" size={72} />
+        <h1 className="gate__title"><span className="wordmark__hile">Hile</span><span className="wordmark__mos">mos</span></h1>
         {children}
       </div>
       {footer}

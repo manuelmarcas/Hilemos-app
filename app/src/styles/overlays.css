@@ -19,7 +19,7 @@
   text-align:center;
   box-shadow:var(--shadow-pop);
 }
-.toast.show{opacity:1;transform:translate(-50%, 0)}
+.toast--show{opacity:1;transform:translate(-50%, 0)}
 /* Tooltips propios (components/Tooltip.tsx, elementos con data-tip): misma pastilla oscura que el aviso flotante,
    con una flecha hacia el elemento. Sustituyen a los del navegador (title). */
 .tooltip{
@@ -41,8 +41,8 @@
   transform:translateY(3px);
   transition:opacity .12s, transform .12s;
 }
-.tooltip.below{transform:translateY(-3px)}
-.tooltip.on{opacity:1;transform:none}
+.tooltip--below{transform:translateY(-3px)}
+.tooltip--on{opacity:1;transform:none}
 .tooltip::after{
   content:"";
   position:absolute;
@@ -52,9 +52,9 @@
   border:5px solid transparent;
   border-top-color:var(--ink);
 }
-.tooltip.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
+.tooltip--below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.tooltip{transition:none;transform:none}}
-.dlg{
+.dialog{
   border:none;
   border-radius:18px;
   padding:22px 20px;
@@ -64,10 +64,10 @@
   background:var(--card);
   color:var(--ink);
 }
-.dlg::backdrop{background:rgba(42,31,39,.45)}
-.dlg h2{margin:0;font-size:1.2rem;color:var(--brand-strong);padding-right:30px}
-.dlg-sub{margin:4px 0 14px;color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
-.dlg-x{
+.dialog::backdrop{background:rgba(42,31,39,.45)}
+.dialog__title{margin:0;font-size:1.2rem;color:var(--brand-strong);padding-right:30px}
+.dialog__sub{margin:4px 0 14px;color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
+.dialog__close{
   position:absolute;
   top:12px;
   right:12px;
@@ -79,9 +79,9 @@
   line-height:1;
   cursor:pointer;
 }
-.share-link{display:flex;gap:8px}
-.share-link .input{font-size:.85rem;min-width:0}
-.qr-box{
+.share__link{display:flex;gap:8px}
+.share__input{font-size:.85rem;min-width:0}
+.share__qr{
   display:flex;
   align-items:center;
   justify-content:center;
@@ -91,14 +91,14 @@
   border-radius:12px;
   padding:12px;
 }
-.qr-box img{width:200px;height:200px;image-rendering:pixelated;border-radius:6px}
-.share-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.dlg-note{font-size:.8rem;color:var(--muted);margin:14px 0 0;line-height:1.45;text-align:center}
-.dlg-confirm{width:min(400px, calc(100% - 32px))}
-.dlg-confirm h2{padding-right:0;font-size:1.12rem;line-height:1.35;overflow-wrap:anywhere}
-.dlg-msg{margin:10px 0 0;color:var(--muted);line-height:1.5;font-size:.94rem}
-.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
-@media (max-width:420px){.dlg-actions .btn{flex:1}}
+.share__qr-img{width:200px;height:200px;image-rendering:pixelated;border-radius:6px}
+.share__btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.dialog__note{font-size:.8rem;color:var(--muted);margin:14px 0 0;line-height:1.45;text-align:center}
+.dialog--confirm{width:min(400px, calc(100% - 32px))}
+.dialog--confirm .dialog__title{padding-right:0;font-size:1.12rem;line-height:1.35;overflow-wrap:anywhere}
+.dialog__msg{margin:10px 0 0;color:var(--muted);line-height:1.5;font-size:.94rem}
+.dialog__actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;flex-wrap:wrap}
+@media (max-width:420px){.dialog__btn{flex:1}}
 /* Avisos con "Deshacer" y cuenta atrás */
 .undo-stack{
   position:fixed;left:50%;transform:translateX(-50%);
@@ -107,7 +107,7 @@
   display:grid;gap:8px;
   width:min(460px, calc(100% - 32px));
 }
-.undo-bar{
+.undo{
   position:relative;overflow:hidden;
   display:flex;align-items:center;gap:12px;
   padding:10px 10px 10px 16px;
@@ -117,14 +117,14 @@
   font-size:.9rem;
   animation:undo-in .2s ease;
 }
-.undo-bar::after{ /* barra que se va vaciando */
+.undo::after{ /* barra que se va vaciando */
   content:"";position:absolute;left:0;bottom:0;height:3px;width:100%;
   background:var(--c0);
   transform-origin:left;
   animation:undo-progress var(--undo-ms) linear forwards;
 }
-.undo-text{flex:1;min-width:0;line-height:1.35}
-.undo-btn{
+.undo__text{flex:1;min-width:0;line-height:1.35}
+.undo__btn{
   flex:none;
   display:inline-flex;align-items:center;gap:8px;
   border:none;border-radius:8px;
@@ -134,8 +134,8 @@
   font:inherit;font-weight:700;
   cursor:pointer;
 }
-.undo-btn:hover{background:color-mix(in srgb, var(--bg) 26%, transparent)}
-.undo-count{
+.undo__btn:hover{background:color-mix(in srgb, var(--bg) 26%, transparent)}
+.undo__count{
   display:inline-grid;place-items:center;
   min-width:22px;height:22px;border-radius:50%;
   background:var(--bg);color:var(--ink);
@@ -143,15 +143,15 @@
 }
 @keyframes undo-progress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes undo-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.undo-bar{animation:none}}
-.toast.above-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
+@media (prefers-reduced-motion:reduce){.undo{animation:none}}
+.toast--above-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
 /* Casilla con su texto (en diálogos y en los avisos del perfil) */
-.dlg-check{display:flex;align-items:center;gap:10px;margin:4px 0 18px;font-size:.9rem;cursor:pointer}
-.dlg-check input{width:18px;height:18px;accent-color:var(--brand);flex:none}
+.check{display:flex;align-items:center;gap:10px;margin:4px 0 18px;font-size:.9rem;cursor:pointer}
+.check__box{width:18px;height:18px;accent-color:var(--brand);flex:none}
 /* Nombre al entrar por primera vez con el enlace del correo (NameDialog) */
-.name-dlg-input{margin-top:16px}
+.dialog__field{margin-top:16px}
 /* Clave de acceso recién creada (AccessKeyDialog) */
-.dlg-key h2{display:flex;align-items:center;gap:8px}
+.dialog--key .dialog__title{display:flex;align-items:center;gap:8px}
 .key-box{
   margin:16px 0 10px;padding:14px 12px;
   border:2px dashed color-mix(in srgb,var(--brand) 45%,transparent);border-radius:12px;
@@ -159,6 +159,6 @@
   font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:clamp(1.05rem,5vw,1.35rem);font-weight:700;
   letter-spacing:.08em;text-align:center;user-select:all;overflow-wrap:anywhere;
 }
-.key-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.key-check{font-weight:600}
-.dlg-key .dlg-actions{margin-top:14px}
+.dialog__key-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.dialog__key-check{font-weight:600}
+.dialog--key .dialog__actions{margin-top:14px}

@@ -14,21 +14,21 @@ export function CalendarMenu({ cal }: { cal: CalEvent }) {
   useMenuKeys(open, setOpen, wrap, btn);
   const label = <><Icon name="calendarAdd" /> Añadir al calendario</>;
   if (isAndroid()) {
-    return <a className="btn small" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">{label}</a>;
+    return <a className="btn btn--small" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer">{label}</a>;
   }
-  if (isIos()) return <button className="btn small" onClick={() => downloadIcs(cal)}>{label}</button>;
+  if (isIos()) return <button className="btn btn--small" onClick={() => downloadIcs(cal)}>{label}</button>;
   return (
-    <div className="pm" ref={wrap}>
-      <button ref={btn} className="btn small" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        {label} <span className="pm-caret" aria-hidden="true">▾</span>
+    <div className="menu" ref={wrap}>
+      <button ref={btn} className="btn btn--small" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        {label} <span className="menu__caret" aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="pm-menu start" role="menu" aria-label="Añadir al calendario">
-          <a role="menuitem" className="pm-item" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer"
+        <div className="menu__list menu__list--start" role="menu" aria-label="Añadir al calendario">
+          <a role="menuitem" className="menu__item" href={googleCalendarUrl(cal)} target="_blank" rel="noopener noreferrer"
             onClick={() => setOpen(false)}>
             <Icon name="globe" />Google Calendar
           </a>
-          <button role="menuitem" className="pm-item" onClick={() => { setOpen(false); downloadIcs(cal); }}>
+          <button role="menuitem" className="menu__item" onClick={() => { setOpen(false); downloadIcs(cal); }}>
             <Icon name="download" />Apple, Outlook y otros (.ics)
           </button>
         </div>
@@ -54,35 +54,35 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
   const pick = (fn: () => void) => () => { setOpen(false); fn(); };
 
   return (
-    <div className="pm" ref={wrap}>
-      <button ref={btn} className="pm-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Opciones de la votación"
+    <div className="menu" ref={wrap}>
+      <button ref={btn} className="menu__btn" aria-haspopup="menu" aria-expanded={open} aria-label="Opciones de la votación"
         data-tip="Opciones de la votación" onClick={() => setOpen(o => !o)}><Icon name="more" /></button>
       {open && (
-        <div className="pm-menu" role="menu" aria-label="Opciones de la votación">
-          <button role="menuitem" className="pm-item" onClick={pick(onEdit)}>
+        <div className="menu__list" role="menu" aria-label="Opciones de la votación">
+          <button role="menuitem" className="menu__item" onClick={pick(onEdit)}>
             <Icon name="edit" />Editar votación
           </button>
           {onCloseOrReopen && (
-            <button role="menuitem" className="pm-item" onClick={pick(onCloseOrReopen)}>
+            <button role="menuitem" className="menu__item" onClick={pick(onCloseOrReopen)}>
               <Icon name={closed ? "unlock" : "lock"} />{closed ? "Reabrir votación" : "Cerrar votación"}
             </button>
           )}
           {onAccess && (
-            <button role="menuitem" className="pm-item" onClick={pick(onAccess)}>
+            <button role="menuitem" className="menu__item" onClick={pick(onAccess)}>
               <Icon name="settings" />Acceso y plazas
             </button>
           )}
           {!anonymous && (
-            <button role="menuitem" className="pm-item" onClick={pick(onAnon)}>
+            <button role="menuitem" className="menu__item" onClick={pick(onAnon)}>
               <Icon name="incognito" />Hacer anónima
             </button>
           )}
-          <button role="menuitem" className="pm-item" onClick={pick(onDuplicate)}>
+          <button role="menuitem" className="menu__item" onClick={pick(onDuplicate)}>
             <Icon name="copy" />Duplicar votación
           </button>
           {onDelete && <>
-            <div className="pm-sep" role="separator" />
-            <button role="menuitem" className="pm-item danger" onClick={pick(onDelete)}>
+            <div className="menu__sep" role="separator" />
+            <button role="menuitem" className="menu__item menu__item--danger" onClick={pick(onDelete)}>
               <Icon name="trash" />Eliminar votación
             </button>
           </>}

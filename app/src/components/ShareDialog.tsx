@@ -62,23 +62,23 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
   return (
     <Dialog
      
-      className="dlg"
+      className="dialog"
       onClose={onClose}
       onOpen={dlg => { dlgRef.current = dlg; dlg.querySelector("input")?.select(); }}
     >
-      <button className="dlg-x" aria-label="Cerrar" onClick={() => dlgRef.current?.close()}>×</button>
-      <h2>Compartir votación</h2>
-      <p className="dlg-sub">{title}</p>
-      <div className="share-link">
-        <input className="input" readOnly value={url} aria-label="Enlace de la votación" />
-        <button className="btn primary" onClick={async () => { toast(await copyText(url) ? "Enlace copiado" : "No se pudo copiar: selecciona el enlace y cópialo a mano"); }}>Copiar</button>
+      <button className="dialog__close" aria-label="Cerrar" onClick={() => dlgRef.current?.close()}>×</button>
+      <h2 className="dialog__title">Compartir votación</h2>
+      <p className="dialog__sub">{title}</p>
+      <div className="share__link">
+        <input className="input share__input" readOnly value={url} aria-label="Enlace de la votación" />
+        <button className="btn btn--primary" onClick={async () => { toast(await copyText(url) ? "Enlace copiado" : "No se pudo copiar: selecciona el enlace y cópialo a mano"); }}>Copiar</button>
       </div>
-      <div className="qr-box" id="qr-box">
+      <div className="share__qr" id="qr-box">
         {!qr ? <span className="muted">Generando QR…</span>
-          : "png" in qr ? <img src={qr.png} alt="Código QR de la votación" />
+          : "png" in qr ? <img className="share__qr-img" src={qr.png} alt="Código QR de la votación" />
           : <span className="status">{qr.error}</span>}
       </div>
-      <div className="share-btns">
+      <div className="share__btns">
         {canShare && (
           <button className="btn" onClick={() => shareLink({ title, text, url })}>
             <Icon name="share" /> Compartir…
@@ -89,7 +89,7 @@ export function ShareDialog({ target, onClose, toast }: { target: ShareTarget; o
         <a className="btn" href={`mailto:?subject=${enc(title)}&body=${enc(`${text}\n\n${url}`)}`}><Icon name="mail" /> Correo</a>
         <button className="btn" disabled={!qr || !("png" in qr)} onClick={download}>{isNative() ? <><Icon name="image" /> Compartir QR</> : <><Icon name="download" /> Descargar QR</>}</button>
       </div>
-      <p className="dlg-note">Quien abra el enlace (o escanee el QR) e inicie sesión quedará como participante y la votación aparecerá en su menú.</p>
+      <p className="dialog__note">Quien abra el enlace (o escanee el QR) e inicie sesión quedará como participante y la votación aparecerá en su menú.</p>
     </Dialog>
   );
 }

@@ -157,7 +157,7 @@ export function PollPage({ id }: { id: string }) {
   }, [pollLoaded, votesLoaded, myLoaded, ownOnly, blocked, lib, poll, votes, myVote, id, store, user, toast]);
 
   if (fatal) {
-    return <><div className="empty-box error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
+    return <><div className="empty-box empty-box--error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
   if (!pollLoaded) return <div className="loading">Cargando votación…</div>;
   if (!poll) {
@@ -405,19 +405,19 @@ export function PollPage({ id }: { id: string }) {
   return (
     <>
       <div className="poll-head">
-        <div className="poll-title">
-          <div className="kicker">
+        <div className="poll-head__main">
+          <div className="poll-head__kicker">
             <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {creator} · <Icon name="users" /> {plural(present.length, ["participante", "participantes"])}
             {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
           </div>
-          <div className="mode-line">
-            <span className={`mode-pill ${poll.anonymous ? "anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
-            {poll.emailsOnly && <span className="mode-pill anon"><Icon name="mail" /> Solo invitados</span>}
-            {poll.approval && <span className="mode-pill anon"><Icon name="approve" /> Con aprobación</span>}
+          <div className="poll-head__modes">
+            <span className={`mode-pill ${poll.anonymous ? "mode-pill--anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
+            {poll.emailsOnly && <span className="mode-pill mode-pill--anon"><Icon name="mail" /> Solo invitados</span>}
+            {poll.approval && <span className="mode-pill mode-pill--anon"><Icon name="approve" /> Con aprobación</span>}
             {!!poll.deadline && !expired && !poll.closed && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
           </div>
-          <div className="title-row">
-            <h1>{poll.title}</h1>
+          <div className="poll-head__title-row">
+            <h1 className="poll-head__title">{poll.title}</h1>
             {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
                 onCloseOrReopen={poll.closed && tbDone ? undefined : closeOrReopen}
@@ -427,13 +427,13 @@ export function PollPage({ id }: { id: string }) {
                 onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined} />
             )}
           </div>
-          {poll.description && <p className="desc">{poll.description}</p>}
-          <div className="poll-actions">
-            <button className="btn primary" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
+          {poll.description && <p className="poll-head__desc">{poll.description}</p>}
+          <div className="poll-head__actions">
+            <button className="btn btn--primary poll-head__action" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
               <Icon name="link" /> Compartir
             </button>
             {T.top.length > 0 && (
-              <button className="btn" onClick={() => act(async () => {
+              <button className="btn poll-head__action" onClick={() => act(async () => {
                 if (await shareResultCard(poll, T, TB) === "downloaded") toast("Imagen del resultado descargada");
               })}>
                 <Icon name="image" /> Compartir resultado
@@ -445,7 +445,7 @@ export function PollPage({ id }: { id: string }) {
       {admin && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
       {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (final ? (
-        <div className="closed-banner final">
+        <div className="closed-banner closed-banner--final">
           <Icon name="trophy" /> Resultado definitivo: <strong>{unitText(view, T, TB!.leaders[0])}</strong>. La votación está cerrada y ya no se puede reabrir.
         </div>
       ) : (
@@ -456,19 +456,19 @@ export function PollPage({ id }: { id: string }) {
       {!poll.closed && expired && (
         <div className="closed-banner">
           <Icon name="hourglass" /> Se acabó el plazo el {fmtDeadline(poll.deadline!)}: ya no se pueden cambiar los votos.
-          {admin && <> <button className="link-btn" onClick={clearDeadline}>Quitar el plazo</button></>}
+          {admin && <> <button className="link-btn closed-banner__link" onClick={clearDeadline}>Quitar el plazo</button></>}
         </div>
       )}
       <div className="poll-info">
-        {canVote && <p className="poll-sub">{instructions(poll, T)}</p>}
-        <p className="poll-note">
+        {canVote && <p className="poll-info__how">{instructions(poll, T)}</p>}
+        <p className="poll-info__note">
           {pollRange(poll)} {poll.anonymous
             ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."
             : "Los demás participantes pueden ver qué ha votado cada uno."}
         </p>
-        <div className="legend"><Legend poll={poll} T={T} /></div>
+        <div className="legend poll-info__legend"><Legend poll={poll} T={T} /></div>
       </div>
-      <div className="status" id="poll-status" role="alert">{status}</div>
+      <div className="status poll-status" id="poll-status" role="alert">{status}</div>
       <TiebreakSolvedNote poll={view} T={T} />
       {TB && (
         <TiebreakCard poll={view} T={T} TB={TB} myTb={votes[user.uid]?.tb} canManage={admin} byUid={byUid}
@@ -477,37 +477,37 @@ export function PollPage({ id }: { id: string }) {
       )}
       {board}
       <PollTabs tab={tab} setTab={setTab} counts={{ people: present.length }} unread={tab === "chat" ? 0 : chatUnread} />
-      <div className="ptab-panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
+      <div className="poll-tabs__panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
         {cal && (
-          <div className="summary-head">
+          <div className="summary__head">
             <CalendarMenu cal={cal} />
           </div>
         )}
         {/* El botón va con el texto que lo explica, no separado arriba junto al calendario. */}
         {T.leaders.length > 1 && !TB && (
-          <div className="summary-tie">
-            <p className="summary-note">
+          <div className="summary__tie">
+            <p className="summary__note">
               Hay {T.leaders.length} opciones empatadas en el primer puesto.{admin
                 ? " Puedes abrir un desempate en el que cada persona elige solo una."
                 : " Quien administra la votación puede abrir un desempate."}
             </p>
-            {admin && <button className="btn small" onClick={tbStart}><Icon name="scale" /> Desempatar</button>}
+            {admin && <button className="btn btn--small" onClick={tbStart}><Icon name="scale" /> Desempatar</button>}
           </div>
         )}
-        <div className="summary-list">
+        <div className="summary__list">
           <Summary poll={poll} T={T} TB={TB} openVoters={openVoters} byUid={byUid} onToggle={k => toggleIn(setOpenVoters, k)} />
         </div>
       </section>
       </div>
-      <div className="ptab-panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
-      <section className="results">
-        {admin && <div className="summary-head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
-        {!poll.anonymous && T.people.some(p => p.total) && <p className="table-hint">Pulsa en un nombre para ver qué ha votado.</p>}
+      <div className="poll-tabs__panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
+      <section className="people-panel">
+        {admin && <div className="summary__head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
+        {!poll.anonymous && T.people.some(p => p.total) && <p className="people-panel__hint">Pulsa en un nombre para ver qué ha votado.</p>}
         <PeopleList people={present} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
           {(people, empty) => (
-            <div className="table-wrap">
+            <div className="people-panel__scroll">
               <PeopleTable poll={poll} T={T} people={people} empty={empty} me={user.uid} openPeople={openPeople}
                 onToggle={k => toggleIn(setOpenPeople, k)} onToggleAdmin={isOwner ? toggleAdmin : undefined} />
             </div>
@@ -518,13 +518,13 @@ export function PollPage({ id }: { id: string }) {
         )}
       </section>
       </div>
-      <div className="ptab-panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
+      <div className="poll-tabs__panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
         <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"}
           seenAt={chatSeenAt} onUnread={setChatUnread} onSeen={markChatSeen} />
       </div>
       {votes[user.uid] && (
         <div className="poll-leave">
-          <button type="button" className="link-btn danger" onClick={leave}>Salir de la votación</button>
+          <button type="button" className="link-btn link-btn--danger poll-leave__btn" onClick={leave}>Salir de la votación</button>
         </div>
       )}
       <TiebreakGuard id={id} poll={poll} T={T} active={admin && votesLoaded && !ownOnly} />

@@ -8,7 +8,7 @@ export function EmojiButton({ field, setValue }: {
 }) {
   const { openEmoji } = useUi();
   return (
-    <button type="button" className="emoji-btn" aria-label="Añadir emoji" aria-expanded="false"
+    <button type="button" className="emoji-field__btn" aria-label="Añadir emoji" aria-expanded="false"
       onClick={e => {
         const anchor = e.currentTarget;
         openEmoji({

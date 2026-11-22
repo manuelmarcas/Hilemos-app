@@ -94,7 +94,7 @@ export function TooltipLayer() {
 
   if (!tip) return null;
   return (
-    <div ref={bubble} className={`tooltip${tip.below ? " below" : ""}${tip.x < -999 ? "" : " on"}`} aria-hidden="true"
+    <div ref={bubble} className={`tooltip${tip.below ? " tooltip--below" : ""}${tip.x < -999 ? "" : " tooltip--on"}`} aria-hidden="true"
       style={{ left: tip.x, top: tip.y, "--tip-arrow": `${tip.arrow}px` } as CSSProperties}>
       {tip.text}
     </div>

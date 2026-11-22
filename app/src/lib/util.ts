@@ -134,6 +134,16 @@ export const isAndroid = () => /Android/i.test(navigator.userAgent);
 
 export const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
+/**
+ * Clases BEM de un bloque o elemento con sus modificadores: bem("picker__day", { on: x, locked: y }) →
+ * "picker__day picker__day--on" (solo los modificadores con valor verdadero). Un modificador con valor va con la
+ * clave calculada: bem("cell__opt", { [`c${i}`]: true }). `mixes`: otras clases que lleva el mismo elemento (mezclas
+ * BEM, como "btn create-bar__btn").
+ */
+export function bem(base: string, mods: Record<string, unknown> = {}, ...mixes: (string | false | null | undefined)[]) {
+  return cls(base, ...Object.entries(mods).filter(([, on]) => on).map(([m]) => `${base}--${m}`), ...mixes);
+}
+
 /** Texto en minúsculas, sin tildes ni símbolos, para nombres de archivo e identificadores («Cena de Navidad» → «cena-de-navidad»). */
 export const slugify = (s: string, max = 40) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, max);

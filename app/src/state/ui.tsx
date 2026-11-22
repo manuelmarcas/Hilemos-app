@@ -91,7 +91,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       {emojiReq && <EmojiPanel req={emojiReq} onClose={closeEmoji} />}
       <UndoStack items={undos} onUndo={runUndo} onExpire={expireUndo} />
       <TooltipLayer />
-      <div id="toast" className={`toast${toastOn ? " show" : ""}${undos.length ? " above-undo" : ""}`} role="status" aria-live="polite">{toastMsg}</div>
+      <div id="toast" className={`toast${toastOn ? " toast--show" : ""}${undos.length ? " toast--above-undo" : ""}`} role="status" aria-live="polite">{toastMsg}</div>
     </UiContext.Provider>
   );
 }

@@ -95,7 +95,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
 
   return (
     <GateCard footer={
-      <p className="gate-legal">
+      <p className="gate__legal">
         Al entrar aceptas las <a href="#/condiciones">condiciones de uso</a> y la <a href="#/privacidad">política de privacidad</a>.
       </p>
     }>
@@ -107,72 +107,72 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
           : "Crea votaciones de horas, días, semanas o meses, compártelas con tu grupo y mira los resultados en directo."}
       </p>
       {demo ? (
-        <form id="demo-login" onSubmit={demoLogin}>
+        <form id="demo-login" className="gate__demo" onSubmit={demoLogin}>
           <input className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required autoFocus
             data-error="Escribe tu nombre para entrar."
             value={name} onChange={e => setName(e.target.value)} />
-          <button className="btn primary" type="submit">Entrar</button>
+          <button className="btn btn--primary" type="submit">Entrar</button>
         </form>
       ) : (
         <>
           {/* Al pedir el correo o la clave solo se ve su formulario: Google despistaría (es otra forma de entrar). */}
           {mode === "main" && (
-            <button className="google-btn" onClick={login}>
+            <button className="gate__google" onClick={login}>
               <GoogleIcon />
               Entrar con Google
             </button>
           )}
           {mode === "main" && (
-            <button className="btn gate-alt" onClick={() => go("email")}><Icon name="mail" /> Entrar con tu correo</button>
+            <button className="btn gate__alt" onClick={() => go("email")}><Icon name="mail" /> Entrar con tu correo</button>
           )}
           {mode === "email" && (sentTo ? (
-            <div className="gate-anon gate-sent" role="status">
+            <div className="gate__form gate__sent" role="status">
               <p><Icon name="mail" /> Te hemos mandado un enlace a <strong>{sentTo}</strong>. Ábrelo en este dispositivo para
                 entrar. Si no lo ves, mira en «Spam» o «Promociones».</p>
-              <button type="button" className="link-btn gate-switch" onClick={() => setSentTo("")}>Usar otro correo</button>
+              <button type="button" className="link-btn gate__switch" onClick={() => setSentTo("")}>Usar otro correo</button>
             </div>
           ) : (
-            <form className="gate-anon" onSubmit={sendLink}>
-              <label className="gate-label" htmlFor="email-input">Entra con tu correo, sin contraseña</label>
-              <input id="email-input" className="input" type="email" autoComplete="email" placeholder="tu@correo.com"
+            <form className="gate__form" onSubmit={sendLink}>
+              <label className="gate__label" htmlFor="email-input">Entra con tu correo, sin contraseña</label>
+              <input id="email-input" className="input gate__input" type="email" autoComplete="email" placeholder="tu@correo.com"
                 required autoFocus data-error="Escribe tu correo para que te mandemos el enlace."
                 value={email} onChange={e => setEmail(e.target.value)} />
-              <p className="gate-anon-note">Te mandaremos un enlace: al pulsarlo, entras. Sirve en cualquier dispositivo.</p>
-              <button className="btn primary" type="submit" disabled={busy}>{busy ? "Enviando…" : "Enviarme el enlace"}</button>
+              <p className="gate__note">Te mandaremos un enlace: al pulsarlo, entras. Sirve en cualquier dispositivo.</p>
+              <button className="btn btn--primary" type="submit" disabled={busy}>{busy ? "Enviando…" : "Enviarme el enlace"}</button>
             </form>
           ))}
           {mode === "key" && (
-            <form className="gate-anon" onSubmit={keyLogin}>
-              <label className="gate-label" htmlFor="key-input">Tu clave de acceso</label>
-              <input id="key-input" className="input key-input" maxLength={30} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+            <form className="gate__form" onSubmit={keyLogin}>
+              <label className="gate__label" htmlFor="key-input">Tu clave de acceso</label>
+              <input id="key-input" className="input gate__input gate__key-input" maxLength={30} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
                 autoComplete="off" autoCapitalize="characters" spellCheck={false} autoFocus required
                 data-error="Escribe o pega tu clave de acceso."
                 value={key} onChange={e => setKey(e.target.value)} />
-              <button className="btn primary" type="submit" disabled={busy}>{busy ? "Comprobando…" : "Entrar con mi clave"}</button>
+              <button className="btn btn--primary" type="submit" disabled={busy}>{busy ? "Comprobando…" : "Entrar con mi clave"}</button>
             </form>
           )}
           {mode === "main" ? <>
-            <div className="gate-or"><span>o sin registrarte</span></div>
-            <form className="gate-anon" onSubmit={anonLogin}>
-              <input className="input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
+            <div className="gate__or"><span>o sin registrarte</span></div>
+            <form className="gate__form" onSubmit={anonLogin}>
+              <input className="input gate__input" maxLength={40} placeholder="Tu nombre" autoComplete="off" required
                 data-error="Escribe tu nombre: es el que verán los demás."
                 aria-label="Tu nombre" value={name} onChange={e => setName(e.target.value)} />
-              <p className="gate-anon-note">
+              <p className="gate__note">
                 <Icon name="key" /> Al continuar, Hilemos te dará una <strong>clave de acceso</strong>. Guárdala: es lo
                 único que te permitirá volver a entrar con esta cuenta si cierras sesión, desinstalas la app o
                 cambias de móvil. En las votaciones privadas o con aprobación hace falta Google o tu correo.
               </p>
               <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Continuar sin cuenta"}</button>
             </form>
-            <button className="btn small gate-key-btn" onClick={() => go("key")}><Icon name="key" /> Tengo una clave de acceso</button>
+            <button className="btn btn--small gate__key-btn" onClick={() => go("key")}><Icon name="key" /> Tengo una clave de acceso</button>
           </> : (
-            <button type="button" className="link-btn gate-switch" onClick={() => go("main")}>
+            <button type="button" className="link-btn gate__switch" onClick={() => go("main")}>
               <Icon name="back" /> Otras formas de entrar
             </button>
           )}
         </>
       )}
-      <div id="gate-status" role="alert">{status}</div>
+      <div id="gate-status" className="gate__status" role="alert">{status}</div>
     </GateCard>
   );
 }
