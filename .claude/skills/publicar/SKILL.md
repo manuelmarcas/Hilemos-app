@@ -13,10 +13,13 @@ redirige). Esta skill es el orden seguro para hacerlo y los tropiezos que ya han
 
 1. **Probado de verdad.** Si el cambio se ve en pantalla, pasa antes por la skill `probar-en-navegador`. Si toca datos
    o reglas, por `cambio-de-modelo`. No publiques algo que no has visto funcionar.
-2. **Tipos y compilación**, desde `app/`:
+2. **Tests, tipos y compilación**, desde `app/`:
    ```bash
+   npm test             # Vitest: la lógica de lib/ (recuento, desempate, editar, avisos del chat…)
    npm run build        # tsc --noEmit + vite build
    ```
+   Si un test falla, no se publica: o el cambio ha roto algo, o el comportamiento ha cambiado a propósito y hay que
+   cambiar el test (dilo al usuario).
 3. **Comprobadores del proyecto** (si has tocado CSS o clases):
    ```bash
    node .claude/skills/limpieza-codigo/scripts/selectores-bem.mjs

@@ -27,7 +27,9 @@ función o su componente.
 - **Un trozo de pantalla largo con sentido propio** (un panel, una tarjeta, un formulario) → componente aunque se use
   una vez: la pantalla queda legible como un índice (`PollPage` pinta `TiebreakCard`, `Summary`, `PeopleTable`…).
 - **Cálculos sobre los datos** (filtrar, contar, decidir si algo se puede hacer) → función en `lib/`, no dentro del
-  componente. Así se reutiliza y se puede probar.
+  componente. Así se reutiliza y se puede probar: su test va al lado, en `lib/<archivo>.test.ts` (Vitest, `npm test`
+  desde `app/`). Si cambias cómo se cuenta, se desempata, qué se puede quitar al editar o qué avisa el chat, añade o
+  ajusta el caso en el test.
 - **Una acción con efectos que se usa desde varios sitios** (salir, archivar, duplicar) → hook en `state/`.
 - **Un patrón visual repetido** → bloque CSS en BEM (skill `estilo-y-css`), no estilos copiados.
 
@@ -54,6 +56,6 @@ Si algo parecido existe pero no encaja del todo, **amplíalo** (un parámetro op
 
 ## Antes de terminar
 
-- `npm run build` en `app/` (tipos y compilación).
+- `npm test` y `npm run build` en `app/` (tests de `lib/`, tipos y compilación).
 - La skill `limpieza-codigo` sobre lo que has tocado: que no quede nada sin usar ni duplicado.
 - Probado en el navegador (skill `probar-en-navegador`).

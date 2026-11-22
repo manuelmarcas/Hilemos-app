@@ -34,7 +34,7 @@ y nadie se entera hasta que un usuario lo sufre. Recorre la lista entera cada ve
 
 ## Probar
 
-- `npm run build` en `app/`.
+- `npm test` y `npm run build` en `app/`.
 - En el navegador (skill `probar-en-navegador`), en modo demo: crear, cambiar y borrar con el dato nuevo; con dos
   usuarios si afecta a permisos (el que puede y el que no).
 - Si cambian las reglas: publicarlas (skill `publicar`) y probar el caso que antes fallaba contra Firestore de verdad

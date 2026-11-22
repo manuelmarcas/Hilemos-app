@@ -28,6 +28,7 @@ cd app
 npm install          # la primera vez
 npm run dev          # servidor de desarrollo: http://localhost:5173/?demo
 npm run typecheck    # comprobar tipos
+npm test             # tests de la lógica de src/lib (Vitest); npm run test:watch los repite al guardar
 npm run build        # compila a dist/ (comprueba tipos antes)
 npm run preview      # sirve dist/ para probar la versión compilada
 npm run android      # compila y copia la web al proyecto de Android (ver «App de Android»)
