@@ -194,7 +194,7 @@ o cerradas, con un aviso 30 días antes en la app y por push.
 
 | N.º | Modelo | Ejemplo | Para quién | Recomendación | Decisión |
 | --- | --- | --- | --- | --- | --- |
-| 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 0,99 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual sale más barato que 12 meses sueltos. |
+| 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 1,49 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual ahorra un 44 % frente a 12 meses sueltos (17,88 €). |
 | 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Pendiente: ver «¿Se sostienen los números?». |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
 
@@ -206,14 +206,14 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | Precio | Sin IVA (21 %) | Neto en Google Play (−15 %) | Neto en la web con Stripe (aprox. 1,5 % + 0,25 €) |
 | --- | --- | --- | --- |
 | 0,60 € (pase) | 0,50 € | 0,42 € | 0,24 € |
-| 0,99 € (mes) | 0,82 € | 0,70 € | 0,56 € |
+| 1,49 € (mes) | 1,23 € | 1,05 € | 0,96 € |
 | 9,99 € (año) | 8,26 € | 7,02 € | 7,86 € |
 
-- **El pase a 0,60 € pierde sentido.** Por 0,39 € más se tiene un mes de todo, y como lo configurado se mantiene al
+- **El pase a 0,60 € pierde sentido.** Por 0,89 € más se tiene un mes de todo, y como lo configurado se mantiene al
   acabar el mes (§8), un mes sirve igual para un evento puntual. Casi todos elegirían el mes. Recomiendo quitar el
   pase al principio y dejar solo mes y año; se puede añadir después si alguien lo echa de menos.
-- **El anual a 9,99 € ahorra un 16 %** frente a 12 meses (11,88 €), unos dos meses gratis. Es una rebaja clara,
-  aunque pequeña; con el mes a 1,49 € el anual ahorraría un 44 % y empujaría más hacia él.
+- **El anual a 9,99 € ahorra un 44 %** frente a 12 meses a 1,49 € (17,88 €): se paga menos de 7 meses. Empuja hacia
+  el anual sin que el mensual deje de servir para un pico.
 - **El coste que más pesa no es técnico.** Para cobrar en España hace falta, en principio, estar dado de alta
   como autónomo o tener una empresa. La cuota de autónomo con tarifa plana ronda los 80 € al mes el primer año y
   unos 200 € después. Con unos 7–8 € netos por suscripción anual, harían falta unas 130 suscripciones para cubrir el
