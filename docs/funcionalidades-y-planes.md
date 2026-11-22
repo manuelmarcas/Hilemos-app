@@ -163,7 +163,7 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 | 3.3 | **Personas por votación** | 25 gratis; 150 en premium | Pagan los grupos grandes: asociaciones, clubes, empresas, bodas | Un grupo grande de amigos se topa con él | No: ya existen `maxPeople` y `members` | ★★★ | Sí: 20 gratis; 150 en premium |
 | 3.4 | **Funciones de control** | Aprobación, solo correos, administradores y plazo en premium | Lo básico sigue completo; paga quien necesita control | Hay que elegir bien qué es «avanzado» | No: las reglas miran el plan al crear o cambiar | ★★★ | Sí |
 | 3.5 | **Opciones por día** | 2 gratis; 4 en premium | Sencillo | Diferencia poco y puede frustrar al crear | No | ★ | No: si la votación pasa a alguien sin premium no se podrían quitar opciones que ya tienen votos |
-| 3.6 | **Caducidad** | Las gratuitas se borran N meses después del último movimiento | Ahorra almacenamiento | Molesta a quien quiere recordar; hay que avisar antes | Sí: una tarea programada | ★ | Sí: caducan las gestionadas por alguien sin premium; las de premium, no. Pendiente: cuántos meses (propuesta: 12 meses sin movimiento, con aviso 30 días antes). |
+| 3.6 | **Caducidad** | Las gratuitas se borran N meses después del último movimiento | Ahorra almacenamiento | Molesta a quien quiere recordar; hay que avisar antes | Sí: una tarea programada | ★ | Sí: caducan las gestionadas por alguien sin premium; las de premium, no. 12 meses sin movimiento, con aviso 30 días antes. |
 | 3.7 | **Marca en lo compartido** | Imagen del resultado con «Hecho con Hilemos» | Publicidad gratis cada vez que se comparte | Ninguno serio | No | ★★ | Sí |
 | 3.8 | **Tope de abiertas a la vez también en premium** | 50 abiertas | Nadie paga un mes para «fabricar» votaciones para otros a gran escala; quien organiza tanto encaja en el plan de organizaciones (4.3) | Casi nadie lo notará | No: el mismo contador de 3.1 | — | Sí, 50 abiertas |
 
@@ -176,8 +176,8 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 - La imagen del resultado lleva la marca.
 - Votar, resultados, desempate, chat, grupos y compartir: gratis y sin límite.
 
-**Sobre la caducidad (3.6).** Propuesta: 12 meses sin movimiento (un voto, un mensaje o un cambio), estén abiertas
-o cerradas, con un aviso 30 días antes en la app y por push.
+**Sobre la caducidad (3.6).** Decidido: 12 meses sin movimiento (un voto, un mensaje o un cambio), estén abiertas
+o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece descargar la votación en CSV (7.10).
 
 - **12 y no 6:** muchas votaciones se repiten cada año (la cena de Navidad, el viaje de verano). Con 6 meses, la del
   año pasado ya no estaría cuando se quiere consultar o duplicar.
@@ -263,15 +263,15 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.7 | Recordatorios automáticos | A quien falta por votar y antes de que acabe el plazo. | Pendiente | ★★★ | Sí, premium (§10) |
 | 7.8 | Votaciones de opciones libres | Restaurante, regalo, destino… | Hecho | No | |
 | 7.9 | Ocultar los resultados hasta votar o hasta el cierre | Para que nadie vote lo que ya va ganando. Lo elige el creador al crear la votación. | Pendiente | ★★ | Sí, premium; opción del creador al crearla |
-| 7.10 | Exportar los resultados | Excel/CSV o PDF. | Pendiente | ★★★ | |
+| 7.10 | Exportar los resultados | CSV para guardar la votación (gratis); PDF como informe para presentar y Excel con formato (premium). Lo exporta quien la gestiona; en las anónimas, solo los totales. | Pendiente | ★★★ (PDF y Excel) | CSV gratis; PDF y Excel premium. El Excel tiene que aportar algo más que el CSV (varias hojas, formato), porque un CSV ya se abre en Excel. |
 | 7.11 | Una nota con el voto | «Llego a las 22:00», «solo por la tarde». | Pendiente | ★ | No |
 | 7.12 | Zona horaria | En las votaciones por horas, para grupos en varios países. Propuesta: la votación guarda la zona de quien la crea; quien la abre desde otra zona ve «hora de Madrid» y, al lado, su hora local. | Pendiente | ★ | Sí: la zona del creador |
 | 7.13 | Límite de elecciones por persona | «Elige como mucho 3». | Pendiente | ★ | No: libertad para elegir |
-| 7.20 | Sacar a alguien de la votación | Un administrador saca a un participante: sus votos dejan de contar, se libera su plaza y no puede volver a entrar con el enlace. Sirve si el enlace llega a quien no debía o si alguien molesta en el chat. Casi está hecho por debajo: es el estado «rechazado» de las votaciones con aprobación aplicado a alguien ya aceptado. Falta el botón, liberar su plaza y el aviso en el chat. | Pendiente | No: es moderación, y las tiendas la piden (7.4) | Pendiente (propuesta: gratis) |
+| 7.20 | Sacar a alguien de la votación | Un administrador saca a un participante: sus votos dejan de contar, se libera su plaza y no puede volver a entrar con el enlace. Sirve si el enlace llega a quien no debía o si alguien molesta en el chat. Casi está hecho por debajo: es el estado «rechazado» de las votaciones con aprobación aplicado a alguien ya aceptado. Falta el botón, liberar su plaza y el aviso en el chat. Va en la fila de cada persona en «Participantes», en un menú ⋯ junto a «Hacer admin» y «Quitar admin»; «Acceso y plazas» queda para las reglas de entrada (plazas y correos). | Pendiente | No: es moderación, y las tiendas la piden (7.4) | Gratis. Lo puede hacer cualquier administrador (también sin premium y también si la heredó); a otro administrador solo lo saca el creador; al creador, nadie. |
 | **Más adelante** | | | | | |
 | 7.14 | Entrar con Apple | Obligatorio para publicar en la App Store si se ofrece entrar con Google. | Pendiente | No | |
 | 7.15 | Otros idiomas | Inglés y catalán, por ejemplo. | Pendiente | No | |
-| 7.16 | Descargar mis datos | El RGPD reconoce el derecho de acceso y portabilidad. | Pendiente | No | |
+| 7.16 | Descargar mis datos | El RGPD reconoce el derecho de acceso y portabilidad: todo lo de la cuenta (perfil, votos, mensajes) en JSON. | Pendiente | No | Gratis (obligatorio) |
 | 7.17 | Limpieza automática de datos viejos | Cuentas sin registro que nadie usa y votaciones abandonadas. | Pendiente | No | |
 | 7.18 | Personalizar una votación | Un color o una imagen de portada. | Pendiente | ★★★ | Más adelante |
 | 7.19 | Estadísticas para quien organiza | Participación y quién suele faltar. | Pendiente | ★★★ (plan de organizaciones, 4.3) | Más adelante |
