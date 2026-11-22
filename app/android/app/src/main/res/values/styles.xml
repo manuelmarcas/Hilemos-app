@@ -16,7 +16,13 @@
     </style>
 
 
+    <!-- Pantalla de arranque. En Android 12+ el sistema pinta el icono en un círculo: el calendario del icono en
+         vectorial (nítido) sobre su morado, en el fondo bg de la app (oscuro en el tema oscuro, values-night). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/hilemos_splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_logo</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

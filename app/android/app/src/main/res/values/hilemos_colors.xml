@@ -2,4 +2,6 @@
 <resources>
     <!-- Color de marca (brand del design system): tinte del icono de los avisos. -->
     <color name="hilemos_brand">#5E2A59</color>
+    <!-- Pantalla de arranque: fondo bg del design system (tema claro). -->
+    <color name="hilemos_splash_bg">#F6F4F7</color>
 </resources>

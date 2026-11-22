@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pantalla de arranque en el tema oscuro: fondo bg del design system. -->
+    <color name="hilemos_splash_bg">#1B1619</color>
+</resources>

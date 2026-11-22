@@ -13,7 +13,7 @@
     "deploy": "npm run build && firebase deploy --only hosting:app",
     "android": "tsc --noEmit && vite build --mode android && cap sync android",
     "android:open": "cap open android",
-    "android:assets": "capacitor-assets generate --android --iconBackgroundColor \"#5E2A59\" --iconBackgroundColorDark \"#5E2A59\" --splashBackgroundColor \"#f6f4f7\" --splashBackgroundColorDark \"#1b1619\"",
+    "android:assets": "node scripts/android-icons.mjs",
     "deploy:antigua": "firebase deploy --only hosting:antigua"
   },
   "dependencies": {
