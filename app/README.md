@@ -111,7 +111,7 @@ el menú lateral y la propia votación.
   votación» en modo edición (`Create` con `edit`), con la plantilla de `editTemplate` (todo lo que tiene, también lo
   pasado, y los ids de sus opciones para que renombrar una no la convierta en otra).
 - Siempre se cambian el nombre y la descripción. Sin desempate, también lo que se vota: se puede añadir, pero no
-  quitar nada que tenga votos (`lockedSlots`, `lockedOpts` y `lockedHours`, con un punto en el calendario). Antes de
+  quitar nada que tenga votos (`lockedSlots`, `lockedOpts` y `lockedHours`, en rojo suave en el calendario y en las opciones). Antes de
   guardar se comprueba otra vez con los votos de ese momento (`lostVotedUnit` en `model.ts`). Las opciones nuevas
   toman un id que la votación no haya usado nunca.
 - No se cambian el tipo (para eso, duplicar), el modo de las horas ni la duración de las franjas; el acceso, el plazo

@@ -181,10 +181,14 @@
 .icon-pick.default{opacity:.6}
 .choice-del{flex:none}
 .choice-add{margin-top:12px}
-/* Al editar, lo que ya tiene votos no se puede quitar: un punto en la esquina lo marca */
-.pday.locked,.pweek.locked,.month-chip.locked{position:relative}
-.pday.locked::after,.pweek.locked::after,.month-chip.locked::after{
-  content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;
-  background:currentColor;opacity:.8;
+/* Al editar, lo que ya tiene votos no se puede quitar: va en rojo suave (danger-soft con borde y texto danger),
+   también ya pasado, y una leyenda lo explica */
+.pday.locked,.pweek.locked,.month-chip.locked,.chip.month-chip.on.locked{
+  background:var(--danger-soft);border-color:var(--danger);color:var(--danger);cursor:not-allowed;
 }
-.tag.locked{padding-right:12px}
+.pday.locked:disabled,.pweek.locked:disabled{opacity:1}
+.pweek.locked .wnum{color:var(--danger)}
+.tag.locked{padding-right:12px;background:var(--danger-soft);color:var(--danger);box-shadow:inset 0 0 0 1px var(--danger)}
+.opt-row.locked .icon-pick,.opt-row.locked .input{border-color:var(--danger);background:var(--danger-soft)}
+.lock-key{display:flex;align-items:center;gap:8px;margin:10px 0 14px;color:var(--muted);font-size:.85rem;line-height:1.4}
+.lock-sw{flex:none;width:14px;height:14px;border-radius:4px;background:var(--danger-soft);border:1px solid var(--danger)}

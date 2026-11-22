@@ -164,6 +164,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
     }
   }
   const LOCKED = "Lo que ya tiene votos no se puede quitar.";
+  const lockTitle = (on: boolean) => (on ? "Tiene votos: no se puede quitar" : undefined);
+  // Leyenda del rojo suave con el que se marca, al editar, lo que ya tiene votos.
+  const lockKey = (text: string) => <p className="lock-key"><span className="lock-sw" aria-hidden="true"></span>{text}</p>;
 
   useEffect(() => { titleRef.current?.focus(); }, []);
   useEffect(() => () => closeEmoji(), [closeEmoji]);
@@ -593,10 +596,12 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                 const k = D.monthKey(year, m);
                 return (
                   <button key={k} type="button" className={cls("chip month-chip", months.has(k) && "on", type === "months" && lockedSlots.has(k) && "locked")}
+                    title={lockTitle(type === "months" && lockedSlots.has(k))}
                     aria-pressed={months.has(k)} disabled={k < cur} onClick={() => toggleMonth(k)}>{D.cap(name)}</button>
                 );
               })}
             </div>
+            {type === "months" && lockedSlots.size > 0 && lockKey("En rojo, los meses que ya tienen votos: no se pueden quitar.")}
             <div className="selected-months">
               {sortedMonths.length
                 ? sortedMonths.map(k => (
@@ -632,9 +637,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                   </>}
                   <span className="count-note">
                     {plural(isWeeks ? weeks.size : days.size, isWeeks ? ["semana seleccionada", "semanas seleccionadas"] : ["día seleccionado", "días seleccionados"])}
-                    {lockedSlots.size > 0 && <> · con punto: ya tienen votos</>}
                   </span>
                 </div>
+                {lockedSlots.size > 0 && lockKey(`En rojo, ${isWeeks ? "las semanas" : "los días"} que ya tienen votos: no se pueden quitar.`)}
                 <div className="pick-months">
                   {sortedMonths.map(mk => {
                     const { y, m } = D.parseMonth(mk);
@@ -645,7 +650,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                           <div className="pweek-head"><span></span>{D.DOW.map(x => <span key={x}>{x}</span>)}</div>
                           <div className="pweeks">
                             {D.monthWeeks(y, m).map(w => (
-                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} aria-pressed={weeks.has(w.key)}
+                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} title={lockTitle(lockedSlots.has(w.key))} aria-pressed={weeks.has(w.key)}
                                 disabled={D.weekEndKey(w.key) < today}
                                 onClick={(e: MouseEvent) => setWeeks(toggleRange(weeks, w.key, selectableWeeks(), e.shiftKey))}>
                                 <span className="wnum">S{w.num}</span>
@@ -662,7 +667,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                       const k = D.dayKey(y, m, d);
                       const we = D.dowMon(new Date(y, m, d)) >= 5;
                       cells.push(
-                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} aria-pressed={days.has(k)}
+                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} title={lockTitle(lockedSlots.has(k))} aria-pressed={days.has(k)}
                           disabled={k < today} onClick={(e: MouseEvent) => setDays(toggleRange(days, k, selectableDays(), e.shiftKey))}>{d}</button>,
                       );
                     }
@@ -677,7 +682,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           <h2><span className="num">{numbers.opts}</span>Opciones de cada día</h2>
           <p className="hint">
             Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.
-            {lockedOpts.size > 0 && type === "days" && " Las que ya tienen votos se pueden renombrar, pero no quitar."}
+            {lockedOpts.size > 0 && type === "days" && " Las que ya tienen votos (en rojo) se pueden renombrar, pero no quitar."}
           </p>
           <div>
             {visible.opts && <>
@@ -690,7 +695,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               <div className="opt-layout">
                 <div className="opt-rows">
                   {shownOpts.map((o, i) => (
-                    <div key={i} className="opt-row">
+                    <div key={i} className={cls("opt-row", !!o.id && lockedOpts.has(o.id) && "locked")} title={lockTitle(!!o.id && lockedOpts.has(o.id))}>
                       <span className={`opt-swatch sw c${i}`}></span>
                       <button type="button" className="icon-pick" aria-label={`Elegir icono de la opción ${i + 1}`} aria-expanded="false" title="Elegir icono"
                         onClick={e => {
@@ -799,14 +804,14 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           <h2><span className="num">{numbers.choices}</span>Opciones</h2>
           <p className="hint">
             Escribe las opciones que se podrán votar, de {MIN_CHOICES} a {MAX_CHOICES}. El icono es opcional: si no eliges
-            ninguno, se pone {DEFAULT_CHOICE_ICON}.{lockedSlots.size > 0 && type === "options" && " Las que ya tienen votos se pueden renombrar, pero no quitar."}
+            ninguno, se pone {DEFAULT_CHOICE_ICON}.{lockedSlots.size > 0 && type === "options" && " Las que ya tienen votos (en rojo) se pueden renombrar, pero no quitar."}
           </p>
           {visible.choices && <>
             <div className="opt-rows choice-rows">
               {choices.map((c, i) => {
                 const locked = !!c.id && lockedSlots.has(c.id);
                 return (
-                  <div key={c.key} className="opt-row choice-row">
+                  <div key={c.key} className={cls("opt-row choice-row", locked && "locked")} title={lockTitle(locked)}>
                     <button type="button" className={cls("icon-pick", !c.icon && "default")} aria-label={`Elegir icono de la opción ${i + 1}`}
                       aria-expanded="false" title="Elegir icono (opcional)"
                       onClick={e => {

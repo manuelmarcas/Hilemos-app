@@ -59,7 +59,7 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
 - **Editar una votación** (menú ⋯ → «Editar votación», solo administradores): nombre y descripción siempre; sin
   desempate, también se pueden **añadir** días, semanas, meses, horas u opciones, pero **no quitar lo que ya tiene
   algún voto** (un día con un voto, o una opción con un voto en cualquier día, semana, mes u hora). Lo que tiene votos
-  lleva un punto y no se deja quitar. El tipo de votación no se cambia: para eso está «Duplicar». Cada cambio deja un
+  sale en rojo suave y no se deja quitar. El tipo de votación no se cambia: para eso está «Duplicar». Cada cambio deja un
   **aviso en el chat** («Ana ha añadido el viernes 18 de diciembre», «… ha cambiado el título…»).
 - **Votos visibles o anónimos** (se elige al crearla). Con votos visibles, en la tabla de participantes se pulsa
   un nombre para ver qué ha votado esa persona, y en "opciones más votadas" se puede desplegar quién las votó.
