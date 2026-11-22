@@ -173,7 +173,7 @@ export function PollPage({ id }: { id: string }) {
     if (!myLoaded || !myVote) return <div className="loading">Cargando votación…</div>;
     return <WaitingView poll={poll} status={memberStatus(myVote)} removed={isRemoved(myVote)} />;
   }
-  // En las abiertas, a quien han sacado le llegan todos los votos, pero ya no participa.
+  // En las abiertas, a quien han expulsado le llegan todos los votos, pero ya no participa.
   if (votes[user.uid]?.status === "rejected" && !isAdmin(poll, user.uid)) {
     return <WaitingView poll={poll} status="rejected" removed={isRemoved(votes[user.uid])} />;
   }
@@ -188,7 +188,7 @@ export function PollPage({ id }: { id: string }) {
   // lo guarda el primer administrador que la abre (TiebreakGuard).
   const view = withTiebreakAdjusted(poll, T);
   const TB = tiebreakTally(view, accepted);
-  // A quien se sacó de la votación se le vuelve a admitir desde «Gestionar participantes», no desde las solicitudes.
+  // A quien se expulsó de la votación se le vuelve a admitir desde «Gestionar participantes», no desde las solicitudes.
   const requests = Object.entries(votes).filter(([, v]) => v?.status && !v.gone && !v.removed).map(([uid, v]) => ({ uid, ...v }))
     .sort((a, b) => (a.seenAt || 0) - (b.seenAt || 0));
   const byUid = Object.fromEntries(T.people.map(p => [p.uid, p]));
@@ -373,20 +373,20 @@ export function PollPage({ id }: { id: string }) {
   const chatNotice = (text: string) =>
     store.sendChat(id, { uid: user.uid, name: user.name, text, at: Date.now(), sys: true }).catch(() => { /* el cambio ya está hecho */ });
 
-  // Sacar a alguien: queda rechazado (sus votos dejan de contar y no puede volver a entrar) y deja libre su plaza.
+  // Expulsar a alguien: queda rechazado (sus votos dejan de contar y no puede volver a entrar) y deja libre su plaza.
   const removeMember = (uid: string, name: string) => act(async () => {
     if (!(await confirm({
-      title: `¿Sacar a ${name} de la votación?`,
+      title: `¿Expulsar a ${name} de la votación?`,
       // La plaza solo importa si quien la creó puso un máximo (sin él, el tope es el general), como al salir.
       message: `Sus votos dejarán de contar${hasLimit(poll) && (poll.maxPeople as number) < MAX_PEOPLE ? " y su plaza quedará libre" : ""}. No podrá volver a entrar ` +
         "con el enlace ni escribir en el chat; sus mensajes se quedan. Podrás volver a admitirle desde aquí.",
-      confirmLabel: "Sacar de la votación",
-      cancelLabel: "No sacar",
+      confirmLabel: "Expulsar de la votación",
+      cancelLabel: "No expulsar",
       danger: true,
     }))) return;
     await store.setMemberStatus(id, uid, "rejected",
       { from: "accepted", counted: hasLimit(poll), removed: true, dropAdmin: admins.includes(uid) });
-    await chatNotice(`ha sacado a ${name} de la votación`);
+    await chatNotice(`ha expulsado a ${name} de la votación`);
     toast(`${name} ya no está en la votación`);
   });
 

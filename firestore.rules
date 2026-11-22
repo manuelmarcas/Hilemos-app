@@ -258,7 +258,7 @@ service cloud.firestore {
 
         allow update: if signedIn() && (selfUpdate() || ownerSetsStatus());
 
-        // Cada uno cambia su nombre, foto y votos, pero no su estado (ni si le sacaron); pendiente o rechazado no puede votar.
+        // Cada uno cambia su nombre, foto y votos, pero no su estado (ni si le expulsaron); pendiente o rechazado no puede votar.
         function selfUpdate() {
           let d = request.resource.data;
           let old = resource.data;
@@ -273,8 +273,8 @@ service cloud.firestore {
         }
 
         // Un administrador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona
-        // (nunca al creador). Sacar a alguien de la votación es rechazarle con `removed`; a otro administrador solo
-        // le saca el creador.
+        // (nunca al creador). Expulsar a alguien de la votación es rechazarle con `removed`; a otro administrador solo
+        // le expulsa el creador.
         function ownerSetsStatus() {
           let d = request.resource.data;
           let p = pollData(pollId);

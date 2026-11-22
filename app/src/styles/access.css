@@ -25,7 +25,7 @@
 .requests__row--rejected{background:var(--soft)}
 .requests__person{min-width:0;overflow-wrap:anywhere}
 .requests__actions{display:flex;gap:6px;flex-wrap:wrap}
-/* «Gestionar participantes» (administradores): administradores, sacar y volver a admitir */
+/* «Gestionar participantes» (administradores): administradores, expulsar y volver a admitir */
 .manage-people{
   background:var(--card);
   border:1px solid var(--line);

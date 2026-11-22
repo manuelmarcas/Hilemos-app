@@ -111,7 +111,7 @@ En las tablas:
 | 2.5.6 | Administradores | El creador nombra coorganizadores con un clic, desde «Gestionar participantes» (menú ⋯); gestionan como él, salvo eliminarla y nombrar a otros. | Premium | ★★★ | Premium |
 | 2.5.7 | Delegado | Si el creador se va, la votación pasa a un administrador o a otro participante. | Gratis (es una garantía) | No | Gratis; con preferencia por un administrador con premium (§8) |
 | 2.5.8 | Solicitudes | Aceptar, rechazar o volver a admitir (en las de aprobación). | Va con 2.2.12 | ★★★ (con 2.2.12) | Va con 2.2.12; aceptar y rechazar sigue funcionando aunque el gestor no tenga premium (§8) |
-| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. Hoy se pueden quitar correos de la lista; quien ya había entrado con un correo quitado sigue dentro y puede votar: solo deja de poder volver a entrar si sale. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Los correos que aún no han entrado se pueden quitar (para corregir errores al escribirlos). Quitar el de alguien que ya está dentro depende de 7.20: si se puede sacar a gente, quitar su correo lo saca (con confirmación); si no, no se puede quitar. |
+| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. Hoy se pueden quitar correos de la lista; quien ya había entrado con un correo quitado sigue dentro y puede votar: solo deja de poder volver a entrar si sale. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Los correos que aún no han entrado se pueden quitar (para corregir errores al escribirlos). Quitar el de alguien que ya está dentro depende de 7.20: si se puede expulsar a gente, quitar su correo lo expulsa (con confirmación); si no, no se puede quitar. |
 | 2.5.10 | Quitar el plazo | Con la votación abierta, deja de tener fecha de cierre. Si el plazo ya ha pasado, reabrir la votación quita el plazo y se pueden volver a cambiar los votos. | Va con 2.2.10 | ★★ (con 2.2.10) | Va con 2.2.10. Probado. |
 | 2.5.11 | Eliminar la votación | La borra para todos. | Gratis | No | Gratis |
 | 2.5.12 | Salir de la votación | Avisa de lo que pasa con los votos según el estado de la votación. | Gratis | No | Gratis |
@@ -267,7 +267,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.11 | Una nota con el voto | «Llego a las 22:00», «solo por la tarde». | Pendiente | ★ | No |
 | 7.12 | Zona horaria | En las votaciones por horas, para grupos en varios países. Propuesta: la votación guarda la zona de quien la crea; quien la abre desde otra zona ve «hora de Madrid» y, al lado, su hora local. | Pendiente | ★ | Sí: la zona del creador |
 | 7.13 | Límite de elecciones por persona | «Elige como mucho 3». | Pendiente | ★ | No: libertad para elegir |
-| 7.20 | Sacar a alguien de la votación | Un administrador saca a un participante: sus votos dejan de contar, se libera su plaza y no puede volver a entrar con el enlace. Sirve si el enlace llega a quien no debía o si alguien molesta en el chat. Está en «Gestionar participantes» (menú ⋯), con «Hacer admin» y «Quitar admin»; los sacados van aparte para volver a admitirlos y el chat avisa. «Acceso y plazas» queda para las reglas de entrada (plazas y correos). | Hecho | No: es moderación, y las tiendas la piden (7.4) | Gratis. Lo puede hacer cualquier administrador (también sin premium y también si la heredó); a otro administrador solo lo saca el creador; al creador, nadie. |
+| 7.20 | Expulsar a alguien de la votación | Un administrador expulsa a un participante: sus votos dejan de contar, se libera su plaza y no puede volver a entrar con el enlace. Sirve si el enlace llega a quien no debía o si alguien molesta en el chat. Está en «Gestionar participantes» (menú ⋯), con «Hacer admin» y «Quitar admin»; los expulsados van aparte para volver a admitirlos y el chat avisa. «Acceso y plazas» queda para las reglas de entrada (plazas y correos). | Hecho | No: es moderación, y las tiendas la piden (7.4) | Gratis. Lo puede hacer cualquier administrador (también sin premium y también si la heredó); a otro administrador solo lo expulsa el creador; al creador, nadie. |
 | **Más adelante** | | | | | |
 | 7.14 | Entrar con Apple | Obligatorio para publicar en la App Store si se ofrece entrar con Google. | Pendiente | No | |
 | 7.15 | Otros idiomas | Inglés y catalán, por ejemplo. | Pendiente | No | |
@@ -331,7 +331,7 @@ nunca paga (1.1).
 | --- | --- |
 | Cerrar, reabrir (si cabe en su límite de abiertas, §9), desempatar y eliminar | Subir el máximo de personas por encima del límite gratuito |
 | Editar título, descripción, días u opciones | Nombrar administradores nuevos (los que ya había siguen) |
-| Aceptar y rechazar solicitudes, para no dejar a nadie fuera, y sacar a alguien (7.20) | Poner un plazo nuevo o alargarlo |
+| Aceptar y rechazar solicitudes, para no dejar a nadie fuera, y expulsar a alguien (7.20) | Poner un plazo nuevo o alargarlo |
 | Añadir correos a la lista: no aumenta las plazas, que es lo que se paga | Activar la aprobación, la lista de correos o los resultados ocultos si no estaban |
 | Quitar el plazo, bajar el máximo o quitar administradores | — |
 

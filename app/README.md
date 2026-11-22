@@ -250,14 +250,14 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   `isAdminOf()`; un administrador solo puede quitarse a sí mismo de la lista (`leaveAdmins`), y nunca cambia el estado
   del creador. `managedPeople` (`model.ts`) decide qué puede hacer cada uno con cada persona del panel, y `roleOf`, su
   etiqueta («Creador», «Delegado» o «Admin»).
-- **Sacar a alguien**: `setMemberStatus(id, uid, "rejected", { removed: true, dropAdmin })` deja su voto como rechazado
+- **Expulsar a alguien**: `setMemberStatus(id, uid, "rejected", { removed: true, dropAdmin })` deja su voto como rechazado
   con `removed: true` (y, si era administrador, le quita de `admins` en la misma escritura); con tope, el contador baja
   1. Como cualquier rechazado, sus votos dejan de contar (`acceptedVotes`), no entra en el chat y no puede borrar su voto
-  para volver a entrar. Ve «Te han sacado de esta votación» (`WaitingView`, también en las abiertas). Volver a admitirle
-  quita `status` y `removed`. En las reglas (`ownerSetsStatus`), a otro administrador solo le saca el creador, y nadie
-  puede quitarse `removed` a sí mismo. Las solicitudes (`Requests`) no muestran a los sacados: se readmiten desde el panel.
+  para volver a entrar. Ve «Te han expulsado de esta votación» (`WaitingView`, también en las abiertas). Volver a admitirle
+  quita `status` y `removed`. En las reglas (`ownerSetsStatus`), a otro administrador solo le expulsa el creador, y nadie
+  puede quitarse `removed` a sí mismo. Las solicitudes (`Requests`) no muestran a los expulsados: se readmiten desde el panel.
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
-  saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
+  expulsa un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
   cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el
   creador, pasa `ownerUid` a un administrador o participante aceptado al azar (`pickHeir`; las reglas exigen que
   tenga voto, sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o

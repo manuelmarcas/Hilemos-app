@@ -1,5 +1,5 @@
 // Pestaña «Participantes»: la tabla (con lo que ha votado cada uno y su papel); con muchos participantes, buscador,
-// filtros y lista recortada; y debajo, plegado, «Se fueron». Nombrar administradores y sacar a alguien va en
+// filtros y lista recortada; y debajo, plegado, «Se fueron». Nombrar administradores y expulsar a alguien va en
 // «Gestionar participantes» (ManagePeople).
 import { Fragment, useState, type ReactNode } from "react";
 import * as D from "../../lib/dates";

@@ -1,7 +1,7 @@
 // Informe de resultados en PDF (A4) para presentar o imprimir: cabecera, ganadora, clasificación con quién votó cada
 // opción, desempate y participantes. Se dibuja en canvas con el tema claro (como la imagen del resultado, con sus
 // fuentes y emojis) y cada página se guarda como imagen dentro del PDF (pdf.ts).
-import { DISPLAY, LIGHT, SANS, clamp, fontsReady, lines, roundRect } from "./canvas";
+import { DISPLAY, LIGHT, SANS, clamp, drawBrand, fontsReady, lines, roundRect } from "./canvas";
 import { exportTable, rankedRows, voterNames } from "./exportData";
 import { plural, pollRange, unitLabel, type Tally, type TiebreakTally } from "./model";
 import { publicHost } from "./native";
@@ -64,9 +64,8 @@ export async function resultPdf(poll: Poll, T: Tally, TB: TiebreakTally | null, 
   newPage();
 
   // ---------- Cabecera ----------
-  y += 34;
-  text("Hilemos", M, `800 34px ${display}`, C["--brand-strong"]);
-  y += 40;
+  drawBrand(g, M, M - 4, 56, C);
+  y += 74;
   g.font = `800 56px ${display}`;
   for (const l of lines(g, poll.title, INNER, 3)) {
     y += 62;

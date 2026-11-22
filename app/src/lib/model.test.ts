@@ -367,13 +367,13 @@ describe("papeles y «Gestionar participantes»", () => {
     expect(roleOf(passed, "ido")).toBe("creator");
   });
 
-  it("isRemoved: solo quien fue sacado, no a quien se rechazó al pedir entrar", () => {
+  it("isRemoved: solo quien fue expulsado, no a quien se rechazó al pedir entrar", () => {
     expect(isRemoved(votes.fuera)).toBe(true);
     expect(isRemoved(votes.rech)).toBe(false);
     expect(isRemoved(votes.ana)).toBe(false);
   });
 
-  it("el creador ve primero a quien la gestiona y a los administradores; puede nombrar y sacar a todos menos a sí mismo", () => {
+  it("el creador ve primero a quien la gestiona y a los administradores; puede nombrar y expulsar a todos menos a sí mismo", () => {
     const { inside, removed } = managedPeople(poll, votes, "owner");
     expect(inside.map(p => p.uid)).toEqual(["owner", "adm", "ana", "bea"]);
     expect(removed.map(p => p.uid)).toEqual(["fuera"]);
@@ -383,7 +383,7 @@ describe("papeles y «Gestionar participantes»", () => {
     expect(by.ana.canToggleAdmin && by.ana.canRemove).toBe(true);
   });
 
-  it("un administrador saca a participantes, pero no nombra administradores ni saca a otro administrador", () => {
+  it("un administrador expulsa a participantes, pero no nombra administradores ni expulsa a otro administrador", () => {
     const poll2 = days({ admins: ["adm", "bea"] });
     const by = Object.fromEntries(managedPeople(poll2, votes, "adm").inside.map(p => [p.uid, p]));
     expect(by.ana.canRemove).toBe(true);

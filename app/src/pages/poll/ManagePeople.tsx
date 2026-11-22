@@ -1,5 +1,5 @@
 // «Gestionar participantes» (administradores, desde el menú ⋯): nombrar o quitar administradores con un clic (solo
-// quien gestiona la votación), sacar a alguien (con confirmación) y volver a admitir a quien se sacó.
+// quien gestiona la votación), expulsar a alguien (con confirmación) y volver a admitir a quien se expulsó.
 import { useState } from "react";
 import { MAX_ADMINS, PEOPLE_FILTER_FROM, isFull, managedPeople, type ManagedPerson } from "../../lib/model";
 import type { Poll, Votes } from "../../lib/types";
@@ -38,7 +38,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
         {owner
           ? "Los administradores gestionan la votación como tú, salvo eliminarla y nombrar a otros. "
           : "Solo quien gestiona la votación puede nombrar administradores. "}
-        Si sacas a alguien, sus votos dejan de contar y no podrá volver a entrar con el enlace.
+        Si expulsas a alguien, sus votos dejan de contar y no podrá volver a entrar con el enlace.
       </p>
       {inside.length >= PEOPLE_FILTER_FROM && (
         <input className="input input--small manage-people__search" type="search" placeholder="Buscar participante…"
@@ -60,7 +60,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
                     </button>
                   )}
                   {p.canRemove && (
-                    <button type="button" className="btn btn--small btn--danger" onClick={() => onRemove(p.uid, p.name)}>Sacar</button>
+                    <button type="button" className="btn btn--small btn--danger" onClick={() => onRemove(p.uid, p.name)}>Expulsar</button>
                   )}
                 </span>
               )}
@@ -70,7 +70,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
         {!shown.length && <li className="manage-people__empty muted">Nadie coincide con la búsqueda.</li>}
       </ul>
       {removed.length > 0 && <>
-        <h3 className="manage-people__subtitle">Sacados <span className="muted">({removed.length})</span></h3>
+        <h3 className="manage-people__subtitle">Expulsados <span className="muted">({removed.length})</span></h3>
         <ul className="manage-people__list">
           {removed.map(p => (
             <li key={p.uid} className="manage-people__row manage-people__row--removed">

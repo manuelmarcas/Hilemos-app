@@ -63,7 +63,7 @@ export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 export const isPresent = (v?: Vote | null) => !!v && !v.status && !v.gone;
 /** Administra la votación: el creador o alguien que él ha nombrado administrador. */
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
-/** Un administrador le sacó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
+/** Un administrador le expulsó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
 export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
 
 export type Role = "creator" | "delegate" | "admin";
@@ -82,13 +82,13 @@ export interface ManagedPerson {
   role: Role | null;
   /** Puede nombrarle o quitarle de administrador (solo quien gestiona la votación, y nunca a sí mismo). */
   canToggleAdmin: boolean;
-  /** Puede sacarle: cualquier administrador, salvo a quien la gestiona, a sí mismo y, si no es el gestor, a otro administrador. */
+  /** Puede expulsarle: cualquier administrador, salvo a quien la gestiona, a sí mismo y, si no es el gestor, a otro administrador. */
   canRemove: boolean;
 }
 
 /**
  * «Gestionar participantes», visto por `me`: quienes siguen dentro (primero quien la gestiona, después los
- * administradores y el resto por nombre) y quienes han sido sacados (para volver a admitirlos).
+ * administradores y el resto por nombre) y quienes han sido expulsados (para volver a admitirlos).
  */
 export function managedPeople(p: PollData, votes: Votes, me: string): { inside: ManagedPerson[]; removed: ManagedPerson[] } {
   const owner = p.ownerUid === me;

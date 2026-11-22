@@ -204,7 +204,7 @@ export function createDemoStore(): Store {
       const v = db.votes[id]?.[uid];
       if (!p || !v) throw fail("not-found");
       if (!isAdmin(p, me()) || uid === p.ownerUid || uid === me()) throw fail("permission-denied");
-      // A un administrador solo le cambia el estado (le saca) el creador, como en las reglas.
+      // A un administrador solo le cambia el estado (le expulsa) el creador, como en las reglas.
       if (p.admins?.includes(uid) && p.ownerUid !== me()) throw fail("permission-denied");
       if (status === "accepted") { delete v.status; delete v.removed; } else {
         v.status = status;

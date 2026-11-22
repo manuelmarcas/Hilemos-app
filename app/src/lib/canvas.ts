@@ -1,12 +1,14 @@
 // Ayudas para dibujar en un canvas lo que se comparte o se exporta (imagen del resultado e informe en PDF):
 // fuentes, colores del design system y texto que se recorta o se reparte en líneas.
 import tokens from "../../design-system/tokens.json";
+import { LOGO_BOX, LOGO_PATHS } from "./logo";
 
 export const DISPLAY = '"Bricolage Grotesque", system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
 export const SANS = 'Figtree, system-ui, "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
 
 // Colores que se usan al dibujar.
-const USED = ["bg", "card", "soft", "line", "ink", "muted", "brand", "brand-strong", "best", "best-soft", "on-best", "tie-soft", "tie-ink"];
+const USED = ["bg", "card", "soft", "line", "ink", "muted", "brand", "brand-strong", "best", "best-soft", "on-best", "tie-soft", "tie-ink",
+  "logo", "wordmark-hile", "wordmark-mos"];
 
 /** Los colores del tema claro de tokens.json, como `{"--ink": "#2a1f27", …}`: para lo que se imprime. */
 export const LIGHT: Record<string, string> = Object.fromEntries(USED.map(n => {
@@ -64,4 +66,34 @@ export function lines(g: CanvasRenderingContext2D, text: string, maxWidth: numbe
   if (out.length < maxLines && line) out.push(line);
   const last = out.length - 1;
   return out.map((l, i) => clamp(g, i === last && left > 0 ? `${l}…` : l, maxWidth));
+}
+
+/**
+ * La marca como en la barra superior: el logotipo de `size` px de alto en (x, top) y, a su derecha, «Hile» y «mos»
+ * en sus dos colores, centrados con él. `colors`: LIGHT o currentColors().
+ */
+export function drawBrand(g: CanvasRenderingContext2D, x: number, top: number, size: number, colors: Record<string, string>) {
+  const [bx, by, bw] = LOGO_BOX;
+  g.save();
+  g.translate(x, top);
+  g.scale(size / bw, size / bw);
+  g.translate(-bx, -by);
+  for (const [fill, d] of LOGO_PATHS) {
+    g.fillStyle = fill ?? colors["--logo"];
+    g.fill(new Path2D(d));
+  }
+  g.restore();
+  // Mismas proporciones que .brand: letra de 1,3rem junto a un logotipo de 34 px, con 6 px de separación.
+  const font = `800 ${Math.round(size * 0.61)}px ${SANS}`;
+  g.save();
+  g.font = font;
+  g.textBaseline = "middle";
+  g.textAlign = "left";
+  let at = x + size * 1.18;
+  for (const [part, color] of [["Hile", colors["--wordmark-hile"]], ["mos", colors["--wordmark-mos"]]]) {
+    g.fillStyle = color;
+    g.fillText(part, at, top + size / 2);
+    at += g.measureText(part).width;
+  }
+  g.restore();
 }

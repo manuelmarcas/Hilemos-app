@@ -208,17 +208,17 @@ await check("Nombrar administradora a Bea (Gestionar participantes, un clic)", a
   await ana.waitForSelector(".people-table__row:has-text('Bea') .role-tag:has-text('Admin')");
   expect(await ana.getByRole("button", { name: "Hacer admin" }).count() === 1, "la tabla no debe tener botones de admin");
 });
-await check("Sacar a Cris y volver a admitirle", async () => {
-  await btn(managedRow(ana, "Cris"), "Sacar").click();
-  expect((await dialogText(ana)).includes("¿Sacar a Cris de la votación?"), "sin confirmación");
+await check("Expulsar a Cris y volver a admitirle", async () => {
+  await btn(managedRow(ana, "Cris"), "Expulsar").click();
+  expect((await dialogText(ana)).includes("¿Expulsar a Cris de la votación?"), "sin confirmación");
   await yes(ana);
-  await managePanel(ana).getByText("Sacados").waitFor();
+  await managePanel(ana).getByText("Expulsados").waitFor();
   expect(await ana.locator(".people-table__row:has-text('Cris')").count() === 0, "Cris sigue en la tabla");
   await btn(managedRow(ana, "Cris"), "Volver a admitir").click();
   await ana.waitForSelector(".people-table__row:has-text('Cris')");
   await btn(managePanel(ana), "Cerrar").click();
   await ana.locator("#ptabbtn-chat").click();
-  await ana.waitForSelector(".chat__sys:has-text('ha sacado a Cris')");
+  await ana.waitForSelector(".chat__sys:has-text('ha expulsado a Cris')");
   await ana.locator("#ptabbtn-people").click();
 });
 await check("Exportar resultados en CSV, Excel y PDF", async () => {

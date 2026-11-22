@@ -4,7 +4,7 @@ import { publicHost, shareFileNative } from "./native";
 import { TYPE, plural, slotLabel, unitParts } from "./model";
 import type { Poll, PollData } from "./types";
 import type { Tally, TiebreakTally } from "./model";
-import { DISPLAY, SANS, clamp, currentColors, fontsReady, lines, roundRect } from "./canvas";
+import { DISPLAY, SANS, clamp, currentColors, drawBrand, fontsReady, lines, roundRect } from "./canvas";
 import { downloadBlob } from "./files";
 import { slugify } from "./util";
 
@@ -58,9 +58,7 @@ export async function resultCard(poll: Poll, T: Tally, TB: TiebreakTally | null)
   let y = PAD + 24;
 
   g.textBaseline = "alphabetic";
-  g.fillStyle = t["--brand-strong"];
-  g.font = `800 40px ${display}`;
-  g.fillText("Hilemos", PAD, y);
+  drawBrand(g, PAD, y - 46, 60, t);
   y += 56;
 
   const info = TYPE[poll.type];
