@@ -34,6 +34,8 @@
     transition:box-shadow .2s;
   }
   .topbar--scrolled{box-shadow:var(--shadow-card)}
+  /* Al ir a un campo (foco, teclado) o a un ancla, el navegador deja hueco a la barra pegada para no taparlo. */
+  html{scroll-padding-top:calc(var(--safe-top) + 80px)}
 }
 .topbar__left{display:flex;align-items:center;gap:10px;min-width:0}
 .brand{
