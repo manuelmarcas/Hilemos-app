@@ -157,7 +157,7 @@ app/                          LA APLICACIÓN (React + Vite + TypeScript). Ver ap
 
 firestore.rules               Reglas de seguridad de Firestore
 firebase.json, .firebaserc    Firebase de la raíz: reglas y funciones (el hosting está en app/)
-functions/                    Cloud Functions de avisos push (escritas, nunca desplegadas: plan Spark)
+functions/                    Cloud Functions de avisos push (desplegadas en europe-west1 desde el 22 de noviembre de 2026; plan Blaze)
 docs/                         Documentación (funcionalidades y planes)
 .claude/skills/               Normas y herramientas del proyecto para Claude Code
 index.html                    Redirección de GitHub Pages a hilemos.web.app (no es la app)

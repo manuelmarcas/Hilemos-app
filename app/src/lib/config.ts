@@ -21,4 +21,4 @@ export const firebaseConfig: FirebaseOptions = {
  * Clave pública de los avisos (Configuración del proyecto > Cloud Messaging > Certificados push web).
  * Es pública como el resto de esta configuración. Vacía: la app no ofrece los avisos (ver app/README.md).
  */
-export const fcmVapidKey = "";
+export const fcmVapidKey = "BBenyl_4Lxl_B2I18HWwEMOX9C6_46OPAd7_4D97bTKQDwNq5xCkKHDBnEan7bFvtsEVKF6d9Mq_9gtWUIS4cmU";

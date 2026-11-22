@@ -57,8 +57,8 @@ Mira `git status`, `git log origin/main..` y `ListAgents`. Si otra sesión tiene
    ```
 6. **Push**: `git push origin main`.
 
-Las Cloud Functions (`functions/`) **no** se despliegan: el proyecto está en el plan Spark y pasar a Blaze es decisión
-del usuario.
+Las Cloud Functions (`functions/`) solo se despliegan si has cambiado `functions/index.js` (el proyecto está en Blaze desde
+el 2026-11-22): `app/node_modules/.bin/firebase deploy --only functions --project votaciones-9bc95`.
 
 ## Tropiezos conocidos
 
