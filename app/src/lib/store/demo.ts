@@ -150,6 +150,9 @@ export function createDemoStore(): Store {
     async updatePoll(id, patch) {
       const db = load();
       if (!db.polls[id]) throw fail("not-found");
+      // Como las reglas: el máximo no puede quedar por debajo de las plazas ocupadas.
+      const next = { ...db.polls[id], ...patch };
+      if ("maxPeople" in patch && typeof next.maxPeople === "number" && (next.members || 0) > next.maxPeople) throw fail("permission-denied");
       Object.assign(db.polls[id], patch);
       write(db);
     },

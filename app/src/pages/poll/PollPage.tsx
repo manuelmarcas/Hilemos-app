@@ -469,7 +469,9 @@ export function PollPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
-      {admin && accessOpen && <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} />}
+      {admin && accessOpen && (
+        <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} onPeople={() => { setAccessOpen(false); setPeopleOpen(true); }} />
+      )}
       {admin && exportOpen && <ExportDialog poll={view} T={T} TB={TB} toast={toast} onClose={() => setExportOpen(false)} />}
       {admin && peopleOpen && (
         <ManagePeople poll={poll} votes={shown} me={user.uid} onToggleAdmin={toggleAdmin} onRemove={removeMember}

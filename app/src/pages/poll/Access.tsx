@@ -1,7 +1,7 @@
 // Quién puede entrar: solicitudes y ajustes de acceso (administradores), y las pantallas de quien está pendiente
 // o no puede entrar (privada, completa o sin cuenta).
-import { useEffect, useState } from "react";
-import { MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, parseEmails, pollRange } from "../../lib/model";
+import { useEffect, useRef, useState } from "react";
+import { MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, minMaxPeople, parseEmails, pollRange } from "../../lib/model";
 import type { MemberStatus, Poll, Vote } from "../../lib/types";
 import { bem, errMsg } from "../../lib/util";
 import { useSession } from "../../state/session";
@@ -55,8 +55,11 @@ export function Requests({ poll, requests, onSet }: {
   );
 }
 
-/** «Acceso y plazas» (administradores): tope de personas y, en las privadas, correos permitidos. */
-export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void }) {
+/**
+ * «Acceso y plazas» (administradores): tope de personas y, en las privadas, correos permitidos. El tope no puede bajar
+ * de las plazas ocupadas (`minMaxPeople`); para eso hay que expulsar antes a alguien (`onPeople` abre ese panel).
+ */
+export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: () => void; onPeople: () => void }) {
   const { store } = useSession();
   const { toast } = useUi();
   const members = poll.members || 0;
@@ -65,6 +68,7 @@ export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void
   const [loaded, setLoaded] = useState(!poll.emailsOnly);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const maxRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!poll.emailsOnly) return;
@@ -74,11 +78,16 @@ export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void
   }, [store, poll.id, poll.emailsOnly]);
 
   const parsed = parseEmails(emailsText);
-  const min = Math.max(2, members);
+  // Se recalcula en directo: si entra alguien mientras se edita, el mínimo sube.
+  const min = minMaxPeople(poll);
+  const n = Number(maxText.trim());
+  // Por debajo de las plazas ocupadas (si es por bajar de 2, vale el aviso general al guardar).
+  const tooLow = maxText.trim() !== "" && Number.isInteger(n) && n < members;
+  const tooLowMsg = `Ya ocupan plaza ${members} personas, así que el máximo no puede ser menor. Para bajarlo, expulsa antes a alguien.`;
   async function save() {
-    const n = Number(maxText.trim());
+    if (tooLow) { maxRef.current?.focus(); return; } // el aviso ya está bajo el campo
     if (!Number.isInteger(n) || n < min || n > MAX_PEOPLE) {
-      setErr(`El máximo debe estar entre ${min} y ${MAX_PEOPLE}${members > 2 ? ` (ya hay ${members} personas dentro)` : ""}.`);
+      setErr(`El máximo debe ser un número entre ${min} y ${MAX_PEOPLE}.`);
       return;
     }
     if (poll.emailsOnly) {
@@ -94,7 +103,9 @@ export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void
       toast("Acceso guardado");
       onClose();
     } catch (e) {
-      setErr("No se pudo guardar. " + errMsg(e));
+      // Las reglas lo rechazan si, mientras se editaba, entró gente y el máximo quedó por debajo.
+      setErr((e as { code?: string })?.code === "permission-denied" && n < minMaxPeople(poll)
+        ? tooLowMsg : "No se pudo guardar. " + errMsg(e));
       setBusy(false);
     }
   }
@@ -102,9 +113,15 @@ export function AccessPanel({ poll, onClose }: { poll: Poll; onClose: () => void
   return (
     <section className="access-panel" aria-label="Acceso y plazas">
       <h2 className="access-panel__title"><Icon name="settings" /> Acceso y plazas</h2>
-      <label className="field-label access-panel__label" htmlFor="ap-max">Máximo de personas <span className="muted">(ahora hay {members})</span></label>
-      <input id="ap-max" className="input input--small" type="number" inputMode="numeric" min={min} max={MAX_PEOPLE}
-        value={maxText} onChange={e => setMaxText(e.target.value)} />
+      <label className="field-label access-panel__label" htmlFor="ap-max">Máximo de personas</label>
+      <input ref={maxRef} id="ap-max" className="input input--small" type="number" inputMode="numeric" min={min} max={MAX_PEOPLE}
+        value={maxText} aria-invalid={tooLow} aria-describedby="ap-max-hint"
+        onChange={e => { setMaxText(e.target.value); setErr(""); }} />
+      <p id="ap-max-hint" className="hint access-panel__hint">
+        {tooLow
+          ? <><span className="hint__warn">{tooLowMsg}</span> <button type="button" className="link-btn" onClick={onPeople}>Gestionar participantes</button></>
+          : members >= 2 ? `Ya ocupan plaza ${members} personas, así que no puede ser menos.` : "Como mínimo, 2 personas."}
+      </p>
       {poll.emailsOnly && (
         <>
           <label className="field-label access-panel__label" htmlFor="ap-emails">Correos que pueden entrar</label>

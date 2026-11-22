@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, lostVotedUnit,
-  managedPeople, memberStatus, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  managedPeople, memberStatus, minMaxPeople, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -414,5 +414,13 @@ describe("winnerKey (la ganadora)", () => {
     const T = tally(open, votes);
     expect(winnerKey(T, tiebreakTally(open, votes))).toBeNull();
     expect(winnerKey(T, tiebreakTally(done, votes))).toBe("2025-12-16|c");
+  });
+});
+
+describe("minMaxPeople (lo menos que se puede poner de máximo)", () => {
+  it("las plazas ocupadas, y nunca menos de 2", () => {
+    expect(minMaxPeople(days({ maxPeople: 20, members: 12 }))).toBe(12);
+    expect(minMaxPeople(days({ maxPeople: 20, members: 1 }))).toBe(2);
+    expect(minMaxPeople(days())).toBe(2);
   });
 });

@@ -138,6 +138,12 @@ export function pickHeir(votes: Votes, leaving: string, admins: string[] = []): 
 export const keepsVotesOnLeave = (p: PollData) =>
   (!!p.closed || deadlinePassed(p)) && !(p.tiebreak && !p.tiebreak.done);
 export const isFull = (p: PollData) => hasLimit(p) && (p.members || 0) >= (p.maxPeople as number);
+/**
+ * Lo menos que se puede poner de máximo: las plazas ya ocupadas (y nunca menos de 2). Ocupan plaza quienes están
+ * dentro, las solicitudes pendientes y quien se fue con sus votos; no, los rechazados ni los expulsados. Las reglas
+ * exigen lo mismo (members <= maxPeople).
+ */
+export const minMaxPeople = (p: PollData) => Math.max(2, p.members || 0);
 
 // ----- Plazo para votar -----
 /** Tiene plazo y ya ha pasado: no se admiten votos aunque `closed` siga false. */

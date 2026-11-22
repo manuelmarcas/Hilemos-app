@@ -179,8 +179,11 @@ Al crear una votación se elige el acceso (no se puede cambiar después) y, opci
 - **Máximo de personas** (`maxPeople`, contando al creador): si no se indica, el tope es **150** (`MAX_PEOPLE`),
   para que ninguna votación crezca sin límite. `members` cuenta a los que están dentro (aceptados y pendientes;
   los rechazados liberan su plaza). Al entrar por primera vez, el voto y `members + 1` se escriben en el mismo
-  lote, y las reglas lo exigen, así que el tope no se puede saltar desde fuera de la app. El creador puede subir o
-  bajar el máximo (nunca por debajo de los que ya están) en ⋯ → «Acceso y plazas».
+  lote, y las reglas lo exigen, así que el tope no se puede saltar desde fuera de la app. Quien administra puede subir
+  o bajar el máximo en ⋯ → «Acceso y plazas», nunca por debajo de las plazas ocupadas (`minMaxPeople`; también quien
+  se fue con sus votos ocupa plaza). Si se escribe menos, el aviso sale bajo el campo al momento, con un enlace a
+  «Gestionar participantes» para expulsar antes a alguien; las reglas (`members <= maxPeople`) y el modo demo lo
+  rechazan igual, y si entra alguien mientras se edita, el mínimo sube en directo.
 - Las votaciones creadas antes de esto no tienen `maxPeople` ni contador y siguen funcionando igual.
 
 En las restringidas (con aprobación o con correos), las reglas solo dejan leer los votos al creador y a los
