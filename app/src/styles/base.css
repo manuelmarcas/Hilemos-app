@@ -7,9 +7,19 @@
    del ancho disponible. Ninguna rejilla de la app fluye por columnas, así que es seguro ponerlo a todas. */
 *{grid-auto-columns:minmax(0, 1fr)}
 [hidden]{display:none !important}
+/* Zonas del sistema que tapan la pantalla en la app de Android (barra de estado, isla de la cámara, botones o
+   gestos de navegación). En el navegador valen 0. Se toma el mayor de env() y de las variables que rellena el
+   plugin SystemBars de Capacitor (--safe-area-inset-*), porque en un WebView antiguo env() devuelve 0. */
+:root{
+  --safe-top:max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --safe-right:max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
+  --safe-bottom:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+  --safe-left:max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+}
 html,body{min-height:100%}
 body{
   margin:0;
+  padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   font-family:var(--font-sans);
   background:
     radial-gradient(circle at 10% 0%, var(--glow-a) 0, transparent 45%),

@@ -4,7 +4,7 @@
 .toast{
   position:fixed;
   left:50%;
-  bottom:24px;
+  bottom:calc(24px + var(--safe-bottom));
   transform:translate(-50%, 20px);
   background:var(--ink);
   color:var(--bg);
@@ -124,7 +124,7 @@
 /* Avisos con "Deshacer" y cuenta atrás */
 .undo-stack{
   position:fixed;left:50%;transform:translateX(-50%);
-  bottom:calc(16px + env(safe-area-inset-bottom));
+  bottom:calc(16px + var(--safe-bottom));
   z-index:61;
   display:grid;gap:8px;
   width:min(460px, calc(100% - 32px));
@@ -166,7 +166,7 @@
 @keyframes undo-progress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes undo-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.undo{animation:none}}
-.toast--above-undo{bottom:calc(84px + env(safe-area-inset-bottom))}
+.toast--above-undo{bottom:calc(84px + var(--safe-bottom))}
 /* Casilla con su texto (en diálogos y en los avisos del perfil) */
 .check{display:flex;align-items:center;gap:10px;margin:4px 0 18px;font-size:.9rem;cursor:pointer}
 .check__box{width:18px;height:18px;accent-color:var(--brand);flex:none}

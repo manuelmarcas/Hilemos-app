@@ -47,6 +47,7 @@
   left:0;right:0;bottom:0;
   width:auto;
   height:min(420px, 60vh);
+  padding-bottom:var(--safe-bottom);
   border-radius:16px 16px 0 0;
 }
 .emoji-panel__head{

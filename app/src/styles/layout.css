@@ -72,7 +72,7 @@
 @media (min-width:960px){
   .page--with-sidebar .app{max-width:1440px}
   .page--with-sidebar .app__layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:28px;align-items:start}
-  .sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
+  .sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px - var(--safe-top) - var(--safe-bottom));overflow:auto}
 }
 @media (max-width:959.98px){
   .page--with-sidebar .topbar__drawer{display:inline-flex}
@@ -83,7 +83,8 @@
       width:min(320px, 86vw);
       border-radius:0 16px 16px 0;
       overflow:auto;
-      padding-top:18px;
+      padding-top:calc(18px + var(--safe-top));
+      padding-bottom:var(--safe-bottom);
       transform:translateX(-105%);
       visibility:hidden;
       /* Al cerrar se oculta cuando ha terminado de salir; al abrir (abajo), se ve al momento: así admite el foco. */
