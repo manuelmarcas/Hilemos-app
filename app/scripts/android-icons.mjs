@@ -64,6 +64,28 @@ ${cal.map(p => `        <path android:fillColor="${p.fill}" android:pathData="${
     </group>
 </vector>
 `);
+// Icono de la pantalla de arranque (Android 12+): el icono entero, cuadrado morado con esquinas redondeadas y el
+// calendario, en vectorial. Lleva su propio fondo porque algunos móviles (ColorOS) no pintan
+// windowSplashScreenIconBackgroundColor. Ocupa la mitad del lienzo para caber en el círculo que muestra el sistema.
+{
+  const V = 1000, T = 500, o = (V - T) / 2, r = T * 0.2, c = T * 0.7, k = c / BOX, co = (V - c) / 2;
+  const tile = `M${o + r},${o} H${o + T - r} A${r},${r} 0 0 1 ${o + T},${o + r} V${o + T - r} A${r},${r} 0 0 1 ${o + T - r},${o + T}` +
+    ` H${o + r} A${r},${r} 0 0 1 ${o},${o + T - r} V${o + r} A${r},${r} 0 0 1 ${o + r},${o} Z`;
+  fs.writeFileSync(`${RES}/drawable/splash_icon.xml`, `<?xml version="1.0" encoding="utf-8"?>
+<!-- Generado por scripts/android-icons.mjs: el icono de la app (fondo morado y calendario) para la pantalla de
+     arranque de Android 12+ (styles.xml, windowSplashScreenAnimatedIcon). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp" android:height="288dp"
+    android:viewportWidth="${V}" android:viewportHeight="${V}">
+    <path android:fillColor="${BG}" android:pathData="${tile}"/>
+    <group android:translateX="${co}" android:translateY="${co}" android:scaleX="${k}" android:scaleY="${k}">
+        <group android:translateX="${-X0}" android:translateY="${-Y0}">
+${cal.map(p => `            <path android:fillColor="${p.fill}" android:pathData="${p.d}"/>`).join("\n")}
+        </group>
+    </group>
+</vector>
+`);
+}
 fs.writeFileSync(`${RES}/values/ic_launcher_background.xml`, `<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Fondo del icono: el morado de design-system/logo/logo-recraft-original.svg (scripts/android-icons.mjs). -->
