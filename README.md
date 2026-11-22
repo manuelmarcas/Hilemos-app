@@ -109,6 +109,21 @@ caducan y cambian de dirección.
 
 Si se publica en otro dominio, hay que añadirlo en *Authentication › Configuración › Dominios autorizados*.
 
+## Skills para Claude Code
+
+En `.claude/skills/` están las normas y herramientas del proyecto para trabajar con Claude Code (se cargan solas
+cuando hacen falta, o con `/nombre`):
+
+| Skill | Para qué |
+| --- | --- |
+| `publicar` | Compilar, reglas, web, comprobar que está en vivo, commit y push, integrando lo de otras sesiones |
+| `probar-en-navegador` | Pruebas en Chrome (modo demo): capturas comparadas píxel a píxel, estados con el ratón y recorrido funcional de toda la app |
+| `cambio-de-modelo` | Todo lo que hay que tocar cuando cambia un dato de Firestore (tipos, reglas, almacenes, plantillas, privacidad…) |
+| `estilo-y-css` | Tokens, convención BEM, tooltips, iconos, tema oscuro y móvil |
+| `codigo-limpio` | Dónde va cada cosa, cuándo sacar un componente y qué reutilizar |
+| `limpieza-codigo` | Código muerto, CSS sin usar, selectores fuera de BEM, duplicados y cálculos de más (con scripts) |
+| `textos` | Cómo se escriben los textos de la interfaz, los comentarios y los commits |
+
 ## Estructura
 
 ```

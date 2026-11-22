@@ -1,1 +1,3 @@
-.claude/
+# Lo local de Claude Code (worktrees, ajustes) no se sube; las skills del proyecto sí.
+.claude/*
+!.claude/skills/

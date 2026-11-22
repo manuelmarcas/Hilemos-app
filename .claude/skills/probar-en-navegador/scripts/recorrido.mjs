@@ -1,0 +1,479 @@
+// Recorrido funcional de toda la app (modo demo): cada paso hace algo como un usuario y comprueba el resultado.
+// Uso: node recorrido.mjs <carpeta para capturas de los fallos>   (PORT y CHROME por variable de entorno)
+import { chromium } from "playwright-core";
+import fs from "node:fs";
+// Puerto del servidor de desarrollo (npx vite --port 5199 --strictPort) y Chrome del sistema.
+const BASE = `http://localhost:${process.env.PORT || 5199}/?demo`;
+const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const OUT = process.argv[2];
+fs.mkdirSync(OUT, { recursive: true });
+const browser = await chromium.launch({ executablePath: CHROME });
+const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, acceptDownloads: true });
+await ctx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(BASE).origin });
+const errors = [];
+const results = [];
+let current = null;
+async function check(name, fn) {
+  try { const r = await fn(); results.push(["✔", name, r ?? ""]); }
+  catch (e) {
+    results.push(["✘", name, e.message.split("\n")[0]]);
+    if (current) await current.screenshot({ path: `${OUT}/fallo-${results.length}.png`, fullPage: true }).catch(() => {});
+  }
+}
+const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
+async function page(name) {
+  const p = await ctx.newPage();
+  p.on("pageerror", e => errors.push(`${name}: ${e.message}`));
+  p.on("console", m => { if (m.type() === "error") errors.push(`${name} (consola): ${m.text()}`); });
+  return p;
+}
+// Ir a una pantalla desde cero (si ya estaba en esa dirección, goto no recarga: se recarga a mano).
+const go = async (p, hash) => {
+  current = p; await p.bringToFront();
+  if (p.url() === BASE + hash) await p.reload(); else await p.goto(BASE + hash);
+  await p.waitForTimeout(250);
+};
+const btn = (p, name) => p.getByRole("button", { name, exact: true });
+const yes = async p => { await p.locator("dialog[open] [data-answer=yes]").click(); await p.waitForTimeout(250); };
+const dialogText = p => p.locator("dialog[open]").innerText();
+const toast = p => p.locator("#toast").innerText();
+async function login(p, name) {
+  await go(p, "#/");
+  await p.fill("#demo-login input", name);
+  await p.click("#demo-login button");
+  await p.waitForSelector(".topbar__name", { state: "attached" });
+}
+const dayBtn = (p, n) => p.locator("#sec-slots button[aria-pressed]", { hasText: new RegExp(`^${n}$`) }).first();
+async function createDays(p, title, days, opts = ["Cena"], extra) {
+  await go(p, "#/nueva");
+  await p.fill("#f-title", title);
+  await p.locator("#sec-type button", { hasText: /^Días/ }).click();
+  await p.locator("#sec-months button", { hasText: /^Diciembre$/ }).click();
+  for (const d of days) await dayBtn(p, d).click();
+  if (opts.length > 1) await p.locator(".seg__btn", { hasText: new RegExp(`^${opts.length}$`) }).click();
+  for (const [i, o] of opts.entries()) await p.fill(`[data-opt-name="${i}"]`, o);
+  if (extra) await extra();
+  await btn(p, "Crear votación").click();
+  await p.waitForURL(/#\/v\/[^/]+$/);
+  return p.url().replace(/^.*#/, "#");
+}
+async function createOptions(p, title, names, extra) {
+  await go(p, "#/nueva");
+  await p.fill("#f-title", title);
+  await p.locator("#sec-type button", { hasText: /^Opciones/ }).click();
+  for (const [i, n] of names.entries()) {
+    if (i >= 2) await btn(p, "Añadir opción").click();
+    await p.fill(`[data-choice="${i}"]`, n);
+  }
+  if (extra) await extra();
+  await btn(p, "Crear votación").click();
+  await p.waitForURL(/#\/v\/[^/]+$/);
+  return p.url().replace(/^.*#/, "#");
+}
+const menu = async (p, item) => {
+  await p.getByRole("button", { name: "Opciones de la votación" }).click();
+  await p.getByRole("menuitem", { name: item }).click();
+};
+const menuItems = async p => {
+  await p.getByRole("button", { name: "Opciones de la votación" }).click();
+  const t = await p.locator(".menu__list").innerText();
+  await p.keyboard.press("Escape");
+  return t.replace(/\s+/g, " ");
+};
+
+// ======================= Sin sesión =======================
+const anon = await page("anónimo");
+await check("Entrada: aviso propio si falta el nombre", async () => {
+  await go(anon, "#/");
+  await anon.click("#demo-login button");
+  await anon.waitForSelector(".field-error");
+  const cls = await anon.locator("#demo-login input").getAttribute("class");
+  expect(cls.includes("input--invalid"), "el campo no se marca en rojo: " + cls);
+  return await anon.locator(".field-error").innerText();
+});
+await check("Entrada: enlaces a condiciones y privacidad", async () => {
+  await go(anon, "#/");
+  await anon.locator(".gate__legal a", { hasText: "política de privacidad" }).click();
+  await anon.waitForSelector("h1:has-text('Política de privacidad')");
+  expect(await anon.locator(".legal--centered").count() === 1, "la página no va centrada");
+  await anon.locator(".legal__other a").click();
+  await anon.waitForSelector("h1:has-text('Condiciones de uso')");
+  await anon.locator(".page-head__back").click();
+  await anon.waitForSelector("h1:has-text('Política de privacidad')");
+});
+
+// ======================= Ana crea =======================
+const ana = await page("Ana");
+await login(ana, "Ana");
+await check("Banner del modo demo con su enlace", async () => {
+  expect(await ana.locator(".demo-banner__link").count() === 1, "falta el enlace");
+});
+await check("Crear: avisa si falta el nombre", async () => {
+  await go(ana, "#/nueva");
+  await btn(ana, "Crear votación").click();
+  return await ana.locator(".create-bar__status").innerText();
+});
+await check("Crear: panel de emojis inserta en el título", async () => {
+  await go(ana, "#/nueva");
+  await ana.fill("#f-title", "Cena");
+  await ana.locator("#sec-name .emoji-field__btn").first().click();
+  await ana.waitForSelector("emoji-picker.emoji-panel__picker");
+  await ana.waitForFunction(() => document.querySelector("emoji-picker")?.shadowRoot?.querySelector(".emoji"));
+  // El clic simulado no entra en el DOM aislado del componente: se lanza el evento que emite al elegir uno.
+  await ana.evaluate(() => document.querySelector("emoji-picker").dispatchEvent(new CustomEvent("emoji-click", { detail: { unicode: "🍕" } })));
+  await ana.waitForTimeout(200);
+  const v = await ana.inputValue("#f-title");
+  expect(v.length > 4, "no se ha insertado: " + v);
+  return v;
+});
+let days;
+await check("Crear votación de días con 2 opciones", async () => {
+  days = await createDays(ana, "Cena de Navidad", [4, 5, 11], ["Comida", "Cena"]);
+  const n = await ana.locator(".cell__opt:not([disabled])").count();
+  expect(n === 6, "casillas votables: " + n);
+  return days;
+});
+await check("Votar y quitar el voto", async () => {
+  const b = ana.getByRole("button", { name: "viernes 4 de diciembre · Cena" });
+  await b.click(); await ana.waitForTimeout(200);
+  expect(await b.getAttribute("aria-pressed") === "true", "no se marca");
+  expect((await b.locator(".count").innerText()) === "1", "el contador no sube");
+  expect((await b.getAttribute("class")).includes("cell__opt--on"), "sin --on");
+  await b.click(); await ana.waitForTimeout(200);
+  expect(await b.getAttribute("aria-pressed") === "false", "no se desmarca");
+  await b.click(); await ana.waitForTimeout(200);
+});
+await check("Compartir: copiar el enlace y QR", async () => {
+  await btn(ana, "Compartir").click();
+  await ana.waitForSelector(".share__qr-img");
+  await ana.locator(".share__link button").click();
+  await ana.waitForTimeout(300);
+  const t = await toast(ana);
+  await ana.keyboard.press("Escape");
+  expect(/copiado/i.test(t), "aviso: " + t);
+  return t;
+});
+await check("Añadir al calendario (.ics)", async () => {
+  await ana.getByRole("button", { name: "Añadir al calendario" }).click();
+  const [dl] = await Promise.all([ana.waitForEvent("download"), ana.getByRole("menuitem", { name: /ics/ }).click()]);
+  return dl.suggestedFilename();
+});
+await check("Imagen del resultado", async () => {
+  // Sin menú de compartir del sistema (el de Chrome de escritorio lo tiene): se descarga.
+  await ana.evaluate(() => { Object.defineProperty(navigator, "share", { value: undefined }); Object.defineProperty(navigator, "canShare", { value: undefined }); });
+  const [dl] = await Promise.all([ana.waitForEvent("download"), btn(ana, "Compartir resultado").click()]);
+  return dl.suggestedFilename();
+});
+
+// ======================= Bea entra, vota y escribe =======================
+const bea = await page("Bea");
+await login(bea, "Bea");
+await check("Bea entra con el enlace y vota", async () => {
+  await go(bea, days);
+  await bea.getByRole("button", { name: "viernes 11 de diciembre · Cena" }).click();
+  await bea.waitForTimeout(200);
+  expect(await bea.locator(".cell__opt--on").count() === 1, "voto no marcado");
+});
+await check("Chat: mensaje y contador de no leídos", async () => {
+  await bea.locator("#ptabbtn-chat").click();
+  await bea.fill("input[aria-label='Mensaje']", "¡Hola!");
+  await btn(bea, "Enviar").click();
+  await bea.waitForSelector(".chat__msg--own");
+  await go(ana, days);
+  await ana.waitForTimeout(400);
+  const badge = await ana.locator(".poll-tabs__badge").innerText();
+  expect(badge === "1", "no leídos: " + badge);
+  await ana.locator("#ptabbtn-chat").click();
+  await ana.waitForSelector(".chat__msg:has-text('¡Hola!')");
+  return "no leídos: " + badge;
+});
+await check("Avisar a quien falta (Cris entra sin votar)", async () => {
+  const cris = await page("Cris");
+  await login(cris, "Cris");
+  await go(cris, days);
+  await cris.close();
+  await go(ana, days);
+  await ana.locator("#ptabbtn-people").click();
+  expect(await ana.getByRole("link", { name: /Avisar a quien falta/ }).count() >= 1, "no aparece");
+});
+await check("Nombrar administradora a Bea", async () => {
+  await ana.locator(".people-table__row:has-text('Bea') .people-table__admin").click();
+  await yes(ana);
+  await ana.waitForSelector(".people-table__row:has-text('Bea') .role-tag:has-text('Admin')");
+});
+await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
+  await ana.locator(".people-table__row:has-text('Bea') .person__btn").click();
+  await ana.waitForSelector(".people-table__votes .person-votes__chip");
+});
+
+// ======================= Desempate =======================
+await check("Desempate: abrir, votar y anular", async () => {
+  await go(ana, days);
+  await btn(ana, "Desempatar").click();
+  await yes(ana);
+  await ana.waitForSelector(".tiebreak");
+  await ana.locator(".tiebreak__option").first().click();
+  await ana.waitForSelector(".tiebreak__option--on");
+  await btn(ana, "Anular").click();
+  await yes(ana);
+  await ana.waitForTimeout(300);
+  expect(await ana.locator(".tiebreak").count() === 0, "sigue el desempate");
+  expect(await ana.locator(".closed-banner").count() === 1, "debería seguir cerrada");
+});
+await check("Reabrir la votación", async () => {
+  await menu(ana, "Reabrir votación");
+  await ana.waitForTimeout(300);
+  expect(await ana.locator(".closed-banner").count() === 0, "sigue cerrada");
+});
+await check("Desempate sin ganadora: solo se puede repetir", async () => {
+  await btn(ana, "Desempatar").click();
+  await yes(ana);
+  await ana.locator(".tiebreak__option").nth(0).click();
+  await go(bea, days);
+  await bea.locator(".tiebreak__option").nth(1).click();
+  await bea.waitForTimeout(300);
+  await go(ana, days);
+  await btn(ana, "Finalizar desempate").click();
+  const t = await dialogText(ana);
+  expect(/sin ganadora/.test(t), "diálogo: " + t);
+  await yes(ana);
+  await ana.waitForSelector("button:has-text('Repetir entre las empatadas')");
+  expect(!(await menuItems(ana)).includes("Reabrir"), "deja reabrir");
+});
+await check("Repetir y finalizar con ganadora: definitivo", async () => {
+  await btn(ana, "Repetir entre las empatadas").click();
+  await yes(ana);
+  await ana.locator(".tiebreak__option").nth(0).click();
+  await go(bea, days);
+  await bea.locator(".tiebreak__option").nth(0).click();
+  await bea.waitForTimeout(300);
+  await go(ana, days);
+  await btn(ana, "Finalizar desempate").click();
+  const t = await dialogText(ana);
+  expect(/definitivamente/.test(t), "diálogo: " + t);
+  await yes(ana);
+  await ana.waitForSelector(".closed-banner--final");
+  expect(await ana.locator(".tiebreak__option--win").count() === 1, "sin ganadora marcada");
+  expect(await ana.locator(".tiebreak__actions").count() === 0, "aún hay acciones");
+  const items = await menuItems(ana);
+  expect(!items.includes("Reabrir"), "deja reabrir: " + items);
+  return await ana.locator(".closed-banner--final").innerText();
+});
+
+// ======================= Gestión =======================
+let opts;
+await check("Votación de opciones: cerrar y reabrir", async () => {
+  opts = await createOptions(ana, "¿Dónde cenamos?", ["Pizza", "Sushi", "Tacos"]);
+  expect(await ana.locator(".choice-board__item").count() === 3, "faltan opciones");
+  await ana.locator(".choice-board__item", { hasText: "Pizza" }).click();
+  await ana.waitForSelector(".choice-board__item--on");
+  await menu(ana, "Cerrar votación");
+  await yes(ana);
+  await ana.waitForSelector(".closed-banner");
+  expect(await ana.locator(".choice-board__item[disabled]").count() === 3, "se puede votar cerrada");
+  await menu(ana, "Reabrir votación");
+  await ana.waitForTimeout(300);
+  expect(await ana.locator(".closed-banner").count() === 0, "sigue cerrada");
+});
+await check("Hacer anónima", async () => {
+  await menu(ana, "Hacer anónima");
+  await yes(ana);
+  await ana.waitForSelector(".mode-pill--anon:has-text('Anónima')");
+});
+await check("Acceso y plazas: cambiar el máximo", async () => {
+  await menu(ana, "Acceso y plazas");
+  await ana.fill("#ap-max", "5");
+  await ana.locator(".access-panel__actions button", { hasText: "Guardar" }).click();
+  await ana.waitForTimeout(300);
+  const k = await ana.locator(".poll-head__kicker").innerText();
+  expect(k.includes("máx. 5"), k);
+});
+await check("Duplicar", async () => {
+  await menu(ana, "Duplicar votación");
+  await ana.waitForURL(/#\/nueva/);
+  const v = await ana.inputValue("#f-title");
+  expect(v.includes("(copia)"), v);
+  expect(await ana.locator("[data-choice='2']").inputValue() === "Tacos", "no copia las opciones");
+});
+await check("Editar y cancelar sin cambios", async () => {
+  await go(ana, opts + "/editar");
+  await btn(ana, "Cancelar").click();
+  await ana.waitForURL(/#\/v\/[^/]+$/);
+});
+await check("Editar: renombrar una opción y aviso en el chat", async () => {
+  await go(ana, opts + "/editar");
+  expect(await ana.locator(".opt-editor__row--locked").count() === 1, "Pizza no sale bloqueada");
+  await ana.fill('[data-choice="1"]', "Sushi bar");
+  await btn(ana, "Guardar cambios").click();
+  await ana.waitForURL(/#\/v\/[^/]+$/);
+  await ana.locator("#ptabbtn-chat").click();
+  return await ana.locator(".chat__sys").last().innerText();
+});
+
+// ======================= Acceso restringido =======================
+let appr;
+await check("Con aprobación: Cris queda pendiente y Ana le acepta", async () => {
+  appr = await createOptions(ana, "Con aprobación", ["A", "B"], async () => {
+    await ana.locator("#sec-access button", { hasText: "Con tu aprobación" }).click();
+  });
+  const cris = await page("Cris");
+  await login(cris, "Cris");
+  await go(cris, appr);
+  await cris.waitForSelector(".notice--pending .notice__title:has-text('Pendiente')");
+  const color = await cris.locator(".notice--pending").evaluate(e => getComputedStyle(e).borderTopWidth);
+  expect(color === "2px", "el aviso pendiente no tiene su estilo: " + color);
+  await go(ana, appr);
+  await ana.locator(".requests__row:has-text('Cris') button", { hasText: "Aceptar" }).click();
+  await ana.waitForTimeout(300);
+  await go(cris, appr);
+  await cris.waitForSelector(".choice-board__item");
+  await cris.locator(".choice-board__item").first().click();
+  await cris.waitForSelector(".choice-board__item--on");
+  await cris.close();
+});
+await check("Con aprobación: rechazo", async () => {
+  await go(bea, appr);
+  await bea.waitForSelector(".notice--pending");
+  await go(ana, appr);
+  await ana.locator(".requests__row:has-text('Bea') button", { hasText: "Rechazar" }).click();
+  await ana.waitForTimeout(300);
+  await go(bea, appr);
+  await bea.waitForSelector(".notice--rejected .notice__title:has-text('No te han aceptado')");
+});
+await check("Solo estos correos: Bea no puede entrar", async () => {
+  const priv = await createOptions(ana, "Privada", ["A", "B"], async () => {
+    await ana.locator("#sec-access button", { hasText: "Solo estos correos" }).click();
+    await ana.fill("#f-emails", "ana@demo.test");
+  });
+  await go(bea, priv);
+  await bea.waitForSelector(".notice--blocked .notice__title:has-text('Votación privada')");
+});
+
+// ======================= Inicio y menú lateral =======================
+await check("Inicio: crear grupo y mover una votación", async () => {
+  await go(ana, "#/");
+  await ana.locator(".groups__chips button", { hasText: "Nuevo grupo" }).click();
+  await ana.fill(".inline-form__input", "Familia");
+  await btn(ana, "Crear grupo").click();
+  await ana.waitForSelector(".groups__chip:has-text('Familia')");
+  await ana.locator(".groups__chip", { hasText: "Todas" }).click();
+  await ana.locator(".poll-card:has-text('Cena de Navidad') .poll-card__more").click();
+  await ana.locator(".poll-card__select").selectOption({ label: "Familia" });
+  await ana.waitForTimeout(300);
+  await ana.locator(".groups__chip", { hasText: "Familia" }).click();
+  const n = await ana.locator(".poll-card").count();
+  expect(n === 1, "en Familia hay " + n);
+  await ana.locator(".groups__chip", { hasText: "Todas" }).click();
+});
+await check("Archivar, deshacer y ver archivadas", async () => {
+  await go(ana, "#/");
+  await ana.locator(".groups__chip", { hasText: "Todas" }).click();
+  const before = await ana.locator(".poll-card").count();
+  await ana.locator(".poll-card:has-text('Privada') .poll-card__more").click();
+  await ana.locator(".poll-card__actions button", { hasText: "Archivar" }).click();
+  await ana.waitForSelector(".undo");
+  expect(await ana.locator(".poll-card").count() === before - 1, "no se archiva");
+  await ana.locator(".undo__btn").click();
+  await ana.waitForTimeout(300);
+  expect(await ana.locator(".poll-card").count() === before, "no se deshace");
+  await ana.locator(".poll-card:has-text('Privada') .poll-card__more").click();
+  await ana.locator(".poll-card__actions button", { hasText: "Archivar" }).click();
+  await ana.waitForSelector(".archived-row");
+  await ana.locator(".archived-row").click();
+  await ana.waitForSelector(".poll-card:has-text('Privada')");
+});
+await check("Menú lateral: buscar y crear grupo", async () => {
+  await go(ana, days);
+  await ana.fill(".sidebar__search", "dónde");
+  await ana.waitForTimeout(200);
+  const t = await ana.locator(".sidebar__body").innerText();
+  expect(t.includes("¿Dónde cenamos?") && !t.includes("Cena de Navidad"), "el buscador no filtra: " + t.slice(0, 80));
+  await ana.fill(".sidebar__search", "");
+  await ana.locator(".sidebar__add").click();
+  await ana.fill(".sidebar__form-input", "Trabajo");
+  await ana.locator(".sidebar__form button", { hasText: "Crear grupo" }).click();
+  await ana.waitForTimeout(300);
+});
+await check("Menú lateral: organizar → archivar", async () => {
+  await ana.getByRole("button", { name: "Organizar «Con aprobación»" }).click();
+  await ana.locator(".sidebar__menu-item", { hasText: "Archivar" }).click();
+  await ana.waitForSelector(".undo");
+});
+
+// ======================= Salir y eliminar =======================
+await check("Bea sale de una votación", async () => {
+  await go(bea, opts);
+  await bea.locator(".poll-leave__btn").click();
+  await yes(bea);
+  await bea.waitForURL(/#\/$/);
+  await bea.waitForTimeout(300);
+  expect(!(await bea.locator(".app").innerText()).includes("¿Dónde cenamos?"), "sigue en su lista");
+});
+await check("Ana elimina una votación", async () => {
+  await go(ana, appr);
+  await menu(ana, "Eliminar votación");
+  await yes(ana);
+  await ana.waitForURL(/#\/$/);
+  await ana.waitForTimeout(300);
+  expect(!(await ana.locator(".app__view").innerText()).includes("Con aprobación"), "sigue en la lista");
+});
+
+// ======================= Perfil =======================
+await check("Perfil: cambiar el nombre", async () => {
+  await go(ana, "#/perfil");
+  await ana.fill("#pf-name", "Ana María");
+  await btn(ana, "Guardar cambios").click();
+  await ana.waitForTimeout(400);
+  expect((await ana.locator(".topbar__name").innerText()) === "Ana María", "el nombre no cambia arriba");
+});
+await check("Perfil: tema oscuro, claro y automático", async () => {
+  await ana.locator(".theme-pick__card", { hasText: "Oscuro" }).click();
+  expect(await ana.evaluate(() => document.documentElement.dataset.theme) === "dark", "no pasa a oscuro");
+  await ana.locator(".theme-pick__card", { hasText: "Claro" }).click();
+  expect(await ana.evaluate(() => document.documentElement.dataset.theme) === "light", "no pasa a claro");
+  await ana.locator(".theme-pick__card", { hasText: "Automático" }).click();
+  expect(await ana.evaluate(() => document.documentElement.dataset.theme) === undefined, "no vuelve a automático");
+});
+await check("Perfil: enlaces legales", async () => {
+  await ana.locator(".profile__legal a", { hasText: "Condiciones" }).click();
+  await ana.waitForSelector("h1:has-text('Condiciones de uso')");
+});
+
+// ======================= Móvil =======================
+const mob = await page("Ana móvil");
+await mob.setViewportSize({ width: 380, height: 800 });
+await login(mob, "Ana");
+await check("Móvil: cajón del menú lateral", async () => {
+  await go(mob, days);
+  await mob.getByRole("button", { name: "Abrir mis votaciones" }).click();
+  await mob.waitForTimeout(300);
+  expect(await mob.evaluate(() => document.body.classList.contains("page--drawer-open")), "no se abre");
+  expect(await mob.evaluate(() => document.activeElement?.classList.contains("sidebar__new")), "el foco no va a «Nueva votación»");
+  await mob.keyboard.press("Escape");
+  await mob.waitForTimeout(200);
+  expect(!(await mob.evaluate(() => document.body.classList.contains("page--drawer-open"))), "no se cierra");
+});
+await check("Móvil: deslizar para archivar", async () => {
+  await go(mob, "#/");
+  const fg = mob.locator(".swipe__fg").first();
+  const title = await fg.locator(".poll-card__title").innerText();
+  const b = await fg.boundingBox();
+  const y = b.y + b.height / 2;
+  const fire = (type, x) => fg.evaluate((el, [type, x, y]) => el.dispatchEvent(new PointerEvent(type, {
+    bubbles: true, pointerId: 7, pointerType: "touch", clientX: x, clientY: y, isPrimary: true,
+  })), [type, x, y]);
+  await fire("pointerdown", b.x + 20);
+  for (let x = b.x + 30; x <= b.x + 280; x += 25) await fire("pointermove", x);
+  await mob.waitForTimeout(100);
+  const armed = await mob.locator(".swipe__bg--archive.swipe__bg--armed").count();
+  await fire("pointerup", b.x + 280);
+  await mob.waitForSelector(".undo");
+  expect(armed === 1, "el fondo de archivar no aparece");
+  return `archivada «${title}»`;
+});
+
+// ======================= Resultado =======================
+await browser.close();
+for (const [ok, name, info] of results) console.log(`${ok} ${name}${info ? "  — " + info : ""}`);
+const bad = results.filter(r => r[0] === "✘").length;
+console.log(`\n${results.length - bad}/${results.length} bien · errores de la página: ${errors.length ? "\n  " + errors.join("\n  ") : "ninguno"}`);
