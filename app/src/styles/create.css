@@ -167,6 +167,12 @@
 }
 .create-summary{font-size:.9rem;color:var(--muted);flex:1 1 200px;font-weight:600}
 .create-bar .status{flex-basis:100%}
+/* «Cancelar» (al editar) y el botón principal van siempre juntos; en pantallas estrechas, a todo el ancho */
+.create-actions{display:flex;gap:8px;flex:none}
+@container view (max-width:519.98px){
+  .create-actions{flex:1 1 100%}
+  .create-actions .btn{flex:1}
+}
 /* La vista previa de «Nueva votación» es una casilla suelta, más ancha que las del calendario. */
 .cell.preview.n1 .opt .label{font-size:2rem}
 .privacy{display:grid;grid-template-columns:1fr;gap:10px}

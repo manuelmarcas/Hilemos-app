@@ -95,7 +95,7 @@ function HourDropdown({ day, options, chosen, onToggle }: {
 
 export function Create({ edit }: { edit?: EditTarget } = {}) {
   const { store, user, library, lastGroup, setLastGroup } = useSession();
-  const { toast, openEmoji, closeEmoji } = useUi();
+  const { toast, confirm, openEmoji, closeEmoji } = useUi();
   const now = useRef(new Date()).current;
   const groups = library.data?.groups || null;
 
@@ -385,17 +385,36 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   }
 
   // Guarda la edición: solo los campos que cambian, y un aviso en el chat por cada cambio.
-  async function saveEdit(target: EditTarget) {
+  /** Cómo quedaría la votación con lo editado y qué campos cambian (vacío si no se ha cambiado nada). */
+  function editChanges(target: EditTarget) {
     const old = target.poll;
     const next: PollData = { ...old, title: title.trim(), description: description.trim(), ...(nameOnly ? {} : structure()) };
-    // Por si alguien ha votado mientras se editaba: lo que ya tiene votos no se puede quitar.
-    const lost = lostVotedUnit(old, next, target.votes);
-    if (lost) { setStatus(`«${unitLabel(old, lost)}» ya tiene votos: no se puede quitar.`); return; }
     const keys = ["title", "description", "months", "slots", "hours", "hourStep", "hoursByDay", "options"] as const;
     const patch: Partial<PollData> = {};
     for (const k of keys) {
       if (JSON.stringify(old[k] ?? null) !== JSON.stringify(next[k] ?? null)) (patch as Record<string, unknown>)[k] = next[k];
     }
+    return { old, next, patch };
+  }
+
+  // Cancelar la edición: vuelve a la votación sin guardar; si hay cambios, pregunta antes de descartarlos.
+  async function cancelEdit(target: EditTarget) {
+    if (busy) return;
+    if (Object.keys(editChanges(target).patch).length && !(await confirm({
+      title: "¿Descartar los cambios?",
+      message: "Se perderá lo que has cambiado y la votación se quedará como estaba.",
+      confirmLabel: "Descartar cambios",
+      cancelLabel: "Seguir editando",
+      danger: true,
+    }))) return;
+    navigate(`/v/${target.id}`);
+  }
+
+  async function saveEdit(target: EditTarget) {
+    const { old, next, patch } = editChanges(target);
+    // Por si alguien ha votado mientras se editaba: lo que ya tiene votos no se puede quitar.
+    const lost = lostVotedUnit(old, next, target.votes);
+    if (lost) { setStatus(`«${unitLabel(old, lost)}» ya tiene votos: no se puede quitar.`); return; }
     if (!Object.keys(patch).length) { toast("No has cambiado nada"); navigate(`/v/${target.id}`); return; }
     setBusy(true);
     try {
@@ -910,9 +929,12 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
 
         <div className="create-bar">
           <div className="create-summary"><Icon name={TYPE[type].icon} /> {summaryParts.join(" · ")}</div>
-          <button type="button" className="btn primary big" disabled={busy} onClick={submit}>
-            {editing ? (busy ? "Guardando…" : "Guardar cambios") : (busy ? "Creando…" : "Crear votación")}
-          </button>
+          <div className="create-actions">
+            {edit && <button type="button" className="btn big" disabled={busy} onClick={() => cancelEdit(edit)}>Cancelar</button>}
+            <button type="button" className="btn primary big" disabled={busy} onClick={submit}>
+              {editing ? (busy ? "Guardando…" : "Guardar cambios") : (busy ? "Creando…" : "Crear votación")}
+            </button>
+          </div>
           <div className="status" role="alert">{status}</div>
         </div>
       </div>

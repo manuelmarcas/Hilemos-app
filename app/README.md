@@ -116,6 +116,8 @@ el menú lateral y la propia votación.
   toman un id que la votación no haya usado nunca.
 - No se cambian el tipo (para eso, duplicar), el modo de las horas ni la duración de las franjas; el acceso, el plazo
   y la privacidad tienen su sitio en la propia votación.
+- «Cancelar» (a la izquierda de «Guardar cambios») vuelve a la votación sin guardar; si se ha cambiado algo, antes
+  pregunta si se descartan los cambios.
 - Se guarda solo lo que cambia y cada cambio va al chat como aviso (`sys: true`, frases de `src/lib/changes.ts`),
   que se pinta como una línea centrada con el nombre de quien lo hizo.
 - Las reglas dejan cambiar `months`, `slots`, `hours`, `hourStep`, `hoursByDay` y `options` solo a los
