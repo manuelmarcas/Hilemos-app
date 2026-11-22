@@ -10,6 +10,8 @@ import { Shell } from "./components/Shell";
 import { EmailLinkFinish } from "./components/EmailLinkFinish";
 import { LegalStandalone } from "./pages/Legal";
 import { legalDoc, useHashPath } from "./state/route";
+import { LogoMark } from "./components/LogoMark";
+import { Spinner } from "./components/Loading";
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo") || !firebaseConfig?.apiKey;
@@ -84,7 +86,9 @@ export function App() {
 
   let content;
   if (bootError) content = <div className="boot"><div className="empty-box empty-box--error">No se pudo cargar la aplicación: {bootError}</div></div>;
-  else if (!store || user === undefined) content = <div className="boot">Cargando…</div>;
+  else if (!store || user === undefined) {
+    content = <div className="boot" role="status" aria-label="Cargando Hilemos"><LogoMark className="boot__logo" size={72} /><Spinner /></div>;
+  }
   else if (emailLink) {
     content = <EmailLinkFinish store={store} url={emailLink} onDone={() => setEmailLink(null)} />;
   }

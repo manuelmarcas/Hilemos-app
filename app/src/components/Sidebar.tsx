@@ -9,6 +9,7 @@ import { useUi } from "../state/ui";
 import { useHashPath } from "../state/route";
 import { useListActions } from "../state/listActions";
 import { Icon } from "./Icon";
+import { Spinner } from "./Loading";
 
 const CKEY = "votaciones-menu-plegados";
 const loadCollapsed = () => {
@@ -136,7 +137,7 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
   if (library.error) {
     body = <div className="sidebar__empty sidebar__empty--error">{errMsg(library.error)}</div>;
   } else if (!lib) {
-    body = <div className="sidebar__empty">Cargando…</div>;
+    body = <div className="sidebar__empty" role="status"><Spinner /> Cargando…</div>;
   } else {
     const groups = sortedGroups(lib.groups);
     // Orden estable (por fecha en que se añadió) para que el menú no salte al ir abriendo votaciones.

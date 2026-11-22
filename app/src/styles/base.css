@@ -51,7 +51,56 @@ button,input,select,textarea{font:inherit}
 .muted{color:var(--muted);font-weight:400}
 .status{color:var(--danger);font-size:.88rem;min-height:1.2em}
 .status:empty{min-height:0}
-.loading{color:var(--muted);padding:40px 0;text-align:center}
+/* Cargando (components/Loading.tsx). El círculo que gira toma el tamaño de --spinner-size y el color de
+   --spinner-color (sobre un relleno brand, on-brand). Con movimiento reducido gira más despacio. */
+.spinner{
+  display:inline-block;
+  flex:none;
+  width:var(--spinner-size, 1.1em);
+  height:var(--spinner-size, 1.1em);
+  border:2px solid var(--line-strong);
+  border-top-color:var(--spinner-color, var(--brand));
+  border-radius:50%;
+  vertical-align:-.2em;
+  animation:spinner-turn .75s linear infinite;
+}
+@keyframes spinner-turn{to{transform:rotate(360deg)}}
+.loading{
+  --spinner-size:28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  color:var(--muted);
+  padding:40px 0;
+  text-align:center;
+}
+/* Lista de votaciones mientras llega: tarjetas vacías con un brillo que pasa. */
+.skeleton{display:grid;gap:10px}
+.skeleton__card{
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+}
+.skeleton__card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, transparent, var(--hover), transparent);
+  transform:translateX(-100%);
+  animation:skeleton-shine 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shine{to{transform:translateX(100%)}}
+.skeleton__icon{flex:none;width:34px;height:34px;border-radius:var(--radius-md);background:var(--soft)}
+.skeleton__lines{display:grid;gap:8px;flex:1;min-width:0}
+.skeleton__line{height:10px;width:45%;border-radius:var(--radius-pill);background:var(--soft)}
+.skeleton__line--title{height:14px;width:70%}
 .empty-box{
   background:var(--card);
   border:1px dashed var(--line);
@@ -72,7 +121,25 @@ button,input,select,textarea{font:inherit}
   line-height:1.4;
 }
 .demo-banner__link{color:var(--tie-ink);font-weight:700;margin-left:6px}
-.boot{min-height:60vh;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:16px}
+/* Arranque de la app (mientras se sabe si hay sesión): el logotipo, que respira, y el círculo debajo. Sigue a la
+   pantalla de arranque de Android. */
+.boot{
+  --spinner-size:24px;
+  min-height:60vh;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  padding:16px;
+}
+.boot__logo{color:var(--logo);animation:boot-breathe 1.6s ease-in-out infinite}
+@keyframes boot-breathe{50%{transform:scale(.94);opacity:.8}}
+@media (prefers-reduced-motion:reduce){
+  .spinner{animation-duration:2s}
+  .skeleton__card::after,.boot__logo{animation:none}
+}
 a.menu__item{text-decoration:none}
 button.cell__opt:not(:disabled):not(.cell__opt--on):hover{background:var(--hover)}
 button.week-board__row:not(:disabled):not(.week-board__row--on):hover{background:var(--hover)}

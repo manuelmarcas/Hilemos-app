@@ -6,6 +6,7 @@ import { errMsg } from "../lib/util";
 import { useHashPath } from "../state/route";
 import { GateCard } from "./GateCard";
 import { Icon } from "./Icon";
+import { Spinner } from "./Loading";
 import { makeAccessKey } from "../state/accessKey";
 
 const GoogleIcon = () => (
@@ -21,7 +22,8 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   const path = useHashPath();
   const [name, setName] = useState("");
   const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
+  // Qué forma de entrar está esperando respuesta: su botón lo dice y los demás se desactivan.
+  const [busy, setBusy] = useState<"" | "google" | "anon" | "email" | "key">("");
   // Qué formulario se ve: el principal (nombre para entrar sin cuenta), el del correo o el de la clave.
   const [mode, setMode] = useState<"main" | "email" | "key">("main");
   const [key, setKey] = useState("");
@@ -31,9 +33,13 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
   const invited = path.startsWith("/v/");
 
   const login = async () => {
+    if (busy) return;
+    setBusy("google");
     setStatus("");
+    // Si sale bien, la app pasa a la pantalla principal y este botón desaparece esperando.
     try { await store.signIn(); }
     catch (e) {
+      setBusy("");
       const err = e as { code?: string; customData?: { email?: string } };
       // Ese correo ya tiene cuenta creada con el enlace (y no es de Gmail, así que Firebase no las junta solo):
       // se lleva al formulario del correo, ya relleno, para entrar con él.
@@ -58,12 +64,12 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     e.preventDefault();
     const n = name.trim();
     if (!n || busy) return;
-    setBusy(true);
+    setBusy("anon");
     setStatus("");
     try { await store.signIn({ name: n, anonymous: true }); }
     catch (err) {
       setStatus("No se pudo entrar sin cuenta. " + errMsg(err));
-      setBusy(false);
+      setBusy("");
       return;
     }
     // Ya hay sesión (la app pasa a la pantalla principal): se crea la clave y la enseña AccessKeyDialog.
@@ -74,22 +80,22 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
     e.preventDefault();
     const mail = email.trim();
     if (!mail || busy) return;
-    setBusy(true);
+    setBusy("email");
     setStatus("");
     try { await store.sendEmailLink(mail); setSentTo(mail); }
     catch (err) { setStatus("No se pudo mandar el enlace. " + errMsg(err)); }
-    setBusy(false);
+    setBusy("");
   };
 
   const keyLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!key.trim() || busy) return;
-    setBusy(true);
+    setBusy("key");
     setStatus("");
     try { await store.signInWithKey(key); }
     catch (err) {
       setStatus(errMsg(err));
-      setBusy(false);
+      setBusy("");
     }
   };
 
@@ -117,13 +123,12 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
         <>
           {/* Al pedir el correo o la clave solo se ve su formulario: Google despistaría (es otra forma de entrar). */}
           {mode === "main" && (
-            <button className="gate__google" onClick={login}>
-              <GoogleIcon />
-              Entrar con Google
+            <button className="gate__google" onClick={login} disabled={!!busy} aria-busy={busy === "google"}>
+              {busy === "google" ? <><Spinner /> Entrando con Google…</> : <><GoogleIcon /> Entrar con Google</>}
             </button>
           )}
           {mode === "main" && (
-            <button className="btn gate__alt" onClick={() => go("email")}><Icon name="mail" /> Entrar con tu correo</button>
+            <button className="btn gate__alt" disabled={!!busy} onClick={() => go("email")}><Icon name="mail" /> Entrar con tu correo</button>
           )}
           {mode === "email" && (sentTo ? (
             <div className="gate__form gate__sent" role="status">
@@ -138,7 +143,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
                 required autoFocus data-error="Escribe tu correo para que te mandemos el enlace."
                 value={email} onChange={e => setEmail(e.target.value)} />
               <p className="gate__note">Te mandaremos un enlace: al pulsarlo, entras. Sirve en cualquier dispositivo.</p>
-              <button className="btn btn--primary" type="submit" disabled={busy}>{busy ? "Enviando…" : "Enviarme el enlace"}</button>
+              <button className="btn btn--primary" type="submit" disabled={!!busy}>{busy === "email" ? <><Spinner /> Enviando…</> : "Enviarme el enlace"}</button>
             </form>
           ))}
           {mode === "key" && (
@@ -148,7 +153,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
                 autoComplete="off" autoCapitalize="characters" spellCheck={false} autoFocus required
                 data-error="Escribe o pega tu clave de acceso."
                 value={key} onChange={e => setKey(e.target.value)} />
-              <button className="btn btn--primary" type="submit" disabled={busy}>{busy ? "Comprobando…" : "Entrar con mi clave"}</button>
+              <button className="btn btn--primary" type="submit" disabled={!!busy}>{busy === "key" ? <><Spinner /> Comprobando…</> : "Entrar con mi clave"}</button>
             </form>
           )}
           {mode === "main" ? <>
@@ -162,9 +167,9 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
                 único que te permitirá volver a entrar con esta cuenta si cierras sesión, desinstalas la app o
                 cambias de móvil. En las votaciones privadas o con aprobación hace falta Google o tu correo.
               </p>
-              <button className="btn" type="submit" disabled={busy}>{busy ? "Entrando…" : "Continuar sin cuenta"}</button>
+              <button className="btn" type="submit" disabled={!!busy}>{busy === "anon" ? <><Spinner /> Entrando…</> : "Continuar sin cuenta"}</button>
             </form>
-            <button className="btn btn--small gate__key-btn" onClick={() => go("key")}><Icon name="key" /> Tengo una clave de acceso</button>
+            <button className="btn btn--small gate__key-btn" disabled={!!busy} onClick={() => go("key")}><Icon name="key" /> Tengo una clave de acceso</button>
           </> : (
             <button type="button" className="link-btn gate__switch" onClick={() => go("main")}>
               <Icon name="back" /> Otras formas de entrar

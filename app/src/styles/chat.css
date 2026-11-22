@@ -21,7 +21,7 @@
   min-width:0;
   padding-right:2px;
 }
-.chat__empty{font-size:.9rem;margin:0;padding:6px 2px}
+.chat__empty{display:flex;align-items:center;gap:8px;font-size:.9rem;margin:0;padding:6px 2px}
 .chat__msg{display:flex;align-items:flex-start;gap:8px;min-width:0}
 .chat__body{
   min-width:0;

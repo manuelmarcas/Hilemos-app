@@ -19,7 +19,7 @@
   transition:background .15s, box-shadow .15s;
 }
 .btn:hover{background:var(--hover)}
-.btn--primary{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.btn--primary{--spinner-color:var(--on-brand);background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
 .btn--primary:hover{background:var(--brand-strong);border-color:var(--brand-strong)}
 .btn--danger{color:var(--danger)}
 .btn--danger-solid{background:var(--danger);border-color:var(--danger);color:var(--on-danger)}

@@ -37,8 +37,11 @@
   cursor:pointer;
   transition:box-shadow .15s, transform .05s;
 }
-.gate__google:hover{box-shadow:0 4px 14px rgba(0,0,0,.12)}
-.gate__google:active{transform:scale(.98)}
+.gate__google:hover:not(:disabled){box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.gate__google:active:not(:disabled){transform:scale(.98)}
+.gate__google:disabled{cursor:default;opacity:var(--opacity-disabled)}
+/* Esperando a Google: el botón sigue a plena vista, con el círculo en lugar del logotipo de Google. */
+.gate__google[aria-busy="true"]{opacity:1}
 .gate__google svg{width:20px;height:20px;flex:none}
 .gate__demo{display:flex;gap:8px}
 .gate__status{color:var(--danger);font-size:.88rem;margin-top:14px;min-height:1.2em}

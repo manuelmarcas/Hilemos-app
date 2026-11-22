@@ -9,7 +9,7 @@ import {
 } from "../lib/model";
 import { describeChanges } from "../lib/changes";
 import type { Poll, PollAccess, PollData, PollType, Votes } from "../lib/types";
-import { bem, cls, errMsg } from "../lib/util";
+import { bem, cls, errMsg, hasMouse } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
@@ -18,6 +18,7 @@ import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
 import { useDismiss } from "../hooks/useDismiss";
+import { Spinner } from "../components/Loading";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
 // y el icono se propone mientras no se haya elegido otro.
@@ -168,7 +169,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   // Leyenda del rojo suave con el que se marca, al editar, lo que ya tiene votos.
   const lockKey = (text: string) => <p className="lock-key"><span className="lock-key__swatch" aria-hidden="true"></span>{text}</p>;
 
-  useEffect(() => { titleRef.current?.focus(); }, []);
+  useEffect(() => { if (hasMouse()) titleRef.current?.focus(); }, []);
   useEffect(() => () => closeEmoji(), [closeEmoji]);
 
   // Si el grupo elegido ya no existe, se vuelve a "Sin grupo".
@@ -932,6 +933,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           <div className="create-bar__actions">
             {edit && <button type="button" className="btn btn--big create-bar__btn" disabled={busy} onClick={() => cancelEdit(edit)}>Cancelar</button>}
             <button type="button" className="btn btn--primary btn--big create-bar__btn" disabled={busy} onClick={submit}>
+              {busy && <Spinner />}
               {editing ? (busy ? "Guardando…" : "Guardar cambios") : (busy ? "Creando…" : "Crear votación")}
             </button>
           </div>

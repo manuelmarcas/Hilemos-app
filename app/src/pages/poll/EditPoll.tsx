@@ -8,6 +8,7 @@ import { errMsg } from "../../lib/util";
 import { useSession } from "../../state/session";
 import { Icon } from "../../components/Icon";
 import { Create } from "../Create";
+import { Loading } from "../../components/Loading";
 
 export function EditPoll({ id }: { id: string }) {
   const { store, user } = useSession();
@@ -24,7 +25,7 @@ export function EditPoll({ id }: { id: string }) {
 
   const back = <p><a href={`#/v/${id}`}><Icon name="back" /> Volver a la votación</a></p>;
   if (error) return <><div className="empty-box empty-box--error">{error}</div>{back}</>;
-  if (poll === undefined || (admin && !votes)) return <div className="loading">Cargando votación…</div>;
+  if (poll === undefined || (admin && !votes)) return <Loading>Cargando votación…</Loading>;
   if (!poll) {
     return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }

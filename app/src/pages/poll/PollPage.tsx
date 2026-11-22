@@ -26,6 +26,7 @@ import { ManagePeople } from "./ManagePeople";
 import { ExportDialog } from "./ExportDialog";
 import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
+import { Loading } from "../../components/Loading";
 
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
@@ -163,14 +164,14 @@ export function PollPage({ id }: { id: string }) {
   if (fatal) {
     return <><div className="empty-box empty-box--error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
-  if (!pollLoaded) return <div className="loading">Cargando votación…</div>;
+  if (!pollLoaded) return <Loading>Cargando votación…</Loading>;
   if (!poll) {
     return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
 
   if (blocked) return <BlockedView poll={poll} kind={blocked} email={user.email} onRetry={retryJoin} />;
   if (ownOnly && !canReadAll) {
-    if (!myLoaded || !myVote) return <div className="loading">Cargando votación…</div>;
+    if (!myLoaded || !myVote) return <Loading>Cargando votación…</Loading>;
     return <WaitingView poll={poll} status={memberStatus(myVote)} removed={isRemoved(myVote)} />;
   }
   // En las abiertas, a quien han expulsado le llegan todos los votos, pero ya no participa.

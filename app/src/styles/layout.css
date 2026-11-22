@@ -193,7 +193,7 @@
 .sidebar__menu-item--danger{color:var(--danger)}
 .sidebar__menu-sep{height:1px;background:var(--line);margin:4px 2px}
 .sidebar__hint{font-size:.78rem;color:var(--muted);padding:4px 8px 8px 22px;line-height:1.4}
-.sidebar__empty{font-size:.86rem;color:var(--muted);padding:10px 8px;line-height:1.45}
+.sidebar__empty{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted);padding:10px 8px;line-height:1.45}
 .sidebar__empty--error{color:var(--danger)}
 .sidebar__foot{display:grid;gap:6px;padding:10px 4px 0;border-top:1px solid var(--line)}
 .sidebar__add{border:1px dashed var(--line);background:none;border-radius:8px;padding:8px;color:var(--brand);font-weight:600;cursor:pointer;font-size:.88rem}

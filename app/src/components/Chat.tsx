@@ -9,6 +9,7 @@ import { useSession } from "../state/session";
 import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
 import { Icon } from "./Icon";
+import { Spinner } from "./Loading";
 
 function fmtWhen(at: number) {
   const dt = new Date(at);
@@ -80,7 +81,7 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
           if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
         }}>
           {msgs === null
-            ? <p className="muted chat__empty">Cargando mensajes…</p>
+            ? <p className="muted chat__empty" role="status"><Spinner /> Cargando mensajes…</p>
             : !msgs.length
               ? <p className="muted chat__empty">Todavía no hay mensajes. Escribe el primero.</p>
               : msgs.map(m => {

@@ -11,6 +11,7 @@ import { SwipeRow } from "../components/SwipeRow";
 import { Icon } from "../components/Icon";
 import { useListActions } from "../state/listActions";
 import { useDuplicate } from "../state/duplicate";
+import { PollListSkeleton } from "../components/Loading";
 
 type Entry = LibraryEntry & { id: string };
 type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
@@ -50,7 +51,7 @@ export function Home() {
     </>;
   }
   if (!lib) {
-    return <><HomeHead /><div id="home-body"><div className="loading">Cargando…</div></div></>;
+    return <><HomeHead /><div id="home-body"><PollListSkeleton label="Cargando tus votaciones…" /></div></>;
   }
 
   let filter = homeFilter;

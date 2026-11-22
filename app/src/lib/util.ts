@@ -131,6 +131,11 @@ export const pollUrl = (id: string) => isNative() ? `${PUBLIC_ORIGIN}/#/v/${id}`
 export const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 export const isAndroid = () => /Android/i.test(navigator.userAgent);
+/**
+ * ¿Se maneja con ratón? Solo entonces se da el foco a un campo al abrir una pantalla: en el móvil abriría el teclado,
+ * que tapa media pantalla sin que la persona lo haya pedido.
+ */
+export const hasMouse = () => matchMedia("(pointer: fine)").matches;
 
 export const cls = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
