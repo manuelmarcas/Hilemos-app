@@ -17,7 +17,7 @@ function AvatarStack({ uids, byUid }: { uids: string[]; byUid: Record<string, Pe
   const ps = uids.map(u => byUid[u]).filter(Boolean);
   if (!ps.length) return null;
   return (
-    <span className="av-stack" title={ps.map(p => p.name).join(", ")}>
+    <span className="av-stack" data-tip={ps.map(p => p.name).join(", ")} role="img" aria-label={ps.map(p => p.name).join(", ")}>
       {ps.slice(0, 5).map(p => <Avatar key={p.uid} name={p.name} photo={p.photo} size={22} seed={p.uid} />)}
       {ps.length > 5 && <span className="av-more">+{ps.length - 5}</span>}
     </span>

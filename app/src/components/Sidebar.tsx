@@ -250,7 +250,6 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
       <div className="sb-foot" id="sb-foot">
         {lib && !library.error && (form?.mode === "new" ? formHTML()
           : <button className="sb-add" onClick={() => { setMenu(null); setForm({ mode: "new", value: "" }); }}><Icon name="plus" /> Nuevo grupo</button>)}
-        {lib && <a className="sb-all" href="#/" onClick={() => setHomeFilter("all")}>Ver todas mis votaciones</a>}
         {lib && archivedCount > 0 && (
           <a className="sb-all" href="#/" onClick={() => setHomeFilter("archived")}><Icon name="archive" /> Archivadas ({archivedCount})</a>
         )}

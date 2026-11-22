@@ -20,6 +20,40 @@
   box-shadow:var(--shadow-pop);
 }
 .toast.show{opacity:1;transform:translate(-50%, 0)}
+/* Tooltips propios (components/Tooltip.tsx, elementos con data-tip): misma pastilla oscura que el aviso flotante,
+   con una flecha hacia el elemento. Sustituyen a los del navegador (title). */
+.tooltip{
+  position:fixed;
+  z-index:70;
+  max-width:min(260px, calc(100vw - 16px));
+  padding:6px 10px;
+  border-radius:8px;
+  background:var(--ink);
+  color:var(--bg);
+  font-size:.8rem;
+  font-weight:600;
+  line-height:1.35;
+  text-align:center;
+  overflow-wrap:anywhere;
+  pointer-events:none;
+  box-shadow:0 6px 18px -8px rgba(0,0,0,.45);
+  opacity:0;
+  transform:translateY(3px);
+  transition:opacity .12s, transform .12s;
+}
+.tooltip.below{transform:translateY(-3px)}
+.tooltip.on{opacity:1;transform:none}
+.tooltip::after{
+  content:"";
+  position:absolute;
+  left:var(--tip-arrow);
+  top:100%;
+  margin-left:-5px;
+  border:5px solid transparent;
+  border-top-color:var(--ink);
+}
+.tooltip.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.tooltip{transition:none;transform:none}}
 .dlg{
   border:none;
   border-radius:18px;

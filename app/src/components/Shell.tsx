@@ -92,7 +92,7 @@ export function Shell() {
           </a>
         </div>
         <div className="who">
-          <a className="me" href="#/perfil" title="Tu perfil">
+          <a className="me" href="#/perfil" data-tip="Tu perfil" aria-label={`Tu perfil: ${user.name}`}>
             <span id="me-avatar" className="me-avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
             <span id="who-name">{user.name}</span>
           </a>

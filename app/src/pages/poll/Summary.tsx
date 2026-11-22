@@ -52,7 +52,7 @@ export function Summary({ poll, T, TB, openVoters, byUid, onToggle }: {
       return (
         <div key={u} className={`summary-row ${e.rank === 1 ? "first" : ""}`}>
           <div className="sr-main">
-            <span className="rank" title={`Puesto ${e.rank}`}>{e.rank}º</span>
+            <span className="rank" data-tip={`Puesto ${e.rank}`}>{e.rank}º</span>
             <span className={`tag-best ${poll.type === "days" ? "" : "icon-only"}`}>{tag(e)}</span>
             <span className="what">{slotLabel(poll, e.slot)}</span>
             {u === tbWinner && <span className="tb-badge"><Icon name="scale" /> Ganó el desempate</span>}
@@ -60,7 +60,7 @@ export function Summary({ poll, T, TB, openVoters, byUid, onToggle }: {
           {poll.anonymous
             ? <span className="votes">{votes}</span>
             : (
-              <button className="votes votes-btn" aria-expanded={open} title="Ver quién lo ha votado" onClick={() => onToggle(u)}>
+              <button className="votes votes-btn" aria-expanded={open} data-tip="Ver quién lo ha votado" onClick={() => onToggle(u)}>
                 <Icon name="users" /> {votes} <span className="caret" aria-hidden="true">▾</span>
               </button>
             )}

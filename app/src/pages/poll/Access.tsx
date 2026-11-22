@@ -45,7 +45,7 @@ export function Requests({ poll, requests, onSet }: {
             <span className="person"><Avatar name={r.name || "Alguien"} photo={r.photo || ""} size={30} seed={r.uid} />{r.name || "Alguien"}
               <span className="muted"> · rechazada</span></span>
             <span className="rq-actions">
-              <button type="button" className="btn small" disabled={full} title={full ? "No quedan plazas" : undefined}
+              <button type="button" className="btn small" disabled={full} data-tip={full ? "No quedan plazas" : undefined}
                 onClick={() => onSet(r.uid, "accepted", "rejected")}>Aceptar</button>
             </span>
           </li>

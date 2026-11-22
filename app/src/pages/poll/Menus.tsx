@@ -56,7 +56,7 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
   return (
     <div className="pm" ref={wrap}>
       <button ref={btn} className="pm-btn" aria-haspopup="menu" aria-expanded={open} aria-label="Opciones de la votación"
-        title="Opciones de la votación" onClick={() => setOpen(o => !o)}><Icon name="more" /></button>
+        data-tip="Opciones de la votación" onClick={() => setOpen(o => !o)}><Icon name="more" /></button>
       {open && (
         <div className="pm-menu" role="menu" aria-label="Opciones de la votación">
           <button role="menuitem" className="pm-item" onClick={pick(onEdit)}>

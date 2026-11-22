@@ -1,9 +1,11 @@
-// Interfaz común a todas las pantallas: avisos (toast), confirmaciones, deshacer, compartir y selector de emojis.
+// Interfaz común a todas las pantallas: avisos (toast), confirmaciones, deshacer, compartir, selector de emojis y
+// tooltips (data-tip).
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { ConfirmDialog, type ConfirmOptions } from "../components/ConfirmDialog";
 import { ShareDialog, type ShareTarget } from "../components/ShareDialog";
 import { EmojiPanel, type EmojiRequest } from "../components/EmojiPanel";
 import { UndoStack, type UndoItem } from "../components/UndoStack";
+import { TooltipLayer } from "../components/Tooltip";
 
 interface UiApi {
   toast: (msg: string) => void;
@@ -88,6 +90,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       {shareReq && <ShareDialog key={shareReq.n} target={shareReq} toast={toast} onClose={() => setShareReq(null)} />}
       {emojiReq && <EmojiPanel req={emojiReq} onClose={closeEmoji} />}
       <UndoStack items={undos} onUndo={runUndo} onExpire={expireUndo} />
+      <TooltipLayer />
       <div id="toast" className={`toast${toastOn ? " show" : ""}${undos.length ? " above-undo" : ""}`} role="status" aria-live="polite">{toastMsg}</div>
     </UiContext.Provider>
   );

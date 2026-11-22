@@ -25,7 +25,7 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
       }
       return (
         <div key={o.id} className="vline">
-          {poll.type === "days" && <span className="vopt" title={o.name}><span className={`sw c${idx}`}></span>{o.icon}</span>}
+          {poll.type === "days" && <span className="vopt" data-tip={o.name} role="img" aria-label={o.name}><span className={`sw c${idx}`}></span>{o.icon}</span>}
           <div className="vchips">{chips}</div>
         </div>
       );

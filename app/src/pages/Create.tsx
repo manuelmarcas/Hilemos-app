@@ -164,7 +164,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
     }
   }
   const LOCKED = "Lo que ya tiene votos no se puede quitar.";
-  const lockTitle = (on: boolean) => (on ? "Tiene votos: no se puede quitar" : undefined);
+  const lockTip = (on: boolean) => (on ? "Tiene votos: no se puede quitar" : undefined);
   // Leyenda del rojo suave con el que se marca, al editar, lo que ya tiene votos.
   const lockKey = (text: string) => <p className="lock-key"><span className="lock-sw" aria-hidden="true"></span>{text}</p>;
 
@@ -596,7 +596,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                 const k = D.monthKey(year, m);
                 return (
                   <button key={k} type="button" className={cls("chip month-chip", months.has(k) && "on", type === "months" && lockedSlots.has(k) && "locked")}
-                    title={lockTitle(type === "months" && lockedSlots.has(k))}
+                    data-tip={lockTip(type === "months" && lockedSlots.has(k))}
                     aria-pressed={months.has(k)} disabled={k < cur} onClick={() => toggleMonth(k)}>{D.cap(name)}</button>
                 );
               })}
@@ -650,7 +650,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                           <div className="pweek-head"><span></span>{D.DOW.map(x => <span key={x}>{x}</span>)}</div>
                           <div className="pweeks">
                             {D.monthWeeks(y, m).map(w => (
-                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} title={lockTitle(lockedSlots.has(w.key))} aria-pressed={weeks.has(w.key)}
+                              <button key={w.key} type="button" className={cls("pweek", weeks.has(w.key) && "on", lockedSlots.has(w.key) && "locked")} data-tip={lockTip(lockedSlots.has(w.key))} aria-pressed={weeks.has(w.key)}
                                 disabled={D.weekEndKey(w.key) < today}
                                 onClick={(e: MouseEvent) => setWeeks(toggleRange(weeks, w.key, selectableWeeks(), e.shiftKey))}>
                                 <span className="wnum">S{w.num}</span>
@@ -667,7 +667,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                       const k = D.dayKey(y, m, d);
                       const we = D.dowMon(new Date(y, m, d)) >= 5;
                       cells.push(
-                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} title={lockTitle(lockedSlots.has(k))} aria-pressed={days.has(k)}
+                        <button key={k} type="button" className={cls("pday", days.has(k) && "on", we && "we", lockedSlots.has(k) && "locked")} data-tip={lockTip(lockedSlots.has(k))} aria-pressed={days.has(k)}
                           disabled={k < today} onClick={(e: MouseEvent) => setDays(toggleRange(days, k, selectableDays(), e.shiftKey))}>{d}</button>,
                       );
                     }
@@ -695,9 +695,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               <div className="opt-layout">
                 <div className="opt-rows">
                   {shownOpts.map((o, i) => (
-                    <div key={i} className={cls("opt-row", !!o.id && lockedOpts.has(o.id) && "locked")} title={lockTitle(!!o.id && lockedOpts.has(o.id))}>
+                    <div key={i} className={cls("opt-row", !!o.id && lockedOpts.has(o.id) && "locked")} data-tip={lockTip(!!o.id && lockedOpts.has(o.id))}>
                       <span className={`opt-swatch sw c${i}`}></span>
-                      <button type="button" className="icon-pick" aria-label={`Elegir icono de la opción ${i + 1}`} aria-expanded="false" title="Elegir icono"
+                      <button type="button" className="icon-pick" aria-label={`Elegir icono de la opción ${i + 1}`} aria-expanded="false" data-tip="Elegir icono"
                         onClick={e => {
                           const anchor = e.currentTarget;
                           openEmoji({ anchor, onPick: emoji => { setOpt(i, { icon: emoji }); anchor.focus(); } });
@@ -761,7 +761,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                           {chosen.length
                             ? chosen.map(h => (
                               <span key={h} className={cls("tag", lockedHours.has(`${d}T${h}`) && "locked")}
-                                title={lockedHours.has(`${d}T${h}`) ? "Ya tiene votos: no se puede quitar" : undefined}>{h}
+                                data-tip={lockTip(lockedHours.has(`${d}T${h}`))}>{h}
                                 {!lockedHours.has(`${d}T${h}`) && (
                                   <button type="button" aria-label={`Quitar las ${h} del ${D.fmtDayShort(d)}`} onClick={() => removeDayHour(d, h)}>×</button>
                                 )}
@@ -811,9 +811,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               {choices.map((c, i) => {
                 const locked = !!c.id && lockedSlots.has(c.id);
                 return (
-                  <div key={c.key} className={cls("opt-row choice-row", locked && "locked")} title={lockTitle(locked)}>
+                  <div key={c.key} className={cls("opt-row choice-row", locked && "locked")} data-tip={lockTip(locked)}>
                     <button type="button" className={cls("icon-pick", !c.icon && "default")} aria-label={`Elegir icono de la opción ${i + 1}`}
-                      aria-expanded="false" title="Elegir icono (opcional)"
+                      aria-expanded="false" data-tip="Elegir icono (opcional)"
                       onClick={e => {
                         const anchor = e.currentTarget;
                         openEmoji({ anchor, onPick: emoji => { setChoice(c.key, { icon: emoji }); anchor.focus(); } });
@@ -833,7 +833,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
                       <EmojiButton field={() => choiceRefs.current[c.key]} setValue={v => setChoice(c.key, { name: v })} />
                     </div>
                     <button type="button" className="icon-btn choice-del" aria-label={`Quitar la opción ${i + 1}`}
-                      title={locked ? "Ya tiene votos: no se puede quitar" : "Quitar la opción"}
+                      data-tip={locked ? "Tiene votos: no se puede quitar" : "Quitar la opción"}
                       disabled={locked || choices.length <= MIN_CHOICES} onClick={() => removeChoice(c)}>
                       <Icon name="close" />
                     </button>
