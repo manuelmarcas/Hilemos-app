@@ -87,6 +87,11 @@ desde fuera y segundo plano. Usa el modo demo y varias personas en el mismo WebV
   dispositivos en la lista, `ADB_SERIAL=<ip:puerto>`.
 - Que no se bloquee la pantalla a mitad: `adb shell svc power stayon usb`, y al acabar `svc power stayon false`.
 - El usuario no debe usar el móvil mientras corre (cinco minutos).
+- **Playwright emula el tema claro** (`prefers-color-scheme: light`) en la página a la que se conecta: para comprobar
+  el tema del sistema hay que preguntar por DevTools a pelo (`rawEval` en el script). Por eso pareció que el tema
+  automático no seguía al móvil, y sí lo sigue.
+- Un enlace que abre otra app (`target=_blank`, Calendar) se pulsa con `evaluate(a => a.click())`: el `click()` de
+  Playwright se queda esperando una ventana que en el WebView no llega.
 
 ## Trucos del modo demo y de Playwright
 

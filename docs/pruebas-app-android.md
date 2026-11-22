@@ -7,10 +7,11 @@ que hay que hacer a mano.
   Casi todo se comprobó con el recorrido automático y el resto a mano con capturas.
 - **[ ]** pendiente. Al lado se dice por qué: necesita una segunda cuenta, un correo real, otro móvil, o ha fallado.
 
-Resultado de la última pasada del recorrido automático: **50 de 52 bien**. Los dos que no:
-- **Imagen del resultado:** el fallo es del script, que pierde un momento la conexión con la app al volver de Google
-  Calendar. En la pasada anterior salió bien.
-- **Tema automático:** es un fallo de la app (apartado 7).
+Resultado de la última pasada del recorrido automático: **50 de 52 bien**. Los dos que no eran fallos del script,
+no de la app:
+- **Imagen del resultado:** el script pierde un momento la conexión con la app al volver de Google Calendar. En la
+  pasada anterior salió bien.
+- **Tema automático:** Playwright forzaba el tema claro al medir (apartado 7).
 
 ## Cómo pasar el recorrido automático
 
@@ -102,8 +103,8 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Añadir al calendario: abre Google Calendar (o el navegador) con el evento.
 - [x] Botón Atrás con un diálogo abierto: lo cierra sin salir de la votación.
 - [x] Botón Atrás con el cajón abierto: no saca de la app.
-- [x] Botón Atrás en «Editar» sale del formulario. *Ojo: el teclado se abre solo al entrar, así que el primer Atrás
-      lo cierra y hace falta un segundo. Ver «Hallazgos».*
+- [x] Botón Atrás en «Editar» sale del formulario. *Hacían falta dos porque el teclado se abría solo; ya no se
+      abre (ver «Hallazgos»).*
 - [x] Teclado: al tocar un campo se abre y el campo queda a la vista.
 - [x] Deslizar una votación con el dedo para archivarla, y deshacer.
 - [x] Cajón del menú lateral: se abre con el botón y el buscador filtra.
@@ -129,18 +130,18 @@ app ya registra el dispositivo (se arregló el fallo que lo impedía).*
 ## 7. Tema
 
 - [x] Tema claro y oscuro elegidos en la app.
-- [ ] **Falla:** con «Automático», la app no sigue el modo oscuro del móvil. Con el modo noche activado
-      (`cmd uimode night yes`), Android aplica el modo noche a la app, pero el WebView sigue diciendo
-      `prefers-color-scheme: light`, también al volver a abrir la app. *Pendiente de investigar; conviene probarlo
-      también activándolo desde los ajustes del móvil.*
+- [x] Con «Automático», la app sigue el modo oscuro del móvil, al abrirla y también al cambiarlo con la app abierta.
+      *Parecía que no: era la herramienta de pruebas. Playwright fuerza el tema claro en la página a la que se
+      conecta, y ahora el recorrido lo mide con DevTools a pelo.*
 
 ## Hallazgos
 
 - **Corregido:** al ir a un campo (por ejemplo, al abrir «Editar»), el campo quedaba medio tapado por la barra
   superior pegada. Ahora el navegador le deja hueco (`scroll-padding-top` en `src/styles/layout.css`).
-- **El teclado se abre solo** al entrar en «Nueva votación» y en «Editar», porque el título recibe el foco. En el
-  móvil tapa media pantalla, y el primer Atrás solo cierra el teclado. Propuesta: dar el foco al título solo con
-  ratón (`pointer: fine`).
-- **El tema automático no sigue al sistema** en la app (apartado 7).
-- **Pantallas de carga** (propuesta del usuario): mientras se espera a Google al entrar, mientras cargan las
-  votaciones y donde haga falta.
+- **Corregido: el teclado se abría solo** al entrar en «Nueva votación» y en «Editar», porque el título recibía el
+  foco. En el móvil tapaba media pantalla, y el primer Atrás solo cerraba el teclado. Ahora el título solo recibe el
+  foco con ratón (`hasMouse()` en `src/lib/util.ts`).
+- **Descartado: el tema automático** sí sigue al sistema (apartado 7).
+- **Hecho: pantallas de carga.** Hay indicadores en el arranque, en «Entrar con Google» y las demás formas de entrar,
+  en la lista de votaciones (tarjetas de esqueleto), en la votación, en «Editar», en el menú lateral, en el chat y en
+  «Crear votación».

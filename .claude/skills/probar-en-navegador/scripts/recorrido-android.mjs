@@ -631,21 +631,36 @@ await check("Perfil: tema oscuro, claro y automático", async () => {
   await ana.locator(".theme-pick__card", { hasText: "Automático" }).click();
   expect(await ana.evaluate(() => document.documentElement.dataset.theme) === undefined, "no vuelve a automático");
 });
-await check("Tema automático: sigue el modo oscuro del móvil", async () => {
+/**
+ * Evalúa en el WebView con una conexión DevTools propia, sin Playwright: Playwright emula prefers-color-scheme
+ * claro en la página a la que se conecta, así que con él el tema del sistema siempre parecería claro.
+ */
+async function rawEval(expression) {
+  const list = await (await fetch("http://localhost:9333/json")).json();
+  const ws = new WebSocket(list[0].webSocketDebuggerUrl);
+  await new Promise((ok, ko) => { ws.onopen = ok; ws.onerror = ko; });
+  const res = await new Promise(r => {
+    ws.onmessage = m => r(JSON.parse(m.data));
+    ws.send(JSON.stringify({ id: 1, method: "Runtime.evaluate", params: { expression, returnByValue: true } }));
+  });
+  ws.close();
+  return res.result?.result?.value;
+}
+await check("Tema automático: sigue el modo oscuro del móvil, también en vivo", async () => {
   const was = sh("cmd uimode night");
-  const bg = () => ana.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const probe = () => rawEval("JSON.stringify([matchMedia('(prefers-color-scheme: dark)').matches, getComputedStyle(document.body).backgroundColor])").then(JSON.parse);
   try {
     sh("cmd uimode night yes"); await sleep(1500);
-    const dark = await ana.evaluate(() => matchMedia("(prefers-color-scheme: dark)").matches);
-    const dbg = await bg();
+    const [dark, dbg] = await probe();
     sh("cmd uimode night no"); await sleep(1500);
-    const light = await ana.evaluate(() => matchMedia("(prefers-color-scheme: dark)").matches);
+    const [light, lbg] = await probe();
     expect(dark && !light, `el WebView no ve el cambio (oscuro=${dark}, claro=${light})`);
-    return `fondo en oscuro: ${dbg}`;
+    return `fondo ${dbg} en oscuro y ${lbg} en claro`;
   } finally {
     sh(`cmd uimode night ${/yes/.test(was) ? "yes" : /auto/.test(was) ? "auto" : "no"}`);
   }
 });
+
 // ======================= Sistema: girar, segundo plano y enlaces =======================
 await check("Girar el móvil: horizontal y vuelta a vertical", async () => {
   await go(ana, days);
