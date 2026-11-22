@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => ({
   // La app de Android (modo «android») no lleva los mapas de código: solo engordarían el paquete.
   build: { outDir: "dist", sourcemap: mode !== "android", chunkSizeWarningLimit: 700 },
   // Tests de la lógica pura (lib/): `npm test`. En Node, sin navegador; la zona horaria fija para que las fechas
-  // salgan igual en cualquier máquina.
-  test: { include: ["src/**/*.test.ts"], environment: "node", env: { TZ: "Europe/Madrid" } },
+  // salgan igual en cualquier máquina. `vmThreads`: con Node 24.15, los modos «threads» y «forks» de Vitest 5 fallan al
+  // arrancar cada archivo («Cannot read properties of undefined (reading 'config')»).
+  test: { include: ["src/**/*.test.ts"], environment: "node", env: { TZ: "Europe/Madrid" }, pool: "vmThreads" },
 }));
