@@ -1,7 +1,8 @@
 # Funcionalidades de Hilemos y planes: gratis y premium
 
-Este documento recoge todo lo que hace Hilemos hoy, una propuesta de qué podría ir en un plan premium y qué
-límites podría tener el plan gratuito. Al final hay una lista de funcionalidades que aún no existen y tres secciones
+Este documento recoge todo lo que hace Hilemos hoy y lo decidido sobre qué va en el plan premium y qué límites tiene
+el plan gratuito (lo que falta por cerrar pone «Pendiente»). Al final hay una lista de funcionalidades que aún no
+existen y tres secciones
 que detallan cómo funcionarían las decisiones más delicadas: qué pasa cuando una votación cambia de manos (§8), el
 límite de votaciones abiertas a la vez (§9) y qué avisos son gratis y cuáles premium (§10).
 
@@ -98,6 +99,7 @@ En las tablas:
 | 2.4.5 | Imagen del resultado | Una tarjeta PNG para compartir, con la marca Hilemos. Es la misma decisión que 3.7. | Gratis (premium: sin marca o personalizada) | ★★ | Gratis con la marca (3.7); premium, sin ella. Personalizarla iría con 7.18. |
 | 2.4.6 | Añadir al calendario | Google Calendar o un archivo .ics para Apple, Outlook y otros. | Gratis | No | Gratis |
 | 2.4.7 | Avisar a quien falta | Un mensaje con los nombres de quien falta por votar, para WhatsApp o el menú de compartir. | Gratis | ★ (los recordatorios automáticos, 7.7, sí son ★★★) | Gratis |
+| 2.4.8 | Exportar resultados | Menú ⋯ (administradores): CSV para guardar la votación, Excel con formato (Resultados, Votos y Participantes) e informe en PDF. En las anónimas, sin nombres. Ver 7.10. | CSV gratis; Excel y PDF premium | ★★★ (Excel y PDF) | CSV gratis; Excel y PDF premium. Hasta que haya planes, todo disponible. |
 
 ### 2.5 Participantes y gestión
 
@@ -111,10 +113,17 @@ En las tablas:
 | 2.5.6 | Administradores | El creador nombra coorganizadores con un clic, desde «Gestionar participantes» (menú ⋯); gestionan como él, salvo eliminarla y nombrar a otros. | Premium | ★★★ | Premium |
 | 2.5.7 | Delegado | Si el creador se va, la votación pasa a un administrador o a otro participante. | Gratis (es una garantía) | No | Gratis; con preferencia por un administrador con premium (§8) |
 | 2.5.8 | Solicitudes | Aceptar, rechazar o volver a admitir (en las de aprobación). | Va con 2.2.12 | ★★★ (con 2.2.12) | Va con 2.2.12; aceptar y rechazar sigue funcionando aunque el gestor no tenga premium (§8) |
-| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. Hoy se pueden quitar correos de la lista; quien ya había entrado con un correo quitado sigue dentro y puede votar: solo deja de poder volver a entrar si sale. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Los correos que aún no han entrado se pueden quitar (para corregir errores al escribirlos). Quitar el de alguien que ya está dentro depende de 7.20: si se puede expulsar a gente, quitar su correo lo expulsa (con confirmación); si no, no se puede quitar. |
+| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. El máximo no puede bajar de las plazas ocupadas: el aviso sale al momento, con un enlace a «Gestionar participantes» para expulsar antes a alguien. Quitar un correo de la lista no expulsa a quien ya entró con él: solo impide que entren nuevas personas con ese correo; para expulsar está 2.5.13. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Pendiente: que quitar el correo de alguien que ya está dentro le expulse (con confirmación). Hoy la app no sabe con qué correo entró cada persona (ver la nota tras la tabla). |
 | 2.5.10 | Quitar el plazo | Con la votación abierta, deja de tener fecha de cierre. Si el plazo ya ha pasado, reabrir la votación quita el plazo y se pueden volver a cambiar los votos. | Va con 2.2.10 | ★★ (con 2.2.10) | Va con 2.2.10. Probado. |
 | 2.5.11 | Eliminar la votación | La borra para todos. | Gratis | No | Gratis |
 | 2.5.12 | Salir de la votación | Avisa de lo que pasa con los votos según el estado de la votación. | Gratis | No | Gratis |
+| 2.5.13 | Gestionar participantes y expulsar | Menú ⋯: nombrar y quitar administradores con un clic y expulsar a alguien (con confirmación). Quien es expulsado deja de contar, libera su plaza y no puede volver con el enlace; se le puede volver a admitir. Ver 7.20. | Gratis (expulsar); administradores, premium (2.5.6) | No (es moderación) | Expulsar, gratis para cualquier administrador; a otro administrador solo le expulsa el creador. Nombrar administradores, premium (2.5.6). |
+
+> **Correos y expulsar (2.5.9).** La lista de correos solo dice quién puede entrar; el voto de cada persona no guarda
+> su correo, así que al quitar uno la app no sabe a quién corresponde. Para que quitar un correo expulse a alguien
+> habría que guardar con qué correo entró cada uno, y sin que lo vean los demás participantes (los votos los leen
+> todos). Es posible, pero toca el modelo de datos y la política de privacidad. Mientras tanto, se expulsa desde
+> «Gestionar participantes».
 
 ### 2.6 Chat
 
@@ -154,7 +163,7 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 
 ---
 
-## 3. Límites para el plan gratuito: alternativas
+## 3. Límites del plan gratuito
 
 | N.º | Límite | Ejemplo | A favor | En contra | ¿Hace falta servidor? | ¿Para premium? | Decisión |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -173,7 +182,7 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 - Hasta 20 personas por votación (150 en premium).
 - Aprobación, solo correos, administradores y plazo, en premium.
 - Las votaciones gratuitas caducan; las de premium, no.
-- La imagen del resultado lleva la marca.
+- La imagen del resultado lleva la marca; con premium, sin ella (2.4.5).
 - Votar, resultados, desempate, chat, grupos y compartir: gratis y sin límite.
 
 **Sobre la caducidad (3.6).** Decidido: 12 meses sin movimiento (un voto, un mensaje o un cambio), estén abiertas
@@ -256,7 +265,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
-| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Sí, imprescindible. Se mantiene entrar sin cuenta (ver nota debajo). |
+| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Imprescindible. Pendiente de confirmar: mantener entrar sin cuenta y protegerse con App Check (recomendado, ver la nota debajo). |
 | 7.5 | Activar los avisos push | Hechos también en la app de Android. Blaze y las funciones, desde el 22 de noviembre de 2026; falta probar un aviso real. | Casi hecho | ★ (los recordatorios, 7.7, ★★★) | |
 | **Muy útiles** | | | | | |
 | 7.6 | «Si hace falta» | Además de «sí», una respuesta tibia: ayuda a encontrar fechas cuando nada encaja. | Pendiente | No | No |
