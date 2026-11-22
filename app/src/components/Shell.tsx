@@ -34,6 +34,14 @@ export function Shell() {
   const path = useHashPath();
   const route = parseRoute(path);
   const [drawer, setDrawer] = useState(false);
+  // La barra superior se queda pegada en el móvil; en cuanto hay algo debajo, se le pone sombra.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Con la app abierta el navegador no pinta el aviso: se muestra como aviso flotante.
   useEffect(() => {
@@ -83,7 +91,7 @@ export function Shell() {
 
   return (
     <div id="app" className="app">
-      <header className="topbar">
+      <header className={"topbar" + (scrolled ? " topbar--scrolled" : "")}>
         <div className="topbar__left">
           <button className="topbar__drawer" id="sb-toggle" aria-label="Abrir mis votaciones" aria-controls="sidebar"
             aria-expanded={drawer} onClick={() => setDrawer(d => !d)}><Icon name="menu" /></button>

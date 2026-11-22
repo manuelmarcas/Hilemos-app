@@ -15,20 +15,34 @@
   --safe-right:max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
   --safe-bottom:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
   --safe-left:max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  /* Fondo de la página. Lo repiten, fijo a la pantalla, la franja de la barra de estado y la barra superior pegada:
+     así se funden con la página sin costura. */
+  --page-bg:
+    radial-gradient(circle at 10% 0%, var(--glow-a) 0, transparent 45%),
+    radial-gradient(circle at 90% 10%, var(--glow-b) 0, transparent 45%),
+    var(--bg);
 }
 html,body{min-height:100%}
 body{
   margin:0;
   padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   font-family:var(--font-sans);
-  background:
-    radial-gradient(circle at 10% 0%, var(--glow-a) 0, transparent 45%),
-    radial-gradient(circle at 90% 10%, var(--glow-b) 0, transparent 45%),
-    var(--bg);
+  background:var(--page-bg);
   background-attachment:fixed;
   color:var(--ink);
   -webkit-text-size-adjust:100%;
+}/* Franja bajo la barra de estado del móvil (app de Android): lo que se desplaza pasa por debajo sin verse. En el
+   navegador mide 0. */
+body::before{
+  content:"";
+  position:fixed;
+  z-index:30;
+  top:0;left:0;right:0;
+  height:var(--safe-top);
+  background:var(--page-bg);
+  background-attachment:fixed;
 }
+
 a{color:var(--link)}
 h1,h2,.brand{font-family:var(--font-display);letter-spacing:-.005em}
 h1{font-weight:800;letter-spacing:-.01em}
