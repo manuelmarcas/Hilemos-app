@@ -126,12 +126,44 @@ cuando hacen falta, o con `/nombre`):
 
 ## Estructura
 
+En la rama `main` solo hay código vigente: la primera versión (sin React) no está en los archivos, solo en el
+historial de git. Hay **una única aplicación**: la web y la app de Android salen del mismo código (`app/src`).
+
 ```
-app/              La aplicación (ver app/README.md)
-firestore.rules   Reglas de seguridad de Firestore
-firebase.json     Configuración de Firebase para publicar las reglas (la del hosting está en app/)
-index.html        Redirección de GitHub Pages a la dirección única
+app/                          LA APLICACIÓN (React + Vite + TypeScript). Ver app/README.md
+├── src/                      Código fuente, el mismo para la web y para Android
+│   ├── main.tsx, App.tsx     Arranque y rutas
+│   ├── pages/                Pantallas (portada, votación, creación…); pages/poll/ = piezas de la votación
+│   ├── components/           Componentes reutilizables
+│   ├── lib/                  Lógica pura (fechas, ranking, desempate…) con sus tests; lib/store/ = acceso a datos
+│   ├── state/, hooks/        Estado global y hooks
+│   └── styles/               CSS en BEM, solo con variables del design system
+├── design-system/            tokens.json (única fuente de colores y medidas), logo y guía de componentes
+├── public/                   Iconos, manifest (PWA) y firebase-messaging-sw.js (avisos push en el navegador)
+├── assets/                   Iconos y splash de origen para generar los de Android
+├── android/                  Proyecto nativo de Android (Capacitor): empaqueta la web compilada en un WebView
+├── redirect/                 Página mínima del sitio antiguo de Firebase Hosting (solo redirige)
+├── capacitor.config.ts       Configuración de la app de Android
+├── firebase.json             Hosting: destinos «app» (la web) y «antigua» (redirección)
+└── vite.config.ts            Compilación y tests (Vitest)
+
+firestore.rules               Reglas de seguridad de Firestore
+firebase.json, .firebaserc    Firebase de la raíz: reglas y funciones (el hosting está en app/)
+functions/                    Cloud Functions de avisos push (escritas, nunca desplegadas: plan Spark)
+docs/                         Documentación (funcionalidades y planes)
+.claude/skills/               Normas y herramientas del proyecto para Claude Code
+index.html                    Redirección de GitHub Pages a hilemos.web.app (no es la app)
 ```
+
+### Qué se ejecuta dónde
+
+| Dónde | Qué código | Cómo llega |
+| --- | --- | --- |
+| **Web** <https://hilemos.web.app> | `app/src` compilado a `app/dist` | `cd app && npm run deploy` (Firebase Hosting, destino `app`) |
+| **App de Android** | El mismo `app/src`, compilado en modo `android` y empaquetado en `app/android` | `npm run android` (compila y sincroniza) y después se abre en Android Studio |
+| Sitio antiguo `votaciones-9bc95.web.app` | `app/redirect/` | `npm run deploy:antigua`; solo redirige |
+| GitHub Pages | `index.html` de la raíz | Solo redirige a la dirección única |
+| Reglas de Firestore | `firestore.rules` | `firebase deploy --only firestore:rules` desde la raíz |
 
 ## Modelo de datos (Firestore)
 
