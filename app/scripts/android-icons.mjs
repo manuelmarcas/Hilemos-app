@@ -112,13 +112,16 @@ console.log(`Iconos de Android generados (fondo ${BG}, ${cal.length} trazos del 
   const lila = fs.readFileSync("design-system/logo/logo-lila.svg", "utf8");
   const lp = [...lila.matchAll(/<path fill="([^"]+)" d="([^"]+)"/g)].map(m => ({ fill: m[1], d: m[2] }));
   const hex = f => (f.length === 7 ? f.toUpperCase() : f);
+  // Más grande que el morado (52 % del lienzo, unas tres cuartas partes de lo visible): va sobre blanco, y en el
+  // cuadro blanco de Google se vería pequeño.
+  const AVP = Math.round(BOX / 0.52);
   fs.writeFileSync(`${RES}/drawable/ic_app_logo.xml`, `<?xml version="1.0" encoding="utf-8"?>
 <!-- Generado por scripts/android-icons.mjs desde design-system/logo/logo-lila.svg: capa delantera del icono de la
      aplicación (selector de cuentas de Google, ajustes). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
-    android:viewportWidth="${VP}" android:viewportHeight="${VP}">
-    <group android:translateX="${VP / 2 - CX}" android:translateY="${VP / 2 - CY}">
+    android:viewportWidth="${AVP}" android:viewportHeight="${AVP}">
+    <group android:translateX="${AVP / 2 - CX}" android:translateY="${AVP / 2 - CY}">
 ${lp.map(p => `        <path android:fillColor="${hex(p.fill)}" android:pathData="${p.d}"/>`).join("\n")}
     </group>
 </vector>
@@ -127,14 +130,14 @@ ${lp.map(p => `        <path android:fillColor="${hex(p.fill)}" android:pathData
 <!-- Generado por scripts/android-icons.mjs: icono de la aplicación (selector de cuentas de Google, ajustes), el
      logotipo lila sobre blanco. El del lanzador es ic_launcher. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:color="#FFFFFF" />
+    <background android:drawable="@android:color/white" />
     <foreground android:drawable="@drawable/ic_app_logo" />
 </adaptive-icon>
 `);
   // Android 7 (sin iconos adaptativos): PNG por densidad.
   const body = lp.map(p => `<path fill="${p.fill}" d="${p.d}"/>`).join("");
   for (const [dir, px] of [["mdpi", 48], ["hdpi", 72], ["xhdpi", 96], ["xxhdpi", 144], ["xxxhdpi", 192]]) {
-    const s = px * 0.66, k = s / BOX, o = (px - s) / 2;
+    const s = px * 0.78, k = s / BOX, o = (px - s) / 2;
     const doc = `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}"><rect width="${px}" height="${px}" rx="${px * 0.2}" fill="#ffffff"/>` +
       `<g transform="translate(${o},${o}) scale(${k}) translate(${-X0},${-Y0})">${body}</g></svg>`;
     await sharp(Buffer.from(doc)).png().toFile(`${RES}/mipmap-${dir}/ic_app.png`);

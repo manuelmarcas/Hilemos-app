@@ -2,6 +2,6 @@
 <!-- Generado por scripts/android-icons.mjs: icono de la aplicación (selector de cuentas de Google, ajustes), el
      logotipo lila sobre blanco. El del lanzador es ic_launcher. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:color="#FFFFFF" />
+    <background android:drawable="@android:color/white" />
     <foreground android:drawable="@drawable/ic_app_logo" />
 </adaptive-icon>
