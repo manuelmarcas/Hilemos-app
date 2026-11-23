@@ -483,8 +483,9 @@ compilarla con `npm run android` y subir una versión nueva a Google Play.
 4. Con la firma de apps de Google Play, Google vuelve a firmar la app con su propia clave: añadir en Firebase las
    huellas SHA-1 de la clave de subida y de la de Google Play (*Play Console > Prueba y publica > Integridad de
    la app*); si no, el login con Google falla en la app descargada de la tienda.
-5. Enlaces que abren la app: publicar `public/.well-known/assetlinks.json` con la huella SHA-256 de la clave de
-   Google Play (la Play Console da el archivo hecho). El filtro ya está en `android/app/src/main/AndroidManifest.xml`;
-   mientras no exista el archivo, los enlaces se abren en el navegador.
+5. Enlaces que abren la app: Firebase Hosting genera solo `https://hilemos.web.app/.well-known/assetlinks.json` con
+   las huellas SHA-256 de la app Android registrada en Firebase (ahora solo la de depuración). Basta con añadir allí
+   también la SHA-256 de la clave de Google Play; no hay que publicar el archivo a mano (además `firebase.json` ignora
+   las carpetas que empiezan por punto). Si falta la huella, los enlaces se abren en el navegador.
 6. Ficha de la tienda: icono de 512 px (`design-system/logo/play-store-512.png`), imagen destacada de 1024×500,
    capturas, política de privacidad y la forma de pedir que se borre la cuenta.
