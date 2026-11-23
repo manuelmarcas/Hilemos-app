@@ -4,8 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
   isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
+  MAX_REPORT_COMMENT, reportsByPerson,
 } from "../../lib/model";
-import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
+import type { MemberStatus, PersonReport, Poll, ReportReason, Vote, Votes } from "../../lib/types";
+import { Avatar } from "../../components/Avatar";
+import { PersonDialog } from "../../components/PersonDialog";
+import { ReportDialog } from "../../components/ReportDialog";
 import { errMsg, pollUrl } from "../../lib/util";
 import { calendarEvent } from "../../lib/ics";
 import { shareResultCard } from "../../lib/resultImage";
@@ -52,6 +56,10 @@ export function PollPage({ id }: { id: string }) {
   const [peopleQuery, setPeopleQuery] = useState("");
   const [peopleFilter, setPeopleFilter] = useState<PeopleFilter>("all");
   const [peopleAll, setPeopleAll] = useState(false);
+  // Perfil abierto (PersonDialog) y persona a la que se está denunciando desde él (uids).
+  const [profileUid, setProfileUid] = useState<string | null>(null);
+  const [reportUid, setReportUid] = useState<string | null>(null);
+  const [personReports, setPersonReports] = useState<PersonReport[]>([]);
   const [tab, setTab] = useState<PollTab>("summary");
   const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
@@ -87,6 +95,12 @@ export function PollPage({ id }: { id: string }) {
       e => setStatus(errMsg(e)));
   }, [store, id, user.uid, ownOnly]);
   useEffect(() => { if (library.error) setStatus(errMsg(library.error)); }, [library.error]);
+  // Denuncias de personas: solo las lee quien administra (se marcan en «Participantes» y en su perfil).
+  const amAdmin = !!poll && isAdmin(poll, user.uid);
+  useEffect(() => {
+    if (!amAdmin) { setPersonReports([]); return; }
+    return store.watchPersonReports(id, setPersonReports, () => setPersonReports([]));
+  }, [store, id, amAdmin]);
   // Completa: en cuanto quede una plaza libre se vuelve a intentar entrar.
   useEffect(() => {
     if (blocked === "full" && poll && !isFull(poll)) { joined.current = false; setBlocked(""); }
@@ -223,6 +237,19 @@ export function PollPage({ id }: { id: string }) {
   const canVote = !poll.closed && !expired;
   // En el chat se escribe aunque la votación esté cerrada: es cuando se remata el plan.
   const canChat = admin || (!!votes[user.uid] && memberStatus(votes[user.uid]) === "accepted");
+  const reportsOf = reportsByPerson(personReports);
+  const profilePerson = profileUid ? present.find(p => p.uid === profileUid) : undefined;
+  const reportPerson = reportUid ? present.find(p => p.uid === reportUid) : undefined;
+
+  // Denunciar a alguien desde su perfil. Va con el nombre y la foto de su voto tal cual (las reglas lo comprueban).
+  const sendPersonReport = (uid: string) => async (reason: ReportReason, comment: string) => {
+    const v = votes[uid] || {};
+    await store.reportPerson(id, {
+      targetUid: uid, targetName: v.name || "", ...(v.photo ? { targetPhoto: v.photo } : {}), by: user.uid, byName: user.name,
+      reason, ...(comment ? { comment: comment.slice(0, MAX_REPORT_COMMENT) } : {}), at: Date.now(),
+    });
+    toast("Denuncia enviada. Gracias por avisar");
+  };
 
   // ---------- Votar ----------
 
@@ -562,13 +589,20 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-tabs__panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
       <section className="people-panel">
         {admin && <div className="summary__head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
-        {!poll.anonymous && T.people.some(p => p.total) && <p className="people-panel__hint">Pulsa en un nombre para ver qué ha votado.</p>}
+        {present.length > 0 && (
+          <p className="people-panel__hint">
+            {!poll.anonymous && T.people.some(p => p.total)
+              ? "Pulsa en un nombre para ver su perfil, y en la flecha o en los números para ver qué ha votado."
+              : "Pulsa en un nombre para ver su perfil."}
+          </p>
+        )}
         <PeopleList people={present} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
           {(people, empty) => (
             <div className="people-panel__scroll">
               <PeopleTable poll={poll} T={T} people={people} empty={empty} me={user.uid} openPeople={openPeople}
-                onToggle={k => toggleIn(setOpenPeople, k)} />
+                onToggle={k => toggleIn(setOpenPeople, k)} onProfile={p => setProfileUid(p.uid)}
+                reported={admin ? new Set(reportsOf.keys()) : undefined} />
             </div>
           )}
         </PeopleList>
@@ -587,6 +621,19 @@ export function PollPage({ id }: { id: string }) {
         </div>
       )}
       <TiebreakGuard id={id} poll={poll} T={T} active={admin && votesLoaded && !ownOnly} />
+      {profilePerson && (
+        <PersonDialog poll={poll} person={profilePerson} vote={votes[profilePerson.uid]} me={user.uid}
+          reports={admin ? reportsOf.get(profilePerson.uid) || [] : []} canReport={canChat}
+          onReport={() => { setReportUid(profilePerson.uid); setProfileUid(null); }} onClose={() => setProfileUid(null)} />
+      )}
+      {reportPerson && (
+        <ReportDialog title={`Denunciar a ${reportPerson.name}`}
+          quote={<span className="person"><Avatar name={reportPerson.name} photo={reportPerson.photo} size={32} seed={reportPerson.uid} /> {reportPerson.name}</span>}
+          question="¿Qué pasa con esta persona? Puede ser por su nombre, su foto o cómo se comporta."
+          already={`Ya habías denunciado a ${reportPerson.name} en esta votación.`}
+          note="La verán quienes administran la votación, que pueden expulsarla, y el equipo de Hilemos."
+          onSend={sendPersonReport(reportPerson.uid)} onClose={() => setReportUid(null)} />
+      )}
     </>
   );
 }

@@ -52,7 +52,8 @@ function Privacy() {
         <li><strong>El chat.</strong> Los mensajes que escribes en cada votación, con tu nombre y la hora.</li>
         <li>
           <strong>Las denuncias.</strong> Si denuncias un mensaje del chat: una copia del mensaje y de quién lo escribió,
-          tu nombre, el motivo y tu comentario, si lo escribes.
+          tu nombre, el motivo y tu comentario, si lo escribes. Si denuncias a una persona: una copia de su nombre y su
+          imagen tal como se veían, tu nombre, el motivo y tu comentario.
         </li>
         <li><strong>Tu lista.</strong> Las votaciones de tu menú, tus grupos, las que has archivado y hasta dónde has leído cada chat.</li>
         <li>
@@ -100,7 +101,8 @@ function Privacy() {
         <li>
           <strong>Quien administra una votación</strong> ve además las solicitudes para entrar y, en las privadas, la
           lista de correos permitidos y con qué correo entró cada participante, para poder quitarle el acceso. También
-          ve las denuncias de los mensajes del chat, con quién las hizo, y puede ocultar mensajes.
+          ve las denuncias de los mensajes del chat y de las personas de la votación, con quién las hizo, y puede
+          ocultar mensajes. La persona denunciada no ve quién la ha denunciado.
         </li>
         <li>
           <strong>Google</strong>, como proveedor técnico: Hilemos funciona sobre Firebase (inicio de sesión, base de
@@ -128,11 +130,15 @@ function Privacy() {
         <li>cambiar tu nombre y tu imagen en «Tu perfil»;</li>
         <li>activar y desactivar los avisos;</li>
         <li>salir de cualquier votación;</li>
+        <li>
+          descargar una copia de tus datos (perfil, grupos, votaciones, votos, mensajes y denuncias) en «Tu perfil» →
+          «Descargar mis datos», en un archivo JSON que puedes llevarte a otro servicio;
+        </li>
         <li>eliminar tu cuenta en «Tu perfil» → «Eliminar mi cuenta».</li>
       </ul>
       <p>
-        Para todo lo demás (por ejemplo, pedir una copia de tus datos), escribe a {mail} desde el correo de tu cuenta
-        o indicando tu nombre en la app. Te responderemos en un plazo máximo de un mes.
+        Para todo lo demás, escribe a {mail} desde el correo de tu cuenta o indicando tu nombre en la app. Te
+        responderemos en un plazo máximo de un mes.
       </p>
       <p>
         Si crees que no se están respetando tus derechos, puedes reclamar ante la Agencia Española de Protección de
@@ -199,8 +205,8 @@ function Terms() {
       <p>
         Lo que escribes (títulos, descripciones, opciones y mensajes) es tuyo y eres responsable de ello. Para que la
         app funcione, nos permites guardarlo y mostrarlo a las personas de cada votación. Cualquiera puede denunciar un
-        mensaje del chat: quien administra la votación puede ocultarlo o expulsar a quien lo escribió, y nosotros
-        revisamos las denuncias. Podemos retirar contenido o suspender cuentas que incumplan estas condiciones.
+        mensaje del chat o a una persona (por su nombre, su imagen o cómo se comporta): quien administra la votación
+        puede ocultar el mensaje o expulsar a esa persona, y nosotros revisamos las denuncias. Podemos retirar contenido o suspender cuentas que incumplan estas condiciones.
       </p>
     </Section>
     <Section title="Las votaciones">

@@ -7,7 +7,8 @@
 //   polls/{pollId}/chat/{msgId}        mensaje del chat (ChatMessage)
 //   polls/{pollId}/private/access      correos permitidos de una votación privada (solo administradores)
 //   polls/{pollId}/emails/{uid}        con qué correo entró cada participante de una privada (solo administradores)
-//   polls/{pollId}/reports/{id}        denuncias de mensajes del chat (solo administradores; ChatReport)
+//   polls/{pollId}/reports/{id}        denuncias de mensajes del chat (administradores y quien denuncia; ChatReport)
+//   polls/{pollId}/personReports/{id}  denuncias de personas (administradores y quien denuncia; PersonReport)
 //   users/{uid}                        perfil (Profile)
 //   users/{uid}/polls/{pollId}         colección del usuario (LibraryEntry)
 //   users/{uid}/groups/{groupId}       grupos del usuario (Group)
@@ -16,9 +17,12 @@
 import type { FirebaseOptions } from "firebase/app";
 import type { AuthCredential, User as FbUser } from "firebase/auth";
 import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySnapshot, WriteBatch } from "firebase/firestore";
-import { CHAT_LIMIT, chatSince, ghostName, hasLimit, keepsVotesOnLeave, pickHeir } from "../model";
+import { CHAT_LIMIT, chatSince, ghostName, hasLimit, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
-import type { AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote } from "../types";
+import type {
+  AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, MyPollData, PersonReport, Poll, PollAccess, PollData, Profile,
+  Store, Vote,
+} from "../types";
 import { isKeyEmail, newAccessKey, parseAccessKey } from "./accessKey";
 
 /** Correo al que se mandó el enlace de entrada: al abrirlo en el mismo dispositivo no hay que volver a escribirlo. */
@@ -55,6 +59,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
   const emailsCol = (id: string) => F.collection(db, "polls", id, "emails");
   const reportsCol = (id: string) => F.collection(db, "polls", id, "reports");
+  const personReportsCol = (id: string) => F.collection(db, "polls", id, "personReports");
   const userRef = (uid: string) => F.doc(db, "users", uid);
   const libCol = (uid: string) => F.collection(db, "users", uid, "polls");
   const groupsCol = (uid: string) => F.collection(db, "users", uid, "groups");
@@ -86,7 +91,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   async function removePoll(id: string, extra?: (b: WriteBatch) => void) {
     const votes = await F.getDocs(votesCol(id));
     await commitIn(votes.docs.map(d => d.ref), (b, r) => b.delete(r));
-    for (const col of [emailsCol(id), reportsCol(id)]) {
+    for (const col of [emailsCol(id), reportsCol(id), personReportsCol(id)]) {
       const s = await F.getDocs(col).catch(() => null);
       if (s) await commitIn(s.docs.map(d => d.ref), (b, r) => b.delete(r));
     }
@@ -456,6 +461,56 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     watchReports: (id, cb, onErr) => F.onSnapshot(reportsCol(id),
       snap => cb(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<ChatReport, "id">) }))), onErr),
     setMessageHidden: (id, msgId, hidden) => F.updateDoc(F.doc(chatCol(id), msgId), { hidden: hidden ? true : F.deleteField() }),
+    // Como la de un mensaje: una por persona denunciada y por quien denuncia.
+    async reportPerson(id, report) {
+      const ref = F.doc(personReportsCol(id), `${report.targetUid}_${report.by}`);
+      if ((await F.getDoc(ref).catch(() => null))?.exists()) throw Object.assign(new Error("ya-denunciado"), { code: "already-exists" });
+      await F.setDoc(ref, report);
+    },
+    watchPersonReports: (id, cb, onErr) => F.onSnapshot(personReportsCol(id),
+      snap => cb(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<PersonReport, "id">) }))), onErr),
+
+    // ---------- Descargar mis datos ----------
+    // Una lectura de cada cosa; el chat se pide «desde» que entró, como al salir, y se quedan los mensajes propios.
+    async exportMyData(u) {
+      const uid = u.uid;
+      const [profile, lib, groups, tokens] = await Promise.all([
+        F.getDoc(userRef(uid)), F.getDocs(libCol(uid)), F.getDocs(groupsCol(uid)), F.getDocs(tokensCol(uid)),
+      ]);
+      const polls = await Promise.all(lib.docs.map(async (entry): Promise<MyPollData> => {
+        const id = entry.id;
+        const safe = <T,>(p: Promise<T>) => p.catch(() => null);
+        const [pollSnap, voteSnap, emailSnap, reports, personReports] = await Promise.all([
+          safe(F.getDoc(pollRef(id))), safe(F.getDoc(F.doc(votesCol(id), uid))), safe(F.getDoc(F.doc(emailsCol(id), uid))),
+          safe(F.getDocs(F.query(reportsCol(id), F.where("by", "==", uid)))),
+          safe(F.getDocs(F.query(personReportsCol(id), F.where("by", "==", uid)))),
+        ]);
+        const poll = pollSnap?.exists() ? (pollSnap.data() as PollData) : null;
+        const vote = voteSnap?.exists() ? (voteSnap.data() as Vote) : null;
+        let myMessages: MyPollData["myMessages"] = [];
+        if (poll) {
+          const msgs = await safe(F.getDocs(F.query(chatCol(id), F.where("at", ">=", chatSince(poll, uid, vote)))));
+          myMessages = (msgs?.docs || []).filter(d => d.get("uid") === uid && !d.get("sys"))
+            .map(d => ({ at: d.get("at"), name: d.get("name"), text: d.get("text") }))
+            .sort((a, b) => a.at - b.at);
+        }
+        const strip = <T extends { id: string },>(docs: QuerySnapshot<DocumentData> | null) =>
+          (docs?.docs || []).map(d => d.data() as Omit<T, "id">);
+        return {
+          id, inMyList: entry.data() as LibraryEntry, poll: pollForExport(poll, uid), myVote: vote,
+          ...(emailSnap?.exists() ? { joinedWithEmail: emailSnap.get("email") } : {}),
+          myMessages, myReports: strip<ChatReport>(reports), myPersonReports: strip<PersonReport>(personReports),
+        };
+      }));
+      return {
+        exportedAt: new Date().toISOString(),
+        account: { uid, name: u.name, email: u.email, withoutRegistration: u.anon },
+        profile: profile.exists() ? (profile.data() as Profile) : null,
+        groups: toMap<Group>(groups),
+        devices: tokens.docs.map(d => ({ platform: d.get("platform"), updatedAt: d.get("updatedAt") })),
+        polls,
+      };
+    },
 
     // ---------- Perfil ----------
     async getProfile(uid) {

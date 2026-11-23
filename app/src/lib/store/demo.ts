@@ -1,9 +1,11 @@
 // Almacén de demostración: la misma interfaz que el de Firebase (Store, en types.ts), pero con los datos en el
 // localStorage de este navegador. Se usa con ?demo en la dirección (o si config.ts no tiene la configuración de
 // Firebase). Hace las mismas comprobaciones que las reglas de Firestore, para que se comporte igual.
-import { CHAT_LIMIT, MAX_CHAT, ghostName, hasLimit, isAdmin, keepsVotesOnLeave, pickHeir } from "../model";
+import { CHAT_LIMIT, MAX_CHAT, chatSince, ghostName, hasLimit, isAdmin, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { slugify } from "../util";
-import type { AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PollAccess, PollData, Profile, Store, Vote, Votes } from "../types";
+import type {
+  AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PersonReport, PollAccess, PollData, Profile, Store, Vote, Votes,
+} from "../types";
 
 interface DemoUserData {
   polls: Record<string, LibraryEntry>;
@@ -19,6 +21,8 @@ interface DemoDb {
   emails?: Record<string, Record<string, string>>;
   /** Denuncias de mensajes del chat (pollId → id → denuncia). */
   reports?: Record<string, Record<string, Omit<ChatReport, "id">>>;
+  /** Denuncias de personas (pollId → id → denuncia). */
+  personReports?: Record<string, Record<string, Omit<PersonReport, "id">>>;
   chat?: Record<string, Record<string, Omit<ChatMessage, "id">>>;
 }
 
@@ -184,6 +188,7 @@ export function createDemoStore(): Store {
       if (db.access) delete db.access[id];
       if (db.emails) delete db.emails[id];
       if (db.reports) delete db.reports[id];
+      if (db.personReports) delete db.personReports[id];
       delete lib(db, uid).polls[id];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);
@@ -321,6 +326,55 @@ export function createDemoStore(): Store {
       if (!isAdmin(p, me())) throw fail("permission-denied");
       if (hidden) msg.hidden = true; else delete msg.hidden;
       write(db);
+    },
+    // Como las reglas: a otra persona que está en la votación, con su nombre y su foto tal cual, una vez.
+    async reportPerson(id, report) {
+      const db = load();
+      const p = db.polls[id];
+      const target = db.votes[id]?.[report.targetUid];
+      if (!p || !target) throw fail("not-found");
+      const mine = db.votes[id]?.[me()];
+      if (report.by !== me() || report.targetUid === me() || target.gone || report.targetName !== target.name
+        || (report.targetPhoto || "") !== (target.photo || "")) throw fail("permission-denied");
+      if (p.ownerUid !== me() && (!mine || mine.status)) throw fail("permission-denied");
+      const rid = `${report.targetUid}_${report.by}`;
+      const all = ((db.personReports ||= {})[id] ||= {});
+      if (all[rid]) throw Object.assign(new Error("ya-denunciado"), { code: "already-exists" });
+      all[rid] = clone(report);
+      write(db);
+    },
+    watchPersonReports: (id, cb) => watch(() => {
+      const db = load();
+      const p = db.polls[id];
+      cb(p && isAdmin(p, me()) ? Object.entries(db.personReports?.[id] || {}).map(([rid, r]) => ({ id: rid, ...clone(r) })) : []);
+    }),
+
+    // ---------- Descargar mis datos ----------
+    async exportMyData(u) {
+      const db = load();
+      const mine = db.users[u.uid] || { polls: {}, groups: {} };
+      return clone({
+        exportedAt: new Date().toISOString(),
+        account: { uid: u.uid, name: u.name, email: u.email, withoutRegistration: u.anon },
+        profile: mine.profile || null,
+        groups: mine.groups || {},
+        devices: [],
+        polls: Object.entries(mine.polls || {}).map(([id, entry]) => {
+          const poll = db.polls[id] || null;
+          const vote = db.votes[id]?.[u.uid] || null;
+          const since = poll ? chatSince(poll, u.uid, vote) : Infinity;
+          const email = db.emails?.[id]?.[u.uid];
+          return {
+            id, inMyList: entry, poll: pollForExport(poll, u.uid), myVote: vote,
+            ...(email ? { joinedWithEmail: email } : {}),
+            myMessages: Object.values(db.chat?.[id] || {})
+              .filter(m => m.uid === u.uid && !m.sys && m.at >= since)
+              .sort((a, b) => a.at - b.at).map(m => ({ at: m.at, name: m.name, text: m.text })),
+            myReports: Object.values(db.reports?.[id] || {}).filter(r => r.by === u.uid),
+            myPersonReports: Object.values(db.personReports?.[id] || {}).filter(r => r.by === u.uid),
+          };
+        }),
+      });
     },
 
     // ---------- Perfil ----------

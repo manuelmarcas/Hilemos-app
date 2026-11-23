@@ -247,8 +247,9 @@ service cloud.firestore {
       // Denuncias de mensajes del chat: una por persona y mensaje ({msgId}_{uid}), de un mensaje ajeno que no sea un
       // aviso y con su texto tal cual. Las leen quienes administran la votación (y las recibe quien modera Hilemos,
       // con una Cloud Function); no se cambian. El creador las borra al eliminar la votación.
+      // Quien la hizo también la lee (para «Descargar mis datos», pidiéndolas con where by == su uid).
       match /reports/{reportId} {
-        allow read: if signedIn() && isAdminOf(pollData(pollId));
+        allow read: if signedIn() && (resource.data.by == request.auth.uid || isAdminOf(pollData(pollId)));
         allow create: if signedIn() && validReport();
         allow delete: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
 
@@ -263,6 +264,34 @@ service cloud.firestore {
             && d.msgText == msg.text
             && msg.get('sys', false) == false
             && d.msgName is string && d.msgName.size() <= 100
+            && d.byName is string && d.byName.size() <= 100
+            && d.reason in ['ofensivo', 'spam', 'inapropiado', 'otro']
+            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 300))
+            && d.at is int
+            && (pollData(pollId).ownerUid == request.auth.uid
+                || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null));
+        }
+      }
+
+      // Denuncias de personas (por su nombre, su foto o su comportamiento): una por persona denunciada y por quien
+      // denuncia ({targetUid}_{uid}), a otra persona que sigue en la votación y con el nombre y la foto de su voto tal
+      // cual. Como las de mensajes: las leen quienes administran la votación y quien la hizo; no se cambian.
+      match /personReports/{reportId} {
+        allow read: if signedIn() && (resource.data.by == request.auth.uid || isAdminOf(pollData(pollId)));
+        allow create: if signedIn() && validPersonReport();
+        allow delete: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
+
+        function validPersonReport() {
+          let d = request.resource.data;
+          let target = get(/databases/$(database)/documents/polls/$(pollId)/votes/$(d.targetUid)).data;
+          return d.keys().hasOnly(['targetUid', 'targetName', 'targetPhoto', 'by', 'byName', 'reason', 'comment', 'at'])
+            && d.targetUid is string
+            && reportId == d.targetUid + '_' + request.auth.uid
+            && d.by == request.auth.uid
+            && d.targetUid != request.auth.uid
+            && target.get('gone', false) == false
+            && d.targetName == target.name
+            && d.get('targetPhoto', '') == target.get('photo', '')
             && d.byName is string && d.byName.size() <= 100
             && d.reason in ['ofensivo', 'spam', 'inapropiado', 'otro']
             && (!('comment' in d) || (d.comment is string && d.comment.size() <= 300))

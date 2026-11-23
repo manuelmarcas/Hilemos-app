@@ -94,6 +94,18 @@
 .person__caret{width:12px;flex:none;color:var(--muted);font-size:.72rem;transition:transform .15s;text-align:center}
 .person__btn[aria-expanded="true"] .person__caret{transform:rotate(90deg)}
 .person--idle{padding-left:12px}
+/* Fila de «Participantes»: la flecha (y los números) despliegan los votos; el nombre abre el perfil (PersonDialog) */
+.person-row{display:inline-flex;align-items:center;gap:2px}
+.person-row__caret{
+  display:inline-grid;place-items:center;flex:none;width:26px;height:30px;margin-left:-6px;
+  border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);font-size:.72rem;cursor:pointer;
+  transition:transform .15s;
+}
+.person-row__caret:hover{background:var(--hover)}
+.person-row__caret[aria-expanded="true"]{transform:rotate(90deg)}
+.person-row__caret--none{cursor:default}
+.people-table__row--toggles{cursor:pointer}
+.people-table__flag{--icon-size:13px;--icon-color:var(--danger);display:inline-flex;margin-left:4px;vertical-align:-2px}
 .people-table__row--open td{border-bottom-color:transparent}
 .people-table__votes td{padding:0 6px 10px 44px}
 .person-votes__line{display:flex;align-items:flex-start;gap:8px;padding-top:4px}

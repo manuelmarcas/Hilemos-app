@@ -237,9 +237,58 @@ await check("Exportar resultados en CSV, Excel y PDF", async () => {
   expect(fs.readFileSync(`${OUT}/export.xlsx`).subarray(0, 2).toString() === "PK", "no es un .xlsx");
   return sizes.join(", ");
 });
-await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
-  await ana.locator(".people-table__row:has-text('Bea') .person__btn").click();
+const beaRow = () => ana.locator(".people-table__row:has-text('Bea')");
+await check("Ver qué ha votado alguien (la flecha y los números lo despliegan)", async () => {
+  await go(ana, days);
+  await ana.locator("#ptabbtn-people").click();
+  await beaRow().locator(".person-row__caret").click();
   await ana.waitForSelector(".people-table__votes .person-votes__chip");
+  await beaRow().locator(".person-row__caret").click();
+  await ana.waitForSelector(".people-table__votes", { state: "detached" });
+  await beaRow().locator(".people-table__num").first().click();
+  await ana.waitForSelector(".people-table__votes .person-votes__chip");
+});
+await check("Perfil de un participante (pulsar en su nombre)", async () => {
+  await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
+  const t = await dialogText(ana);
+  expect(t.includes("Bea") && /Ha elegido \d+ opci/.test(t) && /Entró el \d+ de/.test(t), "perfil: " + t);
+  expect(await btn(ana.locator("dialog[open]"), "Denunciar").count() === 1, "falta «Denunciar»");
+  await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
+  await ana.getByRole("button", { name: "Ver el perfil de Ana" }).click();
+  expect(await ana.locator("dialog[open] a", { hasText: "Editar tu perfil" }).count() === 1, "el propio no lleva a «Tu perfil»");
+  expect(await btn(ana.locator("dialog[open]"), "Denunciar").count() === 0, "se puede denunciar a sí misma");
+  await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
+  return t.replace(/\s+/g, " ");
+});
+await check("Denunciar a una persona desde su perfil", async () => {
+  await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
+  await btn(ana.locator("dialog[open]"), "Denunciar").click();
+  await ana.locator("dialog[open] h2", { hasText: "Denunciar a Bea" }).waitFor();
+  await ana.getByLabel("Spam o publicidad").check();
+  await ana.fill("#report-comment", "Prueba");
+  await btn(ana, "Enviar denuncia").click();
+  await ana.waitForFunction(() => document.querySelector("#toast")?.textContent?.includes("Denuncia enviada"));
+  // Quien administra la ve marcada en la tabla y en su perfil.
+  await beaRow().locator(".people-table__flag").waitFor();
+  await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
+  const t = await dialogText(ana);
+  expect(t.includes("Le han denunciado una vez: Spam o publicidad"), "el perfil no dice la denuncia: " + t);
+  await btn(ana.locator("dialog[open]"), "Denunciar").click();
+  await ana.getByLabel("Insultos, acoso u ofensas").check();
+  await btn(ana, "Enviar denuncia").click();
+  await ana.locator("dialog[open] .status", { hasText: "Ya habías denunciado a Bea" }).waitFor();
+  await btn(ana.locator("dialog[open] .dialog__actions"), "Cancelar").click();
+});
+await check("Descargar mis datos (Tu perfil)", async () => {
+  await go(ana, "#/perfil");
+  const [dl] = await Promise.all([ana.waitForEvent("download"), btn(ana, "Descargar mis datos").click()]);
+  await dl.saveAs(`${OUT}/mis-datos.json`);
+  const d = JSON.parse(fs.readFileSync(`${OUT}/mis-datos.json`, "utf8"));
+  expect(d.account?.name === "Ana" && d.polls?.length >= 1, "sin cuenta o sin votaciones");
+  const p = d.polls.find(x => x.myPersonReports?.length);
+  expect(p && p.myPersonReports[0].targetName === "Bea" && p.poll?.iCreatedIt, "falta la denuncia o la votación");
+  expect(!JSON.stringify(d).includes('"admins"'), "lleva datos de los demás (admins)");
+  return `${dl.suggestedFilename()}: ${d.polls.length} votaciones`;
 });
 
 // ======================= Desempate =======================

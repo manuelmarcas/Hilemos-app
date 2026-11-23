@@ -144,6 +144,49 @@ export interface ChatReport {
   at: number;
 }
 
+/**
+ * Documento `polls/{id}/personReports/{targetUid}_{uid}`: la denuncia de una persona de la votación (una por persona
+ * denunciada y por quien denuncia), por su nombre, su foto o su comportamiento. Copia el nombre y la foto con los que
+ * se la veía, por si los cambia. La leen quienes administran la votación y quien la hizo, y la recibe quien modera
+ * Hilemos (Cloud Function onPersonReport).
+ */
+export interface PersonReport {
+  id: string;
+  targetUid: string;
+  targetName: string;
+  /** Su foto (la miniatura del voto o la URL de Google); sin campo si no tenía. */
+  targetPhoto?: string;
+  by: string;
+  byName: string;
+  reason: ReportReason;
+  comment?: string;
+  at: number;
+}
+
+/** «Descargar mis datos» (Tu perfil): todo lo que Hilemos guarda de la cuenta, para el archivo JSON. */
+export interface MyData {
+  exportedAt: string;
+  account: { uid: string; name: string; email: string; withoutRegistration: boolean };
+  profile: Profile | null;
+  groups: Record<string, Group>;
+  /** Dispositivos con avisos activados (sin el token, que no le sirve a nadie). */
+  devices: { platform?: string; updatedAt?: number }[];
+  polls: MyPollData[];
+}
+
+/** Lo de una votación de su lista: la votación, su participación, sus mensajes y sus denuncias. */
+export interface MyPollData {
+  id: string;
+  inMyList: LibraryEntry;
+  poll: Pick<PollData, "title" | "description" | "type" | "createdAt" | "closed" | "ownerName"> & { iCreatedIt: boolean } | null;
+  myVote: Vote | null;
+  /** Correo con el que entró (votaciones solo con correos). */
+  joinedWithEmail?: string;
+  myMessages: { at: number; name: string; text: string }[];
+  myReports: Omit<ChatReport, "id">[];
+  myPersonReports: Omit<PersonReport, "id">[];
+}
+
 export type MemberStatus = "accepted" | "pending" | "rejected";
 
 export type Votes = Record<string, Vote>;
@@ -315,6 +358,13 @@ export interface Store {
   watchReports(id: string, cb: (reports: ChatReport[]) => void, onErr?: ErrorCb): Unsubscribe;
   /** Oculta un mensaje o lo vuelve a mostrar (solo quienes administran la votación). */
   setMessageHidden(id: string, msgId: string, hidden: boolean): Promise<void>;
+  /** Denuncia a otra persona de la votación (una vez por persona). */
+  reportPerson(id: string, report: Omit<PersonReport, "id">): Promise<void>;
+  /** Denuncias de personas de la votación (solo quienes la administran). */
+  watchPersonReports(id: string, cb: (reports: PersonReport[]) => void, onErr?: ErrorCb): Unsubscribe;
+
+  /** Todo lo que se guarda de la cuenta (perfil, lista, grupos, votos, mensajes y denuncias), para descargarlo. */
+  exportMyData(user: AuthUser): Promise<MyData>;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;

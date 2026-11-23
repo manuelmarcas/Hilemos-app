@@ -107,6 +107,17 @@
 .report-dialog__reason{display:flex;align-items:center;gap:8px;font-size:.94rem;cursor:pointer}
 .report-dialog__label{display:block;margin:14px 0 4px}
 .report-dialog__note{font-size:.85rem}
+/* Perfil de un participante (PersonDialog): foto y nombre, lo que se sabe de él y «Denunciar» */
+.person-card__head{display:flex;align-items:center;gap:14px;padding-right:30px}
+.person-card__id{min-width:0}
+.person-card__name{padding-right:0;overflow-wrap:anywhere}
+.person-card__role{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+.person-card__facts{display:grid;gap:4px;margin:16px 0 0;padding:0;list-style:none;font-size:.94rem}
+.person-card__reports{
+  --icon-size:14px;
+  margin:14px 0 0;padding:8px 12px;border-radius:var(--radius-sm);
+  background:var(--danger-soft);color:var(--danger);font-size:.86rem;line-height:1.45;
+}
 /* «Exportar resultados»: un botón grande por formato, con lo que trae */
 .export-dialog__list{display:grid;gap:8px}
 .export-dialog__option{

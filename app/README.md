@@ -273,7 +273,19 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   `reportsByMessage`) y puede ocultar cualquier mensaje (`setMessageHidden`, campo `hidden`): los demás ven «Mensaje
   ocultado por quien administra la votación». La Cloud Function `onReport` avisa a quien modera Hilemos según
   `config/moderation` (solo la lee el servidor): `uids` para avisos push y `email` + `brevoKey` para un correo con
-  la denuncia. Sin configurar, la denuncia se queda guardada y se ve en la consola de Firebase.
+  la denuncia. Sin configurar, la denuncia se queda guardada y se ve en la consola de Firebase. Los correos llevan el
+  asunto «[Hilemos] Denuncia en «…»», para filtrarlos en Gmail.
+- **Perfil de un participante y denunciar a una persona**: en «Participantes», el nombre abre `PersonDialog` (foto,
+  papel, desde cuándo está y si ha votado) y la flecha o los números despliegan sus votos. Desde el perfil se denuncia
+  a la persona (`ReportDialog`, el mismo que el de mensajes) en `polls/{id}/personReports/{targetUid}_{uid}`, con una
+  copia de su nombre y su foto; las reglas comprueban que son los de su voto, que sigue en la votación (sin `gone`) y
+  que no es uno mismo. Quien administra ve la bandera junto al nombre y las denuncias en su perfil
+  (`watchPersonReports`, `reportsByPerson`); la Cloud Function `onPersonReport` avisa a quien modera como `onReport`.
+- **Descargar mis datos** («Tu perfil», RGPD): `exportMyData` junta en un JSON (`MyData`) la cuenta, el perfil, los
+  grupos, los dispositivos con avisos (sin el token) y, por cada votación de su lista, lo que la describe
+  (`pollForExport`, sin uids de los demás), su voto, el correo con el que entró, sus mensajes (pedidos «desde» que
+  entró, como al salir) y las denuncias que hizo (las reglas dejan leer a cada uno las suyas con `where by == uid`).
+  Se guarda con `saveFile`: en la app, con el menú de compartir.
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
   saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
   cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el

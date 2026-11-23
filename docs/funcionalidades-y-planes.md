@@ -282,7 +282,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Al cobrar, faltarán las condiciones de pago y de devolución. | Hecha, con el contacto hilemos.app@gmail.com | No | Sin devolución si ya se ha usado (ver 4.5). |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
-| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | En marcha | No | Imprescindible. Se mantiene entrar sin cuenta. Denunciar, ocultar y el aviso a quien modera, hechos (pasos 3 a 5); el resto, en §12. |
+| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | En marcha | No | Imprescindible. Se mantiene entrar sin cuenta. Denunciar mensajes y personas, ocultar y el aviso a quien modera, hechos (pasos 3 a 5); el resto, en §12. |
 | 7.5 | Activar los avisos push | Hechos también en la app de Android. Blaze y las funciones, desde el 22 de noviembre de 2026; falta probar un aviso real. | Casi hecho | ★ (los recordatorios, 7.7, ★★★) | |
 | **Muy útiles** | | | | | |
 | 7.6 | «Si hace falta» | Además de «sí», una respuesta tibia: ayuda a encontrar fechas cuando nada encaja. | Pendiente | No | No |
@@ -297,7 +297,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | **Más adelante** | | | | | |
 | 7.14 | Entrar con Apple | Obligatorio para publicar en la App Store si se ofrece entrar con Google. | Pendiente | No | |
 | 7.15 | Otros idiomas | Inglés y catalán, por ejemplo. | Pendiente | No | |
-| 7.16 | Descargar mis datos | El RGPD reconoce el derecho de acceso y portabilidad: todo lo de la cuenta (perfil, votos, mensajes) en JSON. | Pendiente | No | Gratis (obligatorio) |
+| 7.16 | Descargar mis datos | El RGPD reconoce el derecho de acceso y portabilidad: todo lo de la cuenta (perfil, votos, mensajes) en JSON. | Hecho: «Tu perfil» → «Descargar mis datos» | No | Gratis (obligatorio) |
 | 7.17 | Limpieza automática de datos viejos | Cuentas sin registro que nadie usa y votaciones abandonadas. | Pendiente | No | |
 | 7.18 | Personalizar una votación | Un color o una imagen de portada. | Pendiente | ★★★ | Más adelante (§11) |
 | 7.19 | Estadísticas para quien organiza | Participación y quién suele faltar. | Pendiente | ★★★ (plan de organizaciones, 4.3) | Más adelante, con el plan de organizaciones (§11) |
@@ -324,6 +324,7 @@ Decidido: se mantiene entrar sin cuenta. Estas son las piezas, en el orden en qu
 | 1 | **Alerta de presupuesto** ✔ | Puesta a 5 €. En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
 | 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | Yo, el código; tú, crear las claves en la consola de Firebase |
 | 3 | **Denunciar un mensaje** ✔ | En el chat, «Denunciar» en cada mensaje ajeno, con el motivo y un comentario opcional. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado «Denunciado». | Hecho |
+| 3b | **Denunciar a una persona** ✔ | En «Participantes», el nombre abre su perfil y desde ahí se le denuncia por su nombre, su foto o su comportamiento. Se guarda una copia de su nombre y su foto. Quien administra la votación la ve marcada en la tabla y en su perfil. | Hecho |
 | 4 | **Ocultar un mensaje** ✔ | Quien administra la votación oculta un mensaje del chat y puede volver a mostrarlo; los demás ven «Mensaje ocultado por quien administra la votación». Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Hecho |
 | 5 | **Aviso de cada denuncia** ✔ | La Cloud Function `onReport` avisa a quien modera con un push y con un correo (Brevo), según lo que haya en `config/moderation`. Mientras no esté configurado, las denuncias se guardan y se ven en la consola de Firebase. | Hecho; falta configurarlo (§12) |
 | 6 | **Límite de cuentas sin registro** | Firebase ya limita las altas por IP (100 por hora). Con App Check, un programa ya no puede crearlas en masa. Un límite por dispositivo no es fiable en la web (se borra con el navegador), así que no lo haría. | Nada que hacer |
@@ -562,7 +563,7 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | 15 | Recordatorios automáticos, solo por push (7.7). | Premium |
 | 16 | Ocultar los resultados hasta votar o hasta el cierre (7.9). | Premium |
 | 17 | Zona horaria del creador en las votaciones por horas (7.12). | Gratis |
-| 18 | Descargar mis datos, en JSON (7.16). | Gratis (obligatorio) |
+| 18 | Descargar mis datos, en JSON (7.16). ✔ | Hecho |
 | 19 | Limpieza automática de datos viejos (7.17). | — |
 
 Después, los planes de futuro (§11).

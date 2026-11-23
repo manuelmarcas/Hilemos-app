@@ -157,37 +157,63 @@ async function sendMail(key, from, to, subject, text) {
   if (!res.ok) console.error("No se pudo mandar el correo de la denuncia", res.status, await res.text());
 }
 
-// Denuncia de un mensaje del chat: se avisa a quien modera Hilemos. Lo que hay que avisar se configura en
-// config/moderation (solo lo lee el servidor): `uids` (avisos push a esas cuentas), `email` y `brevoKey` (un correo
-// con la denuncia). Sin configurar, la denuncia queda guardada y se ve en la consola de Firebase.
-export const onReport = onDocumentCreated("polls/{pollId}/reports/{reportId}", async event => {
-  const r = event.data?.data();
-  if (!r) return;
-  const { pollId, reportId } = event.params;
+// Denuncias (de un mensaje del chat o de una persona): se avisa a quien modera Hilemos. Lo que hay que avisar se
+// configura en config/moderation (solo lo lee el servidor): `uids` (avisos push a esas cuentas), `email` y `brevoKey`
+// (un correo con la denuncia). Sin configurar, la denuncia queda guardada y se ve en la consola de Firebase.
+// Los asuntos de los correos empiezan siempre por «[Hilemos] Denuncia», para poder filtrarlos en el correo.
+async function alertModerators({ pollId, path, push, subject, lines }) {
   const [poll, cfg] = await Promise.all([db.doc(`polls/${pollId}`).get(), db.doc("config/moderation").get()]);
   const title = poll.get("title") || "Votación";
-  const reason = REASONS[r.reason] || r.reason;
   const tasks = [];
   const uids = cfg.get("uids") || [];
   if (uids.length) {
-    tasks.push(notify(uids, { title: "Denuncia en el chat", body: `«${title}»: ${reason}`, url: pollUrl(pollId), tag: `report-${pollId}` }, "reports"));
+    tasks.push(notify(uids, { title: push, body: `«${title}»: ${subject}`, url: pollUrl(pollId), tag: `report-${pollId}` }, "reports"));
   }
   const email = cfg.get("email");
   const key = cfg.get("brevoKey");
   if (email && key) {
     const text = [
+      ...lines(title).filter(l => l !== null),
+      "",
+      `Votación: ${pollUrl(pollId)}`,
+      `Denuncia en la consola: ${CONSOLE}/~2F${path.split("/").map(encodeURIComponent).join("~2F")}`,
+    ].join("\n");
+    tasks.push(sendMail(key, email, email, `[Hilemos] Denuncia en «${title}»: ${subject}`, text));
+  }
+  if (!tasks.length) console.warn("Denuncia sin moderación configurada (config/moderation)", path);
+  await Promise.all(tasks);
+}
+
+export const onReport = onDocumentCreated("polls/{pollId}/reports/{reportId}", async event => {
+  const r = event.data?.data();
+  if (!r) return;
+  const reason = REASONS[r.reason] || r.reason;
+  await alertModerators({
+    pollId: event.params.pollId, path: event.data.ref.path, push: "Denuncia en el chat", subject: reason,
+    lines: title => [
       `Han denunciado un mensaje del chat de «${title}».`,
       "",
       `Motivo: ${reason}`,
       r.comment ? `Comentario: ${r.comment}` : null,
       `Mensaje de ${r.msgName}: «${r.msgText}»`,
       `Lo denuncia: ${r.byName}`,
+    ],
+  });
+});
+
+export const onPersonReport = onDocumentCreated("polls/{pollId}/personReports/{reportId}", async event => {
+  const r = event.data?.data();
+  if (!r) return;
+  const reason = REASONS[r.reason] || r.reason;
+  await alertModerators({
+    pollId: event.params.pollId, path: event.data.ref.path, push: "Denuncia de una persona", subject: `${r.targetName}, ${reason}`,
+    lines: title => [
+      `Han denunciado a ${r.targetName} en «${title}».`,
       "",
-      `Votación: ${pollUrl(pollId)}`,
-      `Denuncia en la consola: ${CONSOLE}/~2Fpolls~2F${pollId}~2Freports~2F${encodeURIComponent(reportId)}`,
-    ].filter(l => l !== null).join("\n");
-    tasks.push(sendMail(key, email, email, `Denuncia en «${title}»: ${reason}`, text));
-  }
-  if (!tasks.length) console.warn("Denuncia sin moderación configurada (config/moderation)", pollId, reportId);
-  await Promise.all(tasks);
+      `Motivo: ${reason}`,
+      r.comment ? `Comentario: ${r.comment}` : null,
+      r.targetPhoto ? "Tenía foto de perfil: está copiada en la denuncia (campo targetPhoto)." : "No tenía foto de perfil.",
+      `Lo denuncia: ${r.byName}`,
+    ],
+  });
 });

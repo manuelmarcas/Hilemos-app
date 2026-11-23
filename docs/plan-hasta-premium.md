@@ -37,10 +37,10 @@ primer día.
 | --- | --- | --- |
 | 1.1 | **Medir el uso** (ver «Qué se mide»): contadores diarios que calcula el servidor, sin herramientas de analítica ni cookies. | Yo |
 | 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. | Yo |
-| 1.3 | **Denunciar a una persona**, además de un mensaje: desde «Participantes», por el nombre, la foto o su comportamiento. | Yo |
+| 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
 | 1.4 | **Panel de moderación** en la app, solo para quien modera Hilemos: ver las denuncias, ocultar el mensaje, descartar la denuncia y bloquear una cuenta. Aviso push de cada denuncia a esa cuenta, sin correo. | Yo |
 | 1.5 | **App Check** en modo «solo medir». | Tú, las claves; yo, el código |
-| 1.6 | **Descargar mis datos** (7.16), que lo exige el RGPD en cuanto hay usuarios de verdad. | Yo |
+| 1.6 | **Descargar mis datos** (7.16), que lo exige el RGPD en cuanto hay usuarios de verdad. ✔ | Hecho |
 | 1.7 | **Clave de subida y primer `.aab`**; huellas de Google Play en Firebase. | Yo, con tu sitio para guardar la clave |
 | 1.8 | **Play Console**: verificar la cuenta, crear la app, los formularios (privacidad, seguridad de los datos, clasificación, público, borrar la cuenta) y estado de «no comerciante». | Tú, con mi ayuda en las respuestas |
 | 1.9 | **Ficha de la tienda**: capturas, imagen destacada y descripción. | Yo, las capturas y el texto; tú, revisarlos |

@@ -1,6 +1,8 @@
 // Pantalla "Tu perfil": nombre visible, imagen de perfil y preferencias.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { errMsg, imageToAvatar, isIos, makeThumb } from "../lib/util";
+import { todayKey } from "../lib/dates";
+import { saveFile } from "../lib/files";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import { disablePush, enablePush, isStandalone, pushState, type PushState } from "../lib/push";
 import type { NotifyPrefs } from "../lib/types";
@@ -130,6 +132,25 @@ export function Profile() {
       setDelMsg("No se pudo eliminar la cuenta. " + errMsg(e));
       setDeleting(false);
     }
+  }
+
+  // Descargar mis datos (derecho de acceso y portabilidad del RGPD): todo en un JSON.
+  const [exporting, setExporting] = useState(false);
+  const [dataMsg, setDataMsg] = useState("");
+  async function downloadData() {
+    if (exporting) return;
+    setExporting(true);
+    setDataMsg("");
+    try {
+      const data = await store.exportMyData(user);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      if (await saveFile(blob, `hilemos-mis-datos-${todayKey()}.json`, "Mis datos de Hilemos") === "downloaded") {
+        toast("Tus datos se han descargado");
+      }
+    } catch (e) {
+      setDataMsg("No se pudieron preparar tus datos. " + errMsg(e));
+    }
+    setExporting(false);
   }
 
   async function newKey() {
@@ -319,6 +340,15 @@ export function Profile() {
             <a className="btn" href="#/privacidad"><Icon name="lock" /> Política de privacidad</a>
             <a className="btn" href="#/condiciones"><Icon name="vote" /> Condiciones de uso</a>
           </div>
+          <h3 className="profile__label profile__label--gap">Descargar mis datos</h3>
+          <p className="hint">
+            Un archivo con todo lo que Hilemos guarda de tu cuenta: tu perfil, tus grupos, tus votaciones, tus votos, tus
+            mensajes del chat y las denuncias que hayas hecho. Es un archivo JSON, que se abre con cualquier editor de texto.
+          </p>
+          <button className="btn" disabled={exporting} onClick={downloadData}>
+            <Icon name="download" /> {exporting ? "Preparando…" : "Descargar mis datos"}
+          </button>
+          {dataMsg && <div className="status" role="alert">{dataMsg}</div>}
         </section>
         <section className="step step--danger">
           <h2 className="step__title">Eliminar mi cuenta</h2>

@@ -187,8 +187,10 @@ export function Chat({ poll, id, votes, canWrite, admin, active, seenAt, onUnrea
       </div>
       <div className="status" role="alert">{status}</div>
       {reporting && (
-        <ReportDialog msg={reporting.msg} name={reporting.name} onSend={report(reporting.msg, reporting.name)}
-          onClose={() => setReporting(null)} />
+        <ReportDialog title="Denunciar mensaje" quote={<><strong>{reporting.name}:</strong> {reporting.msg.text}</>}
+          question="¿Qué pasa con este mensaje?" already="Ya habías denunciado este mensaje."
+          note="La verán quienes administran la votación, que pueden ocultar el mensaje o expulsar a quien lo escribió, y el equipo de Hilemos."
+          onSend={report(reporting.msg, reporting.name)} onClose={() => setReporting(null)} />
       )}
     </section>
   );

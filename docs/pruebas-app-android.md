@@ -107,6 +107,11 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Semanas: crear y votar con dos personas; empate, desempate y resultado definitivo.
 - [x] Meses (pasando de un año al siguiente): crear, votar con dos personas y editar el título con aviso en el chat.
 - [x] Expulsar a quien votó (en una de horas) borra sus votos; al readmitirle vuelve sin ellos.
+- [x] Participantes: la flecha y los números despliegan los votos; el nombre abre el perfil. *En Chrome (modo demo).*
+- [x] Denunciar a una persona desde su perfil; quien administra la ve marcada y no se puede repetir. *En Chrome (modo
+      demo) y las reglas en el emulador (28 casos).*
+- [x] «Descargar mis datos» en «Tu perfil» (archivo JSON). *En Chrome (modo demo).*
+- [ ] Lo mismo en el móvil: tocar la flecha (es pequeña) y descargar los datos con el menú de compartir.
 - [ ] Recordatorios y plazo de cierre. *Funciones premium; sin probar.*
 
 ## 5. Integración con Android

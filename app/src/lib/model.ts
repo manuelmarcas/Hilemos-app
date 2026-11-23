@@ -4,7 +4,7 @@
 // Voto `polls/{id}/votes/{uid}`: { name, photo, picks: ["<slot>|<opción>", ...], tb: { id, pick } }
 
 import * as D from "./dates";
-import type { ChatReport, MemberStatus, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
+import type { ChatReport, MemberStatus, MyPollData, PersonReport, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
 import type { IconName } from "../components/Icon";
 
 export interface TypeInfo {
@@ -60,6 +60,22 @@ export function reportsByMessage(reports: ChatReport[]) {
   const out = new Map<string, ChatReport[]>();
   for (const r of reports) out.set(r.msgId, [...(out.get(r.msgId) || []), r]);
   return out;
+}
+
+/** Las denuncias de personas agrupadas por persona denunciada (uid → sus denuncias), para quien administra. */
+export function reportsByPerson(reports: PersonReport[]) {
+  const out = new Map<string, PersonReport[]>();
+  for (const r of reports) out.set(r.targetUid, [...(out.get(r.targetUid) || []), r]);
+  return out;
+}
+
+/** Lo de la votación que va en «Descargar mis datos»: lo que la describe, sin datos de los demás. */
+export function pollForExport(p: PollData | null, uid: string): MyPollData["poll"] {
+  if (!p) return null;
+  return {
+    title: p.title, description: p.description, type: p.type, createdAt: p.createdAt, closed: p.closed,
+    ownerName: p.ownerName, iCreatedIt: (p.founder || p.ownerUid) === uid,
+  };
 }
 
 /** Mensajes que se traen de una votación: solo los últimos, que esto no es WhatsApp. */

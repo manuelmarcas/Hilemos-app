@@ -35,16 +35,25 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
   </>;
 }
 
-export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado nadie.", me, openPeople, onToggle, gone }: {
+export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado nadie.", me, openPeople, onToggle, gone, onProfile, reported }: {
   poll: Poll; T: Tally; people: Person[]; me: string; openPeople: Set<string>; onToggle: (uid: string) => void;
   /** La de «Se fueron»: en gris. */
   gone?: boolean;
   /** Texto de la tabla sin nadie. */
   empty?: string;
+  /** Pulsar en el nombre abre su perfil; la flecha y los números despliegan sus votos. Sin él (los que se fueron,
+   *  que ya no tienen perfil), el nombre también despliega los votos. */
+  onProfile?: (p: Person) => void;
+  /** Personas denunciadas (uids), marcadas para quien administra la votación. */
+  reported?: Set<string>;
 }) {
   const anon = !!poll.anonymous;
   const multi = poll.type === "days" && !anon;
   const cols = anon ? 2 : multi ? T.opts.length + 1 : 2;
+  /** Nombre que abre el perfil (si lo hay); `who` es lo que se ve. */
+  const profileBtn = (p: Person, who: ReactNode) => onProfile
+    ? <button type="button" className="person person__btn" aria-label={`Ver el perfil de ${p.name}`} onClick={() => onProfile(p)}>{who}</button>
+    : <span className="person">{who}</span>;
   return (
     <table className={bem("people-table", { gone })}>
       <thead>
@@ -63,31 +72,59 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
               {p.name}
               {p.uid === me && <> <span className="muted">(tú)</span></>}
               <RoleTag poll={poll} uid={p.uid} />
+              {reported?.has(p.uid) && <> <span className="people-table__flag" role="img" aria-label="Denunciado" data-tip="Le han denunciado"><Icon name="flag" /></span></>}
               {!anon && !p.total && <> <span className="muted">· aún no ha votado</span></>}
             </span>
           </>;
           if (anon) {
             return (
               <tr key={p.uid}>
-                <td><span className="person">{who}</span></td>
+                <td>{profileBtn(p, who)}</td>
                 <td className="people-table__num">{p.total ? <><Icon name="check" /> Sí</> : <span className="muted">Aún no</span>}</td>
               </tr>
             );
           }
           const open = openPeople.has(p.uid) && p.total > 0;
+          const nums = multi
+            ? T.opts.map(o => <td key={o.id} className="people-table__num">{p.perOpt[o.id]}</td>)
+            : <td className="people-table__num">{p.total}</td>;
+          if (!onProfile) {
+            return (
+              <Fragment key={p.uid}>
+                <tr className={bem("people-table__row", { open })}>
+                  <td>
+                    {p.total
+                      ? (
+                        <button className="person person__btn" aria-expanded={open} onClick={() => onToggle(p.uid)}>
+                          <span className="person__caret" aria-hidden="true">▸</span>{who}
+                        </button>
+                      )
+                      : <span className="person person--idle">{who}</span>}
+                  </td>
+                  {nums}
+                </tr>
+                {open && <tr className="people-table__votes"><td colSpan={cols}><PersonVotes poll={poll} T={T} picks={p.picks} /></td></tr>}
+              </Fragment>
+            );
+          }
+          // La flecha despliega los votos; los números también (con el dedo, la flecha sola es poco sitio). La flecha
+          // es el botón para el teclado y los lectores de pantalla; el clic en los números es un atajo.
           return (
             <Fragment key={p.uid}>
-              <tr className={bem("people-table__row", { open })}>
+              <tr className={bem("people-table__row", { open, toggles: p.total > 0 })}
+                onClick={e => { if (p.total && (e.target as HTMLElement).closest(".people-table__num")) onToggle(p.uid); }}>
                 <td>
-                  {p.total
-                    ? (
-                      <button className="person person__btn" aria-expanded={open} onClick={() => onToggle(p.uid)}>
-                        <span className="person__caret" aria-hidden="true">▸</span>{who}
-                      </button>
-                    )
-                    : <span className="person person--idle">{who}</span>}
+                  <span className="person-row">
+                    {p.total
+                      ? (
+                        <button type="button" className="person-row__caret" aria-expanded={open} aria-label={`Ver qué ha votado ${p.name}`}
+                          onClick={() => onToggle(p.uid)}>▸</button>
+                      )
+                      : <span className="person-row__caret person-row__caret--none" aria-hidden="true" />}
+                    {profileBtn(p, who)}
+                  </span>
                 </td>
-                {multi ? T.opts.map(o => <td key={o.id} className="people-table__num">{p.perOpt[o.id]}</td>) : <td className="people-table__num">{p.total}</td>}
+                {nums}
               </tr>
               {open && <tr className="people-table__votes"><td colSpan={cols}><PersonVotes poll={poll} T={T} picks={p.picks} /></td></tr>}
             </Fragment>

@@ -398,7 +398,7 @@ for (const [name, ext] of [["CSV", "csv"], ["Excel", "xlsx"], ["PDF", "pdf"]]) {
 await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
   await go(ana, days);
   await ana.locator("#ptabbtn-people").click();
-  await ana.locator(".people-table__row:has-text('Bea') .person__btn").click();
+  await ana.locator(".people-table__row:has-text('Bea') .person-row__caret").click();
   await ana.waitForSelector(".people-table__votes .person-votes__chip");
 });
 

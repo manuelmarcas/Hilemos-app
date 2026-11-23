@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  managedPeople, memberStatus, minMaxPeople, reportsByMessage, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  managedPeople, memberStatus, minMaxPeople, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -465,5 +465,30 @@ describe("reportsByMessage (denuncias por mensaje)", () => {
     expect(m.get("m1")?.map(x => x.by)).toEqual(["a", "b"]);
     expect(m.get("m2")).toHaveLength(1);
     expect(m.get("m3")).toBeUndefined();
+  });
+});
+
+describe("reportsByPerson (denuncias por persona)", () => {
+  it("agrupa las denuncias de cada persona denunciada", () => {
+    const r = (targetUid: string, by: string) => ({ id: `${targetUid}_${by}`, targetUid, targetName: "X", by, byName: by, reason: "ofensivo" as const, at: 1 });
+    const m = reportsByPerson([r("ana", "a"), r("luis", "a"), r("ana", "b")]);
+    expect(m.get("ana")?.map(x => x.by)).toEqual(["a", "b"]);
+    expect(m.get("luis")).toHaveLength(1);
+    expect(m.get("marta")).toBeUndefined();
+  });
+});
+
+describe("pollForExport (Descargar mis datos)", () => {
+  const p = { title: "Cena", type: "days", months: [], slots: [], ownerUid: "u2", ownerName: "Luis", admins: ["u3"], createdAt: 5 } as PollData;
+  it("solo lo que describe la votación, sin uids de los demás", () => {
+    expect(pollForExport(p, "u1")).toEqual({
+      title: "Cena", description: undefined, type: "days", createdAt: 5, closed: undefined, ownerName: "Luis", iCreatedIt: false,
+    });
+  });
+  it("la creó quien la fundó, aunque ahora la gestione otra persona", () => {
+    expect(pollForExport(p, "u2")?.iCreatedIt).toBe(true);
+    expect(pollForExport({ ...p, founder: "u1" }, "u1")?.iCreatedIt).toBe(true);
+    expect(pollForExport({ ...p, founder: "u1" }, "u2")?.iCreatedIt).toBe(false);
+    expect(pollForExport(null, "u1")).toBeNull();
   });
 });
