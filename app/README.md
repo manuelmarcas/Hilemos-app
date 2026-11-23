@@ -367,7 +367,8 @@ vacía, y nada los manda hasta desplegar las Cloud Functions de `functions/`.
 Qué avisa y a quién (cada persona puede apagar cada tipo en «Tu perfil → Preferencias → Avisos»):
 
 - **A todos los que están en la votación (y al creador), menos a quien vota**: alguien vota por primera vez (no en
-  cada cambio, que sería un aviso por clic).
+  cada cambio, que sería un aviso por clic). Si le expulsaron y le readmitieron, cuenta otra vez su primer voto
+  desde que volvió.
 - **Al creador**: alguien pide entrar en una votación con aprobación.
 - **A quien pidió entrar**: le han aceptado.
 - **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate termina («Ya hay

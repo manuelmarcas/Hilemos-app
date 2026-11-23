@@ -65,7 +65,9 @@ async function participants(pollId) {
 }
 
 // Alguien pide entrar, le aceptan o vota por primera vez. Solo la primera vez: cada casilla que se
-// pulsa guarda el voto, y avisar en cada cambio sería un aviso por clic.
+// pulsa guarda el voto, y avisar en cada cambio sería un aviso por clic. «Primera vez» cuenta desde que entró o,
+// si le expulsaron y le readmitieron (o le aceptaron), desde entonces: joinedAt es ese momento y updatedAt, el del
+// último voto guardado.
 export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", async event => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
@@ -73,7 +75,10 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   // Antes de leer nada: cada casilla que se pulsa dispara esta función, y casi nunca hay que avisar.
   const requested = !before && after.status === "pending";
   const accepted = before?.status === "pending" && !after.status;
-  const firstVote = !(before?.picks || []).length && (after.picks || []).length > 0 && !after.status;
+  const hasPicks = (after.picks || []).length > 0 && !after.status;
+  const firstVote = hasPicks && (!(before?.picks || []).length
+    // Primer voto desde que volvió: el anterior era de antes de la readmisión y este, de después.
+    || (!!after.joinedAt && (before?.updatedAt || 0) < after.joinedAt && (after.updatedAt || 0) >= after.joinedAt));
   if (!requested && !accepted && !firstVote) return;
   const { pollId, uid } = event.params;
   const poll = (await db.doc(`polls/${pollId}`).get()).data();
