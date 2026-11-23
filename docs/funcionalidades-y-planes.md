@@ -321,7 +321,7 @@ Decidido: se mantiene entrar sin cuenta. Estas son las piezas, en el orden en qu
 
 | Paso | Qué | Cómo | Quién |
 | --- | --- | --- | --- |
-| 1 | **Alerta de presupuesto** | En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
+| 1 | **Alerta de presupuesto** ✔ | Puesta a 5 €. En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
 | 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | Yo, el código; tú, crear las claves en la consola de Firebase |
 | 3 | **Denunciar un mensaje** ✔ | En el chat, «Denunciar» en cada mensaje ajeno, con el motivo y un comentario opcional. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado «Denunciado». | Hecho |
 | 4 | **Ocultar un mensaje** ✔ | Quien administra la votación oculta un mensaje del chat y puede volver a mostrarlo; los demás ven «Mensaje ocultado por quien administra la votación». Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Hecho |
@@ -528,14 +528,17 @@ se ve la votación, para que un evento se reconozca y quede bonito al compartirl
 
 ## 12. Lo que falta, en orden
 
+El camino por fases, con objetivos y cuándo pasar de una a otra (prueba cerrada, lanzamiento gratis, medir y
+cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la lista de tareas.
+
 ### Antes de publicar en Google Play
 
 | # | Qué | Quién |
 | --- | --- | --- |
 | 1 | Crear el correo **hilemos.app@gmail.com** (Gmail personal). ✔ | Hecho |
 | 2 | Poner ese correo de contacto en la política de privacidad y en las condiciones (7.1). ✔ | Hecho |
-| 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1). | Tú (5 minutos) |
-| 4 | **Moderación configurada** (7.4, paso 5): cuenta gratuita de Brevo con ese correo como remitente y su clave; con eso relleno `config/moderation` (también tu cuenta de Hilemos para los avisos push de denuncias). | Tú, la cuenta; yo, el resto |
+| 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1), de 5 €. ✔ | Hecho |
+| 4 | **Moderación configurada** (7.4, paso 5): tu cuenta de Hilemos en `config/moderation` para los avisos push de denuncias, y un panel de moderación en la app para verlas y actuar. El correo con Brevo queda como opción, no hace falta. | Yo |
 | 5 | **App Check** (7.4, paso 2): crear la clave de reCAPTCHA Enterprise (web) y activar Play Integrity (Android) en la consola de Firebase. Después lo pongo en la app en modo «solo medir» unos días y luego lo exijo. | Tú, las claves; yo, el código |
 | 6 | Probar un **aviso push real** en el móvil (7.5). | Los dos |
 | 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Tú |
