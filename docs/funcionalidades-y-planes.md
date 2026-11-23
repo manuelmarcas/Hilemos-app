@@ -2,9 +2,9 @@
 
 Este documento recoge todo lo que hace Hilemos hoy y lo decidido sobre qué va en el plan premium y qué límites tiene
 el plan gratuito (lo que falta por cerrar pone «Pendiente»). Al final hay una lista de funcionalidades que aún no
-existen y tres secciones
+existen, tres secciones
 que detallan cómo funcionarían las decisiones más delicadas: qué pasa cuando una votación cambia de manos (§8), el
-límite de votaciones abiertas a la vez (§9) y qué avisos son gratis y cuáles premium (§10).
+límite de votaciones abiertas a la vez (§9) y qué avisos son gratis y cuáles premium (§10), y los planes de futuro (§11).
 
 Cada fila lleva un número (por ejemplo, **2.2.10**) para que puedas responder con tus decisiones de forma sencilla:
 «2.2.10 premium, 3.1 sí con 5 votaciones…».
@@ -76,7 +76,7 @@ En las tablas:
 | 2.2.12 | Con aprobación | El organizador acepta o rechaza a cada persona que entra. | Premium | ★★★ | Premium |
 | 2.2.13 | Solo estos correos | Solo entran los correos de una lista (hasta 150). | Premium | ★★★ | Premium |
 | 2.2.14 | Grupo al crearla | Se guarda directamente en uno de sus grupos. | Gratis | No | Gratis |
-| 2.2.15 | Duplicar | Crear otra igual, como plantilla (sin el plazo). | Gratis | ★ | Gratis |
+| 2.2.15 | Duplicar | Crear otra igual, como plantilla (sin el plazo). | Gratis | ★ | Premium. Así no hace falta comprobar qué se copia de una votación premium; quien no paga crea la votación de cero. |
 | 2.2.16 | Editar | Nombre y descripción siempre; añadir días, horas u opciones (sin quitar lo que tiene votos). Cada cambio se avisa en el chat. | Gratis | No | Gratis |
 
 ### 2.3 Votar
@@ -113,7 +113,7 @@ En las tablas:
 | 2.5.6 | Administradores | El creador nombra coorganizadores con un clic, desde «Gestionar participantes» (menú ⋯); gestionan como él, salvo eliminarla y nombrar a otros. | Premium | ★★★ | Premium |
 | 2.5.7 | Delegado | Si el creador se va, la votación pasa a un administrador o a otro participante. | Gratis (es una garantía) | No | Gratis; con preferencia por un administrador con premium (§8) |
 | 2.5.8 | Solicitudes | Aceptar, rechazar o volver a admitir (en las de aprobación). | Va con 2.2.12 | ★★★ (con 2.2.12) | Va con 2.2.12; aceptar y rechazar sigue funcionando aunque el gestor no tenga premium (§8) |
-| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. El máximo no puede bajar de las plazas ocupadas: el aviso sale al momento, con un enlace a «Gestionar participantes» para expulsar antes a alguien. Quitar un correo de la lista no expulsa a quien ya entró con él: solo impide que entren nuevas personas con ese correo; para expulsar está 2.5.13. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Pendiente: que quitar el correo de alguien que ya está dentro le expulse (con confirmación). Hoy la app no sabe con qué correo entró cada persona (ver la nota tras la tabla). |
+| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. El máximo no puede bajar de las plazas ocupadas: el aviso sale al momento, con un enlace a «Gestionar participantes» para expulsar antes a alguien. Quitar un correo de la lista no expulsa a quien ya entró con él: solo impide que entren nuevas personas con ese correo; para expulsar está 2.5.13. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Decidido: quitar el correo de alguien que ya está dentro le expulsa, con un aviso de que está dentro y una confirmación que explica lo que pasará. Pendiente de hacer: hoy la app no sabe con qué correo entró cada persona (ver la nota tras la tabla). |
 | 2.5.10 | Quitar el plazo | Con la votación abierta, deja de tener fecha de cierre. Si el plazo ya ha pasado, reabrir la votación quita el plazo y se pueden volver a cambiar los votos. | Va con 2.2.10 | ★★ (con 2.2.10) | Va con 2.2.10. Probado. |
 | 2.5.11 | Eliminar la votación | La borra para todos. | Gratis | No | Gratis |
 | 2.5.12 | Salir de la votación | Avisa de lo que pasa con los votos según el estado de la votación. | Gratis | No | Gratis |
@@ -189,7 +189,7 @@ Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece descargar la votación en CSV (7.10).
 
 - **12 y no 6:** muchas votaciones se repiten cada año (la cena de Navidad, el viaje de verano). Con 6 meses, la del
-  año pasado ya no estaría cuando se quiere consultar o duplicar.
+  año pasado ya no estaría cuando se quiere consultar o, con premium, duplicar.
 - **Sin movimiento y no desde el cierre:** las gratuitas no tienen plazo y muchas nunca se cierran. Contando desde el
   cierre, esas no caducarían nunca.
 - **El aviso es el momento de pasarse a premium:** «Esta votación se borrará el 3 de marzo. Con premium se guarda».
@@ -204,8 +204,24 @@ o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece de
 | N.º | Modelo | Ejemplo | Para quién | Recomendación | Decisión |
 | --- | --- | --- | --- | --- | --- |
 | 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 1,49 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual ahorra un 44 % frente a 12 meses sueltos (17,88 €). |
-| 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 € |
+| 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
+| 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Propuesta, pendiente de confirmar |
+| 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Pendiente: crear el correo |
+
+**Primera votación premium gratis (4.4).** Es un pase de 0,60 € regalado: no pasa por Google Play ni por ningún
+cobro, así que no complica nada. Enseña lo que da premium justo cuando alguien lo usa (más gente, aprobación,
+plazo, recordatorios, imagen sin marca, Excel y PDF). Solo para cuentas con Google o correo y una vez por cuenta.
+Quien borre la cuenta y vuelva a crearla podría repetirlo, pero solo ganaría otra votación de 0,60 €. Para que se
+note lo que falta, conviene que las opciones de premium se vean al crear una votación, con la etiqueta «Premium»,
+en vez de esconderlas.
+
+**Devoluciones y contacto (4.5).** Lo decidido es no devolver el dinero cuando ya se ha usado. En la UE hay 14
+días para desistir de una compra digital, pero se pierden si la persona pide empezar a usarla ya y acepta que
+pierde ese derecho. Por eso, al pagar tiene que haber una casilla que lo diga. Google Play tiene además su propia
+política de reembolsos en las primeras horas. Conviene que lo revise un gestor. Contacto, mientras no haya
+dominio: **hilemos.app@gmail.com** (o hilemos.soporte@gmail.com si ese ya existe). Sirve igual para la política de
+privacidad, la ficha de Google Play y el soporte, y luego se puede redirigir a hola@ del dominio.
 
 ### ¿Se sostienen los números?
 
@@ -262,7 +278,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | N.º | Funcionalidad | Por qué | Estado | ¿Para premium? | Decisión |
 | --- | --- | --- | --- | --- | --- |
 | **Imprescindibles antes de publicar en la tienda o de cobrar** | | | | | |
-| 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | |
+| 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | Sin devolución si ya se ha usado (ver 4.5). Contacto: un correo de Gmail mientras no haya dominio (ver 4.5). |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
 | 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Imprescindible. Pendiente de confirmar: mantener entrar sin cuenta y protegerse con App Check (recomendado, ver la nota debajo). |
@@ -282,8 +298,8 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.15 | Otros idiomas | Inglés y catalán, por ejemplo. | Pendiente | No | |
 | 7.16 | Descargar mis datos | El RGPD reconoce el derecho de acceso y portabilidad: todo lo de la cuenta (perfil, votos, mensajes) en JSON. | Pendiente | No | Gratis (obligatorio) |
 | 7.17 | Limpieza automática de datos viejos | Cuentas sin registro que nadie usa y votaciones abandonadas. | Pendiente | No | |
-| 7.18 | Personalizar una votación | Un color o una imagen de portada. | Pendiente | ★★★ | Más adelante |
-| 7.19 | Estadísticas para quien organiza | Participación y quién suele faltar. | Pendiente | ★★★ (plan de organizaciones, 4.3) | Más adelante |
+| 7.18 | Personalizar una votación | Un color o una imagen de portada. | Pendiente | ★★★ | Más adelante (§11) |
+| 7.19 | Estadísticas para quien organiza | Participación y quién suele faltar. | Pendiente | ★★★ (plan de organizaciones, 4.3) | Más adelante, con el plan de organizaciones (§11) |
 
 > **Sobre 7.4 y los bots.** Sí, alguien podría crear miles de cuentas desde muchas direcciones IP distintas: Firebase
 > limita las altas por IP, pero una red de bots tiene miles de IP. Lo que esas cuentas pueden hacer es poco:
@@ -362,6 +378,11 @@ Además:
 
 Lo que queda, que alguien con premium organice votaciones para otros, es un uso legítimo.
 
+### Votaciones con pase (4.2)
+
+El pase es de la votación, no de quien la gestiona: ya está pagada, así que sigue siendo premium la herede quien la
+herede, también alguien sin premium. No abre ninguna fisura, porque cada pase sirve para una sola votación.
+
 ### Cómo se comprueba
 
 El plan se guarda en `users/{uid}.premiumUntil` (hasta cuándo tiene premium), que solo escribe el servidor al
@@ -390,6 +411,7 @@ premium (y 50 con premium, 3.8).
 | Sale de una votación abierta que gestiona | −1 para quien sale y +1 para quien la hereda | La herencia no se bloquea: el heredero puede pasar del límite (§8). |
 | Elimina su cuenta | Como salir de cada una | — |
 | Se le acaba el premium con 10 abiertas | Nada cambia en ellas: siguen abiertas y funcionando | No puede crear ni reabrir hasta bajar de 3. |
+| Crea una votación con pase (4.2) | +1, como cualquier otra | El pase da funciones, no más votaciones: con 3 abiertas tampoco puede crearla. |
 | Al estrenar el límite, alguien ya tiene más de 3 | Se cuentan las que tiene | Igual: siguen funcionando y no puede crear más hasta bajar de 3. |
 
 Crear, cerrar y reabrir suben o bajan el contador en la misma escritura que la votación, como ya se hace con
@@ -415,5 +437,36 @@ cuenta, porque pasa el tiempo.**
 | «Quedan 24 horas para votar» | Quien no ha votado | Recordatorio (premium) |
 | «Faltan 4 personas por votar» | Gestor | Recordatorio (premium) |
 
-Los recordatorios se mandan solo si el **gestor actual** tiene premium. Si el gestor con premium sale y la hereda
+Los recordatorios van **solo por push** de momento; por correo (6.5) quedan para más adelante (§11). Se mandan
+solo si el **gestor actual** tiene premium o la votación tiene pase. Si el gestor con premium sale y la hereda
 alguien sin premium, se dejan de enviar (§8). Todos los esenciales están hechos; los recordatorios son 7.7.
+
+---
+
+## 11. Planes de futuro
+
+Ideas para después de cobrar, sin decidir del todo.
+
+### Personalizar una votación (7.18, premium)
+
+No es lo mismo que editar: **editar** cambia lo que se vota (título, días, opciones). **Personalizar** cambia cómo
+se ve la votación, para que un evento se reconozca y quede bonito al compartirlo:
+
+- **Color** de la votación: el de la cabecera, los botones y la casilla elegida (de una paleta cerrada, para que se
+  siga leyendo bien en claro y en oscuro).
+- **Imagen de portada**: una foto arriba del todo (el sitio de la boda, el equipo, la casa rural).
+- **Icono o emoji** de la votación, en vez del del tipo (📅), en «Mis votaciones» y en el menú lateral.
+- **Imagen del resultado y PDF personalizados**: con ese color y esa portada, además de sin marca (2.4.5).
+- **Vista previa del enlace**: que, al compartirlo por WhatsApp, salga la portada y el título de la votación.
+
+### Otras ideas
+
+| Idea | Qué sería | Para quién |
+| --- | --- | --- |
+| Estadísticas para quien organiza (7.19) | Participación por votación, quién suele faltar, cuánto tardan en votar | Plan de organizaciones (4.3) |
+| Plan de organizaciones (4.3) | Más personas aún, varios organizadores con una factura, estadísticas | Asociaciones, clubes, empresas |
+| Recordatorios por correo | Además de push, para quien no tiene la app (necesita un servicio de envío, 6.5) | Premium |
+| Entrar con Apple y app de iPhone (7.14) | Obligatorio para la App Store si se ofrece entrar con Google | Todos |
+| Otros idiomas (7.15) | Inglés y catalán, por ejemplo | Todos |
+| Dominio propio | Correo de contacto y dirección de la web propios (hola@…) | — |
+
