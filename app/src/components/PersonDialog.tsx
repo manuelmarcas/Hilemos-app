@@ -36,9 +36,11 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
   const dlg = useRef<HTMLDialogElement | null>(null);
   const own = person.uid === me;
   const role = roleOf(poll, person.uid);
-  const voted = poll.anonymous
-    ? (person.total ? "Ha votado" : "Aún no ha votado")
-    : person.total ? `Ha elegido ${person.total} ${person.total === 1 ? "opción" : "opciones"}` : "Aún no ha votado";
+  // En el propio, en segunda persona («Has elegido 3 opciones», «Entraste el…»).
+  const opts = `${person.total} ${person.total === 1 ? "opción" : "opciones"}`;
+  const voted = !person.total ? (own ? "Aún no has votado" : "Aún no ha votado")
+    : poll.anonymous ? (own ? "Has votado" : "Ha votado")
+    : own ? `Has elegido ${opts}` : `Ha elegido ${opts}`;
   // Denuncias agrupadas por motivo, con sus comentarios.
   const byReason = new Map<ReportReason, string[]>();
   for (const r of reports) byReason.set(r.reason, [...(byReason.get(r.reason) || []), ...(r.comment ? [r.comment] : [])]);
@@ -56,12 +58,12 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
         </div>
       </div>
       <ul className="person-card__facts">
-        {vote?.joinedAt ? <li className="person-card__fact"><Icon name="days" /> Entró el {D.fmtDayPlain(D.keyOfDate(new Date(vote.joinedAt)))}</li> : null}
+        {vote?.joinedAt ? <li className="person-card__fact"><Icon name="days" /> {own ? "Entraste" : "Entró"} el {D.fmtDayPlain(D.keyOfDate(new Date(vote.joinedAt)))}</li> : null}
         <li className="person-card__fact"><Icon name={person.total ? "check" : "hourglass"} /> {voted}</li>
       </ul>
       {shared !== undefined && (
         <section className="person-card__section" aria-labelledby="person-shared">
-          <h3 className="person-card__label" id="person-shared">Votaciones en común</h3>
+          <h3 className="person-card__label" id="person-shared">Otras votaciones en común</h3>
           {shared === null
             ? <p className="person-card__empty" role="status"><Spinner /> Buscando…</p>
             : shared.length

@@ -6,6 +6,7 @@ import type { Poll, Votes } from "../../lib/types";
 import { searchKey } from "../../lib/util";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
+import { PremiumTag } from "../../components/Premium";
 import { RoleTag } from "./People";
 
 export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadmit, onClose }: {
@@ -56,7 +57,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
                     <button type="button" className="btn btn--small" aria-pressed={isAdm}
                       disabled={!isAdm && adminsFull} data-tip={!isAdm && adminsFull ? `Como mucho ${MAX_ADMINS} administradores` : undefined}
                       onClick={() => onToggleAdmin(p.uid, p.name)}>
-                      {isAdm ? "Quitar admin" : "Hacer admin"}
+                      {isAdm ? "Quitar admin" : <>Hacer admin <PremiumTag decorative /></>}
                     </button>
                   )}
                   {p.canRemove && (

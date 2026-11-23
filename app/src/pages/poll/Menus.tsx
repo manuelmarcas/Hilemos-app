@@ -4,6 +4,7 @@ import { downloadIcs, googleCalendarUrl, type CalEvent } from "../../lib/ics";
 import { isAndroid, isIos } from "../../lib/util";
 import { useMenuKeys } from "../../hooks/useDismiss";
 import { Icon } from "../../components/Icon";
+import { PremiumTag } from "../../components/Premium";
 
 // Un solo botón para el calendario, según el dispositivo: en Android abre Google Calendar (sin descargar nada),
 // en iPhone y iPad descarga el .ics, que abre Calendario directamente, y en el ordenador deja elegir con un menú.
@@ -81,7 +82,7 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
             </button>
           )}
           <button role="menuitem" className="menu__item" onClick={pick(onDuplicate)}>
-            <Icon name="copy" />Duplicar votación
+            <Icon name="copy" />Duplicar votación <PremiumTag decorative className="menu__premium" />
           </button>
           <button role="menuitem" className="menu__item" onClick={pick(onExport)}>
             <Icon name="download" />Exportar resultados

@@ -405,7 +405,9 @@ await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
   await ana.waitForSelector(".people-table__votes", { state: "detached" });
 });
 const actions = p => p.locator("dialog[open] .dialog__actions");
-await check("Perfil de un participante al tocar su nombre", async () => {
+await check("Perfil de un participante al tocar su nombre (sin el rectángulo azul de Android)", async () => {
+  const hl = await ana.getByRole("button", { name: "Ver el perfil de Bea" }).evaluate(e => getComputedStyle(e).webkitTapHighlightColor);
+  expect(hl === "rgba(0, 0, 0, 0)", "resaltado al tocar: " + hl);
   await tap(ana.getByRole("button", { name: "Ver el perfil de Bea" }));
   await ana.waitForSelector("dialog[open].person-card");
   const t = (await dialogText(ana)).replace(/\s+/g, " ");

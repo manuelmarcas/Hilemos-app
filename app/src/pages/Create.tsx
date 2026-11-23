@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
 import {
-  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
+  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, FREE_PEOPLE, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
   fmtDeadline, lostVotedUnit, unitLabel, unitParts,
 } from "../lib/model";
 import { describeChanges } from "../lib/changes";
@@ -17,6 +17,7 @@ import { editTemplate, takeTemplate, type TemplateOption } from "../state/duplic
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
+import { PremiumNote, PremiumTag } from "../components/Premium";
 import { useDismiss } from "../hooks/useDismiss";
 import { Spinner } from "../components/Loading";
 import { EmailChips, joinEmails, splitEmails } from "../components/EmailChips";
@@ -510,10 +511,10 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const minYear = now.getFullYear();
   const isWeeks = type === "weeks";
 
-  const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string) => (
+  const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string, premium = false) => (
     <button key={key} type="button" className={`type-card ${on ? "type-card--on" : ""}`} aria-pressed={on} onClick={onClick}>
       <span className="type-card__icon"><Icon name={icon} /></span>
-      <span className="type-card__name">{name}</span>
+      <span className="type-card__name">{name}{premium && <> <PremiumTag decorative /></>}</span>
       <span className="type-card__desc">{desc}</span>
     </button>
   );
@@ -880,7 +881,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-deadline" hidden={!visible.deadline}>
-          <h2 className="step__title"><span className="step__num">{numbers.deadline}</span>¿Hasta cuándo se vota?</h2>
+          <h2 className="step__title"><span className="step__num">{numbers.deadline}</span>¿Hasta cuándo se vota? <PremiumTag /></h2>
           <p className="hint">
             Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
             plazo. Si lo dejas vacío, sigue abierta hasta que la cierres.
@@ -907,8 +908,8 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           <h2 className="step__title"><span className="step__num">{numbers.access}</span>¿Quién puede unirse?</h2>
           <div className="create__access">
             {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
-            {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval")}
-            {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails")}
+            {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval", true)}
+            {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails", true)}
           </div>
           {access === "emails" && (
             <div className="create__access-emails">
@@ -926,8 +927,12 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             <label className="field-label" htmlFor="f-max">Máximo de personas <span className="muted">(contándote a ti)</span></label>
             <input id="f-max" className="input input--small create__max-input" type="number" inputMode="numeric" min={2} max={MAX_PEOPLE}
               value={maxText} onChange={e => setMaxText(e.target.value)} placeholder={String(MAX_PEOPLE)} />
-            <p className="hint create__access-hint">Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación.</p>
+            <p className="hint create__access-hint">
+              Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación. Más
+              de {FREE_PEOPLE} personas: <PremiumTag />
+            </p>
           </div>
+          <PremiumNote />
         </section>
 
         <div className="create-bar">

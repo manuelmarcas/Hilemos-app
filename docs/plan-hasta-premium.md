@@ -36,7 +36,7 @@ primer día.
 | # | Trabajo | Quién |
 | --- | --- | --- |
 | 1.1 | **Medir el uso** (ver «Qué se mide»): contadores diarios que calcula el servidor, sin herramientas de analítica ni cookies. | Yo |
-| 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. | Yo |
+| 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. ✔ | Hecho |
 | 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
 | 1.4 | **Panel de moderación** en la app, solo para quien modera Hilemos: ver las denuncias, ocultar el mensaje, descartar la denuncia y bloquear una cuenta. Aviso push de cada denuncia a esa cuenta, sin correo. | Yo |
 | 1.5 | **App Check** en modo «solo medir». | Tú, las claves; yo, el código |

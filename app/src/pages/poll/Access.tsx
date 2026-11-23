@@ -1,13 +1,14 @@
 // Quién puede entrar: solicitudes y ajustes de acceso (administradores), y las pantallas de quien está pendiente
 // o no puede entrar (privada, completa o sin cuenta).
 import { useEffect, useRef, useState } from "react";
-import { MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, losingAccess, minMaxPeople, parseEmails, plural, pollRange, type LosingAccess } from "../../lib/model";
+import { FREE_PEOPLE, MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, losingAccess, minMaxPeople, parseEmails, plural, pollRange, type LosingAccess } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { bem, errMsg } from "../../lib/util";
 import { useSession } from "../../state/session";
 import { useUi } from "../../state/ui";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
+import { PremiumTag } from "../../components/Premium";
 import { EmailChips, joinEmails } from "../../components/EmailChips";
 
 /** Solicitudes pendientes (y rechazadas, para poder readmitirlas). Solo las ven quienes administran la votación. */
@@ -142,6 +143,7 @@ export function AccessPanel({ poll, votes, onClose, onPeople, onRemoveByEmail }:
         {tooLow
           ? <><span className="hint__warn">{tooLowMsg}</span> <button type="button" className="link-btn" onClick={onPeople}>Gestionar participantes</button></>
           : members >= 2 ? `Ya ocupan plaza ${members} personas, así que no puede ser menos.` : "Como mínimo, 2 personas."}
+        {!tooLow && <> Más de {FREE_PEOPLE} personas: <PremiumTag /></>}
       </p>
       {poll.emailsOnly && (
         <>

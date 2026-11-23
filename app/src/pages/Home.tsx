@@ -9,6 +9,7 @@ import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
 import { SwipeRow } from "../components/SwipeRow";
 import { Icon } from "../components/Icon";
+import { PremiumTag } from "../components/Premium";
 import { useListActions } from "../state/listActions";
 import { useDuplicate } from "../state/duplicate";
 import { PollListSkeleton } from "../components/Loading";
@@ -144,7 +145,7 @@ export function Home() {
             {!gone && (
               <button className="btn btn--small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
-            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar</button>}
+            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar <PremiumTag decorative /></button>}
             <button className="btn btn--small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>

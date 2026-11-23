@@ -47,6 +47,7 @@
 }
 .menu__item:hover,.menu__item:focus-visible{background:var(--hover);outline:none}
 .menu__item--danger{color:var(--danger)}
+.menu__premium{margin-left:auto}
 .menu__sep{height:1px;background:var(--line);margin:4px 6px}
 .menu__list--start{left:0;right:auto}
 .menu__caret{font-size:.75em;color:var(--muted)}

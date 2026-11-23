@@ -34,6 +34,9 @@ body{
   background-attachment:fixed;
   color:var(--ink);
   -webkit-text-size-adjust:100%;
+  /* Sin el rectángulo azul que pinta Android un instante al tocar algo: cada control ya tiene su estado pulsado,
+     y el foco con teclado se ve con :focus-visible. */
+  -webkit-tap-highlight-color:transparent;
 }/* Franjas bajo la barra de estado y bajo la barra de botones del móvil (app de Android): lo que se desplaza pasa
    por debajo sin verse. En el navegador miden 0; con navegación por gestos, la de abajo también. */
 body::after{

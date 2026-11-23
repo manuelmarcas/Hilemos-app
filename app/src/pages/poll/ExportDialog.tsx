@@ -7,11 +7,12 @@ import type { Poll } from "../../lib/types";
 import { errMsg } from "../../lib/util";
 import { Dialog } from "../../components/Dialog";
 import { Icon, type IconName } from "../../components/Icon";
+import { PremiumNote, PremiumTag } from "../../components/Premium";
 
-const FORMATS: { id: ExportFormat; icon: IconName; title: string; text: string }[] = [
+const FORMATS: { id: ExportFormat; icon: IconName; title: string; text: string; premium?: boolean }[] = [
   { id: "csv", icon: "download", title: "CSV", text: "Para guardar la votación y abrirla en cualquier hoja de cálculo." },
-  { id: "xlsx", icon: "download", title: "Excel", text: "Con formato: la clasificación, lo que votó cada persona y los participantes, en hojas separadas." },
-  { id: "pdf", icon: "download", title: "PDF", text: "Un informe con la ganadora, la clasificación y quién votó cada opción, para presentar o imprimir." },
+  { id: "xlsx", icon: "download", title: "Excel", premium: true, text: "Con formato: la clasificación, lo que votó cada persona y los participantes, en hojas separadas." },
+  { id: "pdf", icon: "download", title: "PDF", premium: true, text: "Un informe con la ganadora, la clasificación y quién votó cada opción, para presentar o imprimir." },
 ];
 
 export function ExportDialog({ poll, T, TB, onClose, toast }: {
@@ -43,12 +44,13 @@ export function ExportDialog({ poll, T, TB, onClose, toast }: {
           <button key={f.id} type="button" className="export-dialog__option" disabled={!!busy} onClick={() => run(f.id)}>
             <Icon name={f.icon} className="export-dialog__icon" />
             <span className="export-dialog__text">
-              <strong className="export-dialog__name">{busy === f.id ? "Generando…" : f.title}</strong>
+              <strong className="export-dialog__name">{busy === f.id ? "Generando…" : f.title}{f.premium && <> <PremiumTag decorative /></>}</strong>
               <span className="export-dialog__desc">{f.text}</span>
             </span>
           </button>
         ))}
       </div>
+      <PremiumNote />
       <div className="status" role="alert">{err}</div>
     </Dialog>
   );

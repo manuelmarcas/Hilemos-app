@@ -38,6 +38,8 @@ export const TOP_N = 5; // opciones que se muestran en "más votadas"
 // ----- Quién puede unirse -----
 /** Tope de personas por votación (para que no se colapse), contando al creador. */
 export const MAX_PEOPLE = 150;
+/** Personas por votación en el plan gratuito (3.3): más será premium. De momento solo se marca, no se limita. */
+export const FREE_PEOPLE = 20;
 /** Desde cuántos participantes aparecen el buscador y los filtros de la tabla. */
 export const PEOPLE_FILTER_FROM = 10;
 /** Correos permitidos como mucho en una votación privada. */

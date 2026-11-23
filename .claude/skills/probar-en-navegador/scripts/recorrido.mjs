@@ -108,6 +108,14 @@ await login(ana, "Ana");
 await check("Banner del modo demo con su enlace", async () => {
   expect(await ana.locator(".demo-banner__link").count() === 1, "falta el enlace");
 });
+await check("Crear: etiqueta «Premium» en plazo, aprobación, solo correos y más de 20 personas", async () => {
+  await go(ana, "#/nueva");
+  const n = await ana.locator(".premium-tag").count();
+  const t = (await ana.locator("#sec-access").innerText()).replace(/\s+/g, " ");
+  expect(n >= 5 && /Lo marcado así será de pago/.test(t), `etiquetas: ${n}`);
+  expect(await ana.locator("#sec-deadline .premium-tag").count() === 1, "falta en el plazo");
+  return `${n} etiquetas`;
+});
 await check("Crear: avisa si falta el nombre", async () => {
   await go(ana, "#/nueva");
   await btn(ana, "Crear votación").click();
@@ -262,6 +270,8 @@ await check("Perfil de un participante (pulsar en su nombre)", async () => {
   await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
   await ana.getByRole("button", { name: "Ver el perfil de Ana" }).click();
   expect(await ana.locator("dialog[open] a", { hasText: "Editar tu perfil" }).count() === 1, "el propio no lleva a «Tu perfil»");
+  const own = await dialogText(ana);
+  expect(/Entraste el/.test(own) && /(Has elegido|Aún no has votado)/.test(own), "el propio no va en segunda persona: " + own);
   expect(await btn(ana.locator("dialog[open]"), "Denunciar").count() === 0, "se puede denunciar a sí misma");
   await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
   return t.replace(/\s+/g, " ");
