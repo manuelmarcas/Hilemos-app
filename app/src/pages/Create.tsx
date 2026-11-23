@@ -19,6 +19,7 @@ import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
 import { useDismiss } from "../hooks/useDismiss";
 import { Spinner } from "../components/Loading";
+import { EmailChips, joinEmails, splitEmails } from "../components/EmailChips";
 
 // Ejemplos según el número de opciones: el nombre solo se muestra como placeholder (no se rellena)
 // y el icono se propone mientras no se haya elegido otro.
@@ -132,7 +133,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const [deadlineDay, setDeadlineDay] = useState("");   // "YYYY-MM-DD"; vacío = sin plazo. Una copia no hereda el plazo.
   const [deadlineTime, setDeadlineTime] = useState(""); // vacío = hasta el final de ese día
   const [access, setAccess] = useState<"open" | "approval" | "emails">(tpl?.access || "open");
-  const [emailsText, setEmailsText] = useState(tpl?.emailsText || "");
+  // Correos ya cerrados en burbujas y lo que queda a medio escribir (ver EmailChips).
+  const [emailList, setEmailList] = useState(() => splitEmails(tpl?.emailsText || ""));
+  const emailsText = joinEmails(emailList.emails, emailList.draft);
   const [maxText, setMaxText] = useState(tpl?.maxText || ""); // vacío = el tope general (MAX_PEOPLE)
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -910,12 +913,11 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           {access === "emails" && (
             <div className="create__access-emails">
               <label className="field-label" htmlFor="f-emails">Correos que pueden entrar</label>
-              <textarea id="f-emails" className="input" rows={3} value={emailsText} onChange={e => setEmailsText(e.target.value)}
-                placeholder="ana@gmail.com, carlos@gmail.com…" autoComplete="off" spellCheck={false} />
-              <p className="hint create__access-hint">
-                Sepáralos con comas, espacios o saltos de línea. Tú siempre puedes entrar.
-                {parsed.emails.length > 0 && <> <strong>{plural(parsed.emails.length, ["correo válido", "correos válidos"])}</strong>.</>}
-                {parsed.invalid.length > 0 && <span className="hint__warn"> No son correos: {parsed.invalid.slice(0, 3).join(", ")}{parsed.invalid.length > 3 ? "…" : ""}.</span>}
+              <EmailChips id="f-emails" emails={emailList.emails} draft={emailList.draft} describedBy="f-emails-hint"
+                onChange={(emails, draft) => setEmailList({ emails, draft })} placeholder="ana@gmail.com" />
+              <p id="f-emails-hint" className="hint create__access-hint">
+                Escribe un correo y pulsa Intro (o una coma) para añadir el siguiente. Tú siempre puedes entrar.
+                {emailList.emails.length > 0 && <> <strong>{plural(emailList.emails.length, ["correo", "correos"])}</strong>.</>}
                 {store.mode === "demo" && <> En el modo demo, el correo de cada persona es su nombre@demo.test (por ejemplo, ana@demo.test).</>}
               </p>
             </div>

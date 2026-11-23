@@ -65,6 +65,65 @@
 @keyframes field-error-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .input--big{font-size:1.1rem;padding:12px 14px}
 .input--small{width:auto;padding:6px 10px;font-size:.88rem}
+/* Campo de correos con burbujas (components/EmailChips.tsx): se ve como un campo, con los correos ya añadidos en
+   burbujas y el cursor detrás. */
+.email-chips{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  min-height:44px;
+  padding:6px 8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--card);
+  cursor:text;
+}
+.email-chips:focus-within{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+.email-chips--wrong{border-color:var(--danger)}
+.email-chips--wrong:focus-within{outline-color:var(--danger);border-color:var(--danger)}
+.email-chips--disabled{background:var(--soft);cursor:default}
+.email-chips__list{display:contents;list-style:none}
+.email-chips__chip{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  max-width:100%;
+  min-width:0;
+  padding:3px 4px 3px 10px;
+  border-radius:var(--radius-pill);
+  background:var(--brand-soft);
+  color:var(--brand-strong);
+  font-size:.9rem;
+  font-weight:600;
+}
+.email-chips__text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.email-chips__remove{
+  --icon-size:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  width:24px;
+  height:24px;
+  border:0;
+  border-radius:50%;
+  background:none;
+  color:inherit;
+  cursor:pointer;
+}
+.email-chips__remove:hover:not(:disabled){background:var(--hover)}
+.email-chips__input{
+  flex:1 1 160px;
+  min-width:0;
+  padding:5px 4px;
+  border:0;
+  outline:0;
+  background:none;
+  color:var(--ink);
+  font-size:1rem;
+}
 textarea.input{resize:vertical;font-size:.95rem}
 /* Campo como los demás, con la flecha propia. Donde se puede (Chrome, Edge y la app de Android, con
    appearance:base-select) también la lista: tarjeta con sombra de menú, filas como las del menú ⋯ y la elegida

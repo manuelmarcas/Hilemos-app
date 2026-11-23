@@ -8,6 +8,7 @@ import { useSession } from "../../state/session";
 import { useUi } from "../../state/ui";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
+import { EmailChips, joinEmails } from "../../components/EmailChips";
 
 /** Solicitudes pendientes (y rechazadas, para poder readmitirlas). Solo las ven quienes administran la votación. */
 export function Requests({ poll, requests, onSet }: {
@@ -64,7 +65,9 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
   const { toast } = useUi();
   const members = poll.members || 0;
   const [maxText, setMaxText] = useState(String(poll.maxPeople ?? MAX_PEOPLE));
-  const [emailsText, setEmailsText] = useState("");
+  // Correos en burbujas y lo que queda a medio escribir (ver EmailChips).
+  const [emailList, setEmailList] = useState({ emails: [] as string[], draft: "" });
+  const emailsText = joinEmails(emailList.emails, emailList.draft);
   const [loaded, setLoaded] = useState(!poll.emailsOnly);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -73,7 +76,7 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
   useEffect(() => {
     if (!poll.emailsOnly) return;
     store.getAccess(poll.id)
-      .then(a => { setEmailsText((a?.emails || []).join("\n")); setLoaded(true); })
+      .then(a => { setEmailList({ emails: a?.emails || [], draft: "" }); setLoaded(true); })
       .catch(e => { setErr("No se pudieron leer los correos. " + errMsg(e)); setLoaded(true); });
   }, [store, poll.id, poll.emailsOnly]);
 
@@ -125,8 +128,8 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
       {poll.emailsOnly && (
         <>
           <label className="field-label access-panel__label" htmlFor="ap-emails">Correos que pueden entrar</label>
-          <textarea id="ap-emails" className="input" rows={4} value={emailsText} disabled={!loaded}
-            onChange={e => setEmailsText(e.target.value)} spellCheck={false} />
+          <EmailChips id="ap-emails" emails={emailList.emails} draft={emailList.draft} disabled={!loaded}
+            onChange={(emails, draft) => { setEmailList({ emails, draft }); setErr(""); }} />
           <p className="hint access-panel__hint">Quitar un correo no expulsa a quien ya ha entrado con él: solo impide que entren nuevas personas. Para expulsar a alguien, usa «Gestionar participantes».</p>
         </>
       )}
