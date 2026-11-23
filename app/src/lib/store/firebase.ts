@@ -399,8 +399,9 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     async setMemberStatus(id, uid, status, { from, counted, removed, dropAdmin }) {
       const batch = F.writeBatch(db);
+      // Al aceptar o readmitir, el chat se le abre desde ahora: lo escrito mientras estaba fuera no es para él.
       batch.update(F.doc(votesCol(id), uid), status === "accepted"
-        ? { status: F.deleteField(), removed: F.deleteField() }
+        ? { status: F.deleteField(), removed: F.deleteField(), joinedAt: Date.now() }
         : { status, ...(status === "rejected" && removed ? { removed: true } : {}) });
       // Los rechazados no ocupan plaza: al rechazar se resta 1 y al readmitir se vuelve a sumar.
       const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);

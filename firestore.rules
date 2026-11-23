@@ -281,7 +281,7 @@ service cloud.firestore {
                 || (d.get('picks', []) == old.get('picks', []) && d.get('tb', null) == old.get('tb', null)));
         }
 
-        // Un administrador acepta (quita el estado), rechaza o vuelve a dejar pendiente a otra persona
+        // Un administrador acepta (quita el estado y le abre el chat desde ahora), rechaza o vuelve a dejar pendiente a otra persona
         // (nunca al creador). Expulsar a alguien de la votación es rechazarle con `removed`; a otro administrador solo
         // le expulsa el creador.
         function ownerSetsStatus() {
@@ -291,8 +291,16 @@ service cloud.firestore {
             && request.auth.uid != uid
             && uid != p.ownerUid
             && (!(uid in p.get('admins', [])) || p.ownerUid == request.auth.uid)
-            && d.diff(resource.data).affectedKeys().hasOnly(['status', 'removed'])
+            && d.diff(resource.data).affectedKeys().hasOnly(['status', 'removed', 'joinedAt'])
             && (!('status' in d) || d.status in ['pending', 'rejected'])
+            // Al aceptar o readmitir (sin estado), el chat se le abre desde ese momento: joinedAt pasa a ser ahora
+            // (con margen por el reloj del móvil) y nunca hacia atrás, para no destapar lo de mientras estaba fuera.
+            && (d.get('joinedAt', null) == resource.data.get('joinedAt', null)
+                || (!('status' in d)
+                    && d.joinedAt is int
+                    && d.joinedAt >= resource.data.get('joinedAt', 0)
+                    && d.joinedAt > request.time.toMillis() - 600000
+                    && d.joinedAt < request.time.toMillis() + 600000))
             && (!('removed' in d) || (d.removed == true && d.get('status', null) == 'rejected'));
         }
 

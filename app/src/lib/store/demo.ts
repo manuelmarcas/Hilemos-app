@@ -210,7 +210,7 @@ export function createDemoStore(): Store {
       if (!isAdmin(p, me()) || uid === p.ownerUid || uid === me()) throw fail("permission-denied");
       // A un administrador solo le cambia el estado (le expulsa) el creador, como en las reglas.
       if (p.admins?.includes(uid) && p.ownerUid !== me()) throw fail("permission-denied");
-      if (status === "accepted") { delete v.status; delete v.removed; } else {
+      if (status === "accepted") { delete v.status; delete v.removed; v.joinedAt = Date.now(); } else {
         v.status = status;
         if (status === "rejected" && removed) v.removed = true;
       }

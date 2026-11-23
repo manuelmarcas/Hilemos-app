@@ -101,6 +101,8 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Perfil: tema oscuro, claro y automático desde la app.
 - [x] Chat: quien entra después no ve los mensajes de antes; quien creó la votación lo ve todo. *En Chrome (modo
       demo), con dos personas, y las reglas de Firestore en el emulador (11 casos, también intentando saltárselo).*
+- [x] Chat: quien es expulsado y readmitido (o aceptado tras pedir entrar) no ve lo escrito mientras estaba fuera;
+      lo ve desde que vuelve. *Reglas en el emulador (7 casos más).*
 - [x] «Solo estos correos» con burbujas: Intro, coma, espacio, pegar una lista, un texto que no es correo (se marca),
       borrar y quitar. *En Chrome (modo demo).*
 - [ ] Votación de horas, de semanas y de meses. *El recorrido solo crea días y opciones.*

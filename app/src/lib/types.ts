@@ -95,8 +95,9 @@ export interface Vote {
   picks?: string[];
   tb?: { id: number; pick: string } | null;
   seenAt?: number;
-  /** Cuándo entró en la votación (la primera vez; si sale y vuelve, la nueva entrada). El chat solo le enseña los
-   *  mensajes desde entonces. Sin campo (votos de antes): lo ve todo. */
+  /** Cuándo entró en la votación (la primera vez; si sale y vuelve, la nueva entrada) o, si estaba pendiente o
+   *  expulsado, cuándo le aceptaron o readmitieron. El chat solo le enseña los mensajes desde entonces: lo escrito
+   *  mientras estaba fuera no es para él. Sin campo (votos de antes): lo ve todo. */
   joinedAt?: number;
   updatedAt?: number;
   /** Pendiente (solo en votaciones con aprobación) o rechazado. Sin campo = aceptado. */
