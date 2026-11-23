@@ -4,7 +4,8 @@ Este documento recoge todo lo que hace Hilemos hoy y lo decidido sobre qué va e
 el plan gratuito (lo que falta por cerrar pone «Pendiente»). Al final hay una lista de funcionalidades que aún no
 existen, tres secciones
 que detallan cómo funcionarían las decisiones más delicadas: qué pasa cuando una votación cambia de manos (§8), el
-límite de votaciones abiertas a la vez (§9) y qué avisos son gratis y cuáles premium (§10), y los planes de futuro (§11).
+límite de votaciones abiertas a la vez (§9) y qué avisos son gratis y cuáles premium (§10); los planes de futuro (§11) y
+lo que falta por hacer, en orden (§12).
 
 Cada fila lleva un número (por ejemplo, **2.2.10**) para que puedas responder con tus decisiones de forma sencilla:
 «2.2.10 premium, 3.1 sí con 5 votaciones…».
@@ -203,7 +204,7 @@ o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece de
 | N.º | Modelo | Ejemplo | Para quién | Recomendación | Decisión |
 | --- | --- | --- | --- | --- | --- |
 | 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 1,49 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual ahorra un 44 % frente a 12 meses sueltos (17,88 €). |
-| 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
+| 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium, para un solo uso: hasta su primer cierre, y si sigue abierta a los 60 días, se cierra sola. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
 | 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Sí: una vez por cuenta, solo con Google o correo, y con las opciones de premium visibles al crear (etiqueta «Premium»). |
 | 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Pendiente: crear el correo |
@@ -281,7 +282,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | Sin devolución si ya se ha usado (ver 4.5). Contacto: un correo de Gmail mientras no haya dominio (ver 4.5). |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
-| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Imprescindible. Se mantiene entrar sin cuenta. Cómo, en la nota de debajo. |
+| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | En marcha | No | Imprescindible. Se mantiene entrar sin cuenta. Denunciar, ocultar y el aviso a quien modera, hechos (pasos 3 a 5); el resto, en §12. |
 | 7.5 | Activar los avisos push | Hechos también en la app de Android. Blaze y las funciones, desde el 22 de noviembre de 2026; falta probar un aviso real. | Casi hecho | ★ (los recordatorios, 7.7, ★★★) | |
 | **Muy útiles** | | | | | |
 | 7.6 | «Si hace falta» | Además de «sí», una respuesta tibia: ayuda a encontrar fechas cuando nada encaja. | Pendiente | No | No |
@@ -322,9 +323,9 @@ Decidido: se mantiene entrar sin cuenta. Estas son las piezas, en el orden en qu
 | --- | --- | --- | --- |
 | 1 | **Alerta de presupuesto** | En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
 | 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | Yo, el código; tú, crear las claves en la consola de Firebase |
-| 3 | **Denunciar un mensaje** | En el chat, «Denunciar» en cada mensaje ajeno. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado. | Yo |
-| 4 | **Ocultar un mensaje** | Quien administra la votación puede ocultar un mensaje del chat («Mensaje ocultado por un administrador»). Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Yo |
-| 5 | **Revisión de las denuncias** | Las denuncias llegan a una colección que solo puede leer el servidor; una Cloud Function te manda un correo con cada una. | Yo; tú decides qué hacer con cada una |
+| 3 | **Denunciar un mensaje** ✔ | En el chat, «Denunciar» en cada mensaje ajeno, con el motivo y un comentario opcional. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado «Denunciado». | Hecho |
+| 4 | **Ocultar un mensaje** ✔ | Quien administra la votación oculta un mensaje del chat y puede volver a mostrarlo; los demás ven «Mensaje ocultado por quien administra la votación». Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Hecho |
+| 5 | **Aviso de cada denuncia** ✔ | La Cloud Function `onReport` avisa a quien modera con un push y con un correo (Brevo), según lo que haya en `config/moderation`. Mientras no esté configurado, las denuncias se guardan y se ven en la consola de Firebase. | Hecho; falta configurarlo (§12) |
 | 6 | **Límite de cuentas sin registro** | Firebase ya limita las altas por IP (100 por hora). Con App Check, un programa ya no puede crearlas en masa. Un límite por dispositivo no es fiable en la web (se borra con el navegador), así que no lo haría. | Nada que hacer |
 
 Lo que pide Google Play a las apps con contenido de los usuarios: poder denunciar contenido y usuarios, poder
@@ -370,9 +371,9 @@ nunca paga (1.1).
 
 | Lo puede hacer | No lo puede hacer |
 | --- | --- |
-| Cerrar, reabrir (si cabe en su límite de abiertas, §9), desempatar y eliminar | Subir el máximo de personas por encima del límite gratuito |
-| Editar la descripción | Editar el título o añadir días u opciones (ver «Reutilizar una votación con funciones de pago») |
-| — | Nombrar administradores nuevos (los que ya había siguen) |
+| Cerrar, desempatar y eliminar | Subir el máximo de personas por encima del límite gratuito |
+| Editar título, descripción, días u opciones (durante los 30 días de la cuenta atrás) | Nombrar administradores nuevos (los que ya había siguen) |
+| — | Reabrirla una vez cerrada (ver «Reutilizar una votación con funciones de pago») |
 | Aceptar y rechazar solicitudes, para no dejar a nadie fuera, y expulsar a alguien (7.20) | Poner un plazo nuevo o alargarlo |
 | Añadir correos a la lista: no aumenta las plazas, que es lo que se paga | Activar la aprobación, la lista de correos o los resultados ocultos si no estaban |
 | Quitar el plazo, bajar el máximo o quitar administradores | — |
@@ -380,6 +381,8 @@ nunca paga (1.1).
 Además:
 
 - **Los recordatorios automáticos dejan de enviarse.** Los avisos esenciales siguen (§10).
+- **Si tiene ajustes de pago, se cierra sola a los 30 días**, salvo que antes vuelva a gestionarla alguien con
+  premium (ver «Reutilizar una votación con funciones de pago»).
 - **La votación caduca** como las gratuitas (3.6).
 - **Cuenta en sus «abiertas a la vez»** (§9), aunque con ella pase del límite: la herencia no se puede rechazar.
   Mientras esté por encima, no podrá crear ni reabrir votaciones.
@@ -401,28 +404,37 @@ Lo que queda, que alguien con premium organice votaciones para otros, es un uso 
 votación se pudiera editar sin límite, se podría reutilizar siempre: pagar un pase de 0,60 € o un mes, y después
 cambiarle el título y los días para cada evento nuevo, sin cerrarla nunca.
 
-**El cortafuegos**, para todas las votaciones:
+**El cortafuegos**, para todas las votaciones con ajustes de pago (más de 20 personas, aprobación, lista de correos,
+administradores, plazo o resultados ocultos):
 
-1. **Lo que se vota y el título solo se cambian con premium si la votación tiene ajustes de pago** (más de 20
-   personas, aprobación, lista de correos, administradores, plazo o resultados ocultos). Quien la gestiona sin
-   premium, o cuando el pase ya ha acabado, puede cerrarla, reabrirla, desempatar, aceptar y expulsar, quitar el
-   plazo y bajar el máximo, pero no editar el título ni añadir días u opciones. Una votación sin ajustes de pago se
-   edita siempre, como ahora.
-2. **El pase acaba la primera vez que la votación se cierra** (al cerrarla, al acabar el plazo o con un desempate
-   definitivo) **o a los 60 días de comprarlo**, lo primero que llegue. Después, la votación sigue igual para los
-   participantes, pero queda como la de quien no tiene premium (punto 1).
-3. **Reabrir una votación cuyo pase ha acabado** cuenta como cualquier reapertura (§9) y no devuelve el pase.
+1. **Si quien la gestiona deja de tener premium, la votación se cierra sola a los 30 días** con el resultado que
+   tenga en ese momento. Pasa igual si se da de baja, si se le acaba la suscripción o si la hereda alguien sin
+   premium. Durante esos 30 días todo sigue funcionando como siempre. Todos ven «Se cierra sola el …», y quien la
+   gestiona recibe un aviso al empezar la cuenta atrás y otro 3 días antes del final. Si al cerrarse hay empate,
+   queda cerrada con el empate y se puede desempatar, porque desempatar es gratis.
+2. **Si vuelve a tener premium antes del final, la cuenta atrás se cancela.** Pasa igual si la hereda alguien con
+   premium. Si vuelve a perderlo, empieza otra vez desde 30.
+3. **Con pase, si sigue abierta a los 60 días de comprarlo, se cierra sola.** El pase cubre un solo uso: hasta que
+   la votación se cierra por primera vez, al cerrarla, al acabar el plazo o con un desempate definitivo.
+4. **Para reabrir una votación con ajustes de pago hace falta premium.** Esto es lo que quería decir con «reabrir no
+   devuelve el pase». Cuando una votación con pase se cierra, el pase ya está gastado. Si después se reabre, no vuelve
+   a tener premium gratis, y quien no paga no puede reabrirla, porque si pudiera, reabrir y editar sería la forma de
+   reutilizarla sin pagar. Con premium o con un pase nuevo, sí.
 
-Con suscripción no hace falta más: mientras se paga, reutilizarla es un uso legítimo.
+Con la cuenta atrás ya no hace falta limitar la edición: durante esos 30 días se puede seguir editando, como ahora, y
+después la votación queda cerrada. Con suscripción no hace falta nada más: mientras se paga, reutilizarla es un uso
+legítimo.
 
-Las reglas lo pueden comprobar: si la votación tiene ajustes de pago, editar el título o lo que se vota exige que
-quien la gestiona tenga premium o que el pase siga vigente (`passUntil` en la votación, que escribe el servidor al
-cobrarlo y se pone a 0 al cerrarse).
+**Cómo se comprueba.** Una tarea programada (Cloud Function, una vez al día) mira las votaciones abiertas con ajustes de
+pago. Si quien las gestiona no tiene premium ni pase vigente, apunta `autoCloseAt` (dentro de 30 días). Si lo
+recupera, lo quita. Al llegar la fecha, la cierra y descuenta la votación de sus abiertas (§9). Las reglas no dejan
+escribir `autoCloseAt` desde la app, y no dejan reabrir una votación con ajustes de pago sin premium.
 
 ### Votaciones con pase (4.2)
 
 El pase es de la votación, no de quien la gestiona: ya está pagada, así que sigue siendo premium la herede quien la
-herede, también alguien sin premium. No abre ninguna fisura, porque cada pase sirve para una sola votación.
+herede, también alguien sin premium. No abre ninguna fisura, porque cada pase sirve para una sola votación y un solo
+uso: acaba en su primer cierre, y si sigue abierta a los 60 días, se cierra sola.
 
 ### Cómo se comprueba
 
@@ -446,6 +458,7 @@ premium (y 50 con premium, 3.8).
 | Cierra una votación | −1 | — |
 | Reabre una votación | +1 | No puede reabrirla. Así no se puede esquivar el límite cerrando y reabriendo. |
 | Se acaba el plazo | −1 (lo hace la función que ya avisa del fin del plazo) | — |
+| Se cierra sola (30 días sin premium, o 60 con pase) | −1 (lo hace la tarea programada que la cierra) | — |
 | Cierra una votación con el plazo ya pasado | Nada: ya se descontó al acabar el plazo | — |
 | Elimina una votación abierta | −1 | — |
 | Archiva una votación | Nada: archivar solo la quita de su panel | — |
@@ -510,4 +523,44 @@ se ve la votación, para que un evento se reconozca y quede bonito al compartirl
 | Entrar con Apple y app de iPhone (7.14) | Obligatorio para la App Store si se ofrece entrar con Google | Todos |
 | Otros idiomas (7.15) | Inglés y catalán, por ejemplo | Todos |
 | Dominio propio | Correo de contacto y dirección de la web propios (hola@…) | — |
+
+---
+
+## 12. Lo que falta, en orden
+
+### Antes de publicar en Google Play
+
+| # | Qué | Quién |
+| --- | --- | --- |
+| 1 | Crear el correo **hilemos.app@gmail.com** (Gmail personal). | Tú |
+| 2 | Poner ese correo de contacto en la política de privacidad (7.1). | Yo, cuando exista |
+| 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1). | Tú (5 minutos) |
+| 4 | **Moderación configurada** (7.4, paso 5): cuenta gratuita de Brevo con ese correo como remitente y su clave; con eso relleno `config/moderation` (también tu cuenta de Hilemos para los avisos push de denuncias). | Tú, la cuenta; yo, el resto |
+| 5 | **App Check** (7.4, paso 2): crear la clave de reCAPTCHA Enterprise (web) y activar Play Integrity (Android) en la consola de Firebase. Después lo pongo en la app en modo «solo medir» unos días y luego lo exijo. | Tú, las claves; yo, el código |
+| 6 | Probar un **aviso push real** en el móvil (7.5). | Los dos |
+| 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Tú |
+
+### Antes de cobrar
+
+| # | Qué | Quién |
+| --- | --- | --- |
+| 8 | Hablar con un gestor: alta de autónomo, IVA de las ventas digitales y condiciones de devolución (4.5). | Tú |
+| 9 | **Saber quién es premium**: `premiumUntil` que escribe el servidor tras comprobar el pago (Google Play Billing en Android, Stripe u otra pasarela en la web; RevenueCat puede juntar las dos). | Yo, con tus cuentas de pago |
+| 10 | **Los límites en las reglas**: 3 abiertas a la vez y 50 en premium (§9), 20 personas (3.3), funciones de control (3.4), duplicar (2.2.15), imagen sin marca, Excel y PDF. | Yo |
+| 11 | **Pase de 0,60 € y primera votación gratis** (4.2 y 4.4), con las opciones de premium visibles al crear. | Yo |
+| 12 | **El cortafuegos**: cuenta atrás de 30 días, cierre a los 60 días con pase y reabrir solo con premium (§8). | Yo |
+| 13 | **Herencia con preferencia por premium** (§8) y **caducidad** a los 12 meses sin movimiento (3.6). | Yo |
+| 14 | La casilla de pago para renunciar al desistimiento y las condiciones de pago (4.5). | Yo, con lo que diga el gestor |
+
+### Funciones ya decididas que faltan
+
+| # | Qué | Plan |
+| --- | --- | --- |
+| 15 | Recordatorios automáticos, solo por push (7.7). | Premium |
+| 16 | Ocultar los resultados hasta votar o hasta el cierre (7.9). | Premium |
+| 17 | Zona horaria del creador en las votaciones por horas (7.12). | Gratis |
+| 18 | Descargar mis datos, en JSON (7.16). | Gratis (obligatorio) |
+| 19 | Limpieza automática de datos viejos (7.17). | — |
+
+Después, los planes de futuro (§11).
 
