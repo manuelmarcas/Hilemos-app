@@ -2,7 +2,7 @@
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as D from "../lib/dates";
-import { MAX_CHAT, isPresent } from "../lib/model";
+import { MAX_CHAT, chatSince, isPresent } from "../lib/model";
 import type { ChatMessage, Poll, Votes } from "../lib/types";
 import { cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
@@ -32,7 +32,9 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
   // Baja sola con cada mensaje nuevo, salvo que estés leyendo más arriba.
   const pinned = useRef(true);
 
-  useEffect(() => store.watchChat(id, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id]);
+  // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
+  const since = chatSince(poll, user.uid, votes[user.uid]);
+  useEffect(() => store.watchChat(id, since, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id, since]);
 
   const latestAt = msgs ? msgs.reduce((max, m) => Math.max(max, m.at), 0) : 0;
 

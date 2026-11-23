@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  TOP_N, acceptedVotes, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, lostVotedUnit,
+  TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, lostVotedUnit,
   managedPeople, memberStatus, minMaxPeople, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
@@ -423,4 +423,12 @@ describe("minMaxPeople (lo menos que se puede poner de máximo)", () => {
     expect(minMaxPeople(days({ maxPeople: 20, members: 1 }))).toBe(2);
     expect(minMaxPeople(days())).toBe(2);
   });
+});
+
+describe("chatSince", () => {
+  const p = { ownerUid: "ana" } as PollData;
+  it("quien crea la votación ve todo el chat", () => expect(chatSince(p, "ana", { joinedAt: 500 })).toBe(0));
+  it("los demás, desde que entraron", () => expect(chatSince(p, "bea", { joinedAt: 500 })).toBe(500));
+  it("los votos de antes (sin joinedAt) lo ven todo", () => expect(chatSince(p, "bea", { name: "Bea" })).toBe(0));
+  it("sin voto, todo", () => expect(chatSince(p, "bea", null)).toBe(0));
 });

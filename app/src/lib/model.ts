@@ -63,6 +63,13 @@ export const hasLimit = (p: PollData) => typeof p.maxPeople === "number";
 export const isPresent = (v?: Vote | null) => !!v && !v.status && !v.gone;
 /** Administra la votación: el creador o alguien que él ha nombrado administrador. */
 export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.admins?.includes(uid);
+
+/**
+ * Desde cuándo ve el chat alguien: quien crea la votación, todo; los demás, desde que entraron (los mensajes de
+ * antes no son para ellos). 0 = todo, también para los votos de antes de guardar `joinedAt`.
+ */
+export const chatSince = (p: PollData, uid: string, vote: Vote | null | undefined) =>
+  p.ownerUid === uid ? 0 : vote?.joinedAt || 0;
 /** Un administrador le expulsó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
 export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
 

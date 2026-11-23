@@ -95,6 +95,9 @@ export interface Vote {
   picks?: string[];
   tb?: { id: number; pick: string } | null;
   seenAt?: number;
+  /** Cuándo entró en la votación (la primera vez; si sale y vuelve, la nueva entrada). El chat solo le enseña los
+   *  mensajes desde entonces. Sin campo (votos de antes): lo ve todo. */
+  joinedAt?: number;
   updatedAt?: number;
   /** Pendiente (solo en votaciones con aprobación) o rechazado. Sin campo = aceptado. */
   status?: "pending" | "rejected";
@@ -273,7 +276,8 @@ export interface Store {
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;
 
   /** Chat de la votación: los últimos CHAT_LIMIT mensajes, del más antiguo al más nuevo. */
-  watchChat(id: string, cb: (msgs: ChatMessage[]) => void, onErr?: ErrorCb): Unsubscribe;
+  /** Últimos mensajes del chat; con `since`, solo los escritos desde entonces (ver chatSince en model.ts). */
+  watchChat(id: string, since: number, cb: (msgs: ChatMessage[]) => void, onErr?: ErrorCb): Unsubscribe;
   sendChat(id: string, msg: Omit<ChatMessage, "id">): Promise<void>;
 
   getProfile(uid: string): Promise<Profile | null>;

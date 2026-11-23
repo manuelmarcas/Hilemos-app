@@ -193,7 +193,8 @@ export function createDemoStore(): Store {
           if ((p.members || 0) >= (p.maxPeople as number)) throw fail("permission-denied");
           p.members = (p.members || 0) + 1;
         }
-        votes[u.uid] = opts.pending ? { ...base, status: "pending" } : base;
+        const first: Vote = { ...base, joinedAt: base.seenAt };
+        votes[u.uid] = opts.pending ? { ...first, status: "pending" } : first;
       } else {
         // Ya participaba: como en Firestore, si había salido de la votación cerrada y vuelve, deja de contar como ido.
         const { gone: _gone, ...prev } = votes[u.uid] || {};
@@ -246,9 +247,9 @@ export function createDemoStore(): Store {
     },
 
     // ---------- Chat ----------
-    watchChat: (id, cb) => watch(() => {
+    watchChat: (id, since, cb) => watch(() => {
       const all = load().chat?.[id] || {};
-      const msgs = Object.entries(all).map(([mid, m]) => ({ id: mid, ...clone(m) }));
+      const msgs = Object.entries(all).map(([mid, m]) => ({ id: mid, ...clone(m) })).filter(m => m.at >= since);
       cb(msgs.sort((a, b) => a.at - b.at).slice(-CHAT_LIMIT));
     }),
     async sendChat(id, msg) {

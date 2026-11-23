@@ -184,6 +184,8 @@ service cloud.firestore {
 
       // Chat de la votación: un documento por mensaje. Solo el creador y los participantes aceptados;
       // quien está pendiente o rechazado no entra. Los mensajes no se editan ni se borran.
+      // Los mensajes de antes de que alguien entrara (votes.joinedAt) no se le enseñan: eso lo hace la app al pedirlos
+      // (watchChat con since), las reglas no lo comprueban.
       match /chat/{msgId} {
         allow read: if signedIn() && chatMember();
         allow create: if signedIn() && chatMember() && validMsg();
@@ -268,6 +270,7 @@ service cloud.firestore {
             && (pollData(pollId).get('closed', false) == false || d.get('picks', []) == old.get('picks', []))
             && d.get('status', null) == old.get('status', null)
             && d.get('removed', false) == old.get('removed', false)
+            && d.get('joinedAt', null) == old.get('joinedAt', null)
             && (old.get('status', null) == null
                 || (d.get('picks', []) == old.get('picks', []) && d.get('tb', null) == old.get('tb', null)));
         }
@@ -301,7 +304,9 @@ service cloud.firestore {
           return d.name is string
             && d.name.size() <= 100
             && (!('photo' in d) || (d.photo is string && d.photo.size() <= 150000))
-            && (!('picks' in d) || (d.picks is list && d.picks.size() <= 3000));
+            && (!('picks' in d) || (d.picks is list && d.picks.size() <= 3000))
+            // Cuándo entró (desde entonces ve el chat). Lo pone la app al entrar y luego no cambia.
+            && (!('joinedAt' in d) || d.joinedAt is int);
         }
 
         // Desempate: un solo voto ({ id, pick }) a una opción candidata y solo mientras esté abierto.

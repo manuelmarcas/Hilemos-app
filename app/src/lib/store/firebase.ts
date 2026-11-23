@@ -386,8 +386,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       // contar como ido).
       if (!opts.isNew) return F.setDoc(ref, { ...base, gone: F.deleteField() }, { merge: true });
       // Entrar por primera vez: con tope, el voto y el contador de la votación cambian juntos (lo exigen las reglas).
+      // joinedAt marca desde cuándo ve el chat.
       const batch = F.writeBatch(db);
-      batch.set(ref, opts.pending ? { ...base, status: "pending" } : base);
+      const first: Vote = { ...base, joinedAt: base.seenAt };
+      batch.set(ref, opts.pending ? { ...first, status: "pending" } : first);
       if (opts.counted) batch.update(pollRef(id), { members: F.increment(1) });
       await batch.commit();
     },
@@ -412,8 +414,9 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
 
     // ---------- Chat ----------
     // Se piden los últimos por fecha descendente (que es lo que sabe limitar Firestore) y se les da la vuelta.
-    watchChat: (id, cb, onErr) => F.onSnapshot(
-      F.query(chatCol(id), F.orderBy("at", "desc"), F.limit(CHAT_LIMIT)),
+    // Con `since`, solo los escritos desde que la persona entró en la votación.
+    watchChat: (id, since, cb, onErr) => F.onSnapshot(
+      F.query(chatCol(id), ...(since ? [F.where("at", ">=", since)] : []), F.orderBy("at", "desc"), F.limit(CHAT_LIMIT)),
       snap => {
         const out: ChatMessage[] = [];
         snap.forEach(d => out.push({ id: d.id, ...(d.data() as Omit<ChatMessage, "id">) }));
