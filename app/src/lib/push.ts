@@ -103,6 +103,23 @@ export async function enablePush(store: Store, uid: string): Promise<boolean> {
   return true;
 }
 
+// Se recuerda en el dispositivo que ya se pidió permiso al entrar, para no volver a preguntar.
+const OFFERED_KEY = "hilemos-push-offered";
+
+/**
+ * En la app de Android, la primera vez que se entra, pide permiso para los avisos y los activa, sin esperar a que la
+ * persona vaya a su perfil. Solo una vez por dispositivo: si dice que no, ya no se le vuelve a preguntar (puede
+ * activarlos después en «Tu perfil»). En el navegador no: ahí se piden solo cuando la persona lo decide.
+ */
+export async function offerPushOnce(store: Store, uid: string) {
+  if (!isNative() || store.mode !== "firebase") return;
+  try {
+    if (localStorage.getItem(OFFERED_KEY)) return;
+    localStorage.setItem(OFFERED_KEY, "1");
+  } catch { return; } // sin forma de recordarlo, mejor no preguntar cada vez
+  if ((await pushState(store)) === "off") await enablePush(store, uid).catch(() => { /* se podrán activar en el perfil */ });
+}
+
 export async function disablePush(store: Store, uid: string) {
   const token = savedToken();
   saveToken(null);

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { parseRoute, useHashPath } from "../state/route";
-import { onPushMessage, pushActiveHere } from "../lib/push";
+import { offerPushOnce, onPushMessage, pushActiveHere } from "../lib/push";
 import { Avatar } from "./Avatar";
 import { LogoMark } from "./LogoMark";
 import { Icon } from "./Icon";
@@ -42,6 +42,9 @@ export function Shell() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // En la app de Android, la primera vez que se entra se piden los avisos (una sola vez por dispositivo).
+  useEffect(() => { void offerPushOnce(store, user.uid); }, [store, user.uid]);
 
   // Con la app abierta el navegador no pinta el aviso: se muestra como aviso flotante.
   useEffect(() => {
