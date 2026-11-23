@@ -34,9 +34,8 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 
 - [x] La app abre la web empaquetada como app nativa (Capacitor).
 - [x] Pantalla de arranque: icono morado con el calendario sobre el fondo de la app.
-- [ ] Nitidez del arranque. *Se veía algo borroso: la imagen de después de la del sistema era un PNG estirado. Ya es
-      vectorial; falta verlo en el móvil.*
-- [ ] El logotipo de carga (el del ojo que gira) en el centro de la pantalla. *Corregido; falta verlo en el móvil.*
+- [x] Nitidez del arranque: la imagen que sigue a la del sistema ya es vectorial (antes, un PNG estirado).
+- [x] El logotipo de carga (el del ojo que gira) en el centro de la pantalla (a 3 dp del centro exacto).
 - [x] Selector de cuentas de Google: muestra el logo lila, el de la pantalla de entrada.
 - [ ] Icono del lanzador (morado) nítido en la pantalla de inicio. *Hay que mirarlo; el sistema solo confirma que
       está declarado.*
@@ -126,8 +125,10 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 
 ## 6. Avisos push
 
-- [ ] La primera vez que se entra en la app, pide permiso para los avisos y los activa. Si se dice que no, no vuelve
-      a preguntar. *Hecho; falta probarlo con la app recién instalada.*
+- [x] La primera vez que se entra en la app, activa los avisos (con el permiso ya dado, sin preguntar) y recuerda que
+      ya lo hizo.
+- [ ] Con la app recién instalada, sale el diálogo de permiso de Android; si se dice que no, no vuelve a preguntar.
+      *ColorOS no deja quitar el permiso por adb: hay que probarlo desinstalando e instalando.*
 - [ ] Activar los avisos en «Tu perfil → Preferencias → Avisos»: Android 13+ pide permiso.
 - [x] Llega un aviso con la app cerrada cuando otra persona vota. *Comprobado a mano.*
 - [ ] El aviso de voto llega a todos los que están en la votación, no solo al creador. *Hecho; falta probarlo.*
