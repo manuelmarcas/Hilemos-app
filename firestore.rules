@@ -291,7 +291,12 @@ service cloud.firestore {
             && request.auth.uid != uid
             && uid != p.ownerUid
             && (!(uid in p.get('admins', [])) || p.ownerUid == request.auth.uid)
-            && d.diff(resource.data).affectedKeys().hasOnly(['status', 'removed', 'joinedAt'])
+            && d.diff(resource.data).affectedKeys().hasOnly(['status', 'removed', 'joinedAt', 'picks', 'tb'])
+            // Sus votos solo se pueden borrar (nunca cambiar): al expulsarle o al readmitir a quien estaba rechazado.
+            && (!d.diff(resource.data).affectedKeys().hasAny(['picks', 'tb'])
+                || (!('picks' in d) && !('tb' in d)
+                    && ((d.get('status', null) == 'rejected' && d.get('removed', false) == true)
+                        || (!('status' in d) && resource.data.get('status', null) == 'rejected'))))
             && (!('status' in d) || d.status in ['pending', 'rejected'])
             // Al aceptar o readmitir (sin estado), el chat se le abre desde ese momento: joinedAt pasa a ser ahora
             // (con margen por el reloj del móvil) y nunca hacia atrás, para no destapar lo de mientras estaba fuera.

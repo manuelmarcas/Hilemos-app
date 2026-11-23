@@ -210,9 +210,13 @@ export function createDemoStore(): Store {
       if (!isAdmin(p, me()) || uid === p.ownerUid || uid === me()) throw fail("permission-denied");
       // A un administrador solo le cambia el estado (le expulsa) el creador, como en las reglas.
       if (p.admins?.includes(uid) && p.ownerUid !== me()) throw fail("permission-denied");
-      if (status === "accepted") { delete v.status; delete v.removed; v.joinedAt = Date.now(); } else {
+      // Como en Firestore: al expulsar (o al readmitir a quien estaba rechazado) se borran sus votos.
+      if (status === "accepted") {
+        if (from === "rejected") { delete v.picks; delete v.tb; }
+        delete v.status; delete v.removed; v.joinedAt = Date.now();
+      } else {
         v.status = status;
-        if (status === "rejected" && removed) v.removed = true;
+        if (status === "rejected" && removed) { v.removed = true; delete v.picks; delete v.tb; }
       }
       const delta = (status === "rejected" ? -1 : 0) + (from === "rejected" ? 1 : 0);
       if (counted && delta) p.members = (p.members || 0) + delta;

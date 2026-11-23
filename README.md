@@ -72,7 +72,7 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
 - **Gestionar participantes** (menú ⋯ de la votación): quien la gestiona nombra o quita administradores con un clic
   («Hacer admin» / «Quitar admin»). Gestionan la votación como él (cerrar y reabrir, desempates, solicitudes, acceso y
   plazo), pero no pueden eliminarla ni nombrar a otros administradores. Cualquier administrador puede **expulsar a
-  alguien** (con confirmación): sus votos dejan de contar, su plaza queda libre, no puede volver a entrar con el
+  alguien** (con confirmación): se borran sus votos (si se le readmite, vuelve a votar), su plaza queda libre, no puede volver a entrar con el
   enlace ni escribir en el chat (sus mensajes se quedan) y el chat avisa («Ana ha expulsado a Luis de la votación»). A otro
   administrador solo le expulsa el creador, y al creador nadie. Los expulsados aparecen aparte, en «Expulsados», para volver a
   admitirlos. En la tabla de «Participantes» solo quedan las etiquetas: «Creador», «Delegado» y «Admin».

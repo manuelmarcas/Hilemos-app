@@ -38,7 +38,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
         {owner
           ? "Los administradores gestionan la votación como tú, salvo eliminarla y nombrar a otros. "
           : "Solo quien gestiona la votación puede nombrar administradores. "}
-        Si expulsas a alguien, sus votos dejan de contar y no podrá volver a entrar con el enlace.
+        Si expulsas a alguien, se borran sus votos y no podrá volver a entrar con el enlace.
       </p>
       {inside.length >= PEOPLE_FILTER_FROM && (
         <input className="input input--small manage-people__search" type="search" placeholder="Buscar participante…"

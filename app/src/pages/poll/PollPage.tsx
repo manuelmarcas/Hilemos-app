@@ -374,13 +374,13 @@ export function PollPage({ id }: { id: string }) {
   const chatNotice = (text: string) =>
     store.sendChat(id, { uid: user.uid, name: user.name, text, at: Date.now(), sys: true }).catch(() => { /* el cambio ya está hecho */ });
 
-  // Expulsar a alguien: queda rechazado (sus votos dejan de contar y no puede volver a entrar) y deja libre su plaza.
+  // Expulsar a alguien: queda rechazado (se borran sus votos y no puede volver a entrar) y deja libre su plaza.
   const removeMember = (uid: string, name: string) => act(async () => {
     if (!(await confirm({
       title: `¿Expulsar a ${name} de la votación?`,
       // La plaza solo importa si quien la creó puso un máximo (sin él, el tope es el general), como al salir.
-      message: `Sus votos dejarán de contar${hasLimit(poll) && (poll.maxPeople as number) < MAX_PEOPLE ? " y su plaza quedará libre" : ""}. No podrá volver a entrar ` +
-        "con el enlace ni escribir en el chat; sus mensajes se quedan. Podrás volver a admitirle desde aquí.",
+      message: `Se borrarán sus votos${hasLimit(poll) && (poll.maxPeople as number) < MAX_PEOPLE ? " y su plaza quedará libre" : ""}. No podrá volver a entrar ` +
+        "con el enlace ni escribir en el chat; sus mensajes se quedan. Podrás volver a admitirle desde aquí, y tendrá que votar de nuevo.",
       confirmLabel: "Expulsar de la votación",
       cancelLabel: "No expulsar",
       danger: true,

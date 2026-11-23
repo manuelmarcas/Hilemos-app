@@ -255,9 +255,10 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   etiqueta («Creador», «Delegado» o «Admin»).
 - **Expulsar a alguien**: `setMemberStatus(id, uid, "rejected", { removed: true, dropAdmin })` deja su voto como rechazado
   con `removed: true` (y, si era administrador, le quita de `admins` en la misma escritura); con tope, el contador baja
-  1. Como cualquier rechazado, sus votos dejan de contar (`acceptedVotes`), no entra en el chat y no puede borrar su voto
-  para volver a entrar. Ve «Te han expulsado de esta votación» (`WaitingView`, también en las abiertas). Volver a admitirle
-  quita `status` y `removed`. En las reglas (`ownerSetsStatus`), a otro administrador solo le expulsa el creador, y nadie
+  1. Se borran sus votos (`picks` y `tb`) en la misma escritura; no entra en el chat y no puede borrar su voto para
+  volver a entrar. Ve «Te han expulsado de esta votación» (`WaitingView`, también en las abiertas). Volver a admitirle
+  quita `status` y `removed`, pone `joinedAt` a ese momento (el chat se le abre desde ahí) y vuelve sin votos: su
+  primer voto avisa a los demás. Las reglas solo dejan borrar los votos de otro al expulsarle o al readmitirle. En las reglas (`ownerSetsStatus`), a otro administrador solo le expulsa el creador, y nadie
   puede quitarse `removed` a sí mismo. Las solicitudes (`Requests`) no muestran a los expulsados: se readmiten desde el panel.
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
   expulsa un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
