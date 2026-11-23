@@ -42,7 +42,7 @@
 .manage-people__row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
 .manage-people__row--removed{background:var(--soft)}
 .manage-people__person{min-width:0;overflow-wrap:anywhere}
-.manage-people__actions{display:flex;gap:6px;flex-wrap:wrap}
+.manage-people__actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .manage-people__empty{padding:6px 2px;font-size:.9rem}
 .manage-people__actions-bar{display:flex;justify-content:flex-end;margin-top:12px}
 /* Pendiente, rechazado, privada o completa (quien no puede entrar) */

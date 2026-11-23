@@ -105,7 +105,7 @@ se decide si seguir igual, cambiar el enfoque o mantenerla gratis como proyecto 
 | 4.2 | Declararse comerciante en Google Play (se ven nombre, dirección, teléfono y correo en la UE) y perfil de pagos. | Tú |
 | 4.3 | Cobro en Android (Google Play Billing) y, si se quiere, en la web; la función que comprueba cada pago y escribe `premiumUntil`. | Yo, con tus cuentas |
 | 4.4 | Condiciones de pago y la casilla de renuncia al desistimiento (4.5). | Yo, con lo que diga el gestor |
-| 4.5 | Avisar en la app con un mes de antelación: qué será premium, desde cuándo y el regalo para quien estuvo desde el principio. | Yo, el aviso; tú, la fecha |
+| 4.5 | Avisar en la app con un mes de antelación (al menos 30 días: lo prometen las condiciones de uso, apartado «Premium y lanzamiento»): qué será premium, desde cuándo y el regalo para quien estuvo desde el principio. | Yo, el aviso; tú, la fecha |
 
 **Para pasar a la fase 5:** pago de prueba completo en Android (compra, renovación y cancelación) y alta hecha.
 

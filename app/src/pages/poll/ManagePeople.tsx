@@ -57,9 +57,11 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
                     <button type="button" className="btn btn--small" aria-pressed={isAdm}
                       disabled={!isAdm && adminsFull} data-tip={!isAdm && adminsFull ? `Como mucho ${MAX_ADMINS} administradores` : undefined}
                       onClick={() => onToggleAdmin(p.uid, p.name)}>
-                      {isAdm ? "Quitar admin" : <>Hacer admin <PremiumTag feature="admins" nested /></>}
+                      {isAdm ? "Quitar admin" : "Hacer admin"}
                     </button>
                   )}
+                  {/* Fuera del botón: dentro ocuparía medio botón y, con el dedo, se tocaría sin querer. */}
+                  {p.canToggleAdmin && !isAdm && <PremiumTag feature="admins" />}
                   {p.canRemove && (
                     <button type="button" className="btn btn--small btn--danger" onClick={() => onRemove(p.uid, p.name)}>Expulsar</button>
                   )}

@@ -64,5 +64,11 @@ export const PREMIUM_INFO: Record<PremiumFeature, PremiumInfo> = {
 /** Lo que es gratis siempre, para que quede claro que premium no toca lo básico. */
 export const ALWAYS_FREE = "Votar, ver los resultados, desempatar, el chat, los grupos y compartir son y seguirán siendo gratis.";
 
-/** El aviso del lanzamiento. */
-export const LAUNCH_FREE = "Durante el lanzamiento de Hilemos, todo es gratis para todos. Cuando llegue premium lo avisaremos con tiempo, y las votaciones que ya tengas seguirán funcionando.";
+/**
+ * El aviso del lanzamiento: que es temporal y qué pasará al acabar, para que nadie se sienta engañado. Lo mismo, con
+ * más detalle, en las condiciones de uso, apartado «Premium y lanzamiento» (pages/Legal.tsx).
+ */
+export const LAUNCH_FREE = "Durante el lanzamiento, todo es gratis para todos, pero es temporal. Cuando llegue premium lo avisaremos con al menos 30 días: lo marcado pasará a ser de pago, empezará a contar el límite de votaciones abiertas a la vez, y las votaciones que ya tengas seguirán funcionando con los límites del plan gratuito.";
+
+/** Id del apartado «Premium y lanzamiento» de las condiciones de uso, al que lleva la ventana de premium. */
+export const TERMS_PREMIUM_ID = "condiciones-premium";

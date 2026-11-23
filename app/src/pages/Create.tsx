@@ -517,7 +517,9 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string, premium?: PremiumFeature) => (
     <button key={key} type="button" className={`type-card ${on ? "type-card--on" : ""}`} aria-pressed={on} onClick={onClick}>
       <span className="type-card__icon"><Icon name={icon} /></span>
-      <span className="type-card__name">{name}{premium && <> <PremiumTag feature={premium} nested /></>}</span>
+      {/* En la esquina, lejos del centro: tocar la tarjeta la elige; tocar la etiqueta, la explica. */}
+      {premium && <PremiumTag feature={premium} nested className="type-card__premium" />}
+      <span className="type-card__name">{name}</span>
       <span className="type-card__desc">{desc}</span>
     </button>
   );

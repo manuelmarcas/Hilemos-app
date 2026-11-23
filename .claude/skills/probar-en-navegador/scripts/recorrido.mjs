@@ -124,8 +124,15 @@ await check("Premium: tocar la etiqueta explica esa función (y no elige la tarj
   await ana.waitForSelector("dialog[open]", { state: "detached" });
   expect(await ana.locator("#sec-access .type-card--on", { hasText: "Cualquiera con el enlace" }).count() === 1, "ha elegido la tarjeta");
   await ana.getByRole("button", { name: "Qué es premium" }).click();
-  expect((await dialogText(ana)).includes("Funciones premium"), "la nota no abre todas");
-  await btn(ana, "Entendido").click();
+  const all = await dialogText(ana);
+  expect(all.includes("Funciones premium") && all.includes("es temporal"), "la nota no abre todas: " + all);
+  // El enlace lleva a las condiciones, ya en su apartado.
+  await ana.locator("dialog[open] a", { hasText: "condiciones de uso" }).click();
+  await ana.waitForURL(/#\/condiciones$/);
+  await ana.locator("#condiciones-premium").waitFor();
+  await ana.waitForFunction(() => { const r = document.getElementById("condiciones-premium").getBoundingClientRect(); return r.top > -5 && r.top < innerHeight / 2; });
+  const terms = await ana.locator("#condiciones-premium").innerText();
+  expect(terms.includes("no da derecho") && terms.includes("al menos 30 días"), "condiciones: " + terms.slice(0, 200));
 });
 await check("Crear: avisa si falta el nombre", async () => {
   await go(ana, "#/nueva");

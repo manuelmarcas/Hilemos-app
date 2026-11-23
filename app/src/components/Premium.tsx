@@ -6,7 +6,7 @@
 // - PremiumHost: la ventana de la explicación, una sola para toda la app (en Shell). Va aparte de la etiqueta porque
 //   la etiqueta puede estar en un menú que se cierra al pulsar fuera, y se llevaría la ventana con él.
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { ALWAYS_FREE, LAUNCH_FREE, PREMIUM_INFO, type PremiumFeature } from "../lib/premium";
+import { ALWAYS_FREE, LAUNCH_FREE, PREMIUM_INFO, TERMS_PREMIUM_ID, type PremiumFeature } from "../lib/premium";
 import { cls } from "../lib/util";
 import { Dialog } from "./Dialog";
 import { Icon } from "./Icon";
@@ -39,8 +39,8 @@ export function PremiumTag({ feature, nested, className }: { feature?: PremiumFe
 export function PremiumNote({ className }: { className?: string }) {
   return (
     <p className={cls("premium-note", className)}>
-      <PremiumTag /> Lo marcado así será de pago más adelante. Durante el lanzamiento, gratis para todos. Pulsa la
-      etiqueta para saber por qué.
+      <PremiumTag /> Lo marcado así será de pago más adelante. Durante el lanzamiento es gratis para todos, de forma
+      temporal. Pulsa la etiqueta para saber más.
     </p>
   );
 }
@@ -56,6 +56,11 @@ export function PremiumHost() {
   }, []);
   if (!feature) return null;
   const info = feature === "all" ? null : PREMIUM_INFO[feature];
+  // A las condiciones, ya en su apartado (la página se pinta después de cambiar de ruta).
+  const toTerms = () => {
+    dlg.current?.close();
+    setTimeout(() => document.getElementById(TERMS_PREMIUM_ID)?.scrollIntoView({ block: "start" }), 250);
+  };
   return (
     <Dialog key={feature} className="dialog premium-dialog" onClose={() => setFeature(null)} onOpen={d => { dlg.current = d; }}>
       <button className="dialog__close" aria-label="Cerrar" onClick={() => dlg.current?.close()}>×</button>
@@ -71,7 +76,10 @@ export function PremiumHost() {
         </ul>
       )}
       <p className="premium-dialog__free"><strong>Ahora, gratis.</strong> {LAUNCH_FREE}</p>
-      <p className="premium-dialog__text premium-dialog__text--muted">{ALWAYS_FREE}</p>
+      <p className="premium-dialog__text premium-dialog__text--muted">
+        {ALWAYS_FREE} Todo, con detalle, en las <a href="#/condiciones" onClick={toTerms}>condiciones de uso</a>, apartado
+        «Premium y lanzamiento».
+      </p>
       <div className="dialog__actions">
         <button type="button" className="btn btn--primary dialog__btn" onClick={() => dlg.current?.close()}>Entendido</button>
       </div>

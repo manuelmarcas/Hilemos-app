@@ -6,6 +6,8 @@ import type { MouseEvent, ReactNode } from "react";
 import type { LegalDoc } from "../state/route";
 import { bem } from "../lib/util";
 import { Icon } from "../components/Icon";
+import { FREE_OPEN, FREE_PEOPLE } from "../lib/model";
+import { ALWAYS_FREE, PREMIUM_INFO, TERMS_PREMIUM_ID } from "../lib/premium";
 
 const UPDATED = "23 de noviembre de 2026";
 const OWNER = "Manuel Martín Castrillo";
@@ -17,8 +19,8 @@ const goBack = (e: MouseEvent) => {
   if (history.length > 1) { e.preventDefault(); history.back(); }
 };
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="step legal__section"><h2 className="step__title legal__title">{title}</h2>{children}</section>;
+function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
+  return <section className="step legal__section" id={id}><h2 className="step__title legal__title">{title}</h2>{children}</section>;
 }
 
 function Privacy() {
@@ -178,8 +180,44 @@ function Terms() {
         ofrece <strong>{OWNER}</strong>. Hoy es gratuita. Para cualquier consulta, escribe a {mail}.
       </p>
       <p>
-        Si en el futuro hay funciones de pago, sus condiciones (precio, renovación, cancelación y devoluciones) se
-        explicarán antes de contratarlas, y nada de lo que ya uses gratis pasará a cobrarse sin avisar.
+        Algunas funciones pasarán a ser de pago más adelante: lo explica el apartado «Premium y lanzamiento».
+      </p>
+    </Section>
+    <Section title="Premium y lanzamiento" id={TERMS_PREMIUM_ID}>
+      <p>
+        Hilemos tendrá un plan gratuito y otro de pago, «premium». En la app, las funciones que serán premium llevan
+        la etiqueta <strong>«Premium»</strong>. Son estas:
+      </p>
+      <ul>
+        {Object.values(PREMIUM_INFO).map(i => <li key={i.title}><strong>{i.title}.</strong> {i.what}</li>)}
+      </ul>
+      <p>
+        <strong>Durante el lanzamiento, todo es gratis para todos</strong>, también lo marcado como premium y sin límite
+        de votaciones abiertas a la vez. Es una situación temporal: usar ahora una función premium gratis no da derecho
+        a seguir usándola gratis después.
+      </p>
+      <p>Cuando empiece premium:</p>
+      <ul>
+        <li>lo avisaremos en la app con al menos 30 días de antelación;</li>
+        <li>las funciones marcadas solo estarán disponibles con premium;</li>
+        <li>
+          empezará a contar el límite de votaciones abiertas a la vez que gestionas ({FREE_OPEN} en el plan gratuito;
+          las cerradas no cuentan);
+        </li>
+        <li>
+          las votaciones que ya tengas seguirán funcionando para quienes votan, con lo que ya tuvieran configurado,
+          pero quien las gestione sin premium tendrá los límites del plan gratuito (por ejemplo, no podrá nombrar
+          administradores nuevos, poner un plazo nuevo ni ampliar las plazas por encima de {FREE_PEOPLE}), y las que
+          usen funciones premium podrán cerrarse solas pasado un tiempo;
+        </li>
+        <li>
+          los precios, la forma de pago, las renovaciones, las cancelaciones y las devoluciones se publicarán aquí antes
+          de poder contratar nada.
+        </li>
+      </ul>
+      <p>
+        Los límites del plan gratuito (como el número de personas por votación o de votaciones abiertas a la vez)
+        pueden cambiar antes de empezar a cobrar; si cambian, se publicarán aquí con el aviso. {ALWAYS_FREE}
       </p>
     </Section>
     <Section title="Tu cuenta">

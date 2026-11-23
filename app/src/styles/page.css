@@ -41,8 +41,11 @@
   padding:12px;
   cursor:pointer;
   color:var(--ink);
+  position:relative;
 }
 .type-card:hover{border-color:var(--line-strong)}
+/* La etiqueta «Premium», en la esquina: lejos de donde se toca para elegir la tarjeta */
+.type-card__premium{position:absolute;top:10px;right:10px}
 .type-card--on,.type-card--on:hover{border-color:var(--brand);background:var(--brand-soft)}
 .type-card__icon{font-size:1.6rem;display:flex}
 .type-card__name{font-weight:700}
