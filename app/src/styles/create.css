@@ -152,7 +152,8 @@
 .hour-dd__check{flex:none;width:14px;color:var(--brand);font-weight:700}
 .create-bar{
   position:sticky;
-  bottom:0;
+  /* Por encima de la barra de botones de Android (con gestos, --nav-bar vale 0). */
+  bottom:var(--nav-bar);
   z-index:5;
   display:flex;
   flex-wrap:wrap;

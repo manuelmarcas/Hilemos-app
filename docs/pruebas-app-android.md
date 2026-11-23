@@ -49,6 +49,10 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] La página respeta la barra de estado (38 px) y los botones de navegación (44 px).
 - [x] Franja del color de la app bajo la barra de estado: lo que se desplaza no se ve por debajo.
 - [x] La barra superior (logo, «Hilemos», perfil) se queda pegada al desplazarse y gana sombra.
+- [x] Con la navegación por botones, franja del color de la app tras los botones: el contenido no se ve por debajo.
+- [ ] Con la navegación por gestos, sin franja abajo (la página llega al borde). *Hace falta cambiar el ajuste.*
+- [x] Chat: deslizando sobre la lista de mensajes se puede bajar hasta el campo de escribir (antes el gesto se
+      quedaba atrapado en la lista).
 - [x] En horizontal (800×360) la página no se sale de la pantalla y respeta los márgenes laterales.
 - [x] Un campo que recibe el foco no queda tapado por la barra pegada (corregido hoy con `scroll-padding-top`).
 - [ ] Móvil con muesca en un lateral o navegación por gestos. *Hace falta otro móvil o cambiar el ajuste.*

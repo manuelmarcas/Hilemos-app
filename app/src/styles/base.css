@@ -15,6 +15,9 @@
   --safe-right:max(env(safe-area-inset-right, 0px), var(--safe-area-inset-right, 0px));
   --safe-bottom:max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
   --safe-left:max(env(safe-area-inset-left, 0px), var(--safe-area-inset-left, 0px));
+  /* Alto de la barra de botones de Android (atrás, inicio, recientes). Con la navegación por gestos la zona de abajo
+     es mucho más baja (solo la rayita), y ahí la página puede llegar al borde: entonces vale 0. */
+  --nav-bar:clamp(0px, (var(--safe-bottom) - 31px) * 1000, var(--safe-bottom));
   /* Fondo de la página. Lo repiten, fijo a la pantalla, la franja de la barra de estado y la barra superior pegada:
      así se funden con la página sin costura. */
   --page-bg:
@@ -31,8 +34,17 @@ body{
   background-attachment:fixed;
   color:var(--ink);
   -webkit-text-size-adjust:100%;
-}/* Franja bajo la barra de estado del móvil (app de Android): lo que se desplaza pasa por debajo sin verse. En el
-   navegador mide 0. */
+}/* Franjas bajo la barra de estado y bajo la barra de botones del móvil (app de Android): lo que se desplaza pasa
+   por debajo sin verse. En el navegador miden 0; con navegación por gestos, la de abajo también. */
+body::after{
+  content:"";
+  position:fixed;
+  z-index:30;
+  bottom:0;left:0;right:0;
+  height:var(--nav-bar);
+  background:var(--page-bg);
+  background-attachment:fixed;
+}
 body::before{
   content:"";
   position:fixed;

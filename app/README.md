@@ -459,7 +459,8 @@ compilarla con `npm run android` y subir una versión nueva a Google Play.
   también el de la pantalla de arranque de Android 12+ (`styles.xml`).
 - **Bordes de la pantalla**: la app se dibuja de borde a borde. La página respeta la barra de estado y los botones de
   Android con `--safe-top`/`--safe-bottom` (`src/styles/base.css`), y en el móvil la barra superior se queda pegada
-  bajo una franja del fondo de la página.
+  bajo una franja del fondo de la página. Abajo hay otra franja igual tras la barra de botones (`--nav-bar`); con la
+  navegación por gestos mide 0 y la página llega al borde.
 - **Plugins de Capacitor**: nunca devolver un plugin desde una función `async` ni resolver una promesa con él (al
   mirar si tiene `.then()` lo toma por un método nativo y falla en silencio). Se importa el módulo y se usa
   `(await import("…")).Plugin.metodo()`.

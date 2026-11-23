@@ -14,10 +14,13 @@
   display:flex;
   flex-direction:column;
   gap:12px;
+  /* Que la tarjeta entera (la lista y el campo de escribir) quepa en la pantalla bajo la barra superior pegada. */
   max-height:min(420px, 55vh);
-  max-height:min(420px, 55dvh);
+  max-height:min(420px, calc(100dvh - var(--safe-top) - var(--safe-bottom) - 230px));
   overflow-y:auto;
-  overscroll-behavior:contain;
+  /* Al llegar arriba o abajo, el dedo sigue moviendo la página (con «contain» se quedaba atrapado en la lista y no
+     se podía bajar hasta el campo de escribir). */
+  overscroll-behavior:auto;
   min-width:0;
   padding-right:2px;
 }
