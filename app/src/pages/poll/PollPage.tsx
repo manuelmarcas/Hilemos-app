@@ -45,8 +45,8 @@ export function PollPage({ id }: { id: string }) {
   const [myVote, setMyVote] = useState<Vote | null>(null);
   const [myLoaded, setMyLoaded] = useState(false);
   const [blocked, setBlocked] = useState<"" | "full" | "noaccess" | "needsaccount">("");
-  const [accessOpen, setAccessOpen] = useState(false);
-  const [peopleOpen, setPeopleOpen] = useState(false);
+  // Panel de gestión abierto bajo la cabecera: solo uno a la vez (abrir otro cierra el que hubiera).
+  const [panel, setPanel] = useState<"access" | "people" | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   // Buscador y filtro de la tabla de participantes (cuando hay muchos).
   const [peopleQuery, setPeopleQuery] = useState("");
@@ -451,8 +451,8 @@ export function PollPage({ id }: { id: string }) {
                 onEdit={() => navigate(`/v/${id}/editar`)}
                 onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
                 onDuplicate={() => duplicate(poll)}
-                onAccess={hasLimit(poll) ? () => setAccessOpen(true) : undefined}
-                onPeople={() => setPeopleOpen(true)} onExport={() => setExportOpen(true)} />
+                onAccess={hasLimit(poll) ? () => setPanel("access") : undefined}
+                onPeople={() => setPanel("people")} onExport={() => setExportOpen(true)} />
             )}
           </div>
           {poll.description && <p className="poll-head__desc">{poll.description}</p>}
@@ -470,13 +470,13 @@ export function PollPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
-      {admin && accessOpen && (
-        <AccessPanel poll={poll} onClose={() => setAccessOpen(false)} onPeople={() => { setAccessOpen(false); setPeopleOpen(true); }} />
+      {admin && panel === "access" && (
+        <AccessPanel poll={poll} onClose={() => setPanel(null)} onPeople={() => setPanel("people")} />
       )}
       {admin && exportOpen && <ExportDialog poll={view} T={T} TB={TB} toast={toast} onClose={() => setExportOpen(false)} />}
-      {admin && peopleOpen && (
+      {admin && panel === "people" && (
         <ManagePeople poll={poll} votes={shown} me={user.uid} onToggleAdmin={toggleAdmin} onRemove={removeMember}
-          onReadmit={readmit} onClose={() => setPeopleOpen(false)} />
+          onReadmit={readmit} onClose={() => setPanel(null)} />
       )}
       {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
       {poll.closed && (final ? (
