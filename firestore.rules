@@ -184,10 +184,11 @@ service cloud.firestore {
 
       // Chat de la votación: un documento por mensaje. Solo el creador y los participantes aceptados;
       // quien está pendiente o rechazado no entra. Los mensajes no se editan ni se borran.
-      // Los mensajes de antes de que alguien entrara (votes.joinedAt) no se le enseñan: eso lo hace la app al pedirlos
-      // (watchChat con since), las reglas no lo comprueban.
+      // Los mensajes de antes de que alguien entrara (votes.joinedAt) no son para él: solo el creador lee todos. La
+      // app los pide siempre «desde» (where at >= joinedAt), que es lo que Firestore necesita para aceptar la consulta.
+      // Sin joinedAt (votos de antes de guardarlo), desde 0: todos.
       match /chat/{msgId} {
-        allow read: if signedIn() && chatMember();
+        allow read: if signedIn() && chatMember() && sinceJoined();
         allow create: if signedIn() && chatMember() && validMsg();
         // Solo el nombre de los mensajes propios: al salir de la votación (o eliminar la cuenta) pasan a un nombre
         // sin dueño. La app lo hace antes de borrar su voto, mientras aún es chatMember() para poder leerlos.
@@ -195,6 +196,11 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
           && request.resource.data.name is string && request.resource.data.name.size() > 0
           && request.resource.data.name.size() <= 100;
+
+        function sinceJoined() {
+          return pollData(pollId).ownerUid == request.auth.uid
+            || resource.data.at >= get(myVotePath()).data.get('joinedAt', 0);
+        }
 
         function chatMember() {
           return pollData(pollId).ownerUid == request.auth.uid

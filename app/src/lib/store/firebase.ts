@@ -14,7 +14,7 @@
 import type { FirebaseOptions } from "firebase/app";
 import type { AuthCredential, User as FbUser } from "firebase/auth";
 import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySnapshot, WriteBatch } from "firebase/firestore";
-import { CHAT_LIMIT, ghostName, hasLimit, keepsVotesOnLeave, pickHeir } from "../model";
+import { CHAT_LIMIT, chatSince, ghostName, hasLimit, keepsVotesOnLeave, pickHeir } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
 import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote } from "../types";
 import { isKeyEmail, newAccessKey, parseAccessKey } from "./accessKey";
@@ -171,10 +171,14 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     if (!snap?.exists()) return;
     const poll = snap.data() as PollData;
     const ghost = ghostName();
-    // El chat va primero: las reglas solo dejan leerlo (y renombrar los mensajes propios) a quien sigue dentro.
+    // El chat va primero: las reglas solo dejan leerlo (y renombrar los mensajes propios) a quien sigue dentro, y
+    // solo desde que entró (por eso se piden desde entonces; los propios se filtran aquí, sin índice compuesto).
     try {
-      const msgs = await F.getDocs(F.query(chatCol(id), F.where("uid", "==", uid)));
-      await commitIn(msgs.docs.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
+      const mine = await F.getDoc(F.doc(votesCol(id), uid)).catch(() => null);
+      const since = chatSince(poll, uid, mine?.exists() ? (mine.data() as Vote) : null);
+      const msgs = await F.getDocs(F.query(chatCol(id), F.where("at", ">=", since)));
+      const own = msgs.docs.filter(d => d.get("uid") === uid);
+      await commitIn(own.map(d => d.ref), (b, r) => b.update(r, { name: ghost }));
     } catch { /* sin chat o sin acceso a él (pendiente o rechazado) */ }
     if (poll.ownerUid === uid) {
       // La votación pasa a otra persona (pickHeir); si no queda nadie, se borra.
@@ -414,9 +418,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
 
     // ---------- Chat ----------
     // Se piden los últimos por fecha descendente (que es lo que sabe limitar Firestore) y se les da la vuelta.
-    // Con `since`, solo los escritos desde que la persona entró en la votación.
+    // Siempre «desde» (aunque sea 0): las reglas solo dejan leer los mensajes desde que la persona entró, y Firestore
+    // solo acepta la consulta si ella misma lo pide así.
     watchChat: (id, since, cb, onErr) => F.onSnapshot(
-      F.query(chatCol(id), ...(since ? [F.where("at", ">=", since)] : []), F.orderBy("at", "desc"), F.limit(CHAT_LIMIT)),
+      F.query(chatCol(id), F.where("at", ">=", since), F.orderBy("at", "desc"), F.limit(CHAT_LIMIT)),
       snap => {
         const out: ChatMessage[] = [];
         snap.forEach(d => out.push({ id: d.id, ...(d.data() as Omit<ChatMessage, "id">) }));
