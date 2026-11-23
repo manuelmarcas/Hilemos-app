@@ -19,7 +19,7 @@
     <!-- Pantalla de arranque. En Android 12+ el sistema pinta el icono en un círculo: el icono entero en vectorial
          (drawable/splash_icon.xml, nítido y con su fondo morado dentro), en el fondo bg de la app (oscuro en el tema oscuro, values-night). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <item name="android:background">@drawable/launch_background</item>
         <item name="windowSplashScreenBackground">@color/hilemos_splash_bg</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>

@@ -124,7 +124,9 @@ button,input,select,textarea{font:inherit}
 /* Arranque de la app (mientras se sabe si hay sesión): el logotipo, con el ojo abierto girando como un círculo de
    carga. Sigue a la pantalla de arranque de Android. */
 .boot{
-  min-height:60vh;
+  /* Toda la pantalla visible, para que el logotipo quede en el centro (como en la de Android). */
+  min-height:calc(100vh - var(--safe-top) - var(--safe-bottom));
+  min-height:calc(100dvh - var(--safe-top) - var(--safe-bottom));
   display:flex;
   flex-direction:column;
   gap:20px;

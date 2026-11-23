@@ -33,11 +33,15 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 ## 1. Instalación, iconos y arranque
 
 - [x] La app abre la web empaquetada como app nativa (Capacitor).
-- [x] Pantalla de arranque: icono morado con el calendario, nítido, sobre el fondo de la app.
+- [x] Pantalla de arranque: icono morado con el calendario sobre el fondo de la app.
+- [ ] Nitidez del arranque. *Se veía algo borroso: la imagen de después de la del sistema era un PNG estirado. Ya es
+      vectorial; falta verlo en el móvil.*
+- [ ] El logotipo de carga (el del ojo que gira) en el centro de la pantalla. *Corregido; falta verlo en el móvil.*
 - [x] Selector de cuentas de Google: muestra el logo lila, el de la pantalla de entrada.
 - [ ] Icono del lanzador (morado) nítido en la pantalla de inicio. *Hay que mirarlo; el sistema solo confirma que
       está declarado.*
-- [ ] Icono en Ajustes → Aplicaciones (lila). *Hay que mirarlo.*
+- [ ] Icono en Ajustes → Aplicaciones: sale el lila y debería ser el morado. *Es el mismo icono que el del selector
+      de cuentas de Google (los dos salen del icono de la aplicación): hay que elegir uno para los dos.*
 - [ ] Pantalla de arranque en Android 11 o anterior (imagen `splash.png`). *Hace falta otro móvil.*
 - [ ] Pantalla de arranque con el móvil en modo oscuro (fondo oscuro). *Ver el apartado 7.*
 
@@ -56,11 +60,13 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Al elegir la cuenta se entra con su nombre y su foto.
 - [x] Entrar sin cuenta con un nombre (modo demo) y el aviso propio si falta el nombre.
 - [x] Salir de la cuenta vuelve a la pantalla de entrada.
-- [ ] Entrar con el correo: el enlace del correo abre la app (App Link con `oobCode`) y completa la entrada. *Hace
-      falta un correo real.*
+- [x] Entrar con el correo: el enlace del correo abre la app (App Link con `oobCode`) y entra con esa cuenta.
+      *Comprobado a mano.*
 - [ ] Entrar sin cuenta de verdad y guardar o compartir la clave de acceso. *Crea una cuenta real.*
-- [ ] Entrar con la clave de acceso en otro móvil. *Hace falta otro móvil.*
-- [ ] Eliminar la cuenta: vuelve a pedir Google con el selector del móvil. *Es destructivo; con una cuenta de prueba.*
+- [x] Entrar con una clave de acceso de una cuenta ya creada. *Comprobado a mano.*
+- [x] Eliminar una cuenta de clave: vuelve a la entrada y la clave deja de valer. *Comprobado a mano.*
+- [ ] Eliminar una cuenta de Google: vuelve a pedir Google con el selector del móvil. *Es destructivo; con una
+      cuenta de prueba.*
 
 ## 4. Funciones de la app (modo demo, con varias personas)
 
@@ -90,6 +96,10 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Eliminar una votación.
 - [x] Perfil: cambiar el nombre (se ve arriba).
 - [x] Perfil: tema oscuro, claro y automático desde la app.
+- [x] Chat: quien entra después no ve los mensajes de antes; quien creó la votación lo ve todo. *En Chrome (modo
+      demo), con dos personas.*
+- [x] «Solo estos correos» con burbujas: Intro, coma, espacio, pegar una lista, un texto que no es correo (se marca),
+      borrar y quitar. *En Chrome (modo demo).*
 - [ ] Votación de horas, de semanas y de meses. *El recorrido solo crea días y opciones.*
 - [ ] Recordatorios y plazo de cierre. *Funciones premium; sin probar.*
 
@@ -111,12 +121,13 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Segundo plano: al volver sigue en la misma pantalla y con la sesión.
 - [x] Un enlace `https://hilemos.web.app/#/v/…` abierto desde fuera abre la app en esa votación.
 - [x] Dominio verificado para App Links (`hilemos.web.app: verified`).
-- [ ] Abrir un enlace desde WhatsApp o el correo con la app cerrada del todo. *A mano; se ha probado con la app
-      abierta.*
+- [x] Abrir un enlace desde el correo con la app cerrada del todo. *Comprobado a mano.*
 - [ ] Sin conexión: avisos y qué pasa al recuperarla. *Desde aquí cortaría la conexión con el móvil.*
 
 ## 6. Avisos push
 
+- [ ] La primera vez que se entra en la app, pide permiso para los avisos y los activa. Si se dice que no, no vuelve
+      a preguntar. *Hecho; falta probarlo con la app recién instalada.*
 - [ ] Activar los avisos en «Tu perfil → Preferencias → Avisos»: Android 13+ pide permiso.
 - [ ] Llega un aviso con la app cerrada cuando otra persona vota.
 - [ ] Llega con la app abierta (aviso dentro de la app).
@@ -130,7 +141,7 @@ app ya registra el dispositivo (se arregló el fallo que lo impedía).*
 ## 7. Tema
 
 - [x] Tema claro y oscuro elegidos en la app.
-- [x] Con «Automático», la app sigue el modo oscuro del móvil, al abrirla y también al cambiarlo con la app abierta.
+- [x] Con «Automático», la app sigue el modo oscuro del móvil (comprobado también a mano), al abrirla y también al cambiarlo con la app abierta.
       *Parecía que no: era la herramienta de pruebas. Playwright fuerza el tema claro en la página a la que se
       conecta, y ahora el recorrido lo mide con DevTools a pelo.*
 

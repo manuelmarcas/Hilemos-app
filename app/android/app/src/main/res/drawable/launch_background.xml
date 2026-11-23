@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo de la pantalla de arranque (styles.xml, android:background): el color de la página y el icono en el centro,
+     en vectorial y al mismo tamaño que lo pinta el sistema (288dp), para que no se note el paso de la una a la otra y
+     se vea nítido. Antes era un PNG por densidad (splash.png) que el móvil estiraba y se veía borroso. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/hilemos_splash_bg" />
+    <item android:width="288dp" android:height="288dp" android:gravity="center"
+        android:drawable="@drawable/splash_icon" />
+</layer-list>
