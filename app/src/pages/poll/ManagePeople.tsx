@@ -6,7 +6,7 @@ import type { Poll, Votes } from "../../lib/types";
 import { searchKey } from "../../lib/util";
 import { Avatar } from "../../components/Avatar";
 import { Icon } from "../../components/Icon";
-import { PremiumTag } from "../../components/Premium";
+import { PREMIUM_STAR_TIP, PremiumStar } from "../../components/Premium";
 import { RoleTag } from "./People";
 
 export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadmit, onClose }: {
@@ -55,13 +55,11 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
                 <span className="manage-people__actions">
                   {p.canToggleAdmin && (
                     <button type="button" className="btn btn--small" aria-pressed={isAdm}
-                      disabled={!isAdm && adminsFull} data-tip={!isAdm && adminsFull ? `Como mucho ${MAX_ADMINS} administradores` : undefined}
+                      disabled={!isAdm && adminsFull} data-tip={isAdm ? undefined : adminsFull ? `Como mucho ${MAX_ADMINS} administradores` : PREMIUM_STAR_TIP}
                       onClick={() => onToggleAdmin(p.uid, p.name)}>
-                      {isAdm ? "Quitar admin" : "Hacer admin"}
+                      {isAdm ? "Quitar admin" : <>Hacer admin <PremiumStar /></>}
                     </button>
                   )}
-                  {/* Fuera del botón: dentro ocuparía medio botón y, con el dedo, se tocaría sin querer. */}
-                  {p.canToggleAdmin && !isAdm && <PremiumTag feature="admins" />}
                   {p.canRemove && (
                     <button type="button" className="btn btn--small btn--danger" onClick={() => onRemove(p.uid, p.name)}>Expulsar</button>
                   )}

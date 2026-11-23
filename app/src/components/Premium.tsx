@@ -35,6 +35,17 @@ export function PremiumTag({ feature, nested, className }: { feature?: PremiumFe
     );
 }
 
+/**
+ * Solo la estrella, sin texto ni ventana, dentro de un botón pequeño donde la etiqueta entera no cabe bien («Hacer
+ * admin»). El botón lleva el tooltip; no se puede pulsar aparte (con el dedo se tocaría sin querer).
+ */
+export function PremiumStar() {
+  return <span className="premium-star" aria-hidden="true"><Icon name="premium" /></span>;
+}
+
+/** El tooltip de un botón con PremiumStar. */
+export const PREMIUM_STAR_TIP = "Premium: gratis durante el lanzamiento";
+
 /** Explica la etiqueta: lo marcado será de pago, pero ahora es gratis. Su etiqueta abre todas las funciones. */
 export function PremiumNote({ className }: { className?: string }) {
   return (
