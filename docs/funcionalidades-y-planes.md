@@ -113,17 +113,16 @@ En las tablas:
 | 2.5.6 | Administradores | El creador nombra coorganizadores con un clic, desde «Gestionar participantes» (menú ⋯); gestionan como él, salvo eliminarla y nombrar a otros. | Premium | ★★★ | Premium |
 | 2.5.7 | Delegado | Si el creador se va, la votación pasa a un administrador o a otro participante. | Gratis (es una garantía) | No | Gratis; con preferencia por un administrador con premium (§8) |
 | 2.5.8 | Solicitudes | Aceptar, rechazar o volver a admitir (en las de aprobación). | Va con 2.2.12 | ★★★ (con 2.2.12) | Va con 2.2.12; aceptar y rechazar sigue funcionando aunque el gestor no tenga premium (§8) |
-| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. El máximo no puede bajar de las plazas ocupadas: el aviso sale al momento, con un enlace a «Gestionar participantes» para expulsar antes a alguien. Quitar un correo de la lista no expulsa a quien ya entró con él: solo impide que entren nuevas personas con ese correo; para expulsar está 2.5.13. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Decidido: quitar el correo de alguien que ya está dentro le expulsa, con un aviso de que está dentro y una confirmación que explica lo que pasará. Pendiente de hacer: hoy la app no sabe con qué correo entró cada persona (ver la nota tras la tabla). |
+| 2.5.9 | Acceso y plazas | Cambiar después el máximo de personas y la lista de correos. El máximo no puede bajar de las plazas ocupadas: el aviso sale al momento, con un enlace a «Gestionar participantes» para expulsar antes a alguien. Quitar el correo de alguien que ya está dentro le expulsa, después de avisar y confirmarlo. | Va con 2.2.11 y 2.2.13 | ★★ (con 2.2.11 y 2.2.13) | Va con 2.2.11 y 2.2.13. Hecho: quitar el correo de alguien que ya está dentro le expulsa (o rechaza su solicitud, si estaba pendiente), con un aviso bajo la lista y una confirmación que dice quién es y qué le pasará. |
 | 2.5.10 | Quitar el plazo | Con la votación abierta, deja de tener fecha de cierre. Si el plazo ya ha pasado, reabrir la votación quita el plazo y se pueden volver a cambiar los votos. | Va con 2.2.10 | ★★ (con 2.2.10) | Va con 2.2.10. Probado. |
 | 2.5.11 | Eliminar la votación | La borra para todos. | Gratis | No | Gratis |
 | 2.5.12 | Salir de la votación | Avisa de lo que pasa con los votos según el estado de la votación. | Gratis | No | Gratis |
 | 2.5.13 | Gestionar participantes y expulsar | Menú ⋯: nombrar y quitar administradores con un clic y expulsar a alguien (con confirmación). Quien es expulsado pierde sus votos, libera su plaza y no puede volver con el enlace; se le puede volver a admitir. Ver 7.20. | Gratis (expulsar); administradores, premium (2.5.6) | No (es moderación) | Expulsar, gratis para cualquier administrador; a otro administrador solo le expulsa el creador. Nombrar administradores, premium (2.5.6). |
 
-> **Correos y expulsar (2.5.9).** La lista de correos solo dice quién puede entrar; el voto de cada persona no guarda
-> su correo, así que al quitar uno la app no sabe a quién corresponde. Para que quitar un correo expulse a alguien
-> habría que guardar con qué correo entró cada uno, y sin que lo vean los demás participantes (los votos los leen
-> todos). Es posible, pero toca el modelo de datos y la política de privacidad. Mientras tanto, se expulsa desde
-> «Gestionar participantes».
+> **Correos y expulsar (2.5.9).** Cada participante de una votación privada apunta con qué correo entró. Solo lo ven
+> quienes la administran (no va en el voto, porque los votos los leen todos). Así, al quitar un correo de la lista,
+> la app sabe a quién corresponde. Quien entró antes de que existiera esto lo apunta en cuanto vuelve a abrir la
+> votación. Si no ha vuelto, no se le puede reconocer por su correo, y se le expulsa desde «Gestionar participantes».
 
 ### 2.6 Chat
 
@@ -206,22 +205,23 @@ o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece de
 | 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 1,49 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual ahorra un 44 % frente a 12 meses sueltos (17,88 €). |
 | 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
-| 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Propuesta, pendiente de confirmar |
+| 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Sí: una vez por cuenta, solo con Google o correo, y con las opciones de premium visibles al crear (etiqueta «Premium»). |
 | 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Pendiente: crear el correo |
 
-**Primera votación premium gratis (4.4).** Es un pase de 0,60 € regalado: no pasa por Google Play ni por ningún
-cobro, así que no complica nada. Enseña lo que da premium justo cuando alguien lo usa (más gente, aprobación,
-plazo, recordatorios, imagen sin marca, Excel y PDF). Solo para cuentas con Google o correo y una vez por cuenta.
-Quien borre la cuenta y vuelva a crearla podría repetirlo, pero solo ganaría otra votación de 0,60 €. Para que se
-note lo que falta, conviene que las opciones de premium se vean al crear una votación, con la etiqueta «Premium»,
-en vez de esconderlas.
+**Primera votación premium gratis (4.4).** Decidido. Es un pase de 0,60 € regalado: no pasa por Google Play ni por
+ningún cobro. Enseña lo que da premium justo cuando alguien lo usa (más gente, aprobación, plazo, recordatorios,
+imagen sin marca, Excel y PDF). Solo para cuentas con Google o correo y una vez por cuenta. Quien borre la cuenta y
+vuelva a crearla podría repetirlo, pero solo ganaría otra votación de 0,60 €. Las opciones de premium se ven al crear
+una votación, con la etiqueta «Premium», en vez de esconderlas.
 
 **Devoluciones y contacto (4.5).** Lo decidido es no devolver el dinero cuando ya se ha usado. En la UE hay 14
 días para desistir de una compra digital, pero se pierden si la persona pide empezar a usarla ya y acepta que
 pierde ese derecho. Por eso, al pagar tiene que haber una casilla que lo diga. Google Play tiene además su propia
 política de reembolsos en las primeras horas. Conviene que lo revise un gestor. Contacto, mientras no haya
 dominio: **hilemos.app@gmail.com** (o hilemos.soporte@gmail.com si ese ya existe). Sirve igual para la política de
-privacidad, la ficha de Google Play y el soporte, y luego se puede redirigir a hola@ del dominio.
+privacidad, la ficha de Google Play y el soporte, y luego se puede redirigir a hola@ del dominio. Una cuenta de Gmail
+normal (personal) basta: la «de empresa» es Google Workspace, que cuesta unos 7 € al mes por usuario y necesita un
+dominio propio.
 
 ### ¿Se sostienen los números?
 
@@ -281,7 +281,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | Sin devolución si ya se ha usado (ver 4.5). Contacto: un correo de Gmail mientras no haya dominio (ver 4.5). |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
-| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Imprescindible. Pendiente de confirmar: mantener entrar sin cuenta y protegerse con App Check (recomendado, ver la nota debajo). |
+| 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | Pendiente | No | Imprescindible. Se mantiene entrar sin cuenta. Cómo, en la nota de debajo. |
 | 7.5 | Activar los avisos push | Hechos también en la app de Android. Blaze y las funciones, desde el 22 de noviembre de 2026; falta probar un aviso real. | Casi hecho | ★ (los recordatorios, 7.7, ★★★) | |
 | **Muy útiles** | | | | | |
 | 7.6 | «Si hace falta» | Además de «sí», una respuesta tibia: ayuda a encontrar fechas cuando nada encaja. | Pendiente | No | No |
@@ -313,6 +313,22 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 > acepte peticiones de la app de verdad (reCAPTCHA en la web y Play Integrity en Android), y no un script. Además, hay
 > que poner una **alerta de presupuesto** en Google Cloud. Quitar la entrada sin cuenta no lo resolvería, porque un
 > bot también puede crear cuentas de correo, y rompería el criterio 1.1.
+
+### 7.4 en detalle: protección contra abusos
+
+Decidido: se mantiene entrar sin cuenta. Estas son las piezas, en el orden en que las haría:
+
+| Paso | Qué | Cómo | Quién |
+| --- | --- | --- | --- |
+| 1 | **Alerta de presupuesto** | En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
+| 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | Yo, el código; tú, crear las claves en la consola de Firebase |
+| 3 | **Denunciar un mensaje** | En el chat, «Denunciar» en cada mensaje ajeno. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado. | Yo |
+| 4 | **Ocultar un mensaje** | Quien administra la votación puede ocultar un mensaje del chat («Mensaje ocultado por un administrador»). Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Yo |
+| 5 | **Revisión de las denuncias** | Las denuncias llegan a una colección que solo puede leer el servidor; una Cloud Function te manda un correo con cada una. | Yo; tú decides qué hacer con cada una |
+| 6 | **Límite de cuentas sin registro** | Firebase ya limita las altas por IP (100 por hora). Con App Check, un programa ya no puede crearlas en masa. Un límite por dispositivo no es fiable en la web (se borra con el navegador), así que no lo haría. | Nada que hacer |
+
+Lo que pide Google Play a las apps con contenido de los usuarios: poder denunciar contenido y usuarios, poder
+bloquear o apartar a quien molesta, y que el desarrollador modere. Con los pasos 3, 4 y 5, más expulsar, se cumple.
 
 ---
 
@@ -355,7 +371,8 @@ nunca paga (1.1).
 | Lo puede hacer | No lo puede hacer |
 | --- | --- |
 | Cerrar, reabrir (si cabe en su límite de abiertas, §9), desempatar y eliminar | Subir el máximo de personas por encima del límite gratuito |
-| Editar título, descripción, días u opciones | Nombrar administradores nuevos (los que ya había siguen) |
+| Editar la descripción | Editar el título o añadir días u opciones (ver «Reutilizar una votación con funciones de pago») |
+| — | Nombrar administradores nuevos (los que ya había siguen) |
 | Aceptar y rechazar solicitudes, para no dejar a nadie fuera, y expulsar a alguien (7.20) | Poner un plazo nuevo o alargarlo |
 | Añadir correos a la lista: no aumenta las plazas, que es lo que se paga | Activar la aprobación, la lista de correos o los resultados ocultos si no estaban |
 | Quitar el plazo, bajar el máximo o quitar administradores | — |
@@ -377,6 +394,30 @@ Además:
 | Cerrar y reabrir para esquivar el límite de abiertas | Reabrir cuenta como abrir (§9). |
 
 Lo que queda, que alguien con premium organice votaciones para otros, es un uso legítimo.
+
+### Reutilizar una votación con funciones de pago
+
+**El problema.** Lo configurado con premium se mantiene (el máximo de 150, la aprobación, la lista de correos…). Si una
+votación se pudiera editar sin límite, se podría reutilizar siempre: pagar un pase de 0,60 € o un mes, y después
+cambiarle el título y los días para cada evento nuevo, sin cerrarla nunca.
+
+**El cortafuegos**, para todas las votaciones:
+
+1. **Lo que se vota y el título solo se cambian con premium si la votación tiene ajustes de pago** (más de 20
+   personas, aprobación, lista de correos, administradores, plazo o resultados ocultos). Quien la gestiona sin
+   premium, o cuando el pase ya ha acabado, puede cerrarla, reabrirla, desempatar, aceptar y expulsar, quitar el
+   plazo y bajar el máximo, pero no editar el título ni añadir días u opciones. Una votación sin ajustes de pago se
+   edita siempre, como ahora.
+2. **El pase acaba la primera vez que la votación se cierra** (al cerrarla, al acabar el plazo o con un desempate
+   definitivo) **o a los 60 días de comprarlo**, lo primero que llegue. Después, la votación sigue igual para los
+   participantes, pero queda como la de quien no tiene premium (punto 1).
+3. **Reabrir una votación cuyo pase ha acabado** cuenta como cualquier reapertura (§9) y no devuelve el pase.
+
+Con suscripción no hace falta más: mientras se paga, reutilizarla es un uso legítimo.
+
+Las reglas lo pueden comprobar: si la votación tiene ajustes de pago, editar el título o lo que se vota exige que
+quien la gestiona tenga premium o que el pase siga vigente (`passUntil` en la votación, que escribe el servidor al
+cobrarlo y se pone a 0 al cerrarse).
 
 ### Votaciones con pase (4.2)
 
