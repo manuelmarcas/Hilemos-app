@@ -9,6 +9,8 @@ import { Icon } from "../components/Icon";
 
 const UPDATED = "23 de noviembre de 2026";
 const OWNER = "Manuel Martín Castrillo";
+const CONTACT = "hilemos.app@gmail.com";
+const mail = <a href={`mailto:${CONTACT}`}>{CONTACT}</a>;
 
 // «Volver» lleva a la pantalla de antes (la entrada, el perfil…) y, si se ha abierto directamente, al inicio.
 const goBack = (e: MouseEvent) => {
@@ -27,10 +29,7 @@ function Privacy() {
     </p>
     <Section title="Quién es el responsable">
       <p>El responsable del tratamiento de tus datos es <strong>{OWNER}</strong>, que desarrolla y mantiene Hilemos.</p>
-      <p>
-        En cuanto haya una dirección de contacto para temas de privacidad se publicará aquí. Mientras tanto, puedes
-        ver, cambiar y borrar tus datos desde la propia app (ver «Tus derechos»).
-      </p>
+      <p>Para cualquier duda sobre tus datos o para ejercer tus derechos, escribe a {mail}.</p>
     </Section>
     <Section title="Qué datos tratamos">
       <ul>
@@ -132,6 +131,10 @@ function Privacy() {
         <li>eliminar tu cuenta en «Tu perfil» → «Eliminar mi cuenta».</li>
       </ul>
       <p>
+        Para todo lo demás (por ejemplo, pedir una copia de tus datos), escribe a {mail} desde el correo de tu cuenta
+        o indicando tu nombre en la app. Te responderemos en un plazo máximo de un mes.
+      </p>
+      <p>
         Si crees que no se están respetando tus derechos, puedes reclamar ante la Agencia Española de Protección de
         Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer">aepd.es</a>).
       </p>
@@ -166,7 +169,7 @@ function Terms() {
     <Section title="El servicio">
       <p>
         Hilemos es una app para crear votaciones de fechas, horas u opciones, compartirlas y ver los resultados. La
-        ofrece <strong>{OWNER}</strong>. Hoy es gratuita.
+        ofrece <strong>{OWNER}</strong>. Hoy es gratuita. Para cualquier consulta, escribe a {mail}.
       </p>
       <p>
         Si en el futuro hay funciones de pago, sus condiciones (precio, renovación, cancelación y devoluciones) se

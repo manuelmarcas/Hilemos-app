@@ -207,7 +207,7 @@ o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece de
 | 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium, para un solo uso: hasta su primer cierre, y si sigue abierta a los 60 días, se cierra sola. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
 | 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Sí: una vez por cuenta, solo con Google o correo, y con las opciones de premium visibles al crear (etiqueta «Premium»). |
-| 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Pendiente: crear el correo |
+| 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Correo creado: hilemos.app@gmail.com, ya en la política de privacidad y en las condiciones |
 
 **Primera votación premium gratis (4.4).** Decidido. Es un pase de 0,60 € regalado: no pasa por Google Play ni por
 ningún cobro. Enseña lo que da premium justo cuando alguien lo usa (más gente, aprobación, plazo, recordatorios,
@@ -219,7 +219,7 @@ una votación, con la etiqueta «Premium», en vez de esconderlas.
 días para desistir de una compra digital, pero se pierden si la persona pide empezar a usarla ya y acepta que
 pierde ese derecho. Por eso, al pagar tiene que haber una casilla que lo diga. Google Play tiene además su propia
 política de reembolsos en las primeras horas. Conviene que lo revise un gestor. Contacto, mientras no haya
-dominio: **hilemos.app@gmail.com** (o hilemos.soporte@gmail.com si ese ya existe). Sirve igual para la política de
+dominio: **hilemos.app@gmail.com** (creado). Sirve igual para la política de
 privacidad, la ficha de Google Play y el soporte, y luego se puede redirigir a hola@ del dominio. Una cuenta de Gmail
 normal (personal) basta: la «de empresa» es Google Workspace, que cuesta unos 7 € al mes por usuario y necesita un
 dominio propio.
@@ -279,7 +279,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | N.º | Funcionalidad | Por qué | Estado | ¿Para premium? | Decisión |
 | --- | --- | --- | --- | --- | --- |
 | **Imprescindibles antes de publicar en la tienda o de cobrar** | | | | | |
-| 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Falta una **dirección de contacto** en la política y, al cobrar, las condiciones de pago y de devolución. | Hecha (falta el contacto) | No | Sin devolución si ya se ha usado (ver 4.5). Contacto: un correo de Gmail mientras no haya dominio (ver 4.5). |
+| 7.1 | Política de privacidad y condiciones de uso | La Play Store y el RGPD las exigen. Al cobrar, faltarán las condiciones de pago y de devolución. | Hecha, con el contacto hilemos.app@gmail.com | No | Sin devolución si ya se ha usado (ver 4.5). |
 | 7.2 | Editar una votación ya creada | No se puede quitar lo que tiene votos y los cambios se avisan en el chat. | Hecho | No | |
 | 7.3 | Que el organizador elija la ganadora a mano | Elegir la ganadora sin contar los votos. Se descartó: la ganadora la deciden siempre los votos (y el desempate, si hace falta). | Descartado | No | Descartado |
 | 7.4 | Protección contra abusos | App Check (que solo la app use la base de datos), límite de cuentas sin registro por dispositivo (bots) y denunciar o moderar mensajes del chat (las tiendas lo piden en apps con contenido de los usuarios). | En marcha | No | Imprescindible. Se mantiene entrar sin cuenta. Denunciar, ocultar y el aviso a quien modera, hechos (pasos 3 a 5); el resto, en §12. |
@@ -532,8 +532,8 @@ se ve la votación, para que un evento se reconozca y quede bonito al compartirl
 
 | # | Qué | Quién |
 | --- | --- | --- |
-| 1 | Crear el correo **hilemos.app@gmail.com** (Gmail personal). | Tú |
-| 2 | Poner ese correo de contacto en la política de privacidad (7.1). | Yo, cuando exista |
+| 1 | Crear el correo **hilemos.app@gmail.com** (Gmail personal). ✔ | Hecho |
+| 2 | Poner ese correo de contacto en la política de privacidad y en las condiciones (7.1). ✔ | Hecho |
 | 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1). | Tú (5 minutos) |
 | 4 | **Moderación configurada** (7.4, paso 5): cuenta gratuita de Brevo con ese correo como remitente y su clave; con eso relleno `config/moderation` (también tu cuenta de Hilemos para los avisos push de denuncias). | Tú, la cuenta; yo, el resto |
 | 5 | **App Check** (7.4, paso 2): crear la clave de reCAPTCHA Enterprise (web) y activar Play Integrity (Android) en la consola de Firebase. Después lo pongo en la app en modo «solo medir» unos días y luego lo exijo. | Tú, las claves; yo, el código |
