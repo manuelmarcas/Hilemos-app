@@ -248,6 +248,13 @@ export interface Store {
   /** Correos permitidos (solo el creador puede leerlos). */
   getAccess(id: string): Promise<PollAccess | null>;
   setAccess(id: string, access: PollAccess): Promise<void>;
+  /**
+   * Votaciones solo con correos: con qué correo entró cada participante (`polls/{id}/emails/{uid}`). Lo apunta cada
+   * uno (`saveMemberEmail`, solo el suyo) y solo lo leen quienes la administran, para expulsar a quien tenía un correo
+   * que se quita de la lista. Devuelve uid → correo.
+   */
+  saveMemberEmail(id: string, uid: string, email: string): Promise<void>;
+  getMemberEmails(id: string): Promise<Record<string, string>>;
   getPoll(id: string): Promise<Poll | null>;
   updatePoll(id: string, patch: Partial<PollData>): Promise<void>;
   /** Borra la votación para todos. `dropGroupId`: grupo que queda vacío y se borra a la vez. */

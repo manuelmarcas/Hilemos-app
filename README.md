@@ -181,6 +181,7 @@ index.html                    Redirección de GitHub Pages a hilemos.web.app (no
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
 | `polls/{pollId}/chat/{msgId}` | Mensajes del chat: `uid`, `name`, `text`, `at` y `sys` (aviso automático de un cambio al editar la votación; solo lo escriben los administradores) |
 | `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected`: pendiente de aprobación, rechazado o expulsado), `removed` (lo expulsó un administrador ya estando dentro), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `joinedAt` (cuándo entró o le aceptaron o readmitieron por última vez: desde entonces ve el chat; quien crea la votación lo ve todo), `updatedAt` |
+| `polls/{pollId}/emails/{uid}` | Solo en las votaciones privadas: con qué correo entró cada participante (`email`). Lo escribe cada uno (el de su cuenta, verificado) y solo lo leen quienes la administran: así, quitar un correo de la lista expulsa a quien lo usó |
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |
 | `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |
 | `users/{uid}/groups/{groupId}` | Grupos privados del usuario: `name`, `createdAt` |

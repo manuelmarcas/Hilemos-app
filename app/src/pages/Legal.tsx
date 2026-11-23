@@ -7,7 +7,7 @@ import type { LegalDoc } from "../state/route";
 import { bem } from "../lib/util";
 import { Icon } from "../components/Icon";
 
-const UPDATED = "21 de noviembre de 2026";
+const UPDATED = "23 de noviembre de 2026";
 const OWNER = "Manuel Martín Castrillo";
 
 // «Volver» lleva a la pantalla de antes (la entrada, el perfil…) y, si se ha abierto directamente, al inicio.
@@ -47,7 +47,8 @@ function Privacy() {
         </li>
         <li>
           <strong>Tu participación.</strong> Lo que votas, tu nombre y tu imagen (copiados en cada votación), cuándo
-          entraste y, en las votaciones con aprobación, si estás pendiente, aceptado o rechazado.
+          entraste y, en las votaciones con aprobación, si estás pendiente, aceptado o rechazado. En las votaciones
+          privadas (solo para unos correos), también con qué correo entraste, que solo ve quien la administra.
         </li>
         <li><strong>El chat.</strong> Los mensajes que escribes en cada votación, con tu nombre y la hora.</li>
         <li><strong>Tu lista.</strong> Las votaciones de tu menú, tus grupos, las que has archivado y hasta dónde has leído cada chat.</li>
@@ -95,7 +96,7 @@ function Privacy() {
         </li>
         <li>
           <strong>Quien administra una votación</strong> ve además las solicitudes para entrar y, en las privadas, la
-          lista de correos permitidos.
+          lista de correos permitidos y con qué correo entró cada participante, para poder quitarle el acceso.
         </li>
         <li>
           <strong>Google</strong>, como proveedor técnico: Hilemos funciona sobre Firebase (inicio de sesión, base de

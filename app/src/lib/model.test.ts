@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, lostVotedUnit,
+  TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
   managedPeople, memberStatus, minMaxPeople, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
@@ -431,4 +431,29 @@ describe("chatSince", () => {
   it("los demás, desde que entraron", () => expect(chatSince(p, "bea", { joinedAt: 500 })).toBe(500));
   it("los votos de antes (sin joinedAt) lo ven todo", () => expect(chatSince(p, "bea", { name: "Bea" })).toBe(0));
   it("sin voto, todo", () => expect(chatSince(p, "bea", null)).toBe(0));
+});
+
+describe("losingAccess (quitar correos de la lista de una privada)", () => {
+  const poll = days({ emailsOnly: true, admins: ["adm"] });
+  const votes: Votes = {
+    owner: vote("Olga", []), bea: vote("Bea", []), adm: vote("Adri", []), pep: vote("Pepa", [], { status: "pending" }),
+    fuera: vote("Fermín", [], { status: "rejected", removed: true }), ido: vote("Ido", [], { gone: true }),
+  };
+  const emails = { owner: "olga@x.es", bea: "bea@x.es", adm: "adri@x.es", pep: "pepa@x.es", fuera: "fermin@x.es", ido: "ido@x.es" };
+  const all = Object.values(emails);
+
+  it("quien sigue dentro (o pendiente) con un correo que se quita; sin mayúsculas que importen", () => {
+    const out = losingAccess(poll, votes, emails, all, ["OLGA@x.es", "adri@x.es"]);
+    expect(out.map(p => [p.uid, p.pending, p.admin])).toEqual([["bea", false, false], ["pep", true, false]]);
+  });
+
+  it("nunca quien la gestiona, ni quien ya no está (expulsado o se fue)", () => {
+    expect(losingAccess(poll, votes, emails, all, [])).toHaveLength(3); // Adri (admin), Bea y Pepa
+    expect(losingAccess(poll, votes, emails, all, []).some(p => ["owner", "fuera", "ido"].includes(p.uid))).toBe(false);
+  });
+
+  it("sin quitar nada, o sin saber su correo, nadie", () => {
+    expect(losingAccess(poll, votes, emails, all, all)).toEqual([]);
+    expect(losingAccess(poll, votes, {}, all, [])).toEqual([]);
+  });
 });

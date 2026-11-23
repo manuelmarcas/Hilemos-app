@@ -6,6 +6,7 @@
 //   polls/{pollId}/votes/{uid}         participante y sus votos (Vote)
 //   polls/{pollId}/chat/{msgId}        mensaje del chat (ChatMessage)
 //   polls/{pollId}/private/access      correos permitidos de una votación privada (solo administradores)
+//   polls/{pollId}/emails/{uid}        con qué correo entró cada participante de una privada (solo administradores)
 //   users/{uid}                        perfil (Profile)
 //   users/{uid}/polls/{pollId}         colección del usuario (LibraryEntry)
 //   users/{uid}/groups/{groupId}       grupos del usuario (Group)
@@ -51,6 +52,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   const votesCol = (id: string) => F.collection(db, "polls", id, "votes");
   const chatCol = (id: string) => F.collection(db, "polls", id, "chat");
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
+  const emailsCol = (id: string) => F.collection(db, "polls", id, "emails");
   const userRef = (uid: string) => F.doc(db, "users", uid);
   const libCol = (uid: string) => F.collection(db, "users", uid, "polls");
   const groupsCol = (uid: string) => F.collection(db, "users", uid, "groups");
@@ -82,6 +84,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   async function removePoll(id: string, extra?: (b: WriteBatch) => void) {
     const votes = await F.getDocs(votesCol(id));
     await commitIn(votes.docs.map(d => d.ref), (b, r) => b.delete(r));
+    const emails = await F.getDocs(emailsCol(id)).catch(() => null);
+    if (emails) await commitIn(emails.docs.map(d => d.ref), (b, r) => b.delete(r));
     const b = F.writeBatch(db);
     b.delete(accessRef(id));
     b.delete(pollRef(id));
@@ -193,6 +197,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     } else if (poll.admins?.includes(uid)) {
       await F.updateDoc(pollRef(id), { admins: F.arrayRemove(uid) }).catch(() => {});
     }
+    // Con qué correo entró (votaciones privadas): ya no hace falta.
+    if (poll.emailsOnly) await F.deleteDoc(F.doc(emailsCol(id), uid)).catch(() => { /* no lo había apuntado */ });
     // Sus votos: con la votación cerrada se quedan con un nombre sin dueño; abierta (o en desempate), se borran y su
     // plaza queda libre (con tope, el contador baja a la vez, como exigen las reglas).
     const vref = F.doc(votesCol(id), uid);
@@ -361,6 +367,11 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       return s.exists() ? (s.data() as PollAccess) : null;
     },
     setAccess: (id, access) => F.setDoc(accessRef(id), access),
+    saveMemberEmail: (id, uid, email) => F.setDoc(F.doc(emailsCol(id), uid), { email }),
+    async getMemberEmails(id) {
+      const s = await F.getDocs(emailsCol(id));
+      return Object.fromEntries(s.docs.map(d => [d.id, String(d.get("email") || "")]));
+    },
     async getPoll(id) { return withId(await F.getDoc(pollRef(id))); },
     updatePoll: (id, patch) => F.updateDoc(pollRef(id), patch),
     // La votación y, a la vez, su entrada en la colección del creador (y su grupo, si se queda vacío).

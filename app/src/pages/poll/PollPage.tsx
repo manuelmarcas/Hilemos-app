@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
-  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey,
+  isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
 } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { errMsg, pollUrl } from "../../lib/util";
@@ -160,6 +160,16 @@ export function PollPage({ id }: { id: string }) {
     }
     addToMenu();
   }, [pollLoaded, votesLoaded, myLoaded, ownOnly, blocked, lib, poll, votes, myVote, id, store, user, toast]);
+
+  // Privadas: cada uno apunta con qué correo entró (solo lo leen quienes la administran), para que quitar ese correo
+  // de la lista le expulse. Una vez por visita, así también lo apunta quien entró antes de que se guardara.
+  const emailNoted = useRef(false);
+  const inside = !!(ownOnly ? myVote : votes[user.uid]);
+  useEffect(() => {
+    if (!poll?.emailsOnly || !user.email || !inside || emailNoted.current) return;
+    emailNoted.current = true;
+    store.saveMemberEmail(id, user.uid, user.email).catch(() => { /* se intentará en la próxima visita */ });
+  }, [poll?.emailsOnly, user.email, user.uid, inside, store, id]);
 
   if (fatal) {
     return <><div className="empty-box empty-box--error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
@@ -385,11 +395,24 @@ export function PollPage({ id }: { id: string }) {
       cancelLabel: "No expulsar",
       danger: true,
     }))) return;
+    await expel(uid, name);
+    toast(`${name} ya no está en la votación`);
+  });
+
+  const expel = async (uid: string, name: string) => {
     await store.setMemberStatus(id, uid, "rejected",
       { from: "accepted", counted: hasLimit(poll), removed: true, dropAdmin: admins.includes(uid) });
     await chatNotice(`ha expulsado a ${name} de la votación`);
-    toast(`${name} ya no está en la votación`);
-  });
+  };
+
+  // Privadas: al quitar de la lista el correo de quien ya está dentro, se le expulsa (o se rechaza su solicitud, si
+  // solo la había pedido). «Acceso y plazas» ya lo ha confirmado.
+  const removeByEmail = async (people: LosingAccess[]) => {
+    for (const p of people) {
+      if (p.pending) await store.setMemberStatus(id, p.uid, "rejected", { from: "pending", counted: hasLimit(poll) });
+      else await expel(p.uid, p.name);
+    }
+  };
 
   const readmit = (uid: string, name: string) => act(async () => {
     await store.setMemberStatus(id, uid, "accepted", { from: "rejected", counted: hasLimit(poll) });
@@ -471,7 +494,8 @@ export function PollPage({ id }: { id: string }) {
         </div>
       </div>
       {admin && panel === "access" && (
-        <AccessPanel poll={poll} onClose={() => setPanel(null)} onPeople={() => setPanel("people")} />
+        <AccessPanel poll={poll} votes={shown} onClose={() => setPanel(null)} onPeople={() => setPanel("people")}
+          onRemoveByEmail={removeByEmail} />
       )}
       {admin && exportOpen && <ExportDialog poll={view} T={T} TB={TB} toast={toast} onClose={() => setExportOpen(false)} />}
       {admin && panel === "people" && (

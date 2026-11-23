@@ -1,8 +1,8 @@
 // Quién puede entrar: solicitudes y ajustes de acceso (administradores), y las pantallas de quien está pendiente
 // o no puede entrar (privada, completa o sin cuenta).
 import { useEffect, useRef, useState } from "react";
-import { MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, minMaxPeople, parseEmails, pollRange } from "../../lib/model";
-import type { MemberStatus, Poll, Vote } from "../../lib/types";
+import { MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, losingAccess, minMaxPeople, parseEmails, plural, pollRange, type LosingAccess } from "../../lib/model";
+import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
 import { bem, errMsg } from "../../lib/util";
 import { useSession } from "../../state/session";
 import { useUi } from "../../state/ui";
@@ -60,13 +60,20 @@ export function Requests({ poll, requests, onSet }: {
  * «Acceso y plazas» (administradores): tope de personas y, en las privadas, correos permitidos. El tope no puede bajar
  * de las plazas ocupadas (`minMaxPeople`); para eso hay que expulsar antes a alguien (`onPeople` abre ese panel).
  */
-export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: () => void; onPeople: () => void }) {
-  const { store } = useSession();
-  const { toast } = useUi();
+export function AccessPanel({ poll, votes, onClose, onPeople, onRemoveByEmail }: {
+  poll: Poll; votes: Votes; onClose: () => void; onPeople: () => void;
+  /** Privadas: expulsa (o rechaza, si estaban pendientes) a quienes se quita el correo de la lista. */
+  onRemoveByEmail: (people: LosingAccess[]) => Promise<void>;
+}) {
+  const { store, user } = useSession();
+  const { toast, confirm } = useUi();
   const members = poll.members || 0;
   const [maxText, setMaxText] = useState(String(poll.maxPeople ?? MAX_PEOPLE));
   // Correos en burbujas y lo que queda a medio escribir (ver EmailChips).
   const [emailList, setEmailList] = useState({ emails: [] as string[], draft: "" });
+  // La lista guardada y con qué correo entró cada participante, para saber a quién deja fuera un cambio.
+  const [saved, setSaved] = useState<string[]>([]);
+  const [memberEmails, setMemberEmails] = useState<Record<string, string>>({});
   const emailsText = joinEmails(emailList.emails, emailList.draft);
   const [loaded, setLoaded] = useState(!poll.emailsOnly);
   const [busy, setBusy] = useState(false);
@@ -76,11 +83,16 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
   useEffect(() => {
     if (!poll.emailsOnly) return;
     store.getAccess(poll.id)
-      .then(a => { setEmailList({ emails: a?.emails || [], draft: "" }); setLoaded(true); })
+      .then(a => { setEmailList({ emails: a?.emails || [], draft: "" }); setSaved(a?.emails || []); setLoaded(true); })
       .catch(e => { setErr("No se pudieron leer los correos. " + errMsg(e)); setLoaded(true); });
+    // Si no se pueden leer, se guarda igual: solo que nadie sale de la votación por quitar su correo.
+    store.getMemberEmails(poll.id).then(setMemberEmails).catch(() => setMemberEmails({}));
   }, [store, poll.id, poll.emailsOnly]);
 
   const parsed = parseEmails(emailsText);
+  const losing = poll.emailsOnly && loaded ? losingAccess(poll, votes, memberEmails, saved, parsed.emails) : [];
+  // A un administrador solo le expulsa el creador (como en las reglas).
+  const untouchable = losing.filter(p => p.admin && poll.ownerUid !== user.uid);
   // Se recalcula en directo: si entra alguien mientras se edita, el mínimo sube.
   const min = minMaxPeople(poll);
   const n = Number(maxText.trim());
@@ -97,13 +109,19 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
       if (parsed.invalid.length) { setErr("Revisa estos correos: " + parsed.invalid.slice(0, 3).join(", ")); return; }
       if (!parsed.emails.length) { setErr("Deja al menos un correo."); return; }
       if (parsed.emails.length > MAX_EMAILS) { setErr(`Como mucho ${MAX_EMAILS} correos.`); return; }
+      if (untouchable.length) {
+        setErr(`${names(untouchable)} ${untouchable.length === 1 ? "administra" : "administran"} la votación: solo quien la creó puede quitar ${untouchable.length === 1 ? "su correo" : "sus correos"}.`);
+        return;
+      }
+      if (losing.length && !(await confirm(losingConfirm(losing)))) return;
     }
     setBusy(true);
     setErr("");
     try {
       if (n !== poll.maxPeople) await store.updatePoll(poll.id, { maxPeople: n });
       if (poll.emailsOnly) await store.setAccess(poll.id, { emails: parsed.emails });
-      toast("Acceso guardado");
+      if (losing.length) await onRemoveByEmail(losing);
+      toast(losing.length ? `Acceso guardado: ${plural(losing.length, ["persona ya no está", "personas ya no están"])} en la votación` : "Acceso guardado");
       onClose();
     } catch (e) {
       // Las reglas lo rechazan si, mientras se editaba, entró gente y el máximo quedó por debajo.
@@ -130,7 +148,11 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
           <label className="field-label access-panel__label" htmlFor="ap-emails">Correos que pueden entrar</label>
           <EmailChips id="ap-emails" emails={emailList.emails} draft={emailList.draft} disabled={!loaded}
             onChange={(emails, draft) => { setEmailList({ emails, draft }); setErr(""); }} />
-          <p className="hint access-panel__hint">Quitar un correo no expulsa a quien ya ha entrado con él: solo impide que entren nuevas personas. Para expulsar a alguien, usa «Gestionar participantes».</p>
+          <p className="hint access-panel__hint">
+            {losing.length > 0 && <><span className="hint__warn">Al guardar, {names(losing)} {losing.length === 1 ? "dejará" : "dejarán"} de estar en la votación: {losing.length === 1 ? "su correo ya no está" : "sus correos ya no están"} en la lista.</span> </>}
+            Si quitas el correo de alguien que ya está dentro, se le expulsa (antes te lo pediremos confirmar). A quien
+            no se reconozca por su correo, expúlsale desde <button type="button" className="link-btn" onClick={onPeople}>Gestionar participantes</button>
+          </p>
         </>
       )}
       <div className="status" role="alert">{err}</div>
@@ -140,6 +162,34 @@ export function AccessPanel({ poll, onClose, onPeople }: { poll: Poll; onClose: 
       </div>
     </section>
   );
+}
+
+/** «Ana», «Ana y Luis», «Ana, Luis y Pepa». */
+const names = (people: { name: string }[]) => {
+  const n = people.map(p => p.name);
+  return n.length > 1 ? `${n.slice(0, -1).join(", ")} y ${n[n.length - 1]}` : n[0] || "";
+};
+
+/** Confirmación al quitar correos de gente que ya está dentro: quién es y qué le pasa. */
+function losingConfirm(losing: LosingAccess[]) {
+  const inside = losing.filter(p => !p.pending);
+  const pending = losing.filter(p => p.pending);
+  const who = (ps: LosingAccess[]) => names(ps.map(p => ({ name: `${p.name} (${p.email})` })));
+  const parts: string[] = [];
+  if (inside.length) {
+    const one = inside.length === 1;
+    parts.push(`${who(inside)} ${one ? "ya está" : "ya están"} en la votación. Si quitas ${one ? "su correo, se le expulsará" : "sus correos, se les expulsará"}: ` +
+      `se borrarán sus votos, no ${one ? "podrá" : "podrán"} volver a entrar con el enlace ni escribir en el chat, y sus mensajes se quedan. ` +
+      `Podrás volver a ${one ? "admitirle" : "admitirles"} desde «Gestionar participantes».`);
+  }
+  if (pending.length) parts.push(`Se rechazará la solicitud de ${who(pending)}.`);
+  return {
+    title: inside.length ? `¿Quitar ${inside.length === 1 ? "el correo de alguien" : "los correos de gente"} que ya está dentro?` : "¿Rechazar sus solicitudes?",
+    message: parts.join(" "),
+    confirmLabel: inside.length ? (inside.length === 1 ? "Quitar y expulsar" : "Quitar y expulsarles") : "Quitar y rechazar",
+    cancelLabel: "No quitar",
+    danger: true,
+  };
 }
 
 /** Cabecera de la votación (tipo, creador, título y descripción) para quien aún no puede verla entera. */

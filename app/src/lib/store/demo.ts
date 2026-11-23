@@ -15,6 +15,8 @@ interface DemoDb {
   votes: Record<string, Votes>;
   users: Record<string, DemoUserData>;
   access?: Record<string, PollAccess>;
+  /** Votaciones privadas: con qué correo entró cada participante (pollId → uid → correo). */
+  emails?: Record<string, Record<string, string>>;
   chat?: Record<string, Record<string, Omit<ChatMessage, "id">>>;
 }
 
@@ -69,6 +71,7 @@ export function createDemoStore(): Store {
     if (!p) return;
     const ghost = ghostName();
     for (const m of Object.values(db.chat?.[id] || {})) if (m.uid === uid) m.name = ghost;
+    if (db.emails?.[id]) delete db.emails[id][uid];
     if (p.ownerUid === uid) {
       const votes = db.votes[id] || {};
       const heir = pickHeir(votes, uid, p.admins);
@@ -146,6 +149,22 @@ export function createDemoStore(): Store {
       (db.access ||= {})[id] = clone(access);
       write(db);
     },
+    // Como las reglas: cada uno apunta solo el suyo, solo en las privadas, y solo lo leen quienes la administran.
+    async saveMemberEmail(id, uid, email) {
+      const db = load();
+      const p = db.polls[id];
+      if (!p) throw fail("not-found");
+      if (uid !== me() || !p.emailsOnly || email !== (user?.email || "")) throw fail("permission-denied");
+      ((db.emails ||= {})[id] ||= {})[uid] = email;
+      write(db);
+    },
+    async getMemberEmails(id) {
+      const db = load();
+      const p = db.polls[id];
+      if (!p) throw fail("not-found");
+      if (!isAdmin(p, me())) throw fail("permission-denied");
+      return clone(db.emails?.[id] || {});
+    },
     async getPoll(id) { const p = load().polls[id]; return p ? { id, ...clone(p) } : null; },
     async updatePoll(id, patch) {
       const db = load();
@@ -161,6 +180,7 @@ export function createDemoStore(): Store {
       delete db.polls[id];
       delete db.votes[id];
       if (db.access) delete db.access[id];
+      if (db.emails) delete db.emails[id];
       delete lib(db, uid).polls[id];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);

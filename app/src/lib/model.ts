@@ -82,6 +82,33 @@ export function roleOf(p: PollData, uid: string): Role | null {
 }
 export const ROLE_NAME: Record<Role, string> = { creator: "Creador", delegate: "Delegado", admin: "Admin" };
 
+export interface LosingAccess {
+  uid: string;
+  name: string;
+  email: string;
+  /** Solo había pedido entrar (con aprobación): se rechaza su solicitud en vez de expulsarle. */
+  pending: boolean;
+  admin: boolean;
+}
+
+/**
+ * Al cambiar la lista de una votación solo con correos (de `before` a `after`): quién está dentro, o pendiente, con
+ * un correo que se quita, según `memberEmails` (uid → correo con el que entró). Nunca quien la gestiona, que siempre
+ * puede entrar. Quien no apuntó su correo (entró antes de que se guardara y no ha vuelto) no se reconoce.
+ */
+export function losingAccess(p: PollData, votes: Votes, memberEmails: Record<string, string>, before: string[], after: string[]): LosingAccess[] {
+  const kept = new Set(after.map(e => e.toLowerCase()));
+  const removed = new Set(before.map(e => e.toLowerCase()).filter(e => !kept.has(e)));
+  return Object.entries(memberEmails)
+    .filter(([uid, email]) => uid !== p.ownerUid && removed.has(email.toLowerCase()))
+    .flatMap(([uid, email]) => {
+      const v = votes[uid];
+      if (!v || v.gone || v.status === "rejected") return [];
+      return [{ uid, name: v.name || "Alguien", email, pending: v.status === "pending", admin: !!p.admins?.includes(uid) }];
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+}
+
 export interface ManagedPerson {
   uid: string;
   name: string;

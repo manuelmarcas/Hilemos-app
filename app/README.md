@@ -260,8 +260,15 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   quita `status` y `removed`, pone `joinedAt` a ese momento (el chat se le abre desde ahí) y vuelve sin votos: su
   primer voto avisa a los demás. Las reglas solo dejan borrar los votos de otro al expulsarle o al readmitirle. En las reglas (`ownerSetsStatus`), a otro administrador solo le expulsa el creador, y nadie
   puede quitarse `removed` a sí mismo. Las solicitudes (`Requests`) no muestran a los expulsados: se readmiten desde el panel.
+- **Quitar un correo de una privada expulsa a quien lo usó**: cada participante apunta con qué correo entró en
+  `polls/{id}/emails/{uid}` (`saveMemberEmail`, una vez por visita en `PollPage`, así que también quien entró antes de
+  que existiera al volver a abrirla). Solo lo leen quienes la administran (no va en el voto, que leen todos). En
+  «Acceso y plazas», `losingAccess` (`model.ts`) compara la lista guardada con la nueva: quien está dentro con un correo
+  que se quita sale avisado bajo el campo y, al guardar, con una confirmación; después se le expulsa (o se rechaza su
+  solicitud, si estaba pendiente) con `removeByEmail`. Un administrador que no es el creador no puede quitar el correo de
+  otro administrador. Quien entró antes y no ha vuelto a abrirla no se reconoce: se expulsa desde «Gestionar participantes».
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
-  expulsa un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
+  saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
   cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el
   creador, pasa `ownerUid` a un administrador o participante aceptado al azar (`pickHeir`; las reglas exigen que
   tenga voto, sin estado y sin `gone`) y apunta el creador original en `founder`/`founderName` (una sola vez), o
