@@ -95,6 +95,10 @@ desde fuera y segundo plano. Usa el modo demo y varias personas en el mismo WebV
 
 ## Trucos del modo demo y de Playwright
 
+- **Error 504 «Outdated Optimize Dep»** en el servidor de desarrollo (y fallan el QR, los emojis o las descargas): su
+  caché de dependencias está desfasada, a menudo porque sigue vivo un Vite antiguo en el mismo puerto. Para el
+  proceso (búscalo por `vite.js` y el puerto en la línea de comando) y arráncalo con `--force`.
+
 - **Cada pestaña es una sesión**: dos páginas del mismo contexto son dos personas que comparten datos (así se prueba
   con «Ana» y «Bea»). Una página nueva empieza sin sesión: hay que entrar.
 - **Pestaña en segundo plano**: Chrome no la pinta y la captura se queda esperando. `page.bringToFront()` antes de

@@ -7,11 +7,8 @@ que hay que hacer a mano.
   Casi todo se comprobó con el recorrido automático y el resto a mano con capturas.
 - **[ ]** pendiente. Al lado se dice por qué: necesita una segunda cuenta, un correo real, otro móvil, o ha fallado.
 
-Resultado de la última pasada del recorrido automático: **50 de 52 bien**. Los dos que no eran fallos del script,
-no de la app:
-- **Imagen del resultado:** el script pierde un momento la conexión con la app al volver de Google Calendar. En la
-  pasada anterior salió bien.
-- **Tema automático:** Playwright forzaba el tema claro al medir (apartado 7).
+Resultado de la última pasada del recorrido automático (23 de noviembre de 2026): **60 de 60 bien** en el móvil y
+**49 de 49** en Chrome (`recorrido.mjs`), con los cinco tipos de votación.
 
 ## Cómo pasar el recorrido automático
 
@@ -105,7 +102,11 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
       lo ve desde que vuelve. *Reglas en el emulador (7 casos más).*
 - [x] «Solo estos correos» con burbujas: Intro, coma, espacio, pegar una lista, un texto que no es correo (se marca),
       borrar y quitar. *En Chrome (modo demo).*
-- [ ] Votación de horas, de semanas y de meses. *El recorrido solo crea días y opciones.*
+- [x] Horas por rango y horas sueltas: crear, votar con dos personas (contadores, la más votada, quitar el voto) y
+      añadir al calendario con la hora (en Android, Google Calendar con la hora puesta).
+- [x] Semanas: crear y votar con dos personas; empate, desempate y resultado definitivo.
+- [x] Meses (pasando de un año al siguiente): crear, votar con dos personas y editar el título con aviso en el chat.
+- [x] Expulsar a quien votó (en una de horas) borra sus votos; al readmitirle vuelve sin ellos.
 - [ ] Recordatorios y plazo de cierre. *Funciones premium; sin probar.*
 
 ## 5. Integración con Android

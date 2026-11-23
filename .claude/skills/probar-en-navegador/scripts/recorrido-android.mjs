@@ -327,6 +327,9 @@ await check("Añadir al calendario: abre Google Calendar (o el navegador) fuera 
   expect(app, "no sale de la app: el enlace no hace nada");
   await ensureFront();
   expect(focusIsApp(), "no se vuelve a la app");
+  // Al pasar a segundo plano, la conexión de DevTools puede quedarse colgada: se rehace.
+  await sleep(1500);
+  await reconnect();
   return "abre " + app;
 });
 await check("Imagen del resultado desde la app", async () => {
@@ -523,6 +526,124 @@ await check("Editar: renombrar una opción y aviso en el chat", async () => {
   return await ana.locator(".chat__sys").last().innerText();
 });
 
+// ======================= Horas, semanas y meses =======================
+// Para cada tipo: crear, votar con dos personas (contadores, la más votada y quitar el voto) y lo propio de cada uno.
+const createType = async (p, title, type, fill) => {
+  await go(p, "#/nueva");
+  await p.fill("#f-title", title);
+  await p.locator("#sec-type button", { hasText: new RegExp("^" + type) }).click();
+  await fill();
+  await btn(p, "Crear votación").click();
+  await p.waitForURL(/#\/v\/[^/]+$/);
+  return p.url().replace(/^.*#/, "#");
+};
+// Casillas que se pueden votar (en las de horas, las celdas de la tabla).
+const units = p => p.locator("main button[aria-pressed]:not([disabled])");
+const countOf = async b => Number((await b.locator(".count").innerText().catch(() => "0")).trim() || 0);
+/** Ana vota las casillas 0 y 1, Bea solo la 1: la 1 queda primera con 2 votos. Luego Ana quita la 0. */
+async function voteFlow(hash, kind) {
+  await go(ana, hash);
+  const n = await units(ana).count();
+  expect(n >= 2, `${kind}: solo hay ${n} casillas para votar`);
+  const label1 = await units(ana).nth(1).getAttribute("aria-label");
+  await units(ana).nth(0).click(); await ana.waitForTimeout(150);
+  await units(ana).nth(1).click(); await ana.waitForTimeout(250);
+  expect(await ana.locator("main button[aria-pressed=true]").count() === 2, `${kind}: Ana no tiene 2 votos marcados`);
+  await go(bea, hash);
+  await bea.getByRole("button", { name: label1, exact: true }).click(); await bea.waitForTimeout(250);
+  const b1 = bea.getByRole("button", { name: label1, exact: true });
+  expect(await b1.getAttribute("aria-pressed") === "true", `${kind}: el voto de Bea no se marca`);
+  expect(await countOf(b1) === 2, `${kind}: la casilla votada por las dos no cuenta 2 (${await countOf(b1)})`);
+  await go(ana, hash);
+  const first = (await ana.locator(".summary-row--first").first().innerText()).replace(/\s+/g, " ");
+  await units(ana).nth(0).click(); await ana.waitForTimeout(250);
+  expect(await ana.locator("main button[aria-pressed=true]").count() === 1, `${kind}: no se quita el voto`);
+  return `${n} casillas · primera: ${first.slice(0, 60)}`;
+}
+let hoursRange, hoursList, weeksPoll, monthsPoll;
+await check("Horas (rango): crear y votar con dos personas", async () => {
+  hoursRange = await createType(ana, "Reunión", "Horas", async () => {
+    await ana.locator("#sec-months button", { hasText: /^Diciembre$/ }).click();
+    for (const d of [1, 2, 3]) await dayBtn(ana, d).click();
+  });
+  expect(await ana.locator("main table").count() >= 1, "no se ve la tabla de horas");
+  return await voteFlow(hoursRange, "horas");
+});
+await check("Horas: añadir al calendario con la hora", async () => {
+  await go(ana, hoursRange);
+  const cal = ana.locator(".summary__head").first();
+  expect(await cal.count() === 1, "no hay botón de calendario"); // (en el ordenador el resumen sale dos veces)
+  const href = await cal.locator("a").first().getAttribute("href").catch(() => null);
+  // En Android y en el navegador con menú, el enlace de Google Calendar lleva la hora (…T…); si es un menú, vale con que esté.
+  if (href) expect(/dates=\d{8}T\d{4}/.test(href), "el evento no lleva hora: " + href.slice(0, 120));
+  return href ? "Google Calendar con hora" : "menú de calendario";
+});
+await check("Horas sueltas: crear y votar con dos personas", async () => {
+  hoursList = await createType(ana, "Llamadas", "Horas", async () => {
+    await ana.locator("#sec-months button", { hasText: /^Diciembre$/ }).click();
+    for (const d of [1, 2]) await dayBtn(ana, d).click();
+    await btn(ana, "Horas sueltas").click();
+    for (const [i, h] of [[0, "18:00"], [0, "18:30"], [1, "19:00"]]) {
+      await ana.locator("#sec-hours button[aria-haspopup=listbox]").nth(i).click();
+      await ana.getByRole("option", { name: h }).click();
+      await ana.keyboard.press("Escape");
+    }
+  });
+  return await voteFlow(hoursList, "horas sueltas");
+});
+await check("Semanas: crear y votar con dos personas", async () => {
+  weeksPoll = await createType(ana, "Vacaciones", "Semanas", async () => {
+    await ana.locator("#sec-months button", { hasText: /^Diciembre$/ }).click();
+    for (const i of [1, 2, 3]) await ana.locator("#sec-slots button[aria-pressed]").nth(i).click();
+  });
+  return await voteFlow(weeksPoll, "semanas");
+});
+await check("Semanas: empate, desempate y resultado definitivo", async () => {
+  // Ahora: Ana tiene la 1 y Bea la 1. Ana añade la 2 y Bea también: empate a 2 entre la 1 y la 2.
+  await go(ana, weeksPoll);
+  await units(ana).nth(2).click(); await ana.waitForTimeout(200);
+  await go(bea, weeksPoll);
+  await units(bea).nth(2).click(); await bea.waitForTimeout(200);
+  await go(ana, weeksPoll);
+  await btn(ana, "Desempatar").click();
+  await yes(ana);
+  await ana.locator(".tiebreak__option").nth(0).click();
+  await go(bea, weeksPoll);
+  await bea.locator(".tiebreak__option").nth(0).click(); await bea.waitForTimeout(250);
+  await go(ana, weeksPoll);
+  await btn(ana, "Finalizar desempate").click();
+  await yes(ana);
+  await ana.waitForSelector(".closed-banner--final");
+  return (await ana.locator(".closed-banner--final").innerText()).replace(/\s+/g, " ").slice(0, 90);
+});
+await check("Meses: crear (pasando de año) y votar con dos personas", async () => {
+  monthsPoll = await createType(ana, "Viaje", "Meses", async () => {
+    await ana.locator("#sec-months button", { hasText: /^Diciembre$/ }).click();
+    await ana.locator("#sec-months button[aria-label='Año siguiente']").click();
+    await ana.locator("#sec-months button", { hasText: /^Enero$/ }).click();
+    await ana.locator("#sec-months button", { hasText: /^Febrero$/ }).click();
+  });
+  return await voteFlow(monthsPoll, "meses");
+});
+await check("Meses: editar el título y aviso en el chat", async () => {
+  await go(ana, monthsPoll + "/editar");
+  await ana.fill("#f-title", "Viaje de invierno");
+  await btn(ana, "Guardar cambios").click();
+  await ana.waitForURL(/#\/v\/[^/]+$/);
+  await ana.locator("#ptabbtn-chat").click();
+  return (await ana.locator(".chat__sys").last().innerText()).replace(/\s+/g, " ").slice(0, 80);
+});
+await check("Horas: expulsar a quien votó borra sus votos y al readmitirle vuelve sin ellos", async () => {
+  await go(ana, hoursRange);
+  await menu(ana, "Gestionar participantes");
+  const row = ana.locator("section[aria-label='Gestionar participantes'] li", { hasText: "Bea" });
+  await row.getByRole("button", { name: "Expulsar", exact: true }).click();
+  await yes(ana);
+  await row.getByRole("button", { name: "Volver a admitir" }).click(); await ana.waitForTimeout(300);
+  await go(bea, hoursRange);
+  expect(await bea.locator("main button[aria-pressed=true]").count() === 0, "Bea vuelve con sus votos");
+});
+
 // ======================= Acceso restringido =======================
 let appr;
 await check("Con aprobación: Cris queda pendiente y Ana le acepta", async () => {
@@ -648,6 +769,8 @@ async function rawEval(expression) {
 }
 await check("Tema automático: sigue el modo oscuro del móvil, también en vivo", async () => {
   const was = sh("cmd uimode night");
+  // Mientras Playwright está conectado, la página tiene el tema claro forzado: se suelta para medir y se vuelve.
+  await browser.close().catch(() => {});
   const probe = () => rawEval("JSON.stringify([matchMedia('(prefers-color-scheme: dark)').matches, getComputedStyle(document.body).backgroundColor])").then(JSON.parse);
   try {
     sh("cmd uimode night yes"); await sleep(1500);
@@ -658,6 +781,7 @@ await check("Tema automático: sigue el modo oscuro del móvil, también en vivo
     return `fondo ${dbg} en oscuro y ${lbg} en claro`;
   } finally {
     sh(`cmd uimode night ${/yes/.test(was) ? "yes" : /auto/.test(was) ? "auto" : "no"}`);
+    await reconnect();
   }
 });
 
