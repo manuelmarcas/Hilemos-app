@@ -172,7 +172,11 @@ Al crear una votación se elige el acceso (no se puede cambiar después) y, opci
 - **Cualquiera con el enlace**: como siempre.
 - **Con tu aprobación** (`approval: true`): quien abre el enlace entra **pendiente** (`status: "pending"` en su
   voto). Ve el título y un aviso, pero no puede votar ni ver los votos. El creador ve la caja «✋ Solicitudes» y
-  acepta (se borra `status`) o rechaza (`status: "rejected"`, se puede readmitir después).
+  acepta (se borra `status`) o rechaza (`status: "rejected"`, se puede readmitir después). Con muchas solicitudes
+  (`Requests`, en `pages/poll/Access.tsx`): la caja se pliega en una línea, enseña 5 con «Ver las N», busca por nombre
+  desde 10 y acepta o rechaza varias a la vez con casillas («Seleccionar todas» elige las que se ven con la búsqueda;
+  rechazar varias pide confirmación). `setPendingStatus` lo guarda en un lote de hasta 450, con el contador de plazas
+  ajustado en la misma escritura.
 - **Solo estos correos** (`emailsOnly: true`): solo entran las cuentas de Google de la lista. La lista se guarda
   aparte, en `polls/{id}/private/access` (`{ emails }`, en minúsculas), que solo puede leer el creador; así nadie
   ve los correos de los demás. El creador la cambia en ⋯ → «Acceso y plazas».

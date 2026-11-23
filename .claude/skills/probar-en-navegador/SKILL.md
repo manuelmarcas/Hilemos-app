@@ -14,6 +14,7 @@ Playwright. Hay cuatro herramientas en `scripts/`. Elige según lo que hayas cam
 | Una función nueva o un arreglo | Un script corto que haga ese caso (y el recorrido si toca algo compartido) |
 | CSS, clases o componentes (sin querer cambiar el aspecto) | `capturas.mjs` antes y después + `comparar.mjs`, y `estados.mjs` si hay `:hover` o `:focus` |
 | Algo grande o «que no se rompa nada» | Todo: capturas, estados y `recorrido.mjs` |
+| Solicitudes de entrada (votaciones con aprobación) | `solicitudes.mjs <carpeta>`: mete 100 solicitudes en el modo demo y prueba plegar, «Ver las 100», buscar y aceptar o rechazar en lote |
 
 ## Preparar (una vez por sesión)
 

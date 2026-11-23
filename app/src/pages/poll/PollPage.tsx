@@ -421,6 +421,13 @@ export function PollPage({ id }: { id: string }) {
     await store.setMemberStatus(id, uid, to, { from, counted: hasLimit(poll) });
     toast(to === "accepted" ? "Aceptado: ya puede votar" : to === "rejected" ? "Solicitud rechazada" : "Solicitud pendiente");
   });
+  // Varias solicitudes a la vez (casillas de «Solicitudes»): un solo lote, con el contador de plazas ajustado.
+  const setMany = (uids: string[], to: "accepted" | "rejected") => act(async () => {
+    await store.setPendingStatus(id, uids, to, { counted: hasLimit(poll) });
+    toast(to === "accepted"
+      ? `${plural(uids.length, ["persona aceptada", "personas aceptadas"])}: ya pueden votar`
+      : plural(uids.length, ["solicitud rechazada", "solicitudes rechazadas"]));
+  });
 
   // ---------- «Gestionar participantes» ----------
 
@@ -554,7 +561,7 @@ export function PollPage({ id }: { id: string }) {
         <ManagePeople poll={poll} votes={shown} me={user.uid} onToggleAdmin={toggleAdmin} onRemove={removeMember}
           onReadmit={readmit} onClose={() => setPanel(null)} />
       )}
-      {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} />}
+      {admin && requests.length > 0 && <Requests poll={poll} requests={requests} onSet={setMember} onSetMany={setMany} />}
       {poll.closed && (final ? (
         <div className="closed-banner closed-banner--final">
           <Icon name="trophy" /> Resultado definitivo: <strong>{unitText(view, T, TB!.leaders[0])}</strong>. La votación está cerrada y ya no se puede reabrir.

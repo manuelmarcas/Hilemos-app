@@ -16,14 +16,29 @@
 .access-panel__hint{margin:0}
 .access-panel__actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .requests__head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px}
-.requests__title{margin:0;display:inline-flex;align-items:center;gap:8px}
+.requests__title{margin:0}
+.requests--closed{padding-block:10px}
+/* La cabecera pliega y despliega el panel: con muchas solicitudes, que no ocupe media pantalla */
+.requests__toggle{
+  display:inline-flex;align-items:center;gap:8px;margin:-4px -6px;padding:4px 6px;
+  border:none;border-radius:var(--radius-sm);background:none;color:inherit;font:inherit;cursor:pointer;
+}
+.requests__toggle:hover{background:var(--hover)}
+.requests__caret{font-size:.7rem;color:var(--muted);transition:transform .15s}
+.requests__toggle[aria-expanded="true"] .requests__caret{transform:rotate(90deg)}
+.requests__search{width:100%;max-width:320px;margin:0 0 8px}
+.requests__bulk{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin:0 0 8px;min-height:34px}
+.requests__check-all{margin:0;font-weight:600}
+.requests__row--picked{border-color:var(--brand);background:var(--brand-soft)}
+.requests__empty{padding:6px 2px;font-size:.9rem}
+.requests__more{margin-top:8px}
 .requests__count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border-radius:99px;
   background:var(--tie-soft);color:var(--tie-ink);font-size:.8rem;font-weight:800;font-variant-numeric:tabular-nums}
 .requests__sub{margin:6px 0 10px;font-size:.9rem;color:var(--muted);line-height:1.45}
 .requests__list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .requests__row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
 .requests__row--rejected{background:var(--soft)}
-.requests__person{min-width:0;overflow-wrap:anywhere}
+.requests__person{min-width:0;overflow-wrap:anywhere;cursor:pointer}
 .requests__actions{display:flex;gap:6px;flex-wrap:wrap}
 /* «Gestionar participantes» (administradores): administradores, expulsar y volver a admitir */
 .manage-people{

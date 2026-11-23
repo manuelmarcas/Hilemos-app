@@ -1,9 +1,9 @@
 // Quién puede entrar: solicitudes y ajustes de acceso (administradores), y las pantallas de quien está pendiente
 // o no puede entrar (privada, completa o sin cuenta).
 import { useEffect, useRef, useState } from "react";
-import { FREE_PEOPLE, MAX_EMAILS, MAX_PEOPLE, TYPE, isFull, losingAccess, minMaxPeople, parseEmails, plural, pollRange, type LosingAccess } from "../../lib/model";
+import { FREE_PEOPLE, MAX_EMAILS, MAX_PEOPLE, PEOPLE_FILTER_FROM, TYPE, isFull, losingAccess, minMaxPeople, parseEmails, plural, pollRange, type LosingAccess } from "../../lib/model";
 import type { MemberStatus, Poll, Vote, Votes } from "../../lib/types";
-import { bem, errMsg } from "../../lib/util";
+import { bem, errMsg, searchKey } from "../../lib/util";
 import { useSession } from "../../state/session";
 import { useUi } from "../../state/ui";
 import { Avatar } from "../../components/Avatar";
@@ -11,48 +11,141 @@ import { Icon } from "../../components/Icon";
 import { PremiumTag } from "../../components/Premium";
 import { EmailChips, joinEmails } from "../../components/EmailChips";
 
-/** Solicitudes pendientes (y rechazadas, para poder readmitirlas). Solo las ven quienes administran la votación. */
-export function Requests({ poll, requests, onSet }: {
+/** Solicitudes que se ven sin pulsar «Ver las N». */
+const REQUESTS_SHOWN = 5;
+
+/**
+ * Solicitudes pendientes (y rechazadas, para poder readmitirlas). Solo las ven quienes administran la votación.
+ * Pensado también para muchas (cien en una votación abierta a un grupo grande): se pliega en una línea, enseña las
+ * primeras REQUESTS_SHOWN, busca por nombre desde PEOPLE_FILTER_FROM y se aceptan o rechazan varias a la vez con
+ * casillas («Seleccionar todas» elige las que se ven con la búsqueda).
+ */
+export function Requests({ poll, requests, onSet, onSetMany }: {
   poll: Poll; requests: (Vote & { uid: string })[]; onSet: (uid: string, to: MemberStatus, from: MemberStatus) => void;
+  /** Acepta o rechaza a la vez a varias pendientes. */
+  onSetMany: (uids: string[], to: "accepted" | "rejected") => Promise<void>;
 }) {
+  const { confirm } = useUi();
   const pending = requests.filter(r => r.status === "pending");
   const rejected = requests.filter(r => r.status === "rejected");
+  const [open, setOpen] = useState(true);
   const [showRejected, setShowRejected] = useState(false);
+  const [all, setAll] = useState(false);
+  const [query, setQuery] = useState("");
+  const [picked, setPicked] = useState<Set<string>>(() => new Set());
+  const [busy, setBusy] = useState(false);
   const full = isFull(poll);
+  const name = (r: Vote) => r.name || "Alguien";
+
+  // Las elegidas que siguen pendientes (si otra persona que administra acepta a una, deja de contar).
+  const chosen = pending.filter(r => picked.has(r.uid)).map(r => r.uid);
+  const q = searchKey(query.trim());
+  const found = q ? pending.filter(r => searchKey(name(r)).includes(q)) : pending;
+  const cut = !all && !q && found.length > REQUESTS_SHOWN;
+  const shown = cut ? found.slice(0, REQUESTS_SHOWN) : found;
+  const allPicked = found.length > 0 && found.every(r => picked.has(r.uid));
+  const toggle = (uid: string) => setPicked(s => {
+    const n = new Set(s);
+    if (n.has(uid)) n.delete(uid); else n.add(uid);
+    return n;
+  });
+  const pickAll = () => setPicked(s => {
+    const n = new Set(s);
+    found.forEach(r => { if (allPicked) n.delete(r.uid); else n.add(r.uid); });
+    return n;
+  });
+
+  async function many(to: "accepted" | "rejected") {
+    if (!chosen.length || busy) return;
+    if (to === "rejected" && chosen.length > 1 && !(await confirm({
+      title: `¿Rechazar ${plural(chosen.length, ["solicitud", "solicitudes"])}?`,
+      message: "No podrán votar ni ver los resultados. Podrás aceptarlas más tarde en «Ver rechazadas», si quedan plazas.",
+      confirmLabel: `Rechazar ${plural(chosen.length, ["solicitud", "solicitudes"])}`,
+      danger: true,
+    }))) return;
+    setBusy(true);
+    try {
+      await onSetMany(chosen, to);
+      setPicked(new Set());
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <section className="requests">
+    <section className={bem("requests", { closed: !open })}>
       <div className="requests__head">
-        <h2 className="requests__title"><Icon name="approve" /> Solicitudes {pending.length > 0 && <span className="requests__count">{pending.length}</span>}</h2>
-        {rejected.length > 0 && (
+        <h2 className="requests__title">
+          <button type="button" className="requests__toggle" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+            <span className="requests__caret" aria-hidden="true">▸</span>
+            <Icon name="approve" /> Solicitudes {pending.length > 0 && <span className="requests__count">{pending.length}</span>}
+          </button>
+        </h2>
+        {open && rejected.length > 0 && (
           <button type="button" className="link-btn" aria-expanded={showRejected} onClick={() => setShowRejected(v => !v)}>
             {showRejected ? "Ocultar rechazadas" : `Ver rechazadas (${rejected.length})`}
           </button>
         )}
       </div>
-      {pending.length > 0
-        ? <p className="requests__sub">Estas personas han abierto el enlace. No pueden votar ni ver los resultados hasta que las aceptes.</p>
-        : <p className="requests__sub">No hay solicitudes pendientes.</p>}
-      <ul className="requests__list">
-        {pending.map(r => (
-          <li key={r.uid} className="requests__row">
-            <span className="person requests__person"><Avatar name={r.name || "Alguien"} photo={r.photo || ""} size={30} seed={r.uid} />{r.name || "Alguien"}</span>
-            <span className="requests__actions">
-              <button type="button" className="btn btn--small btn--primary" onClick={() => onSet(r.uid, "accepted", "pending")}>Aceptar</button>
-              <button type="button" className="btn btn--small btn--danger" onClick={() => onSet(r.uid, "rejected", "pending")}>Rechazar</button>
-            </span>
-          </li>
-        ))}
-        {showRejected && rejected.map(r => (
-          <li key={r.uid} className="requests__row requests__row--rejected">
-            <span className="person requests__person"><Avatar name={r.name || "Alguien"} photo={r.photo || ""} size={30} seed={r.uid} />{r.name || "Alguien"}
-              <span className="muted"> · rechazada</span></span>
-            <span className="requests__actions">
-              <button type="button" className="btn btn--small" disabled={full} data-tip={full ? "No quedan plazas" : undefined}
-                onClick={() => onSet(r.uid, "accepted", "rejected")}>Aceptar</button>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {open && <>
+        {pending.length > 0
+          ? <p className="requests__sub">Estas personas han abierto el enlace. No pueden votar ni ver los resultados hasta que las aceptes.</p>
+          : <p className="requests__sub">No hay solicitudes pendientes.</p>}
+        {pending.length >= PEOPLE_FILTER_FROM && (
+          <input className="input input--small requests__search" type="search" placeholder="Buscar solicitud…"
+            aria-label="Buscar solicitud" value={query} onChange={e => setQuery(e.target.value)} />
+        )}
+        {pending.length > 1 && (
+          <div className="requests__bulk">
+            <label className="check requests__check-all">
+              <input className="check__box" type="checkbox" checked={allPicked} disabled={!found.length} onChange={pickAll} />
+              {q ? `Seleccionar las ${found.length} que coinciden` : `Seleccionar todas (${found.length})`}
+            </label>
+            {chosen.length > 0 && (
+              <span className="requests__actions">
+                <button type="button" className="btn btn--small btn--primary" disabled={busy} onClick={() => many("accepted")}>
+                  Aceptar ({chosen.length})
+                </button>
+                <button type="button" className="btn btn--small btn--danger" disabled={busy} onClick={() => many("rejected")}>
+                  Rechazar ({chosen.length})
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+        <ul className="requests__list">
+          {shown.map(r => (
+            <li key={r.uid} className={bem("requests__row", { picked: picked.has(r.uid) })}>
+              <label className="person requests__person">
+                {pending.length > 1 && (
+                  <input className="check__box" type="checkbox" checked={picked.has(r.uid)} onChange={() => toggle(r.uid)}
+                    aria-label={`Seleccionar a ${name(r)}`} />
+                )}
+                <Avatar name={name(r)} photo={r.photo || ""} size={30} seed={r.uid} />{name(r)}
+              </label>
+              <span className="requests__actions">
+                <button type="button" className="btn btn--small btn--primary" onClick={() => onSet(r.uid, "accepted", "pending")}>Aceptar</button>
+                <button type="button" className="btn btn--small btn--danger" onClick={() => onSet(r.uid, "rejected", "pending")}>Rechazar</button>
+              </span>
+            </li>
+          ))}
+          {q && !found.length && <li className="requests__empty muted">Nadie coincide con la búsqueda.</li>}
+          {showRejected && rejected.map(r => (
+            <li key={r.uid} className="requests__row requests__row--rejected">
+              <span className="person requests__person"><Avatar name={name(r)} photo={r.photo || ""} size={30} seed={r.uid} />{name(r)}
+                <span className="muted"> · rechazada</span></span>
+              <span className="requests__actions">
+                <button type="button" className="btn btn--small" disabled={full} data-tip={full ? "No quedan plazas" : undefined}
+                  onClick={() => onSet(r.uid, "accepted", "rejected")}>Aceptar</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+        {cut && <button type="button" className="link-btn requests__more" onClick={() => setAll(true)}>Ver las {found.length}</button>}
+        {all && !q && found.length > REQUESTS_SHOWN && (
+          <button type="button" className="link-btn requests__more" onClick={() => setAll(false)}>Ver menos</button>
+        )}
+      </>}
     </section>
   );
 }

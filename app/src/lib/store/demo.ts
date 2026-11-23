@@ -251,6 +251,19 @@ export function createDemoStore(): Store {
       if (dropAdmin) p.admins = (p.admins || []).filter(a => a !== uid);
       write(db);
     },
+    async setPendingStatus(id, uids, status, { counted }) {
+      const db = load();
+      const p = db.polls[id];
+      if (!p) throw fail("not-found");
+      if (!isAdmin(p, me())) throw fail("permission-denied");
+      for (const uid of uids) {
+        const v = db.votes[id]?.[uid];
+        if (!v || v.status !== "pending") throw fail("permission-denied");
+        if (status === "accepted") { delete v.status; v.joinedAt = Date.now(); } else v.status = "rejected";
+      }
+      if (counted && status === "rejected") p.members = Math.max(0, (p.members || 0) - uids.length);
+      write(db);
+    },
     async saveVote(id, uid, data) {
       const db = load();
       if (!db.polls[id]) throw fail("not-found");

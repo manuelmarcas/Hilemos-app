@@ -344,6 +344,11 @@ export interface Store {
    */
   setMemberStatus(id: string, uid: string, status: MemberStatus,
     opts: { from: MemberStatus; counted: boolean; removed?: boolean; dropAdmin?: boolean }): Promise<void>;
+  /**
+   * Acepta o rechaza a la vez a varias personas que pidieron entrar (solo administradores, solo pendientes): en un
+   * lote (o varios, si son muchas), con el contador de plazas ajustado de una vez (`counted`: la votación tiene tope).
+   */
+  setPendingStatus(id: string, uids: string[], status: "accepted" | "rejected", opts: { counted: boolean }): Promise<void>;
   saveVote(id: string, uid: string, data: Vote): Promise<void>;
   saveTiebreakVote(id: string, uid: string, data: Vote): Promise<void>;
   updateParticipant(id: string, uid: string, data: Vote): Promise<void>;

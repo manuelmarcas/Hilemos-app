@@ -435,6 +435,19 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       if (Object.keys(pollPatch).length) batch.update(pollRef(id), pollPatch);
       await batch.commit();
     },
+    async setPendingStatus(id, uids, status, { counted }) {
+      for (let i = 0; i < uids.length; i += BATCH_SIZE) {
+        const part = uids.slice(i, i + BATCH_SIZE);
+        const batch = F.writeBatch(db);
+        const now = Date.now();
+        part.forEach(uid => batch.update(F.doc(votesCol(id), uid), status === "accepted"
+          ? { status: F.deleteField(), joinedAt: now }
+          : { status: "rejected" }));
+        // Los rechazados no ocupan plaza: el contador baja una vez por cada uno, en el mismo lote.
+        if (counted && status === "rejected") batch.update(pollRef(id), { members: F.increment(-part.length) });
+        await batch.commit();
+      }
+    },
     // Voto, voto del desempate y nombre/foto del participante: todo va en su documento, sin tocar el resto.
     saveVote: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),
     saveTiebreakVote: (id, uid, data) => F.setDoc(F.doc(votesCol(id), uid), data, { merge: true }),
