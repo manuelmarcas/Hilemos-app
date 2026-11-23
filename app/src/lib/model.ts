@@ -40,6 +40,22 @@ export const TOP_N = 5; // opciones que se muestran en "más votadas"
 export const MAX_PEOPLE = 150;
 /** Personas por votación en el plan gratuito (3.3): más será premium. De momento solo se marca, no se limita. */
 export const FREE_PEOPLE = 20;
+/** Votaciones abiertas a la vez que gestiona alguien sin premium (3.1, §9). De momento solo se marca. */
+export const FREE_OPEN = 3;
+
+/**
+ * La votación usa algo premium (§8, «Reutilizar una votación con funciones de pago»): plazo, aprobación, solo correos,
+ * administradores o más de FREE_PEOPLE personas. Reabrirla será premium. Las personas se cuentan por las que hay
+ * (`members`), no por el máximo: durante el lanzamiento el máximo por defecto es MAX_PEOPLE en todas.
+ */
+export function hasPremiumSettings(p: PollData) {
+  return !!p.deadline || !!p.approval || !!p.emailsOnly || !!p.admins?.length || (p.members || 0) > FREE_PEOPLE;
+}
+
+/** Votaciones abiertas que gestiona `uid` (las que creó o heredó), para el límite FREE_OPEN (§9). */
+export function openManaged(polls: (PollData | null | undefined)[], uid: string) {
+  return polls.filter(p => p && p.ownerUid === uid && !p.closed && !deadlinePassed(p)).length;
+}
 /** Desde cuántos participantes aparecen el buscador y los filtros de la tabla. */
 export const PEOPLE_FILTER_FROM = 10;
 /** Correos permitidos como mucho en una votación privada. */

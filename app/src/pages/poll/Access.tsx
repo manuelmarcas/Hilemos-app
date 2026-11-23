@@ -143,7 +143,7 @@ export function AccessPanel({ poll, votes, onClose, onPeople, onRemoveByEmail }:
         {tooLow
           ? <><span className="hint__warn">{tooLowMsg}</span> <button type="button" className="link-btn" onClick={onPeople}>Gestionar participantes</button></>
           : members >= 2 ? `Ya ocupan plaza ${members} personas, así que no puede ser menos.` : "Como mínimo, 2 personas."}
-        {!tooLow && <> Más de {FREE_PEOPLE} personas: <PremiumTag /></>}
+        {!tooLow && <> Más de {FREE_PEOPLE} personas: <PremiumTag feature="people" /></>}
       </p>
       {poll.emailsOnly && (
         <>

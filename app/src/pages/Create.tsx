@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
 import {
-  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, FREE_PEOPLE, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
+  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, FREE_PEOPLE, FREE_OPEN, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
   fmtDeadline, lostVotedUnit, unitLabel, unitParts,
 } from "../lib/model";
 import { describeChanges } from "../lib/changes";
@@ -14,10 +14,12 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { navigate } from "../state/route";
 import { editTemplate, takeTemplate, type TemplateOption } from "../state/duplicate";
+import { useOpenManaged } from "../state/openManaged";
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
 import { PremiumNote, PremiumTag } from "../components/Premium";
+import type { PremiumFeature } from "../lib/premium";
 import { useDismiss } from "../hooks/useDismiss";
 import { Spinner } from "../components/Loading";
 import { EmailChips, joinEmails, splitEmails } from "../components/EmailChips";
@@ -105,6 +107,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   // Datos de la votación que se está editando o duplicando (o null).
   const [tpl] = useState(() => (edit ? editTemplate(edit.poll) : takeTemplate()));
   const editing = !!edit;
+  const openCount = useOpenManaged();
   // Con un desempate (abierto o finalizado) solo se cambian el nombre y la descripción: el recuento ya está hecho.
   const nameOnly = !!edit?.poll.tiebreak;
 
@@ -511,10 +514,10 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const minYear = now.getFullYear();
   const isWeeks = type === "weeks";
 
-  const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string, premium = false) => (
+  const typeCard = (on: boolean, icon: IconName, name: string, desc: string, onClick: () => void, key: string, premium?: PremiumFeature) => (
     <button key={key} type="button" className={`type-card ${on ? "type-card--on" : ""}`} aria-pressed={on} onClick={onClick}>
       <span className="type-card__icon"><Icon name={icon} /></span>
-      <span className="type-card__name">{name}{premium && <> <PremiumTag decorative /></>}</span>
+      <span className="type-card__name">{name}{premium && <> <PremiumTag feature={premium} nested /></>}</span>
       <span className="type-card__desc">{desc}</span>
     </button>
   );
@@ -552,8 +555,19 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             {nameOnly
               ? "Hay un desempate, así que solo se pueden cambiar el nombre y la descripción."
               : <>Puedes añadir {type === "options" ? "opciones" : type === "hours" ? "días y horas" : type === "days" ? "días y opciones" : TYPE[type].unit[1]}, pero
-                no quitar lo que ya tiene votos. El tipo de votación no se cambia: para eso, duplícala.</>}
+                no quitar lo que ya tiene votos. El tipo de votación no se cambia: para eso, duplícala <PremiumTag feature="duplicate" />.</>}
             {" "}Cada cambio se avisará en el chat.
+          </p>
+        )}
+        {!editing && tpl?.duplicated && (
+          <p className="subtitle">
+            Es una copia de otra votación, sin sus votos ni las fechas que ya han pasado. Revísala y pulsa «Crear
+            votación». <PremiumTag feature="duplicate" />
+          </p>
+        )}
+        {!editing && openCount !== null && openCount >= FREE_OPEN && (
+          <p className="subtitle">
+            Ya tienes {openCount} votaciones abiertas. Tener más de {FREE_OPEN} abiertas a la vez: <PremiumTag feature="open" />
           </p>
         )}
         {!editing && user.anon && store.mode === "firebase" && (
@@ -881,7 +895,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         </section>
 
         <section className="step" id="sec-deadline" hidden={!visible.deadline}>
-          <h2 className="step__title"><span className="step__num">{numbers.deadline}</span>¿Hasta cuándo se vota? <PremiumTag /></h2>
+          <h2 className="step__title"><span className="step__num">{numbers.deadline}</span>¿Hasta cuándo se vota? <PremiumTag feature="deadline" /></h2>
           <p className="hint">
             Opcional. Al llegar el plazo, la votación deja de admitir votos y tú decides si la cierras o quitas el
             plazo. Si lo dejas vacío, sigue abierta hasta que la cierres.
@@ -908,8 +922,8 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
           <h2 className="step__title"><span className="step__num">{numbers.access}</span>¿Quién puede unirse?</h2>
           <div className="create__access">
             {typeCard(access === "open", "link", "Cualquiera con el enlace", "Quien abra el enlace entra y vota.", () => setAccess("open"), "open")}
-            {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval", true)}
-            {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails", true)}
+            {typeCard(access === "approval", "approve", "Con tu aprobación", "Quien entre verá la votación, pero no podrá votar hasta que le aceptes.", () => setAccess("approval"), "approval", "approval")}
+            {typeCard(access === "emails", "mail", "Solo estos correos", "Privada: solo entran las cuentas de Google que indiques.", () => setAccess("emails"), "emails", "emails")}
           </div>
           {access === "emails" && (
             <div className="create__access-emails">
@@ -929,7 +943,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
               value={maxText} onChange={e => setMaxText(e.target.value)} placeholder={String(MAX_PEOPLE)} />
             <p className="hint create__access-hint">
               Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación. Más
-              de {FREE_PEOPLE} personas: <PremiumTag />
+              de {FREE_PEOPLE} personas: <PremiumTag feature="people" />
             </p>
           </div>
           <PremiumNote />

@@ -145,7 +145,7 @@ export function Home() {
             {!gone && (
               <button className="btn btn--small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
-            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar <PremiumTag decorative /></button>}
+            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar <PremiumTag feature="duplicate" nested /></button>}
             <button className="btn btn--small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>

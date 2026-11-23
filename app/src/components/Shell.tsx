@@ -9,6 +9,7 @@ import { LogoMark } from "./LogoMark";
 import { Icon } from "./Icon";
 import { AccessKeyDialog } from "./AccessKeyDialog";
 import { NameDialog } from "./NameDialog";
+import { PremiumHost } from "./Premium";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -118,6 +119,7 @@ export function Shell() {
       <div className="sidebar-backdrop" id="sb-backdrop" onClick={() => setDrawer(false)} />
       <AccessKeyDialog />
       <NameDialog />
+      <PremiumHost />
     </div>
   );
 }

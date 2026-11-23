@@ -226,6 +226,8 @@ select.input:hover{background-color:var(--hover)}
   --icon-size:11px;--icon-color:var(--premium);
   display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 6px;border-radius:var(--radius-pill);
   background:var(--premium-soft);color:var(--premium);
-  font-size:.66rem;font-weight:700;letter-spacing:.02em;line-height:1.55;white-space:nowrap;vertical-align:.12em;
+  font-family:inherit;font-size:.66rem;font-weight:700;letter-spacing:.02em;line-height:1.55;white-space:nowrap;vertical-align:.12em;
+  border:none;cursor:help;
 }
+.premium-tag:hover{background:color-mix(in srgb, var(--premium) 18%, var(--premium-soft))}
 .premium-note{margin:14px 0 0;color:var(--muted);font-size:.82rem;line-height:1.6}

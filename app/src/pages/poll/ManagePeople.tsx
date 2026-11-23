@@ -57,7 +57,7 @@ export function ManagePeople({ poll, votes, me, onToggleAdmin, onRemove, onReadm
                     <button type="button" className="btn btn--small" aria-pressed={isAdm}
                       disabled={!isAdm && adminsFull} data-tip={!isAdm && adminsFull ? `Como mucho ${MAX_ADMINS} administradores` : undefined}
                       onClick={() => onToggleAdmin(p.uid, p.name)}>
-                      {isAdm ? "Quitar admin" : <>Hacer admin <PremiumTag decorative /></>}
+                      {isAdm ? "Quitar admin" : <>Hacer admin <PremiumTag feature="admins" nested /></>}
                     </button>
                   )}
                   {p.canRemove && (

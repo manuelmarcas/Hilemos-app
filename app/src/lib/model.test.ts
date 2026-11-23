@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  managedPeople, memberStatus, minMaxPeople, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -490,5 +490,23 @@ describe("pollForExport (Descargar mis datos)", () => {
     expect(pollForExport({ ...p, founder: "u1" }, "u1")?.iCreatedIt).toBe(true);
     expect(pollForExport({ ...p, founder: "u1" }, "u2")?.iCreatedIt).toBe(false);
     expect(pollForExport(null, "u1")).toBeNull();
+  });
+});
+
+describe("hasPremiumSettings y openManaged (marcas de premium)", () => {
+  const base = { title: "x", type: "days", months: [], slots: [], ownerUid: "ana" } as PollData;
+  it("plazo, aprobación, solo correos, administradores o más de 20 personas", () => {
+    expect(hasPremiumSettings(base)).toBe(false);
+    expect(hasPremiumSettings({ ...base, maxPeople: 150, members: 20 })).toBe(false);
+    expect(hasPremiumSettings({ ...base, members: 21 })).toBe(true);
+    expect(hasPremiumSettings({ ...base, deadline: 1 })).toBe(true);
+    expect(hasPremiumSettings({ ...base, approval: true })).toBe(true);
+    expect(hasPremiumSettings({ ...base, emailsOnly: true })).toBe(true);
+    expect(hasPremiumSettings({ ...base, admins: [] })).toBe(false);
+    expect(hasPremiumSettings({ ...base, admins: ["luis"] })).toBe(true);
+  });
+  it("cuenta las abiertas que gestiona: ni cerradas, ni con el plazo pasado, ni ajenas", () => {
+    const polls = [base, { ...base, closed: true }, { ...base, deadline: 1 }, { ...base, ownerUid: "luis" }, null, { ...base, deadline: Date.now() + 1e6 }];
+    expect(openManaged(polls, "ana")).toBe(2);
   });
 });

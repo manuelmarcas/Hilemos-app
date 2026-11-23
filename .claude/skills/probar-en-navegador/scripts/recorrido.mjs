@@ -116,6 +116,17 @@ await check("Crear: etiqueta «Premium» en plazo, aprobación, solo correos y m
   expect(await ana.locator("#sec-deadline .premium-tag").count() === 1, "falta en el plazo");
   return `${n} etiquetas`;
 });
+await check("Premium: tocar la etiqueta explica esa función (y no elige la tarjeta)", async () => {
+  await ana.locator("#sec-access .type-card", { hasText: "Con tu aprobación" }).locator(".premium-tag").click();
+  const t = await dialogText(ana);
+  expect(t.includes("Con tu aprobación") && t.includes("Por qué será premium") && t.includes("gratis para todos"), "ventana: " + t);
+  await btn(ana, "Entendido").click();
+  await ana.waitForSelector("dialog[open]", { state: "detached" });
+  expect(await ana.locator("#sec-access .type-card--on", { hasText: "Cualquiera con el enlace" }).count() === 1, "ha elegido la tarjeta");
+  await ana.getByRole("button", { name: "Qué es premium" }).click();
+  expect((await dialogText(ana)).includes("Funciones premium"), "la nota no abre todas");
+  await btn(ana, "Entendido").click();
+});
 await check("Crear: avisa si falta el nombre", async () => {
   await go(ana, "#/nueva");
   await btn(ana, "Crear votación").click();
@@ -389,11 +400,20 @@ await check("Acceso y plazas: cambiar el máximo", async () => {
   const k = await ana.locator(".poll-head__kicker").innerText();
   expect(k.includes("máx. 5"), k);
 });
+await check("Premium en el menú: la etiqueta de «Duplicar» explica y no duplica", async () => {
+  await go(ana, opts);
+  await ana.getByRole("button", { name: "Opciones de la votación" }).click();
+  await ana.getByRole("menuitem", { name: "Duplicar votación" }).locator(".premium-tag").click();
+  expect((await dialogText(ana)).includes("Duplicar"), "no explica duplicar");
+  await btn(ana, "Entendido").click();
+  expect(ana.url().includes("#/v/"), "ha duplicado: " + ana.url());
+});
 await check("Duplicar", async () => {
   await menu(ana, "Duplicar votación");
   await ana.waitForURL(/#\/nueva/);
   const v = await ana.inputValue("#f-title");
   expect(v.includes("(copia)"), v);
+  expect(await ana.locator(".subtitle", { hasText: "Es una copia de otra votación" }).locator(".premium-tag").count() === 1, "falta la etiqueta de la copia");
   expect(await ana.locator("[data-choice='2']").inputValue() === "Tacos", "no copia las opciones");
 });
 await check("Editar y cancelar sin cambios", async () => {

@@ -5,6 +5,7 @@ import { isAndroid, isIos } from "../../lib/util";
 import { useMenuKeys } from "../../hooks/useDismiss";
 import { Icon } from "../../components/Icon";
 import { PremiumTag } from "../../components/Premium";
+import type { PremiumFeature } from "../../lib/premium";
 
 // Un solo botón para el calendario, según el dispositivo: en Android abre Google Calendar (sin descargar nada),
 // en iPhone y iPad descarga el .ics, que abre Calendario directamente, y en el ordenador deja elegir con un menú.
@@ -43,8 +44,10 @@ export function CalendarMenu({ cal }: { cal: CalEvent }) {
  * el resultado ya definitivo, no se ofrece), acceso y plazas, gestionar participantes, hacerla anónima, duplicarla,
  * exportar los resultados y (solo el creador, `onDelete`) eliminarla.
  */
-export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, onDelete, onDuplicate, onAccess, onPeople, onExport }: {
+export function OwnerMenu({ closed, anonymous, onCloseOrReopen, reopenPremium, onEdit, onAnon, onDelete, onDuplicate, onAccess, onPeople, onExport }: {
   closed: boolean; anonymous: boolean; onCloseOrReopen?: () => void; onEdit: () => void; onAnon: () => void;
+  /** Reabrirla será premium: tiene funciones premium («reopen») o ya hay demasiadas abiertas («open»). */
+  reopenPremium?: PremiumFeature;
   onDelete?: () => void; onDuplicate: () => void; onAccess?: () => void; onPeople: () => void; onExport: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -66,6 +69,7 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
           {onCloseOrReopen && (
             <button role="menuitem" className="menu__item" onClick={pick(onCloseOrReopen)}>
               <Icon name={closed ? "unlock" : "lock"} />{closed ? "Reabrir votación" : "Cerrar votación"}
+              {closed && reopenPremium && <PremiumTag feature={reopenPremium} nested className="menu__premium" />}
             </button>
           )}
           {onAccess && (
@@ -82,7 +86,7 @@ export function OwnerMenu({ closed, anonymous, onCloseOrReopen, onEdit, onAnon, 
             </button>
           )}
           <button role="menuitem" className="menu__item" onClick={pick(onDuplicate)}>
-            <Icon name="copy" />Duplicar votación <PremiumTag decorative className="menu__premium" />
+            <Icon name="copy" />Duplicar votación <PremiumTag feature="duplicate" nested className="menu__premium" />
           </button>
           <button role="menuitem" className="menu__item" onClick={pick(onExport)}>
             <Icon name="download" />Exportar resultados

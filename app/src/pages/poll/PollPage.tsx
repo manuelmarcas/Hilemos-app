@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
   isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
-  MAX_REPORT_COMMENT, reportsByPerson,
+  MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN,
 } from "../../lib/model";
 import type { MemberStatus, PersonReport, Poll, ReportReason, Vote, Votes } from "../../lib/types";
 import { Avatar } from "../../components/Avatar";
 import { PersonDialog } from "../../components/PersonDialog";
+import { useOpenManaged } from "../../state/openManaged";
 import { ReportDialog } from "../../components/ReportDialog";
 import { errMsg, pollUrl } from "../../lib/util";
 import { calendarEvent } from "../../lib/ics";
@@ -119,6 +120,7 @@ export function PollPage({ id }: { id: string }) {
   }, [store, id, user.uid, profileUid]);
   // Denuncias de personas: solo las lee quien administra (se marcan en «Participantes» y en su perfil).
   const amAdmin = !!poll && isAdmin(poll, user.uid);
+  const openCount = useOpenManaged();
   useEffect(() => {
     if (!amAdmin) { setPersonReports([]); return; }
     return store.watchPersonReports(id, setPersonReports, () => setPersonReports([]));
@@ -520,6 +522,7 @@ export function PollPage({ id }: { id: string }) {
             {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
                 onCloseOrReopen={poll.closed && tbDone ? undefined : closeOrReopen}
+                reopenPremium={hasPremiumSettings(poll) ? "reopen" : isOwner && (openCount ?? 0) >= FREE_OPEN ? "open" : undefined}
                 onEdit={() => navigate(`/v/${id}/editar`)}
                 onAnon={makeAnon} onDelete={isOwner ? remove : undefined}
                 onDuplicate={() => duplicate(poll)}

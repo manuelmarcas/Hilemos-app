@@ -34,6 +34,8 @@ export interface CreateTemplate {
   emailsText: string;
   maxText: string;
   groupId: string;
+  /** Viene de «Duplicar» (premium): Create lo dice arriba, con la etiqueta. */
+  duplicated?: boolean;
 }
 
 const TITLE_MAX = 120; // el mismo tope que el campo del nombre
@@ -102,7 +104,7 @@ export function useDuplicate() {
       try { emails = (await store.getAccess(poll.id))?.emails; } catch { /* nada */ }
     }
     const groupId = library.data?.polls[poll.id]?.groupId ?? null;
-    pending = { tpl: templateFromPoll(poll, { groupId, emails }), at: Date.now() };
+    pending = { tpl: { ...templateFromPoll(poll, { groupId, emails }), duplicated: true }, at: Date.now() };
     navigate("/nueva");
     toast("Copia lista: revísala y pulsa «Crear votación»");
   }, [store, user.uid, library.data, toast]);

@@ -134,6 +134,17 @@
 .person-card__reasons{margin:6px 0 0;padding-left:22px}
 .person-card__comment{display:block;color:var(--ink);font-style:italic;overflow-wrap:anywhere}
 .person-card__reports-hint{margin:8px 0 0;padding-top:8px;border-top:1px solid color-mix(in srgb, var(--danger) 25%, transparent);color:var(--ink)}
+/* Qué es una función premium (PremiumHost, al pulsar una etiqueta «Premium») */
+.premium-dialog__kicker{
+  --icon-size:14px;--icon-color:var(--premium);
+  display:flex;align-items:center;gap:5px;margin:0 0 4px;color:var(--premium);
+  font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+}
+.premium-dialog__label{margin:14px 0 2px;font-size:.9rem;color:var(--ink)}
+.premium-dialog__text{margin:8px 0 0;line-height:1.5;font-size:.94rem}
+.premium-dialog__text--muted{color:var(--muted);font-size:.86rem}
+.premium-dialog__list{display:grid;gap:6px;margin:12px 0 0;padding-left:18px;font-size:.9rem;line-height:1.45}
+.premium-dialog__free{margin:16px 0 0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--premium-soft);color:var(--ink);font-size:.9rem;line-height:1.5}
 /* «Exportar resultados»: un botón grande por formato, con lo que trae */
 .export-dialog__list{display:grid;gap:8px}
 .export-dialog__option{

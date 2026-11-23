@@ -44,7 +44,7 @@ export function ExportDialog({ poll, T, TB, onClose, toast }: {
           <button key={f.id} type="button" className="export-dialog__option" disabled={!!busy} onClick={() => run(f.id)}>
             <Icon name={f.icon} className="export-dialog__icon" />
             <span className="export-dialog__text">
-              <strong className="export-dialog__name">{busy === f.id ? "Generando…" : f.title}{f.premium && <> <PremiumTag decorative /></>}</strong>
+              <strong className="export-dialog__name">{busy === f.id ? "Generando…" : f.title}{f.premium && <> <PremiumTag feature="export" nested /></>}</strong>
               <span className="export-dialog__desc">{f.text}</span>
             </span>
           </button>
