@@ -1,21 +1,33 @@
 // Perfil de un participante, al pulsar en su nombre en «Participantes»: su foto, su nombre, su papel, desde cuándo
-// está y si ha votado. Desde aquí se le denuncia (por su nombre, su foto o su comportamiento); quien administra la
-// votación ve además si ya le han denunciado. Lo propio lleva a «Tu perfil».
+// está, si ha votado y las otras votaciones en las que coincidís. Desde aquí se le denuncia (por su nombre, su foto o
+// su comportamiento); quien administra la votación ve además sus denuncias. Lo propio lleva a «Tu perfil».
 import { useRef } from "react";
 import * as D from "../lib/dates";
-import { REPORT_REASONS, ROLE_NAME, roleOf, type Person } from "../lib/model";
-import type { PersonReport, Poll, Vote } from "../lib/types";
+import { REPORT_REASONS, ROLE_NAME, TYPE, roleOf, type Person } from "../lib/model";
+import type { PersonReport, Poll, PollType, ReportReason, Vote } from "../lib/types";
 import { Avatar } from "./Avatar";
 import { Dialog } from "./Dialog";
 import { Icon } from "./Icon";
+import { Spinner } from "./Loading";
 
-export function PersonDialog({ poll, person, vote, me, reports, canReport, onReport, onClose }: {
+/** Votaciones en común que se enseñan como mucho (el resto, «y N más»). */
+const SHARED_SHOWN = 5;
+
+export interface SharedPoll {
+  id: string;
+  title: string;
+  type?: PollType;
+}
+
+export function PersonDialog({ poll, person, vote, me, reports, shared, canReport, onReport, onClose }: {
   poll: Poll;
   person: Person;
   vote: Vote | undefined;
   me: string;
   /** Denuncias que tiene (solo se pasan a quien administra la votación). */
   reports: PersonReport[];
+  /** Otras votaciones de tu lista en las que también está (null mientras se buscan). No se pasa en el propio. */
+  shared?: SharedPoll[] | null;
   /** Puede denunciar: está dentro de la votación (aceptado). */
   canReport: boolean;
   onReport: () => void;
@@ -27,7 +39,11 @@ export function PersonDialog({ poll, person, vote, me, reports, canReport, onRep
   const voted = poll.anonymous
     ? (person.total ? "Ha votado" : "Aún no ha votado")
     : person.total ? `Ha elegido ${person.total} ${person.total === 1 ? "opción" : "opciones"}` : "Aún no ha votado";
-  const reasons = [...new Set(reports.map(r => REPORT_REASONS[r.reason]))].join(" · ");
+  // Denuncias agrupadas por motivo, con sus comentarios.
+  const byReason = new Map<ReportReason, string[]>();
+  for (const r of reports) byReason.set(r.reason, [...(byReason.get(r.reason) || []), ...(r.comment ? [r.comment] : [])]);
+  const counts = new Map<ReportReason, number>();
+  for (const r of reports) counts.set(r.reason, (counts.get(r.reason) || 0) + 1);
 
   return (
     <Dialog className="dialog person-card" onClose={onClose} onOpen={d => { dlg.current = d; }}>
@@ -40,14 +56,47 @@ export function PersonDialog({ poll, person, vote, me, reports, canReport, onRep
         </div>
       </div>
       <ul className="person-card__facts">
-        {vote?.joinedAt ? <li>Entró el {D.fmtDayPlain(D.keyOfDate(new Date(vote.joinedAt)))}</li> : null}
-        <li>{voted}</li>
+        {vote?.joinedAt ? <li className="person-card__fact"><Icon name="days" /> Entró el {D.fmtDayPlain(D.keyOfDate(new Date(vote.joinedAt)))}</li> : null}
+        <li className="person-card__fact"><Icon name={person.total ? "check" : "hourglass"} /> {voted}</li>
       </ul>
+      {shared !== undefined && (
+        <section className="person-card__section" aria-labelledby="person-shared">
+          <h3 className="person-card__label" id="person-shared">Votaciones en común</h3>
+          {shared === null
+            ? <p className="person-card__empty" role="status"><Spinner /> Buscando…</p>
+            : shared.length
+              ? <>
+                <ul className="person-card__polls">
+                  {shared.slice(0, SHARED_SHOWN).map(s => (
+                    <li key={s.id}>
+                      <a className="person-card__poll" href={`#/v/${s.id}`} onClick={() => dlg.current?.close()}>
+                        <Icon name={(s.type && TYPE[s.type]?.icon) || "vote"} /> <span className="person-card__poll-title">{s.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {shared.length > SHARED_SHOWN && <p className="person-card__empty">y {shared.length - SHARED_SHOWN} más</p>}
+              </>
+              : <p className="person-card__empty">No coincidís en ninguna otra votación.</p>}
+        </section>
+      )}
       {reports.length > 0 && (
-        <p className="person-card__reports">
-          <Icon name="flag" /> {reports.length === 1 ? "Le han denunciado una vez" : `Le han denunciado ${reports.length} veces`}: {reasons}.
-          Si hace falta, puedes expulsar a {person.name} en «Gestionar participantes».
-        </p>
+        <div className="person-card__reports">
+          <p className="person-card__reports-title">
+            <Icon name="flag" /> <strong>{reports.length === 1 ? "Le han denunciado una vez" : `Le han denunciado ${reports.length} veces`}</strong>
+          </p>
+          <ul className="person-card__reasons">
+            {[...byReason].map(([reason, comments]) => (
+              <li key={reason}>
+                <strong>{REPORT_REASONS[reason]}</strong>{(counts.get(reason) || 0) > 1 && ` (${counts.get(reason)})`}
+                {comments.map((c, i) => <span key={i} className="person-card__comment">«{c}»</span>)}
+              </li>
+            ))}
+          </ul>
+          <p className="person-card__reports-hint">
+            Si hace falta, puedes expulsar a {person.name} en «Gestionar participantes».
+          </p>
+        </div>
       )}
       <div className="dialog__actions">
         {own

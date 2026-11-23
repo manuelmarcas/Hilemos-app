@@ -7,8 +7,8 @@ que hay que hacer a mano.
   Casi todo se comprobó con el recorrido automático y el resto a mano con capturas.
 - **[ ]** pendiente. Al lado se dice por qué: necesita una segunda cuenta, un correo real, otro móvil, o ha fallado.
 
-Resultado de la última pasada del recorrido automático (23 de noviembre de 2026): **60 de 60 bien** en el móvil y
-**49 de 49** en Chrome (`recorrido.mjs`), con los cinco tipos de votación.
+Resultado de la última pasada del recorrido automático (23 de noviembre de 2026): **63 de 63 bien** en el móvil y
+**52 de 52** en Chrome (`recorrido.mjs`), con los cinco tipos de votación.
 
 ## Cómo pasar el recorrido automático
 
@@ -107,11 +107,11 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Semanas: crear y votar con dos personas; empate, desempate y resultado definitivo.
 - [x] Meses (pasando de un año al siguiente): crear, votar con dos personas y editar el título con aviso en el chat.
 - [x] Expulsar a quien votó (en una de horas) borra sus votos; al readmitirle vuelve sin ellos.
-- [x] Participantes: la flecha y los números despliegan los votos; el nombre abre el perfil. *En Chrome (modo demo).*
-- [x] Denunciar a una persona desde su perfil; quien administra la ve marcada y no se puede repetir. *En Chrome (modo
+- [x] Participantes: la flecha y el resto de la fila despliegan los votos; el nombre abre el perfil, con las
+      votaciones en común.
+- [x] Denunciar a una persona desde su perfil, con el dedo; quien administra la ve marcada y no se repite. *Y en Chrome (modo
       demo) y las reglas en el emulador (28 casos).*
-- [x] «Descargar mis datos» en «Tu perfil» (archivo JSON). *En Chrome (modo demo).*
-- [ ] Lo mismo en el móvil: tocar la flecha (es pequeña) y descargar los datos con el menú de compartir.
+- [x] «Descargar mis datos» en «Tu perfil» (archivo JSON; en la app, con el menú de compartir del sistema).
 - [ ] Recordatorios y plazo de cierre. *Funciones premium; sin probar.*
 
 ## 5. Integración con Android

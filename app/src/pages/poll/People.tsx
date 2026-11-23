@@ -107,12 +107,16 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
               </Fragment>
             );
           }
-          // La flecha despliega los votos; los números también (con el dedo, la flecha sola es poco sitio). La flecha
-          // es el botón para el teclado y los lectores de pantalla; el clic en los números es un atajo.
+          // Pulsar en cualquier parte de la fila, menos en el nombre (que abre el perfil), despliega los votos: con el
+          // dedo, la flecha sola es poco sitio. La flecha es el botón para el teclado y los lectores de pantalla; el
+          // clic en el resto de la fila es un atajo (y la fila se sombrea con el ratón encima).
           return (
             <Fragment key={p.uid}>
               <tr className={bem("people-table__row", { open, toggles: p.total > 0 })}
-                onClick={e => { if (p.total && (e.target as HTMLElement).closest(".people-table__num")) onToggle(p.uid); }}>
+                onClick={e => {
+                  const t = e.target as HTMLElement;
+                  if (p.total && !t.closest(".person__btn, .person-row__caret")) onToggle(p.uid);
+                }}>
                 <td>
                   <span className="person-row">
                     {p.total

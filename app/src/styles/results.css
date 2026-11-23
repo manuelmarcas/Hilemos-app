@@ -105,6 +105,7 @@
 .person-row__caret[aria-expanded="true"]{transform:rotate(90deg)}
 .person-row__caret--none{cursor:default}
 .people-table__row--toggles{cursor:pointer}
+@media (hover:hover){.people-table__row--toggles:hover{background:var(--hover)}}
 .people-table__flag{--icon-size:13px;--icon-color:var(--danger);display:inline-flex;margin-left:4px;vertical-align:-2px}
 .people-table__row--open td{border-bottom-color:transparent}
 .people-table__votes td{padding:0 6px 10px 44px}

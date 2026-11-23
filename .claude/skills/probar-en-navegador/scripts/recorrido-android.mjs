@@ -400,6 +400,39 @@ await check("Ver qué ha votado alguien (tabla desplegable)", async () => {
   await ana.locator("#ptabbtn-people").click();
   await ana.locator(".people-table__row:has-text('Bea') .person-row__caret").click();
   await ana.waitForSelector(".people-table__votes .person-votes__chip");
+  // Con el dedo: tocar los números de la fila la pliega.
+  await tap(ana.locator(".people-table__row:has-text('Bea') .people-table__num").first());
+  await ana.waitForSelector(".people-table__votes", { state: "detached" });
+});
+const actions = p => p.locator("dialog[open] .dialog__actions");
+await check("Perfil de un participante al tocar su nombre", async () => {
+  await tap(ana.getByRole("button", { name: "Ver el perfil de Bea" }));
+  await ana.waitForSelector("dialog[open].person-card");
+  const t = (await dialogText(ana)).replace(/\s+/g, " ");
+  expect(/Ha elegido \d+ opci/.test(t) && /votaciones en común/i.test(t), "perfil: " + t);
+  fs.writeFileSync(`${OUT}/perfil.png`, adbBuf("exec-out", "screencap", "-p"));
+  await tap(btn(actions(ana), "Cerrar"));
+  await ana.waitForSelector("dialog[open]", { state: "detached" });
+  return t;
+});
+await check("Denunciar a una persona desde su perfil (con el dedo)", async () => {
+  await tap(ana.getByRole("button", { name: "Ver el perfil de Bea" }));
+  await tap(btn(actions(ana), "Denunciar"));
+  await ana.locator("dialog[open] h2", { hasText: "Denunciar a Bea" }).waitFor();
+  await tap(ana.locator("dialog[open] label", { hasText: "Spam o publicidad" }));
+  expect(await ana.getByLabel("Spam o publicidad").isChecked(), "el motivo no se marca");
+  await tap(btn(ana, "Enviar denuncia"));
+  await ana.waitForFunction(() => document.querySelector("#toast")?.textContent?.includes("Denuncia enviada"));
+  await ana.locator(".people-table__row:has-text('Bea') .people-table__flag").waitFor();
+  await tap(ana.getByRole("button", { name: "Ver el perfil de Bea" }));
+  const t = await dialogText(ana);
+  expect(t.includes("Le han denunciado una vez") && t.includes("Spam o publicidad"), "el perfil no la dice: " + t);
+  fs.writeFileSync(`${OUT}/perfil-denunciado.png`, adbBuf("exec-out", "screencap", "-p"));
+  await tap(btn(actions(ana), "Cerrar"));
+});
+await check("Descargar mis datos: menú de compartir del sistema", async () => {
+  await go(ana, "#/perfil");
+  return await systemShare(() => tap(btn(ana, "Descargar mis datos")));
 });
 
 // ======================= Desempate =======================

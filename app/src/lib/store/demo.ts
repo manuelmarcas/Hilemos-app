@@ -1,7 +1,7 @@
 // Almacén de demostración: la misma interfaz que el de Firebase (Store, en types.ts), pero con los datos en el
 // localStorage de este navegador. Se usa con ?demo en la dirección (o si config.ts no tiene la configuración de
 // Firebase). Hace las mismas comprobaciones que las reglas de Firestore, para que se comporte igual.
-import { CHAT_LIMIT, MAX_CHAT, chatSince, ghostName, hasLimit, isAdmin, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
+import { CHAT_LIMIT, MAX_CHAT, chatSince, ghostName, hasLimit, isAdmin, isPresent, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { slugify } from "../util";
 import type {
   AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PersonReport, PollAccess, PollData, Profile, Store, Vote, Votes,
@@ -348,6 +348,11 @@ export function createDemoStore(): Store {
       const p = db.polls[id];
       cb(p && isAdmin(p, me()) ? Object.entries(db.personReports?.[id] || {}).map(([rid, r]) => ({ id: rid, ...clone(r) })) : []);
     }),
+
+    async sharedPolls(uid, pollIds) {
+      const db = load();
+      return pollIds.filter(pid => db.polls[pid] && isPresent(db.votes[pid]?.[uid]));
+    },
 
     // ---------- Descargar mis datos ----------
     async exportMyData(u) {

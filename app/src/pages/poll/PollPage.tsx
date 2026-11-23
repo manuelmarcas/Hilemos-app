@@ -32,6 +32,9 @@ import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
 import { Loading } from "../../components/Loading";
 
+/** Votaciones de tu lista en las que se mira si coincides con alguien («Votaciones en común» de su perfil). */
+const SHARED_LOOKUP = 40;
+
 export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
@@ -95,6 +98,25 @@ export function PollPage({ id }: { id: string }) {
       e => setStatus(errMsg(e)));
   }, [store, id, user.uid, ownOnly]);
   useEffect(() => { if (library.error) setStatus(errMsg(library.error)); }, [library.error]);
+  // «Votaciones en común» del perfil abierto: de las de tu lista (las 40 más recientes), en cuáles está también.
+  // Una lectura por votación, así que se guarda mientras dura la pantalla.
+  const libRef = useRef(lib);
+  libRef.current = lib;
+  const sharedCache = useRef(new Map<string, string[]>());
+  const [sharedIds, setSharedIds] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!profileUid || profileUid === user.uid) return;
+    const cached = sharedCache.current.get(profileUid);
+    if (cached) { setSharedIds(cached); return; }
+    setSharedIds(null);
+    const ids = Object.entries(libRef.current?.polls || {}).filter(([pid]) => pid !== id)
+      .sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0)).slice(0, SHARED_LOOKUP).map(([pid]) => pid);
+    let alive = true;
+    store.sharedPolls(profileUid, ids)
+      .then(r => { sharedCache.current.set(profileUid, r); if (alive) setSharedIds(r); })
+      .catch(() => { if (alive) setSharedIds([]); });
+    return () => { alive = false; };
+  }, [store, id, user.uid, profileUid]);
   // Denuncias de personas: solo las lee quien administra (se marcan en «Participantes» y en su perfil).
   const amAdmin = !!poll && isAdmin(poll, user.uid);
   useEffect(() => {
@@ -592,7 +614,7 @@ export function PollPage({ id }: { id: string }) {
         {present.length > 0 && (
           <p className="people-panel__hint">
             {!poll.anonymous && T.people.some(p => p.total)
-              ? "Pulsa en un nombre para ver su perfil, y en la flecha o en los números para ver qué ha votado."
+              ? "Pulsa en un nombre para ver su perfil, y en el resto de la fila para ver qué ha votado."
               : "Pulsa en un nombre para ver su perfil."}
           </p>
         )}
@@ -624,6 +646,8 @@ export function PollPage({ id }: { id: string }) {
       {profilePerson && (
         <PersonDialog poll={poll} person={profilePerson} vote={votes[profilePerson.uid]} me={user.uid}
           reports={admin ? reportsOf.get(profilePerson.uid) || [] : []} canReport={canChat}
+          shared={profilePerson.uid === user.uid ? undefined
+            : sharedIds && sharedIds.map(pid => ({ id: pid, title: lib?.polls[pid]?.title || "Votación", type: lib?.polls[pid]?.type }))}
           onReport={() => { setReportUid(profilePerson.uid); setProfileUid(null); }} onClose={() => setProfileUid(null)} />
       )}
       {reportPerson && (

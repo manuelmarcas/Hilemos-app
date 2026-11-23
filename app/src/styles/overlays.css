@@ -112,12 +112,28 @@
 .person-card__id{min-width:0}
 .person-card__name{padding-right:0;overflow-wrap:anywhere}
 .person-card__role{margin:4px 0 0;color:var(--muted);font-size:.9rem}
-.person-card__facts{display:grid;gap:4px;margin:16px 0 0;padding:0;list-style:none;font-size:.94rem}
-.person-card__reports{
-  --icon-size:14px;
-  margin:14px 0 0;padding:8px 12px;border-radius:var(--radius-sm);
-  background:var(--danger-soft);color:var(--danger);font-size:.86rem;line-height:1.45;
+.person-card__facts{display:grid;gap:6px;margin:16px 0 0;padding:0;list-style:none;font-size:.94rem}
+.person-card__fact{--icon-size:17px;--icon-color:var(--muted);display:flex;align-items:center;gap:8px}
+.person-card__section{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.person-card__label{margin:0 0 8px;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.person-card__polls{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.person-card__poll{
+  --icon-size:17px;--icon-color:var(--brand);
+  display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius-sm);
+  background:var(--soft);color:var(--ink);font-size:.92rem;font-weight:600;text-decoration:none;
 }
+.person-card__poll:hover{background:var(--hover)}
+.person-card__poll-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person-card__empty{display:flex;align-items:center;gap:8px;margin:6px 0 0;color:var(--muted);font-size:.88rem}
+.person-card__reports{
+  --icon-size:15px;
+  margin:16px 0 0;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--danger-soft);color:var(--danger);font-size:.88rem;line-height:1.45;
+}
+.person-card__reports-title{display:flex;align-items:center;gap:6px;margin:0}
+.person-card__reasons{margin:6px 0 0;padding-left:22px}
+.person-card__comment{display:block;color:var(--ink);font-style:italic;overflow-wrap:anywhere}
+.person-card__reports-hint{margin:8px 0 0;padding-top:8px;border-top:1px solid color-mix(in srgb, var(--danger) 25%, transparent);color:var(--ink)}
 /* «Exportar resultados»: un botón grande por formato, con lo que trae */
 .export-dialog__list{display:grid;gap:8px}
 .export-dialog__option{

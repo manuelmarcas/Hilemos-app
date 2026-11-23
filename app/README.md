@@ -276,7 +276,9 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   la denuncia. Sin configurar, la denuncia se queda guardada y se ve en la consola de Firebase. Los correos llevan el
   asunto «[Hilemos] Denuncia en «…»», para filtrarlos en Gmail.
 - **Perfil de un participante y denunciar a una persona**: en «Participantes», el nombre abre `PersonDialog` (foto,
-  papel, desde cuándo está y si ha votado) y la flecha o los números despliegan sus votos. Desde el perfil se denuncia
+  papel, desde cuándo está, si ha votado y las «Votaciones en común»: de las 40 más recientes de tu lista, en cuáles
+  está también, con `sharedPolls`, una lectura por votación y guardado mientras dura la pantalla) y el resto de la
+  fila (la flecha, los números o el hueco) despliega sus votos. Desde el perfil se denuncia
   a la persona (`ReportDialog`, el mismo que el de mensajes) en `polls/{id}/personReports/{targetUid}_{uid}`, con una
   copia de su nombre y su foto; las reglas comprueban que son los de su voto, que sigue en la votación (sin `gone`) y
   que no es uno mismo. Quien administra ve la bandera junto al nombre y las denuncias en su perfil

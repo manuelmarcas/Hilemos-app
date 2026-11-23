@@ -17,7 +17,7 @@
 import type { FirebaseOptions } from "firebase/app";
 import type { AuthCredential, User as FbUser } from "firebase/auth";
 import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySnapshot, WriteBatch } from "firebase/firestore";
-import { CHAT_LIMIT, chatSince, ghostName, hasLimit, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
+import { CHAT_LIMIT, chatSince, ghostName, hasLimit, isPresent, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
 import type {
   AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, MyPollData, PersonReport, Poll, PollAccess, PollData, Profile,
@@ -469,6 +469,14 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
     watchPersonReports: (id, cb, onErr) => F.onSnapshot(personReportsCol(id),
       snap => cb(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<PersonReport, "id">) }))), onErr),
+
+    async sharedPolls(uid, pollIds) {
+      const found = await Promise.all(pollIds.map(async pid => {
+        const s = await F.getDoc(F.doc(votesCol(pid), uid)).catch(() => null);
+        return s?.exists() && isPresent(s.data() as Vote) ? pid : null;
+      }));
+      return found.filter((x): x is string => !!x);
+    },
 
     // ---------- Descargar mis datos ----------
     // Una lectura de cada cosa; el chat se pide «desde» que entró, como al salir, y se quedan los mensajes propios.

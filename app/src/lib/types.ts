@@ -363,6 +363,12 @@ export interface Store {
   /** Denuncias de personas de la votación (solo quienes la administran). */
   watchPersonReports(id: string, cb: (reports: PersonReport[]) => void, onErr?: ErrorCb): Unsubscribe;
 
+  /**
+   * De las votaciones `pollIds` (las de la lista de quien pregunta), en cuáles está también `uid` (aceptado y sin
+   * irse), para «Votaciones en común» en su perfil. Una lectura por votación; las que no se pueden leer no cuentan.
+   */
+  sharedPolls(uid: string, pollIds: string[]): Promise<string[]>;
+
   /** Todo lo que se guarda de la cuenta (perfil, lista, grupos, votos, mensajes y denuncias), para descargarlo. */
   exportMyData(user: AuthUser): Promise<MyData>;
 

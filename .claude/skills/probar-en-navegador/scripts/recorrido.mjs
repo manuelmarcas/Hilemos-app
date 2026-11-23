@@ -247,11 +247,17 @@ await check("Ver qué ha votado alguien (la flecha y los números lo despliegan)
   await ana.waitForSelector(".people-table__votes", { state: "detached" });
   await beaRow().locator(".people-table__num").first().click();
   await ana.waitForSelector(".people-table__votes .person-votes__chip");
+  // Pulsar en la fila fuera del nombre también lo pliega.
+  const box = await beaRow().locator("td").first().boundingBox();
+  await ana.mouse.click(box.x + box.width - 6, box.y + box.height / 2);
+  await ana.waitForSelector(".people-table__votes", { state: "detached" });
 });
 await check("Perfil de un participante (pulsar en su nombre)", async () => {
   await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
   const t = await dialogText(ana);
   expect(t.includes("Bea") && /Ha elegido \d+ opci/.test(t) && /Entró el \d+ de/.test(t), "perfil: " + t);
+  await ana.locator("dialog[open] .person-card__section").filter({ hasNotText: "Buscando" }).waitFor();
+  expect(/votaciones en común/i.test(await dialogText(ana)), "faltan las votaciones en común");
   expect(await btn(ana.locator("dialog[open]"), "Denunciar").count() === 1, "falta «Denunciar»");
   await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
   await ana.getByRole("button", { name: "Ver el perfil de Ana" }).click();
@@ -272,7 +278,7 @@ await check("Denunciar a una persona desde su perfil", async () => {
   await beaRow().locator(".people-table__flag").waitFor();
   await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
   const t = await dialogText(ana);
-  expect(t.includes("Le han denunciado una vez: Spam o publicidad"), "el perfil no dice la denuncia: " + t);
+  expect(t.includes("Le han denunciado una vez") && t.includes("Spam o publicidad") && t.includes("«Prueba»"), "el perfil no dice la denuncia: " + t);
   await btn(ana.locator("dialog[open]"), "Denunciar").click();
   await ana.getByLabel("Insultos, acoso u ofensas").check();
   await btn(ana, "Enviar denuncia").click();
