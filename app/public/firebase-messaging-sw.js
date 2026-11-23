@@ -14,6 +14,9 @@ self.addEventListener("push", event => {
   if (!d.title && !d.body) return;
   event.waitUntil(self.registration.showNotification(d.title || "Hilemos", {
     body: d.body || "",
+    // El icono de la app y, en la barra de estado de Android, el logotipo de trazo en blanco (lo tiñe el sistema).
+    icon: "/icon-192.png",
+    badge: "/badge-96.png",
     lang: "es",
     tag: d.tag || "votaciones",
     renotify: true,

@@ -97,7 +97,7 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] Perfil: cambiar el nombre (se ve arriba).
 - [x] Perfil: tema oscuro, claro y automático desde la app.
 - [x] Chat: quien entra después no ve los mensajes de antes; quien creó la votación lo ve todo. *En Chrome (modo
-      demo), con dos personas.*
+      demo), con dos personas, y las reglas de Firestore en el emulador (11 casos, también intentando saltárselo).*
 - [x] «Solo estos correos» con burbujas: Intro, coma, espacio, pegar una lista, un texto que no es correo (se marca),
       borrar y quitar. *En Chrome (modo demo).*
 - [ ] Votación de horas, de semanas y de meses. *El recorrido solo crea días y opciones.*
@@ -129,7 +129,9 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [ ] La primera vez que se entra en la app, pide permiso para los avisos y los activa. Si se dice que no, no vuelve
       a preguntar. *Hecho; falta probarlo con la app recién instalada.*
 - [ ] Activar los avisos en «Tu perfil → Preferencias → Avisos»: Android 13+ pide permiso.
-- [ ] Llega un aviso con la app cerrada cuando otra persona vota.
+- [x] Llega un aviso con la app cerrada cuando otra persona vota. *Comprobado a mano.*
+- [ ] El aviso de voto llega a todos los que están en la votación, no solo al creador. *Hecho; falta probarlo.*
+- [ ] El icono pequeño del aviso es el logotipo de trazo (calendario con cara). *Hecho; falta verlo en el móvil.*
 - [ ] Llega con la app abierta (aviso dentro de la app).
 - [ ] Al tocar el aviso se abre esa votación.
 - [ ] Avisos de cierre, desempate y fin del plazo.

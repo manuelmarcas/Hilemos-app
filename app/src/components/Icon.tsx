@@ -21,6 +21,14 @@ const ICONS = {
   close: <path d="M6 6l12 12M18 6 6 18" />,
   edit: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4" />,
 
+  // El logotipo con el trazo de los iconos: el calendario con la cabecera algo más arriba, para que quepa la cara
+  // (guiño, ojo abierto, sonrisa y lengua). Es también el icono de los avisos en Android (drawable/ic_stat_hilemos.xml).
+  logo: <>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" />
+    <path d="M8 3v4M16 3v4M3.5 9.5h17M7.6 13.4a1.2 1.2 0 0 1 2.4 0M7.6 15.6c2.3 2.2 6.5 2.2 8.8 0M14.6 16.9l1.1 1.3" />
+    {dot(15.2, 12.8)}
+  </>,
+
   // Tipos de votación
   hours: <><circle cx="12" cy="12.5" r="8.5" /><path d="M12 8v4.5l3 2M5 3.5 3 5.5M19 3.5l2 2" /></>,
   days: cal(<rect x="10" y="13" width="4" height="4" rx="1.2" fill="currentColor" stroke="none" />),
