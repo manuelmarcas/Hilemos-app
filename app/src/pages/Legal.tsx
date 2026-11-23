@@ -51,6 +51,10 @@ function Privacy() {
           privadas (solo para unos correos), también con qué correo entraste, que solo ve quien la administra.
         </li>
         <li><strong>El chat.</strong> Los mensajes que escribes en cada votación, con tu nombre y la hora.</li>
+        <li>
+          <strong>Las denuncias.</strong> Si denuncias un mensaje del chat: una copia del mensaje y de quién lo escribió,
+          tu nombre, el motivo y tu comentario, si lo escribes.
+        </li>
         <li><strong>Tu lista.</strong> Las votaciones de tu menú, tus grupos, las que has archivado y hasta dónde has leído cada chat.</li>
         <li>
           <strong>Los avisos, si los activas.</strong> Un identificador de tu dispositivo para poder mandarte avisos y
@@ -96,7 +100,8 @@ function Privacy() {
         </li>
         <li>
           <strong>Quien administra una votación</strong> ve además las solicitudes para entrar y, en las privadas, la
-          lista de correos permitidos y con qué correo entró cada participante, para poder quitarle el acceso.
+          lista de correos permitidos y con qué correo entró cada participante, para poder quitarle el acceso. También
+          ve las denuncias de los mensajes del chat, con quién las hizo, y puede ocultar mensajes.
         </li>
         <li>
           <strong>Google</strong>, como proveedor técnico: Hilemos funciona sobre Firebase (inicio de sesión, base de
@@ -190,8 +195,9 @@ function Terms() {
     <Section title="Lo que escribes">
       <p>
         Lo que escribes (títulos, descripciones, opciones y mensajes) es tuyo y eres responsable de ello. Para que la
-        app funcione, nos permites guardarlo y mostrarlo a las personas de cada votación. Podemos retirar contenido o
-        suspender cuentas que incumplan estas condiciones.
+        app funcione, nos permites guardarlo y mostrarlo a las personas de cada votación. Cualquiera puede denunciar un
+        mensaje del chat: quien administra la votación puede ocultarlo o expulsar a quien lo escribió, y nosotros
+        revisamos las denuncias. Podemos retirar contenido o suspender cuentas que incumplan estas condiciones.
       </p>
     </Section>
     <Section title="Las votaciones">

@@ -578,7 +578,7 @@ export function PollPage({ id }: { id: string }) {
       </section>
       </div>
       <div className="poll-tabs__panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
-        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} active={tab === "chat"}
+        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} admin={admin} active={tab === "chat"}
           seenAt={chatSeenAt} onUnread={setChatUnread} onSeen={markChatSeen} />
       </div>
       {votes[user.uid] && (

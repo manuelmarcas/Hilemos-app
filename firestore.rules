@@ -204,12 +204,23 @@ service cloud.firestore {
       match /chat/{msgId} {
         allow read: if signedIn() && chatMember() && sinceJoined();
         allow create: if signedIn() && chatMember() && validMsg();
+        allow update: if signedIn() && (ownName() || adminHides());
+
         // Solo el nombre de los mensajes propios: al salir de la votación (o eliminar la cuenta) pasan a un nombre
         // sin dueño. La app lo hace antes de borrar su voto, mientras aún es chatMember() para poder leerlos.
-        allow update: if signedIn() && resource.data.uid == request.auth.uid
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
-          && request.resource.data.name is string && request.resource.data.name.size() > 0
-          && request.resource.data.name.size() <= 100;
+        function ownName() {
+          return resource.data.uid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+            && request.resource.data.name is string && request.resource.data.name.size() > 0
+            && request.resource.data.name.size() <= 100;
+        }
+
+        // Quien administra la votación oculta un mensaje (hidden: true) o lo vuelve a mostrar (sin el campo).
+        function adminHides() {
+          return isAdminOf(pollData(pollId))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden'])
+            && (!('hidden' in request.resource.data) || request.resource.data.hidden == true);
+        }
 
         function sinceJoined() {
           return pollData(pollId).ownerUid == request.auth.uid
@@ -230,6 +241,34 @@ service cloud.firestore {
             && d.name is string && d.name.size() > 0 && d.name.size() <= 100
             && d.text is string && d.text.size() > 0 && d.text.size() <= 500
             && d.at is int;
+        }
+      }
+
+      // Denuncias de mensajes del chat: una por persona y mensaje ({msgId}_{uid}), de un mensaje ajeno que no sea un
+      // aviso y con su texto tal cual. Las leen quienes administran la votación (y las recibe quien modera Hilemos,
+      // con una Cloud Function); no se cambian. El creador las borra al eliminar la votación.
+      match /reports/{reportId} {
+        allow read: if signedIn() && isAdminOf(pollData(pollId));
+        allow create: if signedIn() && validReport();
+        allow delete: if signedIn() && pollData(pollId).ownerUid == request.auth.uid;
+
+        function validReport() {
+          let d = request.resource.data;
+          let msg = get(/databases/$(database)/documents/polls/$(pollId)/chat/$(d.msgId)).data;
+          return d.keys().hasOnly(['msgId', 'msgUid', 'msgName', 'msgText', 'by', 'byName', 'reason', 'comment', 'at'])
+            && d.msgId is string
+            && reportId == d.msgId + '_' + request.auth.uid
+            && d.by == request.auth.uid
+            && d.msgUid == msg.uid && d.msgUid != request.auth.uid
+            && d.msgText == msg.text
+            && msg.get('sys', false) == false
+            && d.msgName is string && d.msgName.size() <= 100
+            && d.byName is string && d.byName.size() <= 100
+            && d.reason in ['ofensivo', 'spam', 'inapropiado', 'otro']
+            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 300))
+            && d.at is int
+            && (pollData(pollId).ownerUid == request.auth.uid
+                || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null));
         }
       }
 

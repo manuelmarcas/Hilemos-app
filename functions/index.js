@@ -7,7 +7,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { setGlobalOptions } from "firebase-functions/v2";
-import { onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 
 initializeApp();
@@ -135,4 +135,59 @@ export const onDeadline = onSchedule({ schedule: `every ${DEADLINE_EVERY_MIN} mi
     url: pollUrl(d.id),
     tag: `state-${d.id}`,
   }, "state")));
+});
+
+// ---------- Moderación ----------
+
+const REASONS = {
+  ofensivo: "Insultos, acoso u ofensas",
+  spam: "Spam o publicidad",
+  inapropiado: "Contenido inapropiado o peligroso",
+  otro: "Otro motivo",
+};
+const CONSOLE = "https://console.firebase.google.com/project/votaciones-9bc95/firestore/data";
+
+/** Correo con Brevo (su API, sin dependencias). `from` tiene que ser un remitente verificado en Brevo. */
+async function sendMail(key, from, to, subject, text) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": key, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({ sender: { name: "Hilemos", email: from }, to: [{ email: to }], subject, textContent: text }),
+  });
+  if (!res.ok) console.error("No se pudo mandar el correo de la denuncia", res.status, await res.text());
+}
+
+// Denuncia de un mensaje del chat: se avisa a quien modera Hilemos. Lo que hay que avisar se configura en
+// config/moderation (solo lo lee el servidor): `uids` (avisos push a esas cuentas), `email` y `brevoKey` (un correo
+// con la denuncia). Sin configurar, la denuncia queda guardada y se ve en la consola de Firebase.
+export const onReport = onDocumentCreated("polls/{pollId}/reports/{reportId}", async event => {
+  const r = event.data?.data();
+  if (!r) return;
+  const { pollId, reportId } = event.params;
+  const [poll, cfg] = await Promise.all([db.doc(`polls/${pollId}`).get(), db.doc("config/moderation").get()]);
+  const title = poll.get("title") || "Votación";
+  const reason = REASONS[r.reason] || r.reason;
+  const tasks = [];
+  const uids = cfg.get("uids") || [];
+  if (uids.length) {
+    tasks.push(notify(uids, { title: "Denuncia en el chat", body: `«${title}»: ${reason}`, url: pollUrl(pollId), tag: `report-${pollId}` }, "reports"));
+  }
+  const email = cfg.get("email");
+  const key = cfg.get("brevoKey");
+  if (email && key) {
+    const text = [
+      `Han denunciado un mensaje del chat de «${title}».`,
+      "",
+      `Motivo: ${reason}`,
+      r.comment ? `Comentario: ${r.comment}` : null,
+      `Mensaje de ${r.msgName}: «${r.msgText}»`,
+      `Lo denuncia: ${r.byName}`,
+      "",
+      `Votación: ${pollUrl(pollId)}`,
+      `Denuncia en la consola: ${CONSOLE}/~2Fpolls~2F${pollId}~2Freports~2F${encodeURIComponent(reportId)}`,
+    ].filter(l => l !== null).join("\n");
+    tasks.push(sendMail(key, email, email, `Denuncia en «${title}»: ${reason}`, text));
+  }
+  if (!tasks.length) console.warn("Denuncia sin moderación configurada (config/moderation)", pollId, reportId);
+  await Promise.all(tasks);
 });

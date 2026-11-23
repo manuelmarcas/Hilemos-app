@@ -4,7 +4,7 @@
 // Voto `polls/{id}/votes/{uid}`: { name, photo, picks: ["<slot>|<opción>", ...], tb: { id, pick } }
 
 import * as D from "./dates";
-import type { MemberStatus, Poll, PollData, PollOption, PollType, Vote, Votes } from "./types";
+import type { ChatReport, MemberStatus, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
 import type { IconName } from "../components/Icon";
 
 export interface TypeInfo {
@@ -46,6 +46,22 @@ export const MAX_EMAILS = MAX_PEOPLE;
 export const MAX_ADMINS = 20;
 
 // ----- Chat -----
+/** Motivos para denunciar un mensaje, con su texto. */
+export const REPORT_REASONS: Record<ReportReason, string> = {
+  ofensivo: "Insultos, acoso u ofensas",
+  spam: "Spam o publicidad",
+  inapropiado: "Contenido inapropiado o peligroso",
+  otro: "Otro motivo",
+};
+/** Largo máximo del comentario de una denuncia (el mismo que validan las reglas). */
+export const MAX_REPORT_COMMENT = 300;
+/** Las denuncias agrupadas por mensaje (msgId → sus denuncias), para marcarlos a quien administra. */
+export function reportsByMessage(reports: ChatReport[]) {
+  const out = new Map<string, ChatReport[]>();
+  for (const r of reports) out.set(r.msgId, [...(out.get(r.msgId) || []), r]);
+  return out;
+}
+
 /** Mensajes que se traen de una votación: solo los últimos, que esto no es WhatsApp. */
 export const CHAT_LIMIT = 200;
 /** Longitud máxima de un mensaje (la misma que validan las reglas). */

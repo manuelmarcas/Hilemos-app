@@ -3,7 +3,7 @@
 // Firebase). Hace las mismas comprobaciones que las reglas de Firestore, para que se comporte igual.
 import { CHAT_LIMIT, MAX_CHAT, ghostName, hasLimit, isAdmin, keepsVotesOnLeave, pickHeir } from "../model";
 import { slugify } from "../util";
-import type { AuthUser, ChatMessage, Group, LibraryEntry, PollAccess, PollData, Profile, Store, Vote, Votes } from "../types";
+import type { AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PollAccess, PollData, Profile, Store, Vote, Votes } from "../types";
 
 interface DemoUserData {
   polls: Record<string, LibraryEntry>;
@@ -17,6 +17,8 @@ interface DemoDb {
   access?: Record<string, PollAccess>;
   /** Votaciones privadas: con qué correo entró cada participante (pollId → uid → correo). */
   emails?: Record<string, Record<string, string>>;
+  /** Denuncias de mensajes del chat (pollId → id → denuncia). */
+  reports?: Record<string, Record<string, Omit<ChatReport, "id">>>;
   chat?: Record<string, Record<string, Omit<ChatMessage, "id">>>;
 }
 
@@ -181,6 +183,7 @@ export function createDemoStore(): Store {
       delete db.votes[id];
       if (db.access) delete db.access[id];
       if (db.emails) delete db.emails[id];
+      if (db.reports) delete db.reports[id];
       delete lib(db, uid).polls[id];
       if (dropGroupId) delete lib(db, uid).groups[dropGroupId];
       write(db);
@@ -288,6 +291,35 @@ export function createDemoStore(): Store {
       const text = msg.text.trim();
       if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
       ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };
+      write(db);
+    },
+    // Como las reglas: una por persona y mensaje, de un mensaje ajeno (no un aviso) y con su texto tal cual.
+    async reportMessage(id, report) {
+      const db = load();
+      const p = db.polls[id];
+      const msg = db.chat?.[id]?.[report.msgId];
+      if (!p || !msg) throw fail("not-found");
+      const mine = db.votes[id]?.[me()];
+      if (report.by !== me() || msg.uid === me() || msg.sys || msg.text !== report.msgText) throw fail("permission-denied");
+      if (p.ownerUid !== me() && (!mine || mine.status)) throw fail("permission-denied");
+      const rid = `${report.msgId}_${report.by}`;
+      const all = ((db.reports ||= {})[id] ||= {});
+      if (all[rid]) throw Object.assign(new Error("ya-denunciado"), { code: "already-exists" });
+      all[rid] = clone(report);
+      write(db);
+    },
+    watchReports: (id, cb) => watch(() => {
+      const db = load();
+      const p = db.polls[id];
+      cb(p && isAdmin(p, me()) ? Object.entries(db.reports?.[id] || {}).map(([rid, r]) => ({ id: rid, ...clone(r) })) : []);
+    }),
+    async setMessageHidden(id, msgId, hidden) {
+      const db = load();
+      const p = db.polls[id];
+      const msg = db.chat?.[id]?.[msgId];
+      if (!p || !msg) throw fail("not-found");
+      if (!isAdmin(p, me())) throw fail("permission-denied");
+      if (hidden) msg.hidden = true; else delete msg.hidden;
       write(db);
     },
 

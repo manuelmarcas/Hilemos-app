@@ -2,10 +2,12 @@
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as D from "../lib/dates";
-import { MAX_CHAT, chatSince, isPresent } from "../lib/model";
-import type { ChatMessage, Poll, Votes } from "../lib/types";
-import { cls, errMsg } from "../lib/util";
+import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage } from "../lib/model";
+import type { ChatMessage, ChatReport, Poll, ReportReason, Votes } from "../lib/types";
+import { bem, cls, errMsg } from "../lib/util";
 import { useSession } from "../state/session";
+import { useUi } from "../state/ui";
+import { ReportDialog } from "./ReportDialog";
 import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
 import { Icon } from "./Icon";
@@ -18,12 +20,19 @@ function fmtWhen(at: number) {
   return key === D.todayKey() ? hhmm : `${D.fmtDayShort(key)}, ${hhmm}`;
 }
 
-export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSeen }: {
-  poll: Poll; id: string; votes: Votes; canWrite: boolean; active: boolean;
-  seenAt: number; onUnread: (n: number) => void; onSeen: (at: number) => void;
+export function Chat({ poll, id, votes, canWrite, admin, active, seenAt, onUnread, onSeen }: {
+  poll: Poll; id: string; votes: Votes;
+  /** Puede escribir (y denunciar mensajes): está dentro de la votación. */
+  canWrite: boolean;
+  /** Administra la votación: ve qué mensajes se han denunciado y puede ocultarlos. */
+  admin: boolean;
+  active: boolean; seenAt: number; onUnread: (n: number) => void; onSeen: (at: number) => void;
 }) {
   const { store, user } = useSession();
+  const { toast } = useUi();
   const [msgs, setMsgs] = useState<ChatMessage[] | null>(null);
+  const [reports, setReports] = useState<Map<string, ChatReport[]>>(() => new Map());
+  const [reporting, setReporting] = useState<{ msg: ChatMessage; name: string } | null>(null);
   const [text, setText] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -35,6 +44,12 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
   const since = chatSince(poll, user.uid, votes[user.uid]);
   useEffect(() => store.watchChat(id, since, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id, since]);
+
+  // Las denuncias solo las ve quien administra la votación.
+  useEffect(() => {
+    if (!admin) { setReports(new Map()); return; }
+    return store.watchReports(id, r => setReports(reportsByMessage(r)), () => setReports(new Map()));
+  }, [store, id, admin]);
 
   const latestAt = msgs ? msgs.reduce((max, m) => Math.max(max, m.at), 0) : 0;
 
@@ -70,6 +85,23 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
     field.current?.focus();
   }
 
+  const report = (msg: ChatMessage, name: string) => async (reason: ReportReason, comment: string) => {
+    await store.reportMessage(id, {
+      msgId: msg.id, msgUid: msg.uid, msgName: name, msgText: msg.text, by: user.uid, byName: user.name,
+      reason, ...(comment ? { comment: comment.slice(0, MAX_REPORT_COMMENT) } : {}), at: Date.now(),
+    });
+    toast("Denuncia enviada. Gracias por avisar");
+  };
+
+  const setHidden = async (msg: ChatMessage, hidden: boolean) => {
+    try {
+      await store.setMessageHidden(id, msg.id, hidden);
+      toast(hidden ? "Mensaje ocultado" : "Mensaje visible otra vez");
+    } catch (err) {
+      setStatus("No se pudo cambiar el mensaje. " + errMsg(err));
+    }
+  };
+
   return (
     <section className="chat">
       <p className="chat__note">
@@ -102,15 +134,39 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
                     </div>
                   );
                 }
+                // Oculto por quien administra: los demás ven un aviso; quien administra, el texto apagado.
+                const hidden = !!m.hidden;
+                const flagged = reports.get(m.id) || [];
+                const reasons = [...new Set(flagged.map(r => REPORT_REASONS[r.reason]))].join(" · ");
                 return (
                   <div key={m.id} className={cls("chat__msg", own && "chat__msg--own")}>
                     <Avatar name={name} photo={own ? user.photo : v?.photo} size={28} seed={m.uid} />
-                    <div className="chat__body">
+                    <div className={bem("chat__body", { hidden })}>
                       <div className="chat__head">
                         <span className="chat__name">{own ? "Tú" : name}</span>
                         <span className="chat__when">{fmtWhen(m.at)}</span>
+                        {admin && flagged.length > 0 && (
+                          <span className="chat__flag" data-tip={reasons}>
+                            <Icon name="flag" /> {flagged.length === 1 ? "Denunciado" : `Denunciado ×${flagged.length}`}
+                          </span>
+                        )}
+                        <span className="chat__tools">
+                          {canWrite && !own && !hidden && (
+                            <button type="button" className="chat__tool" aria-label={`Denunciar mensaje de ${name}`} data-tip="Denunciar mensaje"
+                              onClick={() => setReporting({ msg: m, name })}><Icon name="flag" /></button>
+                          )}
+                          {admin && (
+                            <button type="button" className="chat__tool" aria-label={hidden ? "Volver a mostrar el mensaje" : "Ocultar el mensaje"}
+                              data-tip={hidden ? "Volver a mostrar" : "Ocultar a todos"} onClick={() => setHidden(m, !hidden)}>
+                              <Icon name={hidden ? "eye" : "eyeOff"} />
+                            </button>
+                          )}
+                        </span>
                       </div>
-                      <p className="chat__text">{m.text}</p>
+                      {hidden && !admin
+                        ? <p className="chat__text chat__text--hidden">Mensaje ocultado por quien administra la votación.</p>
+                        : <p className={bem("chat__text", { hidden })}>{m.text}</p>}
+                      {hidden && admin && <p className="chat__hidden-note">Oculto: los demás no lo ven.</p>}
                     </div>
                   </div>
                 );
@@ -130,6 +186,10 @@ export function Chat({ poll, id, votes, canWrite, active, seenAt, onUnread, onSe
         )}
       </div>
       <div className="status" role="alert">{status}</div>
+      {reporting && (
+        <ReportDialog msg={reporting.msg} name={reporting.name} onSend={report(reporting.msg, reporting.name)}
+          onClose={() => setReporting(null)} />
+      )}
     </section>
   );
 }

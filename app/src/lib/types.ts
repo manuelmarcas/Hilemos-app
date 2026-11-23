@@ -120,6 +120,28 @@ export interface ChatMessage {
   /** Aviso automático de un cambio en la votación (lo escribe un administrador al editarla). `text` va sin sujeto
    *  («ha añadido el …»): se pinta detrás del nombre de quien lo hizo. */
   sys?: boolean;
+  /** Ocultado por quien administra la votación: los demás ven un aviso en su lugar (el texto sigue guardado). */
+  hidden?: boolean;
+}
+
+export type ReportReason = "ofensivo" | "spam" | "inapropiado" | "otro";
+
+/**
+ * Documento `polls/{id}/reports/{msgId}_{uid}`: la denuncia de un mensaje del chat (una por persona y mensaje). Copia
+ * el mensaje, por si se oculta o cambia de nombre. La leen quienes administran la votación y la recibe quien modera
+ * Hilemos (Cloud Function onReport).
+ */
+export interface ChatReport {
+  id: string;
+  msgId: string;
+  msgUid: string;
+  msgName: string;
+  msgText: string;
+  by: string;
+  byName: string;
+  reason: ReportReason;
+  comment?: string;
+  at: number;
 }
 
 export type MemberStatus = "accepted" | "pending" | "rejected";
@@ -287,6 +309,12 @@ export interface Store {
   /** Últimos mensajes del chat; con `since`, solo los escritos desde entonces (ver chatSince en model.ts). */
   watchChat(id: string, since: number, cb: (msgs: ChatMessage[]) => void, onErr?: ErrorCb): Unsubscribe;
   sendChat(id: string, msg: Omit<ChatMessage, "id">): Promise<void>;
+  /** Denuncia un mensaje ajeno (una vez por mensaje). */
+  reportMessage(id: string, report: Omit<ChatReport, "id">): Promise<void>;
+  /** Denuncias de la votación (solo quienes la administran). */
+  watchReports(id: string, cb: (reports: ChatReport[]) => void, onErr?: ErrorCb): Unsubscribe;
+  /** Oculta un mensaje o lo vuelve a mostrar (solo quienes administran la votación). */
+  setMessageHidden(id: string, msgId: string, hidden: boolean): Promise<void>;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;

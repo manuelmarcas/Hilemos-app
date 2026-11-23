@@ -7,6 +7,7 @@
 //   polls/{pollId}/chat/{msgId}        mensaje del chat (ChatMessage)
 //   polls/{pollId}/private/access      correos permitidos de una votación privada (solo administradores)
 //   polls/{pollId}/emails/{uid}        con qué correo entró cada participante de una privada (solo administradores)
+//   polls/{pollId}/reports/{id}        denuncias de mensajes del chat (solo administradores; ChatReport)
 //   users/{uid}                        perfil (Profile)
 //   users/{uid}/polls/{pollId}         colección del usuario (LibraryEntry)
 //   users/{uid}/groups/{groupId}       grupos del usuario (Group)
@@ -17,7 +18,7 @@ import type { AuthCredential, User as FbUser } from "firebase/auth";
 import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySnapshot, WriteBatch } from "firebase/firestore";
 import { CHAT_LIMIT, chatSince, ghostName, hasLimit, keepsVotesOnLeave, pickHeir } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
-import type { AuthUser, ChatMessage, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote } from "../types";
+import type { AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, Poll, PollAccess, PollData, Profile, Store, Vote } from "../types";
 import { isKeyEmail, newAccessKey, parseAccessKey } from "./accessKey";
 
 /** Correo al que se mandó el enlace de entrada: al abrirlo en el mismo dispositivo no hay que volver a escribirlo. */
@@ -53,6 +54,7 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   const chatCol = (id: string) => F.collection(db, "polls", id, "chat");
   const accessRef = (id: string) => F.doc(db, "polls", id, "private", "access");
   const emailsCol = (id: string) => F.collection(db, "polls", id, "emails");
+  const reportsCol = (id: string) => F.collection(db, "polls", id, "reports");
   const userRef = (uid: string) => F.doc(db, "users", uid);
   const libCol = (uid: string) => F.collection(db, "users", uid, "polls");
   const groupsCol = (uid: string) => F.collection(db, "users", uid, "groups");
@@ -84,8 +86,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
   async function removePoll(id: string, extra?: (b: WriteBatch) => void) {
     const votes = await F.getDocs(votesCol(id));
     await commitIn(votes.docs.map(d => d.ref), (b, r) => b.delete(r));
-    const emails = await F.getDocs(emailsCol(id)).catch(() => null);
-    if (emails) await commitIn(emails.docs.map(d => d.ref), (b, r) => b.delete(r));
+    for (const col of [emailsCol(id), reportsCol(id)]) {
+      const s = await F.getDocs(col).catch(() => null);
+      if (s) await commitIn(s.docs.map(d => d.ref), (b, r) => b.delete(r));
+    }
     const b = F.writeBatch(db);
     b.delete(accessRef(id));
     b.delete(pollRef(id));
@@ -443,6 +447,15 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
         cb(out.reverse());
       }, onErr),
     async sendChat(id, msg) { await F.addDoc(chatCol(id), msg); },
+    // Una por persona y mensaje: el id lo dice, y las reglas no dejan cambiarla después.
+    async reportMessage(id, report) {
+      const ref = F.doc(reportsCol(id), `${report.msgId}_${report.by}`);
+      if ((await F.getDoc(ref).catch(() => null))?.exists()) throw Object.assign(new Error("ya-denunciado"), { code: "already-exists" });
+      await F.setDoc(ref, report);
+    },
+    watchReports: (id, cb, onErr) => F.onSnapshot(reportsCol(id),
+      snap => cb(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<ChatReport, "id">) }))), onErr),
+    setMessageHidden: (id, msgId, hidden) => F.updateDoc(F.doc(chatCol(id), msgId), { hidden: hidden ? true : F.deleteField() }),
 
     // ---------- Perfil ----------
     async getProfile(uid) {

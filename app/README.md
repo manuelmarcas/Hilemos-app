@@ -267,6 +267,13 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
   que se quita sale avisado bajo el campo y, al guardar, con una confirmación; después se le expulsa (o se rechaza su
   solicitud, si estaba pendiente) con `removeByEmail`. Un administrador que no es el creador no puede quitar el correo de
   otro administrador. Quien entró antes y no ha vuelto a abrirla no se reconoce: se expulsa desde «Gestionar participantes».
+- **Moderación del chat**: «Denunciar» en cada mensaje ajeno (`ReportDialog`) guarda `polls/{id}/reports/{msgId}_{uid}`
+  con una copia del mensaje; las reglas comprueban que el texto y el autor son los del mensaje de verdad, que no es un
+  aviso ni propio, y que no se repite. Quien administra la votación ve la marca «Denunciado» (`watchReports`,
+  `reportsByMessage`) y puede ocultar cualquier mensaje (`setMessageHidden`, campo `hidden`): los demás ven «Mensaje
+  ocultado por quien administra la votación». La Cloud Function `onReport` avisa a quien modera Hilemos según
+  `config/moderation` (solo la lee el servidor): `uids` para avisos push y `email` + `brevoKey` para un correo con
+  la denuncia. Sin configurar, la denuncia se queda guardada y se ve en la consola de Firebase.
 - `leave()` en `store/firebase.ts` (usada por `leavePoll` y `deleteAccount`; `demo.ts` hace lo mismo), sin servidor:
   saca un nombre sin dueño (`ghostName()`, uno por votación) y renombra con él sus mensajes del chat (las reglas dejan
   cambiar solo el nombre de los mensajes propios, y solo a quien sigue dentro: por eso va lo primero). Si era el

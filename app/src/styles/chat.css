@@ -38,6 +38,23 @@
 .chat__name{font-size:.82rem;font-weight:700;color:var(--brand-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chat__when{font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
 .chat__text{margin:0;font-size:.95rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Moderación: denunciar (todos), ocultar (quien administra) y la marca «Denunciado» (solo quien administra) */
+.chat__tools{margin-left:auto;display:inline-flex;gap:2px;flex:none}
+.chat__tool{
+  --icon-size:15px;
+  display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;margin:-4px -4px -4px 0;
+  border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);cursor:pointer;
+}
+.chat__tool:hover{background:var(--hover);color:var(--ink)}
+.chat__flag{
+  --icon-size:12px;
+  display:inline-flex;align-items:center;gap:3px;flex:none;padding:1px 7px;border-radius:var(--radius-pill);
+  background:var(--danger-soft);color:var(--danger);font-size:.68rem;font-weight:700;
+}
+/* Mensaje oculto: borde de puntos; los demás ven un aviso en cursiva y quien administra, el texto en gris */
+.chat__body--hidden{border:1px dashed var(--line)}
+.chat__text--hidden{color:var(--muted);font-style:italic}
+.chat__hidden-note{margin:2px 0 0;font-size:.75rem;color:var(--muted)}
 /* Aviso de un cambio en la votación (lo escribe la app al editarla): una línea centrada, sin burbuja */
 .chat__sys{
   display:flex;align-items:flex-start;gap:6px;min-width:0;align-self:center;max-width:100%;

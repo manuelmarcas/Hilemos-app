@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  managedPeople, memberStatus, minMaxPeople, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  managedPeople, memberStatus, minMaxPeople, reportsByMessage, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -455,5 +455,15 @@ describe("losingAccess (quitar correos de la lista de una privada)", () => {
   it("sin quitar nada, o sin saber su correo, nadie", () => {
     expect(losingAccess(poll, votes, emails, all, all)).toEqual([]);
     expect(losingAccess(poll, votes, {}, all, [])).toEqual([]);
+  });
+});
+
+describe("reportsByMessage (denuncias por mensaje)", () => {
+  it("agrupa las denuncias de cada mensaje", () => {
+    const r = (msgId: string, by: string) => ({ id: `${msgId}_${by}`, msgId, msgUid: "x", msgName: "X", msgText: "t", by, byName: by, reason: "spam" as const, at: 1 });
+    const m = reportsByMessage([r("m1", "a"), r("m2", "a"), r("m1", "b")]);
+    expect(m.get("m1")?.map(x => x.by)).toEqual(["a", "b"]);
+    expect(m.get("m2")).toHaveLength(1);
+    expect(m.get("m3")).toBeUndefined();
   });
 });
