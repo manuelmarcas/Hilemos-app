@@ -17,7 +17,7 @@ const THEMES: [ThemePref, IconName, string, string][] = [
 ];
 
 const NOTIFY: [keyof NotifyPrefs, string][] = [
-  ["votes", "Alguien vota en una votación tuya"],
+  ["votes", "Alguien vota por primera vez en una votación en la que estás"],
   ["state", "Se cierra, hay desempate o se acaba el plazo"],
   ["members", "Te aceptan, o alguien quiere entrar en una tuya"],
 ];

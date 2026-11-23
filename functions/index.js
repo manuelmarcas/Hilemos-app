@@ -58,10 +58,10 @@ async function tiebreakWinners(pollId, tb) {
   return max ? Object.values(counts).filter(n => n === max).length : 0;
 }
 
-/** Participantes aceptados (quien está pendiente o rechazado no recibe avisos de la votación). */
+/** Participantes aceptados (quien está pendiente o rechazado no recibe avisos de la votación, ni quien se fue). */
 async function participants(pollId) {
   const s = await db.collection(`polls/${pollId}/votes`).get();
-  return s.docs.filter(d => !d.get("status")).map(d => d.id);
+  return s.docs.filter(d => !d.get("status") && !d.get("gone")).map(d => d.id);
 }
 
 // Alguien pide entrar, le aceptan o vota por primera vez. Solo la primera vez: cada casilla que se
@@ -87,8 +87,10 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   if (accepted) {
     return notify([uid], { ...msg, body: "Te han aceptado: ya puedes votar", tag: `members-${pollId}` }, "members");
   }
-  if (firstVote && uid !== poll.ownerUid) {
-    return notify([poll.ownerUid], { ...msg, body: `${name} ha votado`, tag: `votes-${pollId}` }, "votes");
+  // El primer voto de alguien: a todos los que están en la votación (y al creador), menos a quien ha votado.
+  if (firstVote) {
+    const uids = [poll.ownerUid, ...(await participants(pollId))].filter(u => u !== uid);
+    return notify(uids, { ...msg, body: `${name} ha votado`, tag: `votes-${pollId}` }, "votes");
   }
 });
 
