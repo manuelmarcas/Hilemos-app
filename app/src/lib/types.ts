@@ -77,6 +77,32 @@ export interface PollData {
   approval?: boolean;
   /** Solo pueden entrar los correos de `polls/{id}/private/access` (que solo lee el creador). */
   emailsOnly?: boolean;
+  // ----- Premium: solo los escribe el servidor (functions/plan.js); las reglas no dejan a la app -----
+  /** Desde cuándo la gestiona quien la gestiona ahora (al heredarla). Sin campo: desde que se creó (`createdAt`). */
+  ownerSince?: number;
+  /** Se cerrará sola en esta fecha (la primera de `autoCloseWhy`). Sin campo: no tiene cuenta atrás. */
+  autoCloseAt?: number;
+  /** Por qué se cerrará sola y cuándo, por cada motivo: le sobra a quien la gestiona (más abiertas que su límite)
+   *  o usa funciones de pago y quien la gestiona no tiene premium. */
+  autoCloseWhy?: Partial<Record<AutoCloseReason, number>>;
+  /** Fecha de cierre de la que ya se avisó el día antes (para no repetir el aviso). */
+  autoCloseWarned?: number;
+  /** Cuándo la cerró sola una cuenta atrás (el aviso de cierre dice entonces «se ha cerrado sola»). */
+  autoClosedAt?: number;
+}
+
+/** Motivos de la cuenta atrás de una votación (docs/funcionalidades-y-planes.md, §8). */
+export type AutoCloseReason = "limit" | "premium";
+
+/**
+ * Documento `config/app`: lo que se cambia sin publicar otra versión de la app de Android. Lo escribe solo quien
+ * administra Hilemos, desde la consola de Firebase; lo lee cualquiera.
+ */
+export interface AppConfig {
+  /** Versión (versionCode) más antigua de la app de Android que sigue valiendo: con una anterior, pide actualizarla. */
+  minBuild?: number;
+  /** Aviso para todos, arriba de la página (por ejemplo, el de que llega premium). Cada `id` se cierra una vez. */
+  notice?: { id: string; text: string; url?: string } | null;
 }
 
 /** Documento `polls/{id}/private/access`: correos permitidos (en minúsculas). Solo lo lee y escribe el creador. */
@@ -376,6 +402,9 @@ export interface Store {
 
   /** Todo lo que se guarda de la cuenta (perfil, lista, grupos, votos, mensajes y denuncias), para descargarlo. */
   exportMyData(user: AuthUser): Promise<MyData>;
+
+  /** `config/app` (versión mínima y aviso para todos); null si no hay o no se puede leer. */
+  getAppConfig(): Promise<AppConfig | null>;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;

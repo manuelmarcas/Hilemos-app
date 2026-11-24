@@ -42,6 +42,19 @@ const toBase64 = (b: Blob) => new Promise<string>((resolve, reject) => {
   r.readAsDataURL(b);
 });
 
+/** Ficha de Hilemos en Google Play (para actualizar la app). */
+export const PLAY_URL = "https://play.google.com/store/apps/details?id=app.hilemos";
+
+/** Versión (versionCode) de la app de Android; null en la web o si no se puede saber. */
+export async function nativeBuild(): Promise<number | null> {
+  if (!isNative()) return null;
+  try {
+    const { App } = await import("@capacitor/app");
+    const n = Number((await App.getInfo()).build);
+    return Number.isFinite(n) ? n : null;
+  } catch { return null; }
+}
+
 export function initNative() {
   if (!isNative()) return;
   void import("@capacitor/app").then(({ App }) => {

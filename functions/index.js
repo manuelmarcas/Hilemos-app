@@ -1,4 +1,5 @@
-// Avisos de Votaciones: Cloud Functions que mandan avisos (FCM) cuando pasa algo en una votación.
+// Cloud Functions de Hilemos: avisos (FCM) cuando pasa algo en una votación, premium (herencia y cuentas atrás, con
+// la lógica en plan.js) y aviso de las denuncias a quien modera.
 // - Navegador: mensajes solo de datos; el aviso lo compone app/public/firebase-messaging-sw.js.
 // - App de Android (token con platform "android"): con bloque «notification», para que Android lo pinte aunque la
 //   app esté cerrada, en el canal «avisos» (ver app/src/lib/push.ts y el AndroidManifest.xml).
@@ -9,6 +10,10 @@ import { getMessaging } from "firebase-admin/messaging";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import {
+  CLEAR_COUNTDOWN, DAY, INHERIT_GRACE, addedReasons, betterHeir, countdownPatch, countdownText, extrasOf, fmtWhen,
+  freeForAll, hasPremium, isOpen, nextWhy, openLimit, openPollsOf, paidSettings,
+} from "./plan.js";
 
 initializeApp();
 const db = getFirestore();
@@ -100,11 +105,13 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
 });
 
 // Cambios de estado de la votación que interesan a todos los participantes (menos a quien los hace: el creador).
+// Si la ha cerrado el servidor (una cuenta atrás, ver onAutoClose), se avisa también a quien la gestiona.
 export const onPollUpdated = onDocumentUpdated("polls/{pollId}", async event => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!before || !after) return;
   const { pollId } = event.params;
+  const autoClosed = !!after.autoClosedAt && after.autoClosedAt !== before.autoClosedAt;
   let body = "";
   if (after.tiebreak && !after.tiebreak.done && before.tiebreak?.id !== after.tiebreak.id) body = "Hay un desempate: elige una de las empatadas";
   else if (before.tiebreak && !before.tiebreak.done && after.tiebreak?.done) {
@@ -113,10 +120,12 @@ export const onPollUpdated = onDocumentUpdated("polls/{pollId}", async event => 
       ? "Ya hay resultado definitivo: mira la opción ganadora"
       : "El desempate ha terminado sin ganadora";
   }
-  else if (!before.closed && after.closed) body = "Se ha cerrado la votación: mira el resultado";
+  else if (!before.closed && after.closed) {
+    body = autoClosed ? "Se ha cerrado sola: mira el resultado" : "Se ha cerrado la votación: mira el resultado";
+  }
   else if (before.closed && !after.closed) body = "Se ha vuelto a abrir: puedes cambiar tu voto";
   if (!body) return;
-  const uids = (await participants(pollId)).filter(u => u !== after.ownerUid);
+  const uids = (await participants(pollId)).filter(u => autoClosed || u !== after.ownerUid);
   return notify(uids, { title: after.title || "Votación", body, url: pollUrl(pollId), tag: `state-${pollId}` }, "state");
 });
 
@@ -135,6 +144,132 @@ export const onDeadline = onSchedule({ schedule: `every ${DEADLINE_EVERY_MIN} mi
     url: pollUrl(d.id),
     tag: `state-${d.id}`,
   }, "state")));
+});
+
+// ---------- Premium: herencia y cuentas atrás (functions/plan.js; apagado durante el lanzamiento gratis) ----------
+
+/** Participantes aceptados que siguen en la votación, con sus datos (uid → voto). */
+async function acceptedMembers(pollId) {
+  const s = await db.collection(`polls/${pollId}/votes`).get();
+  return Object.fromEntries(s.docs.filter(d => !d.get("status") && !d.get("gone")).map(d => [d.id, d.data()]));
+}
+
+/** Avisa a quien gestiona `poll` de una cuenta atrás nueva. */
+const notifyCountdown = (uid, pollId, poll, body) =>
+  notify([uid], { title: poll.title || "Votación", body, url: pollUrl(pollId), tag: `close-${pollId}` }, "state");
+
+// La votación cambia de manos (su gestor sale o elimina su cuenta) o se cierra a mano.
+// - Siempre se apunta `ownerSince` (desde cuándo la gestiona): ordena qué votaciones «sobran» (extrasOf).
+// - Con premium encendido (§8): si el heredero no tiene sitio, se busca otro que lo tenga; si nadie, la hereda él y
+//   se cierra sola a los 7 días (sin volver a empezar si ya corría). Si tiene sitio, se le quita esa cuenta atrás.
+// - Cerrada a mano con una cuenta atrás: se quita, para que al reabrirla no se cierre sola al momento.
+// Las escrituras del propio servidor vuelven a disparar esta función, pero sin cambio de manos no hacen nada.
+export const onPollPlan = onDocumentUpdated("polls/{pollId}", async event => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (!before || !after) return;
+  const ref = event.data.after.ref;
+  const { pollId } = event.params;
+  if (!before.closed && after.closed && after.autoCloseAt && after.autoClosedAt === before.autoClosedAt) {
+    return ref.update(CLEAR_COUNTDOWN);
+  }
+  if (before.ownerUid === after.ownerUid) return;
+  const now = Date.now();
+  if ((await freeForAll(db)) || !isOpen(after, now)) return ref.update({ ownerSince: now });
+
+  const heir = after.ownerUid;
+  /** Si a `uid` le cabe esta votación (sin contarla) y si tiene premium. */
+  const room = async uid => {
+    const [premium, open] = await Promise.all([hasPremium(db, uid, now), openPollsOf(db, uid, now)]);
+    return { premium, fits: open.filter(p => p.id !== pollId).length < openLimit(premium) };
+  };
+  const mine = await room(heir);
+  if (!mine.fits) {
+    const members = await acceptedMembers(pollId);
+    const adminsBefore = before.admins || [];
+    const cands = Object.keys(members).filter(u => u !== heir && u !== before.ownerUid);
+    const other = await betterHeir({
+      admins: cands.filter(u => adminsBefore.includes(u)),
+      others: cands.filter(u => !adminsBefore.includes(u)),
+    }, room);
+    if (other) {
+      // La hereda quien tiene sitio; el primer elegido vuelve a ser administrador si lo era.
+      const admins = [...new Set([
+        ...(after.admins || []).filter(a => a !== other),
+        ...(adminsBefore.includes(heir) ? [heir] : []),
+      ])];
+      return ref.update({ ownerUid: other, ownerName: members[other].name || "Alguien", admins });
+    }
+  }
+  // Recién heredada, es la última en llegar a sus manos: sobra si no le cabía.
+  const why = nextWhy(after.autoCloseWhy, {
+    extra: !mine.fits, paid: paidSettings(after), premium: mine.premium, now, extraGrace: INHERIT_GRACE,
+  });
+  await ref.update({ ownerSince: now, ...(countdownPatch(after, why) || {}) });
+  const added = addedReasons(after.autoCloseWhy, why);
+  if (added.length) await notifyCountdown(heir, pollId, after, countdownText(added[0], why[added[0]], { inherited: true }));
+});
+
+// Cada hora: cierra las votaciones cuya cuenta atrás ha llegado al final y avisa a quien las gestiona el día antes.
+// Con el lanzamiento gratis, o si la votación ya no está abierta, solo quita la cuenta atrás.
+export const onAutoClose = onSchedule({ schedule: "every 60 minutes", timeZone: "Europe/Madrid" }, async () => {
+  const now = Date.now();
+  const s = await db.collection("polls").where("autoCloseAt", "<=", now + DAY).get();
+  if (s.empty) return;
+  const free = await freeForAll(db);
+  await Promise.all(s.docs.map(async d => {
+    const p = d.data();
+    if (free || !isOpen(p, now)) return d.ref.update(CLEAR_COUNTDOWN);
+    if (p.autoCloseAt <= now) return d.ref.update({ closed: true, autoClosedAt: now, ...CLEAR_COUNTDOWN });
+    if (p.autoCloseWarned === p.autoCloseAt) return;
+    await d.ref.update({ autoCloseWarned: p.autoCloseAt });
+    const fix = p.autoCloseWhy?.limit === p.autoCloseAt
+      ? "Cierra otra votación para mantenerla abierta."
+      : "Con premium sigue abierta.";
+    await notifyCountdown(p.ownerUid, d.id, p, `Se cerrará sola el ${fmtWhen(p.autoCloseAt)}: queda menos de un día. ${fix}`);
+  }));
+});
+
+// Cada día: pone o quita las cuentas atrás de todas las votaciones abiertas (§8 y §9), por si alguien ha perdido o
+// recuperado premium, ha cerrado otras o ha empezado el límite. Sobran las que pasan del límite (las últimas en
+// llegar a sus manos) y las que usan funciones de pago sin premium: 30 días. Con el lanzamiento gratis, las quita.
+// Lee todas las abiertas una vez al día: a esta escala, unas pocas miles de lecturas.
+export const onPlanSweep = onSchedule({ schedule: "every day 04:00", timeZone: "Europe/Madrid" }, async () => {
+  const now = Date.now();
+  if (await freeForAll(db)) {
+    const s = await db.collection("polls").where("autoCloseAt", ">", 0).get();
+    await Promise.all(s.docs.map(d => d.ref.update(CLEAR_COUNTDOWN)));
+    return;
+  }
+  const s = await db.collection("polls").where("closed", "==", false).get();
+  const byOwner = new Map();
+  for (const d of s.docs) {
+    const p = { id: d.id, ...d.data() };
+    if (!isOpen(p, now)) continue;
+    byOwner.set(p.ownerUid, [...(byOwner.get(p.ownerUid) || []), { p, ref: d.ref }]);
+  }
+  for (const [uid, list] of byOwner) {
+    const premium = await hasPremium(db, uid, now);
+    const extras = extrasOf(list.map(x => x.p), openLimit(premium));
+    const news = [];
+    for (const { p, ref } of list) {
+      const why = nextWhy(p.autoCloseWhy, { extra: extras.has(p.id), paid: paidSettings(p), premium, now });
+      const patch = countdownPatch(p, why);
+      if (!patch) continue;
+      await ref.update(patch);
+      const added = addedReasons(p.autoCloseWhy, why);
+      if (added.length) news.push({ p, reason: added[0], at: why[added[0]] });
+    }
+    // Un aviso por votación; si son varias, uno solo que lleva a «Mis votaciones».
+    if (news.length === 1) await notifyCountdown(uid, news[0].p.id, news[0].p, countdownText(news[0].reason, news[0].at));
+    else if (news.length > 1) {
+      await notify([uid], {
+        title: "Hilemos",
+        body: `${news.length} de tus votaciones abiertas se cerrarán solas a partir del ${fmtWhen(Math.min(...news.map(n => n.at)))}. Mira en cada una por qué y cómo mantenerla abierta.`,
+        url: `${SITE}/`, tag: `close-${uid}`,
+      }, "state");
+    }
+  }
 });
 
 // ---------- Moderación ----------

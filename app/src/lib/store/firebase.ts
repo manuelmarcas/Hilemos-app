@@ -20,8 +20,8 @@ import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySna
 import { CHAT_LIMIT, chatSince, ghostName, hasLimit, isPresent, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
 import type {
-  AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, MyPollData, PersonReport, Poll, PollAccess, PollData, Profile,
-  Store, Vote,
+  AppConfig, AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, MyPollData, PersonReport, Poll, PollAccess, PollData,
+  Profile, Store, Vote,
 } from "../types";
 import { isKeyEmail, newAccessKey, parseAccessKey } from "./accessKey";
 
@@ -534,6 +534,11 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
 
     // ---------- Perfil ----------
+    async getAppConfig() {
+      const s = await F.getDoc(F.doc(db, "config", "app")).catch(() => null);
+      return s?.exists() ? (s.data() as AppConfig) : null;
+    },
+
     async getProfile(uid) {
       // Mismo reintento que ownSnapshot: justo al entrar, la primera lectura puede llegar antes que la sesión.
       for (let tries = 0; ; tries++) {

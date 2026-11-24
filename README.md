@@ -157,7 +157,7 @@ app/                          LA APLICACIÓN (React + Vite + TypeScript). Ver ap
 
 firestore.rules               Reglas de seguridad de Firestore
 firebase.json, .firebaserc    Firebase de la raíz: reglas y funciones (el hosting está en app/)
-functions/                    Cloud Functions de avisos push (desplegadas en europe-west1 desde el 22 de noviembre de 2026; plan Blaze)
+functions/                    Cloud Functions (europe-west1, plan Blaze): avisos push, denuncias y premium (plan.js, apagado)
 docs/                         Documentación (funcionalidades y planes)
 .claude/skills/               Normas y herramientas del proyecto para Claude Code
 index.html                    Redirección de GitHub Pages a hilemos.web.app (no es la app)
@@ -177,7 +177,7 @@ index.html                    Redirección de GitHub Pages a hilemos.web.app (no
 
 | Ruta | Contenido |
 | --- | --- |
-| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana, meses votables o, en las de opciones, los ids de las opciones), `hours` y `hourStep` (solo horas), `options` (opciones de cada día en las de días; las opciones libres en las de `type: "options"`), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly` |
+| `polls/{pollId}` | `title`, `description`, `type`, `anonymous`, `tiebreak` (`id`, `candidates`, `done`, `round`), `tbNote` (aviso para todos de que el desempate cambió porque alguien dejó de participar: `at`, `solved` y, si sigue, `tb` y `n`), `months`, `slots` (días, lunes de cada semana, meses votables o, en las de opciones, los ids de las opciones), `hours` y `hourStep` (solo horas), `options` (opciones de cada día en las de días; las opciones libres en las de `type: "options"`), `ownerUid`, `ownerName`, `admins` (administradores nombrados por el creador), `founder` y `founderName` (si el creador se fue: su uid y su nombre sin dueño), `createdAt`, `closed`, `deadline` (plazo; pasado, las reglas ya no aceptan votos), y quién puede unirse: `maxPeople`, `members`, `approval`, `emailsOnly`. Solo los escribe el servidor (premium, `functions/plan.js`): `ownerSince` (desde cuándo la gestiona quien la heredó), `autoCloseAt`, `autoCloseWhy` (`limit`/`premium`: cuándo se cerrará sola y por qué), `autoCloseWarned` y `autoClosedAt` |
 | `polls/{pollId}/private/access` | Correos permitidos de una votación privada (`emails`). Solo lo lee el creador |
 | `polls/{pollId}/chat/{msgId}` | Mensajes del chat: `uid`, `name`, `text`, `at` y `sys` (aviso automático de un cambio al editar la votación; solo lo escriben los administradores) y `hidden` (ocultado por quien administra la votación) |
 | `polls/{pollId}/votes/{uid}` | Un documento por participante: `name`, `photo`, `picks` (`"<casilla>\|<opción>"`), `tb` (voto del desempate: `{ id, pick }`), `status` (`pending`/`rejected`: pendiente de aprobación, rechazado o expulsado), `removed` (lo expulsó un administrador ya estando dentro), `gone` (se fue y sus votos se quedaron con un nombre sin dueño), `seenAt`, `joinedAt` (cuándo entró o le aceptaron o readmitieron por última vez: desde entonces ve el chat; quien crea la votación lo ve todo), `updatedAt` |
@@ -187,6 +187,10 @@ index.html                    Redirección de GitHub Pages a hilemos.web.app (no
 | `users/{uid}` | Perfil: `name` (nombre visible), `photo`, `thumb`, `notify` (avisos), `updatedAt` |
 | `users/{uid}/polls/{pollId}` | Colección privada del usuario: `title`, `type`, `role` (`owner`/`participant`), `ownerName`, `groupId`, `addedAt`, `archived` |
 | `users/{uid}/groups/{groupId}` | Grupos privados del usuario: `name`, `createdAt` |
+| `plans/{uid}` | Plan de cada usuario: `premiumUntil` (hasta cuándo tiene premium). Solo lo escribe el servidor al comprobar un pago y solo lo lee su dueño. No va en `users/{uid}` porque eso lo escribe la propia persona |
+| `config/plan` | Interruptor del lanzamiento gratis: `freeForAll` (si no es `false`, o no existe, todo es gratis y el servidor no limita nada). Solo lo lee el servidor |
+| `config/app` | Lo que se cambia sin publicar otra versión de Android: `minBuild` (versionCode mínimo; con uno anterior, la app pide actualizarla) y `notice` (`{ id, text, url? }`: aviso para todos arriba de la página). Lo lee cualquiera; se escribe desde la consola |
+| `config/moderation` | A quién avisar de cada denuncia: `uids` (push), `email` y `brevoKey`. Solo lo lee el servidor |
 
 Cualquier usuario con sesión puede abrir una votación si tiene el enlace; solo el creador puede cerrarla o
 borrarla; cada uno solo puede modificar su propio voto; y la colección/grupos de cada usuario es privada.

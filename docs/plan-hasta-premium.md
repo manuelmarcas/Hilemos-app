@@ -13,16 +13,16 @@ por escrito, y no sobre la marcha.
 
 ---
 
-## Dónde estamos (23 de noviembre de 2026)
+## Dónde estamos (24 de noviembre de 2026)
 
 | Pieza | Estado |
 | --- | --- |
 | Web en hilemos.web.app | Publicada |
 | App de Android | Funciona en el móvil (versión de depuración); recorrido automático de 60 de 60 |
 | Firebase | Plan Blaze, alerta de presupuesto de 5 €, avisos push desplegados |
-| Cuenta de Google Play | Pagada; falta verificarla y crear la app |
+| Cuenta de Google Play | Verificada; falta crear la app y subir el primer `.aab` (firmado con la clave de subida) |
 | Denunciar y ocultar mensajes | Hecho y publicado; el aviso a quien modera, sin configurar |
-| Premium | Decidido en papel; en la app todo es gratis y no hay ninguna marca de premium |
+| Premium | Marcado en la app (etiquetas «Premium»). En el servidor, la herencia, las cuentas atrás y el cierre automático están hechos y **apagados** (`config/plan.freeForAll`). Faltan los límites en las reglas, el pase y el cobro |
 | Medir el uso | No hay nada: no se sabe cuánta gente usa la app ni qué usa |
 | Usuarios | Solo pruebas propias |
 
@@ -44,6 +44,8 @@ primer día.
 | 1.7 | **Clave de subida y primer `.aab`**; huellas de Google Play en Firebase. | Yo, con tu sitio para guardar la clave |
 | 1.8 | **Play Console**: verificar la cuenta, crear la app, los formularios (privacidad, seguridad de los datos, clasificación, público, borrar la cuenta) y estado de «no comerciante». | Tú, con mi ayuda en las respuestas |
 | 1.9 | **Ficha de la tienda**: capturas, imagen destacada y descripción. | Yo, las capturas y el texto; tú, revisarlos |
+| 1.10 | **Versión mínima y aviso para todos** (`config/app`) ✔: sin publicar otra versión, pedir que se actualice una versión vieja o avisar de algo (una incidencia, el estreno de premium). | Hecho |
+| 1.11 | **Lo que tiene que ir en el primer `.aab`**: todo lo que necesita código en la app y no se puede cambiar desde el servidor. Ya están la versión mínima, el aviso para todos y el aviso «Se cierra sola». Falta **App Check** (1.5): si se exige más adelante y la versión de la prueba no lo lleva, esa versión dejaría de funcionar. | Los dos |
 
 **Para pasar a la fase 2:** el `.aab` está en la pista de prueba cerrada y hay al menos 12 personas apuntadas.
 

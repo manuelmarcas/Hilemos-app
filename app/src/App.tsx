@@ -11,6 +11,8 @@ import { EmailLinkFinish } from "./components/EmailLinkFinish";
 import { LegalStandalone } from "./pages/Legal";
 import { legalDoc, useHashPath } from "./state/route";
 import { LogoMark } from "./components/LogoMark";
+import { NoticeBanner, UpdateRequired } from "./components/AppNotices";
+import { useAppConfig } from "./state/appConfig";
 
 const params = new URLSearchParams(location.search);
 const DEMO = params.has("demo") || !firebaseConfig?.apiKey;
@@ -83,8 +85,12 @@ export function App() {
     setUser(u => (u ? { ...u, ...patch } : u));
   }, []);
 
+  // Versión mínima de la app y aviso para todos (config/app): se cambian sin publicar otra versión.
+  const remote = useAppConfig(store);
+
   let content;
-  if (bootError) content = <div className="boot"><div className="empty-box empty-box--error">No se pudo cargar la aplicación: {bootError}</div></div>;
+  if (remote.update) content = <UpdateRequired />;
+  else if (bootError) content = <div className="boot"><div className="empty-box empty-box--error">No se pudo cargar la aplicación: {bootError}</div></div>;
   else if (!store || user === undefined) {
     content = <div className="boot" role="status" aria-label="Cargando Hilemos"><LogoMark className="boot__logo" eyeClassName="boot__eye" size={96} /></div>;
   }
@@ -103,6 +109,7 @@ export function App() {
   return (
     <>
       {DEMO && <DemoBanner />}
+      {remote.notice && !remote.update && <NoticeBanner notice={remote.notice} onClose={remote.closeNotice} />}
       {content}
     </>
   );

@@ -9,7 +9,7 @@ import { Icon } from "../components/Icon";
 import { FREE_OPEN, FREE_PEOPLE } from "../lib/model";
 import { ALWAYS_FREE, PREMIUM_INFO, TERMS_PREMIUM_ID } from "../lib/premium";
 
-const UPDATED = "23 de noviembre de 2026";
+const UPDATED = "24 de noviembre de 2026";
 const OWNER = "Manuel Martín Castrillo";
 const CONTACT = "hilemos.app@gmail.com";
 const mail = <a href={`mailto:${CONTACT}`}>{CONTACT}</a>;
@@ -202,13 +202,16 @@ function Terms() {
         <li>las funciones marcadas solo estarán disponibles con premium;</li>
         <li>
           empezará a contar el límite de votaciones abiertas a la vez que gestionas ({FREE_OPEN} en el plan gratuito;
-          las cerradas no cuentan);
+          las cerradas no cuentan). Si tienes más, las que sobren se cerrarán solas 30 días después de avisarte, salvo
+          que antes cierres otras o tengas premium. Lo mismo vale si heredas una votación (porque quien la gestionaba
+          sale de ella) y con ella pasas del límite, pero entonces el plazo es de 7 días;
         </li>
         <li>
           las votaciones que ya tengas seguirán funcionando para quienes votan, con lo que ya tuvieran configurado,
           pero quien las gestione sin premium tendrá los límites del plan gratuito (por ejemplo, no podrá nombrar
           administradores nuevos, poner un plazo nuevo ni ampliar las plazas por encima de {FREE_PEOPLE}), y las que
-          usen funciones premium podrán cerrarse solas pasado un tiempo;
+          usen funciones premium se cerrarán solas 30 días después de que quien las gestiona deje de tener premium,
+          avisando antes. Una votación cerrada sigue guardada con su resultado;
         </li>
         <li>
           los precios, la forma de pago, las renovaciones, las cancelaciones y las devoluciones se publicarán aquí antes

@@ -231,3 +231,22 @@
 .dialog__key-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .dialog__key-check{font-weight:600}
 .dialog--key .dialog__actions{margin-top:14px}
+/* Aviso para todos (config/app, components/AppNotices.tsx): franja arriba de la página, con los tokens ámbar del
+   banner del modo demo. «Entendido» es un .link-btn con el color del aviso. */
+.notice-banner{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:4px 12px;
+  background:var(--tie-soft);
+  border-bottom:1px solid var(--tie);
+  color:var(--tie-ink);
+  font-size:.84rem;
+  padding:8px 16px;
+  text-align:center;
+  line-height:1.4;
+}
+.notice-banner__text{min-width:0;overflow-wrap:anywhere}
+.notice-banner__link{color:var(--tie-ink);font-weight:700}
+.notice-banner__close{color:var(--tie-ink);font-weight:700;font-size:inherit}

@@ -1,10 +1,13 @@
 // Almacén de demostración: la misma interfaz que el de Firebase (Store, en types.ts), pero con los datos en el
 // localStorage de este navegador. Se usa con ?demo en la dirección (o si config.ts no tiene la configuración de
 // Firebase). Hace las mismas comprobaciones que las reglas de Firestore, para que se comporte igual.
-import { CHAT_LIMIT, MAX_CHAT, chatSince, ghostName, hasLimit, isAdmin, isPresent, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
+import {
+  CHAT_LIMIT, MAX_CHAT, SERVER_KEYS, chatSince, deadlinePassed, ghostName, hasLimit, isAdmin, isPresent, keepsVotesOnLeave, pickHeir,
+  pollForExport,
+} from "../model";
 import { slugify } from "../util";
 import type {
-  AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PersonReport, PollAccess, PollData, Profile, Store, Vote, Votes,
+  AppConfig, AuthUser, ChatMessage, ChatReport, Group, LibraryEntry, PersonReport, PollAccess, PollData, Profile, Store, Vote, Votes,
 } from "../types";
 
 interface DemoUserData {
@@ -24,6 +27,8 @@ interface DemoDb {
   /** Denuncias de personas (pollId → id → denuncia). */
   personReports?: Record<string, Record<string, Omit<PersonReport, "id">>>;
   chat?: Record<string, Record<string, Omit<ChatMessage, "id">>>;
+  /** Lo de `config/app` (en Firebase lo escribe quien administra Hilemos desde la consola). */
+  config?: AppConfig;
 }
 
 const KEY = "votaciones-demo-v2";      // los datos (localStorage: compartidos entre pestañas)
@@ -137,6 +142,8 @@ export function createDemoStore(): Store {
     // ---------- Votaciones ----------
     async createPoll(data, access) {
       const db = load();
+      // Como las reglas: los campos del servidor (ownerSince, cuentas atrás) no se crean desde la app.
+      if (SERVER_KEYS.some(k => k in data)) throw fail("permission-denied");
       const id = rid();
       db.polls[id] = clone(data);
       if (access) (db.access ||= {})[id] = clone(access);
@@ -267,7 +274,8 @@ export function createDemoStore(): Store {
     async saveVote(id, uid, data) {
       const db = load();
       if (!db.polls[id]) throw fail("not-found");
-      if (db.polls[id].closed) throw fail("permission-denied");
+      // Como las reglas (votingOpen): ni cerrada ni con el plazo pasado.
+      if (db.polls[id].closed || deadlinePassed(db.polls[id])) throw fail("permission-denied");
       const votes = (db.votes[id] ||= {});
       if (votes[uid]?.status) throw fail("permission-denied"); // pendiente o rechazado: no puede votar
       votes[uid] = { ...(votes[uid] || {}), ...clone(data) };
@@ -396,6 +404,9 @@ export function createDemoStore(): Store {
     },
 
     // ---------- Perfil ----------
+    // Para probar el aviso y la versión mínima en la demo, se escribe a mano en `config` del localStorage.
+    async getAppConfig() { const c = load().config; return c ? clone(c) : null; },
+
     async getProfile(uid) {
       const p = load().users[uid]?.profile;
       return p ? clone(p) : null;

@@ -64,7 +64,14 @@ service cloud.firestore {
                 && request.resource.data.maxPeople <= 150
                 && request.resource.data.get('members', -1) == 0))
         && (!('members' in request.resource.data) || 'maxPeople' in request.resource.data)
+        && !request.resource.data.keys().hasAny(serverKeys())
         && request.resource.data.closed == false;
+
+      // Campos que solo escribe el servidor (functions/plan.js): desde cuándo la gestiona quien la gestiona y las
+      // cuentas atrás que la cierran sola. La app no puede crearlos (arriba) ni cambiarlos (no están en ownerUpdate).
+      function serverKeys() {
+        return ['ownerSince', 'autoCloseAt', 'autoCloseWhy', 'autoCloseWarned', 'autoClosedAt'];
+      }
 
       allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());
 
@@ -320,7 +327,7 @@ service cloud.firestore {
           && request.auth.uid == uid
           && validVote()
           && validTiebreakVote(null)
-          && (pollData(pollId).get('closed', false) == false || !('picks' in request.resource.data))
+          && (votingOpen() || !('picks' in request.resource.data))
           && canJoin()
           && countedJoin();
 
@@ -355,7 +362,7 @@ service cloud.firestore {
           return request.auth.uid == uid
             && validVote()
             && validTiebreakVote(old.get('tb', null))
-            && (pollData(pollId).get('closed', false) == false || d.get('picks', []) == old.get('picks', []))
+            && (votingOpen() || d.get('picks', []) == old.get('picks', []))
             && d.get('status', null) == old.get('status', null)
             && d.get('removed', false) == old.get('removed', false)
             && d.get('joinedAt', null) == old.get('joinedAt', null)
@@ -400,6 +407,14 @@ service cloud.firestore {
                    || getAfter(pollPath()).data.members == pollData(pollId).get('members', 0) - 1))
               || pollData(pollId).ownerUid == request.auth.uid);
 
+        // Se puede votar: ni cerrada ni con el plazo pasado (hora del servidor; la app lo comprueba con la del móvil).
+        // El voto del desempate va aparte (validTiebreakVote): un desempate se puede votar aunque el plazo haya pasado.
+        function votingOpen() {
+          let p = pollData(pollId);
+          return p.get('closed', false) == false
+            && (p.get('deadline', 0) == 0 || request.time.toMillis() < p.deadline);
+        }
+
         function validVote() {
           let d = request.resource.data;
           return d.name is string
@@ -424,8 +439,21 @@ service cloud.firestore {
     }
 
     // ---------- Datos privados de cada usuario: perfil (users/{uid}), sus votaciones y sus grupos ----------
+    // Lo escribe la propia persona: por eso aquí no puede ir nada de premium (ver plans).
     match /users/{uid}/{document=**} {
       allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- Plan de cada usuario (premiumUntil): solo lo escribe el servidor al comprobar un pago ----------
+    match /plans/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- Configuración ----------
+    // config/app (versión mínima de la app de Android y aviso para todos): la lee cualquiera, también antes de entrar.
+    // El resto de config (plan, moderation) solo lo lee el servidor. Nada se escribe desde la app.
+    match /config/app {
+      allow read: if true;
     }
   }
 }

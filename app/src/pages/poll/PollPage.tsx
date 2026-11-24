@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
   isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
-  MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN,
+  MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN, autoClose, autoCloseNote,
 } from "../../lib/model";
 import type { MemberStatus, PersonReport, Poll, ReportReason, Vote, Votes } from "../../lib/types";
 import { Avatar } from "../../components/Avatar";
@@ -259,6 +259,8 @@ export function PollPage({ id }: { id: string }) {
   const admins = poll.admins || [];
   const expired = deadlinePassed(poll);
   const canVote = !poll.closed && !expired;
+  // Se cerrará sola (premium, §8): lo decide el servidor; aquí solo se enseña.
+  const closing = autoClose(poll);
   // En el chat se escribe aunque la votación esté cerrada: es cuando se remata el plan.
   const canChat = admin || (!!votes[user.uid] && memberStatus(votes[user.uid]) === "accepted");
   const reportsOf = reportsByPerson(personReports);
@@ -522,7 +524,12 @@ export function PollPage({ id }: { id: string }) {
             <span className={`mode-pill ${poll.anonymous ? "mode-pill--anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
             {poll.emailsOnly && <span className="mode-pill mode-pill--anon"><Icon name="mail" /> Solo invitados</span>}
             {poll.approval && <span className="mode-pill mode-pill--anon"><Icon name="approve" /> Con aprobación</span>}
-            {!!poll.deadline && !expired && !poll.closed && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
+            {!!poll.deadline && !expired && !poll.closed && (!closing || poll.deadline <= closing.at) && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
+            {closing && (!poll.deadline || closing.at < poll.deadline) && (
+              <span className="mode-pill" data-tip={autoCloseNote(closing.reason, closing.at, isOwner)}>
+                <Icon name="hourglass" /> Se cierra sola el {fmtDeadline(closing.at)}
+              </span>
+            )}
           </div>
           <div className="poll-head__title-row">
             <h1 className="poll-head__title">{poll.title}</h1>
@@ -579,6 +586,8 @@ export function PollPage({ id }: { id: string }) {
       )}
       <div className="poll-info">
         {canVote && <p className="poll-info__how">{instructions(poll, T)}</p>}
+        {/* Solo quien la gestiona puede evitarlo: a él se le explica aquí (el tooltip no llega al móvil). */}
+        {closing && isOwner && <p className="poll-info__how">{autoCloseNote(closing.reason, closing.at, true)}</p>}
         <p className="poll-info__note">
           {pollRange(poll)} {poll.anonymous
             ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."

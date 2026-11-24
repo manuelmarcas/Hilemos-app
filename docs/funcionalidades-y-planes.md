@@ -255,7 +255,7 @@ bajos son las comisiones, el IVA y los gastos de cobrar.
 | N.º | Qué | Detalle |
 | --- | --- | --- |
 | 5.1 | **Cobro en Android** | En contenido digital dentro de la app, Google Play obliga a usar su sistema de pagos (Google Play Billing), con comisión (15 % en suscripciones). En la web se puede cobrar con Stripe u otro. |
-| 5.2 | **Saber quién es premium** | Hace falta un dato que la app no pueda falsificar, por ejemplo `users/{uid}.premiumUntil` (hasta cuándo tiene premium). Solo puede escribirlo un servidor después de comprobar el pago (con el aviso de Stripe, con la API de Google Play o con un servicio como RevenueCat). El proyecto ya está en el plan **Blaze** y ya tiene Cloud Functions. |
+| 5.2 | **Saber quién es premium** | Hace falta un dato que la app no pueda falsificar: `plans/{uid}.premiumUntil` (hasta cuándo tiene premium; no en `users/{uid}`, que lo escribe la propia persona). Ya existe y las reglas no dejan escribirlo desde la app. Solo puede escribirlo un servidor después de comprobar el pago (con el aviso de Stripe, con la API de Google Play o con un servicio como RevenueCat). El proyecto ya está en el plan **Blaze** y ya tiene Cloud Functions. |
 | 5.3 | **Comprobar los límites** | 3.1, 3.3, 3.4, 3.7 y 3.8 se pueden comprobar con las reglas de Firestore y contadores, sin servidor, como ya se hace con `members` y `maxPeople`. Las reglas leen el plan del gestor actual en cada cambio de pago; como el dato es una fecha, el premium caduca solo, sin que haga falta escribir nada (§8). 3.6 necesita una tarea programada. |
 | 5.4 | **Los límites van en las reglas, no solo en la pantalla** | Si solo los comprueba la app, alguien con conocimientos técnicos se los salta. |
 
@@ -353,12 +353,17 @@ Cuando el gestor sale, la votación pasa, en este orden, a:
 3. un participante aceptado con premium o con sitio;
 4. si nadie tiene sitio, cualquier administrador y, si no hay, cualquier participante aceptado.
 
-Dentro de cada grupo se elige al azar, como ahora. Hoy se prefiere a un administrador; el cambio es mirar antes si
-alguno tiene premium o sitio. Quien también se fue (con sus votos) nunca hereda, y si no queda nadie, la votación se
-borra, como ahora.
+Dentro de cada grupo se elige al azar. Quien también se fue (con sus votos) nunca hereda, y si no queda nadie, la
+votación se borra, como ahora.
 
 La votación nunca se queda sin gestor: si nadie tiene sitio, la hereda igualmente alguien del grupo 4, pero con la
 cuenta atrás de 7 días (ver «Heredar por encima del límite»).
+
+**Cómo se hace (hecho, apagado durante el lanzamiento).** La app de quien sale elige como siempre: un administrador
+al azar o, si no hay, un participante. Después, el servidor (`onPollPlan`) mira si el elegido tiene sitio. Si no lo
+tiene, se la pasa a otro siguiendo el orden de arriba; si nadie lo tiene, se la deja con la cuenta atrás. Así la app
+no tiene que leer el plan ni las votaciones de otras personas, y elegir a propósito a alguien lleno no sirve de nada.
+El primer elegido, si era administrador, lo sigue siendo. Esa persona tiene la votación unos segundos.
 
 ### Heredar por encima del límite
 
@@ -374,18 +379,19 @@ de compensar. A quien vota no se le corta de golpe: tiene una semana para termin
 | Caso | Qué pasa |
 | --- | --- |
 | El heredero tiene premium o, con la heredada, se queda en 3 o menos | Nada: la hereda sin cuenta atrás. |
-| El heredero, sin premium, pasa de 3 con la heredada | Cuenta atrás de 7 días. Todos ven «Se cierra sola el …». El heredero recibe un aviso al heredarla («Has heredado «X». Como tienes más de 3 abiertas, se cerrará sola el …; cierra otra para mantenerla») y otro 1 día antes del final. |
-| Durante la cuenta atrás, el heredero cierra o elimina otras y baja a 3 o menos | Se cancela la cuenta atrás de todas sus votaciones heredadas por encima del límite. |
-| Tiene varias heredadas con cuenta atrás (por ejemplo, 5 abiertas) y cierra una (queda en 4) | Siguen todas las cuentas atrás: solo se cancelan cuando baja a 3 o menos. |
-| Durante la cuenta atrás, el heredero consigue premium | Se cancela. Si después lo pierde, se aplica lo de siempre (las suyas siguen abiertas, §9), no una cuenta atrás nueva por el límite. |
+| El heredero, sin premium, pasa de 3 con la heredada | Cuenta atrás de 7 días. Todos ven «⏳ Se cierra sola el …» (el motivo, en el tooltip). El heredero ve en la votación qué puede hacer y recibe un aviso al heredarla («La has heredado y ya tienes más de 3 votaciones abiertas: se cerrará sola el …. Cierra otra para mantenerla abierta») y otro cuando queda menos de un día. |
+| Durante la cuenta atrás, el heredero cierra o elimina otras y baja a 3 o menos | Se cancela la cuenta atrás (en el barrido diario: como mucho, un día después). |
+| Tiene varias que le sobran (por ejemplo, 5 abiertas) y cierra una (queda en 4) | **Sobran siempre las últimas en llegar a sus manos** (§9): con 5 sobran 2; al cerrar una, sobra 1 y a la otra se le quita la cuenta atrás. Así elige él cuáles se quedan, cerrando las que no necesita. |
+| Durante la cuenta atrás, el heredero consigue premium | Se cancela. Si después lo pierde, las que le sobren tendrán la cuenta atrás de 30 días (ver «De premium a gratis»). |
 | Durante la cuenta atrás, el heredero sale y la hereda otra persona sin sitio | **La fecha no cambia**: la cuenta atrás no vuelve a empezar. Si no, se alargaría para siempre pasándola entre dos cuentas llenas. |
 | Durante la cuenta atrás, el heredero sale y la hereda alguien con premium o con sitio | Se cancela. |
 | La votación tiene además ajustes de pago (cuenta atrás de 30 días) | Cuenta la fecha que llegue antes. Cada cuenta atrás se cancela por su propio motivo: la de 7 días al tener sitio o premium; la de 30, al tener premium. |
 | La votación tiene pase (4.2) | También tiene la cuenta atrás de 7 días: el pase da funciones, no más votaciones abiertas. Si además lleva 60 días con el pase, cuenta la fecha que llegue antes. |
-| Se acaba el plazo durante la cuenta atrás | Se cierra por el plazo, como siempre (−1 en las abiertas). La cuenta atrás ya no hace nada. |
-| Se cierra por la cuenta atrás | Queda cerrada como si la hubiera cerrado el gestor: −1 en sus abiertas, aviso de cierre a los participantes y, si hay empate, se puede desempatar. Reabrirla cuenta como abrir (§9): solo con sitio. |
-| Las votaciones que el heredero creó él mismo | Nunca tienen esta cuenta atrás. Solo se aplica a la heredada que le hace pasar del límite. |
-| Durante el lanzamiento gratis (sin límite) | No se aplica nada de esto. |
+| Se acaba el plazo durante la cuenta atrás | Se cierra por el plazo, como siempre (deja de contar en las abiertas). La cuenta atrás se quita sin avisar. Si tiene un plazo anterior a la cuenta atrás, la votación solo enseña el plazo. |
+| La cierra a mano durante la cuenta atrás | Se quita la cuenta atrás, para que al reabrirla no se cierre sola al momento. |
+| Se cierra por la cuenta atrás | Queda cerrada como si la hubiera cerrado el gestor: deja de contar en sus abiertas y todos, también quien la gestiona, reciben «Se ha cerrado sola: mira el resultado». Si hay empate, se puede desempatar. Reabrirla cuenta como abrir (§9): solo con sitio. |
+| Las votaciones que el heredero creó él mismo | Nunca tienen la cuenta atrás de 7 días. La de 30 días, solo si le sobran al perder premium. |
+| Durante el lanzamiento gratis (sin límite) | No se aplica nada de esto. Si se encendiera premium y después se volviera al «todo gratis», el barrido diario quita todas las cuentas atrás. |
 
 **Lo que no se cierra del todo.** Alguien puede usar varias cuentas y entrar en cada una por separado: es el límite
 de cualquier app con cuentas gratis. Lo que este freno evita es juntarlas todas en una sola cuenta.
@@ -430,7 +436,12 @@ Además:
 | --- | --- |
 | Pagar un mes, crear muchas votaciones grandes y pasárselas a amigos sin premium | Los amigos no pueden ampliarlas ni nombrar administradores, y cada una cuenta en sus abiertas, así que no pueden crear más. Las que les hagan pasar de 3 se cierran solas a los 7 días. Además, el tope de 50 abiertas en premium (3.8) limita cuántas se pueden fabricar. |
 | Crear votaciones con otra cuenta, salir y heredarlas todas en la propia | Las heredadas que hacen pasar de 3 se cierran solas a los 7 días, y la cuenta atrás no vuelve a empezar al pasarlas a otra cuenta llena (ver «Heredar por encima del límite»). |
-| Darse de baja y seguir gestionando con funciones de pago | Las reglas miran el plan en cada cambio: sin premium, lo de pago queda congelado. |
+| Pagar un mes, abrir 50 votaciones y quedárselas abiertas para siempre | Al acabar premium, las que pasan de 3 se cierran solas a los 30 días (ver «De premium a gratis»). |
+| Darse de baja y seguir gestionando con funciones de pago | Las reglas miran el plan en cada cambio: sin premium, lo de pago queda congelado, y la votación se cierra sola a los 30 días. |
+| Escribirse premium a sí mismo | El plan está en `plans/{uid}`, que solo escribe el servidor. No va en `users/{uid}`, que lo escribe la propia persona. |
+| Crear una votación con `ownerSince` antiguo, para que nunca sea de las que sobran, o con la cuenta atrás ya quitada | Las reglas no dejan crear ni cambiar los campos del servidor (`ownerSince`, `autoClose…`). |
+| Votar fuera de plazo desde fuera de la app, o cambiando la hora del móvil | Las reglas comprueban el plazo con la hora del servidor. |
+| Usar una versión vieja de la app que no conoce un límite nuevo | Los límites van en las reglas y el servidor, no en la app. Si una versión vieja deja de funcionar con unas reglas nuevas, `config/app.minBuild` le pide actualizarse. |
 | Ser administrador de alguien con premium para usar sus funciones | Solo sirve en las votaciones de esa persona, no en las propias. |
 | Cerrar y reabrir para esquivar el límite de abiertas | Reabrir cuenta como abrir (§9). |
 
@@ -448,8 +459,9 @@ administradores, plazo o resultados ocultos):
 1. **Si quien la gestiona deja de tener premium, la votación se cierra sola a los 30 días** con el resultado que
    tenga en ese momento. Pasa igual si se da de baja, si se le acaba la suscripción o si la hereda alguien sin
    premium. Durante esos 30 días todo sigue funcionando como siempre. Todos ven «Se cierra sola el …», y quien la
-   gestiona recibe un aviso al empezar la cuenta atrás y otro 3 días antes del final. Si al cerrarse hay empate,
-   queda cerrada con el empate y se puede desempatar, porque desempatar es gratis.
+   gestiona recibe un aviso al empezar la cuenta atrás y otro cuando queda menos de un día (el mismo que en las
+   demás cuentas atrás). Si al cerrarse hay empate, queda cerrada con el empate y se puede desempatar, porque
+   desempatar es gratis.
 2. **Si vuelve a tener premium antes del final, la cuenta atrás se cancela.** Pasa igual si la hereda alguien con
    premium. Si vuelve a perderlo, empieza otra vez desde 30.
 3. **Con pase, si sigue abierta a los 60 días de comprarlo, se cierra sola.** El pase cubre un solo uso: hasta que
@@ -463,10 +475,12 @@ Con la cuenta atrás ya no hace falta limitar la edición: durante esos 30 días
 después la votación queda cerrada. Con suscripción no hace falta nada más: mientras se paga, reutilizarla es un uso
 legítimo.
 
-**Cómo se comprueba.** Una tarea programada (Cloud Function, una vez al día) mira las votaciones abiertas con ajustes de
-pago. Si quien las gestiona no tiene premium ni pase vigente, apunta `autoCloseAt` (dentro de 30 días). Si lo
-recupera, lo quita. Al llegar la fecha, la cierra y descuenta la votación de sus abiertas (§9). Las reglas no dejan
-escribir `autoCloseAt` desde la app, y no dejan reabrir una votación con ajustes de pago sin premium.
+**Cómo se comprueba (hecho, apagado durante el lanzamiento).** El barrido diario (`onPlanSweep`, a las 4:00) mira
+todas las votaciones abiertas. A las que tienen ajustes de pago y cuyo gestor no tiene premium les apunta
+`autoCloseWhy.premium` (dentro de 30 días); si lo recupera, se lo quita. `onAutoClose`, cada hora, avisa cuando queda
+menos de un día y la cierra al llegar la fecha. Las reglas no dejan escribir esos campos desde la app. Falta (con el
+pase y el cobro): que las reglas no dejen reabrir una votación con ajustes de pago sin premium, y no contar como de
+pago las que tienen pase vigente.
 
 ### Votaciones con pase (4.2)
 
@@ -474,25 +488,71 @@ El pase es de la votación, no de quien la gestiona: ya está pagada, así que s
 herede, también alguien sin premium. No abre ninguna fisura, porque cada pase sirve para una sola votación y un solo
 uso: acaba en su primer cierre, y si sigue abierta a los 60 días, se cierra sola.
 
+### De premium a gratis: todos los casos
+
+Lo que pasa cuando quien gestiona deja de tener premium, por la razón que sea: se da de baja, se le acaba el mes o el
+año, le devuelven el dinero, se acaba el regalo de fundador o hereda la votación alguien sin premium. Para el servidor
+es lo mismo: `plans/{uid}.premiumUntil` queda en el pasado.
+
+| Caso | Qué pasa |
+| --- | --- |
+| Tiene abiertas votaciones con ajustes de pago | Siguen funcionando igual para todos. Cada una se cierra sola a los 30 días (aviso al empezar y cuando queda menos de un día), salvo que antes vuelva a tener premium. |
+| Tiene más de 3 abiertas (con o sin ajustes de pago) | Se quedan abiertas las 3 primeras en llegar a sus manos; **las que sobran se cierran solas a los 30 días**. Si cierra las que no necesita, las demás se salvan (sobran siempre las últimas). Si son varias a la vez, recibe un solo aviso que lleva a «Mis votaciones». Mientras tenga más de 3, no puede crear ni reabrir. |
+| Las dos cosas a la vez | Cada motivo tiene su fecha y se cancela por su cuenta; la votación se cierra en la primera. |
+| Vuelve a tener premium durante la cuenta atrás | Se cancelan las dos en el barrido del día siguiente. Si lo vuelve a perder, empiezan otra vez desde 30. |
+| Quita los ajustes de pago durante la cuenta atrás | Si la votación deja de tener ajustes de pago (quita el plazo y los administradores y no pasa de 20 personas), queda como una gratuita y se cancela esa cuenta atrás. La aprobación y la lista de correos no se pueden quitar después de crearla, así que esas votaciones se cierran siempre. |
+| Sigue editando durante la cuenta atrás | Puede (título, descripción, añadir días u opciones), como en cualquier votación. Al final queda cerrada igual: por eso no hace falta limitar la edición. |
+| Un administrador suyo tiene premium | No cuenta: manda el plan de quien la gestiona (§8, «La regla»). |
+| La votación tiene pase (4.2) o es su primera votación premium gratis (4.4) | El pase es de la votación: no le afecta que el gestor pierda premium. Acaba en su primer cierre o a los 60 días. Pendiente de hacer con el pase. |
+| Fundadores (premium de regalo al estrenar premium, fase 5) | Al acabar el regalo, como cualquier suscripción que acaba. |
+| Al encender premium (se apaga el «todo gratis») | El primer barrido aplica todo lo anterior a todas las votaciones abiertas: las que sobran y las de pago sin premium, a 30 días. Como el estreno se avisa 30 días antes (`config/app.notice` y las condiciones de uso, que ya lo dicen), hay tiempo de sobra para cerrar lo que no se use o pagar. |
+| Tiene apagados los avisos de cambios de estado | No le llegan los push de la cuenta atrás, pero lo ve en la votación («⏳ Se cierra sola el …» y qué puede hacer). |
+| Cambia la hora del móvil | No sirve: las fechas las pone y las compara el servidor. |
+| Elimina su cuenta con premium | Sale de todas, como siempre. **Ojo, al cobrar:** eliminar la cuenta no cancela una suscripción de Google Play; hay que decirlo al eliminarla y en las condiciones de pago. |
+| Pagó con otra cuenta de Hilemos | Premium es de la cuenta (el uid) que hizo la compra. Al cobrar hará falta «Restaurar compras» para pasarla a la cuenta en la que se entra. |
+
 ### Cómo se comprueba
 
-El plan se guarda en `users/{uid}.premiumUntil` (hasta cuándo tiene premium), que solo escribe el servidor al
-comprobar el pago. Las reglas lo leen del gestor actual en cada cambio de pago y lo comparan con la hora del
-servidor, así que el premium caduca solo, sin que haga falta escribir nada al acabar la suscripción. Para elegir
-heredero con premium o con sitio, la app de quien sale tiene que poder leer `premiumUntil` y el contador de abiertas
-de quienes siguen en la votación (como mucho 150 lecturas, y solo al salir). Esa preferencia es una comodidad, no la
-protección: aunque alguien eligiera a propósito un heredero lleno, la Cloud Function que apunta la herencia en el
-contador (§9) mira las abiertas del heredero y, si pasa de 3 sin premium, apunta `autoCloseAt` a 7 días (o deja la
-fecha que ya tuviera, si es anterior). La tarea diaria del cortafuegos cancela esa cuenta atrás cuando el gestor
-tiene premium o 3 abiertas o menos.
+El plan se guarda en `plans/{uid}.premiumUntil` (hasta cuándo tiene premium). Solo lo escribe el servidor al
+comprobar el pago y solo lo lee su dueño. No puede ir en `users/{uid}`, porque las reglas dejan que cada persona
+escriba ahí lo que quiera. Las reglas y el servidor lo comparan con su hora, así que el premium caduca solo, sin que
+haga falta escribir nada al acabar la suscripción.
+
+**El interruptor.** Mientras `config/plan.freeForAll` no sea `false` (y si el documento no existe), todo es gratis:
+el servidor solo apunta `ownerSince` al heredar y quita cualquier cuenta atrás. Encender premium es escribir
+`freeForAll: false` en la consola; volver atrás, ponerlo a `true`.
+
+**Lo que hace el servidor** (`functions/plan.js`, con sus pruebas):
+
+| Función | Cuándo | Qué hace |
+| --- | --- | --- |
+| `onPollPlan` | La votación cambia de manos o se cierra a mano | Apunta `ownerSince`. Con premium encendido, busca heredero con sitio y, si no hay, pone la cuenta atrás de 7 días (sin volver a empezar la que ya corría). Al cerrarla a mano, quita la cuenta atrás. |
+| `onPlanSweep` | Cada día a las 4:00 | Recorre las abiertas por gestor: las que sobran (30 días) y las de pago sin premium (30 días). Pone las nuevas, quita las que ya no tocan y avisa de las nuevas. |
+| `onAutoClose` | Cada hora | Avisa cuando queda menos de un día y cierra las que han llegado a la fecha (`autoClosedAt`). |
+
+Las abiertas de cada persona se cuentan con una consulta (`ownerUid` y `closed == false`, sin las de plazo pasado),
+no con un contador: no se puede descuadrar. Para que las reglas impidan **crear** la cuarta hace falta, además, un
+contador (§9).
 
 ---
 
 ## 9. El límite de votaciones abiertas a la vez (3.1), caso por caso
 
-Cada persona tiene en su perfil un contador de las votaciones abiertas que **gestiona** (las que ha creado o
-heredado). Las votaciones en las que solo participa, o de las que es administrador, no cuentan. El límite es 3 sin
-premium (y 50 con premium, 3.8).
+Cuentan las votaciones abiertas que cada persona **gestiona** (las que ha creado o heredado), sin las cerradas ni las
+de plazo pasado. Las votaciones en las que solo participa, o de las que es administrador, no cuentan. El límite es 3
+sin premium (y 50 con premium, 3.8).
+
+**Las que sobran.** Si alguien tiene más de su límite, sobran **las últimas en llegar a sus manos**: por fecha de
+creación o, si la heredó, por la fecha en que la heredó (`ownerSince`). Así, quien cierra las que no necesita elige
+cuáles se quedan, y si no hace nada se quedan las primeras. Las que sobran se cierran solas: a los 7 días si sobran
+por una herencia y a los 30 en los demás casos (se acabó premium o se estrenó el límite).
+
+**Dos formas de contar.** El servidor las cuenta con una consulta cada vez que hace falta (al heredar y en el barrido
+diario): es exacto y ya está hecho. Para que **las reglas** impidan crear o reabrir la cuarta (pendiente, §12) hace
+falta además un contador, porque las reglas no pueden hacer consultas. Ese contador no puede ir en `users/{uid}`
+(la persona lo pondría a 0): irá en un documento que la app solo puede subir o bajar de uno en uno en la misma
+escritura que crea, cierra o reabre la votación (las reglas lo comprueban con `getAfter`), y que el servidor ajusta
+en lo que no hace la persona (fin del plazo, herencia, cierre automático). La tabla de abajo es la de ese contador.
 
 | Qué pasa | Contador | Si ya está en el límite |
 | --- | --- | --- |
@@ -508,13 +568,14 @@ premium (y 50 con premium, 3.8).
 | Sale de una votación abierta que gestiona | −1 para quien sale y +1 para quien la hereda | Se prefiere un heredero con premium o con sitio. Si nadie tiene sitio, la herencia no se bloquea, pero la votación se cierra sola a los 7 días salvo que el heredero baje a 3 o consiga premium (§8, «Heredar por encima del límite»). |
 | Se cierra sola por heredarla por encima del límite | −1 (lo hace la tarea programada que la cierra) | — |
 | Elimina su cuenta | Como salir de cada una | — |
-| Se le acaba el premium con 10 abiertas | Nada cambia en ellas: siguen abiertas y funcionando | No puede crear ni reabrir hasta bajar de 3. |
+| Se le acaba el premium con 10 abiertas | Nada cambia al momento: siguen abiertas y funcionando | Las 7 que sobran (las últimas en llegar a sus manos) se cierran solas a los 30 días, salvo que cierre otras o renueve. No puede crear ni reabrir hasta bajar de 3. |
 | Crea una votación con pase (4.2) | +1, como cualquier otra | El pase da funciones, no más votaciones: con 3 abiertas tampoco puede crearla. |
-| Al estrenar el límite, alguien ya tiene más de 3 | Se cuentan las que tiene | Igual: siguen funcionando y no puede crear más hasta bajar de 3. |
+| Al estrenar el límite, alguien ya tiene más de 3 | Se cuentan las que tiene | Las que sobran se cierran solas a los 30 días (el estreno se avisa 30 días antes). No puede crear más hasta bajar de 3. |
 
 Crear, cerrar y reabrir suben o bajan el contador en la misma escritura que la votación, como ya se hace con
 `members`, para que nadie pueda crear cinco de golpe antes de que se actualice. Lo que no hace el propio gestor (el
-fin del plazo o recibir una herencia) lo apunta una Cloud Function.
+fin del plazo, recibir una herencia o el cierre automático) lo apunta una Cloud Function. Si alguna vez se
+descuadrara, el barrido diario puede volver a calcularlo con la consulta.
 
 ---
 
@@ -531,7 +592,8 @@ cuenta, porque pasa el tiempo.**
 | Se ha cerrado o se ha vuelto a abrir | Participantes | Esencial (gratis) |
 | Hay un desempate; resultado definitivo o desempate sin ganadora | Participantes | Esencial (gratis) |
 | Se ha acabado el plazo | Participantes | Esencial (gratis; el plazo ya es premium) |
-| «Has heredado «X»; se cerrará sola el …» y, 1 día antes, «Mañana se cierra «X»» (al heredarla por encima del límite, §8) | Heredero | Esencial (gratis) |
+| «Se cerrará sola el …» al empezar una cuenta atrás (heredada por encima del límite, le sobra o usa funciones de pago sin premium, §8) y otro cuando queda menos de un día | Quien la gestiona | Esencial (gratis) |
+| «Se ha cerrado sola: mira el resultado» | Participantes y quien la gestiona | Esencial (gratis) |
 | «Te falta votar» (por ejemplo, 2 días después de entrar sin votar) | Quien no ha votado | Recordatorio (premium) |
 | «Quedan 24 horas para votar» | Quien no ha votado | Recordatorio (premium) |
 | «Faltan 4 personas por votar» | Gestor | Recordatorio (premium) |
@@ -586,7 +648,9 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | 4 | **Moderación configurada** (7.4, paso 5): tu cuenta de Hilemos en `config/moderation` para los avisos push de denuncias, y un panel de moderación en la app para verlas y actuar. El correo con Brevo queda como opción, no hace falta. | Yo |
 | 5 | **App Check** (7.4, paso 2): crear la clave de reCAPTCHA Enterprise (web) y activar Play Integrity (Android) en la consola de Firebase. Después lo pongo en la app en modo «solo medir» unos días y luego lo exijo. | Tú, las claves; yo, el código |
 | 6 | Probar un **aviso push real** en el móvil (7.5). | Los dos |
-| 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Tú |
+| 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Hecho: verificada ✔ |
+| 7b | **Versión mínima y aviso para todos** (`config/app`) ✔: retirar una versión vieja de Android o avisar de algo sin publicar otra. Tiene que ir en el primer `.aab`. | Hecho |
+| 7c | **El plazo en las reglas** ✔: con el plazo pasado ya no se aceptan votos tampoco desde fuera de la app. | Hecho |
 
 ### Antes de cobrar
 
@@ -594,10 +658,11 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | --- | --- | --- |
 | 8 | Hablar con un gestor: alta de autónomo, IVA de las ventas digitales y condiciones de devolución (4.5). | Tú |
 | 9 | **Saber quién es premium**: `premiumUntil` que escribe el servidor tras comprobar el pago (Google Play Billing en Android, Stripe u otra pasarela en la web; RevenueCat puede juntar las dos). | Yo, con tus cuentas de pago |
-| 10 | **Los límites en las reglas**: 3 abiertas a la vez y 50 en premium (§9), 20 personas (3.3), funciones de control (3.4), duplicar (2.2.15), imagen sin marca, Excel y PDF. | Yo |
+| 9b | **Base de premium en el servidor, apagada** ✔: `plans/{uid}`, interruptor `config/plan.freeForAll`, campos del servidor protegidos en las reglas, herencia con preferencia por quien tiene sitio, cuentas atrás (7 y 30 días), cierre automático y avisos (§8). Probado en el emulador. | Hecho |
+| 10 | **Los límites en las reglas**: 3 abiertas a la vez y 50 en premium (§9, con su contador), 20 personas (3.3), funciones de control (3.4), duplicar (2.2.15), imagen sin marca, Excel y PDF. Va con una versión nueva de la app (la del cobro), y `config/app.minBuild` retira las anteriores. | Yo |
 | 11 | **Pase de 0,60 € y primera votación gratis** (4.2 y 4.4), con las opciones de premium visibles al crear. | Yo |
-| 12 | **El cortafuegos**: cuenta atrás de 30 días, cierre a los 60 días con pase y reabrir solo con premium (§8). | Yo |
-| 13 | **Herencia con preferencia por premium y por quien tiene sitio**, con cierre a los 7 días si se hereda por encima del límite (§8), y **caducidad** a los 12 meses sin movimiento (3.6). | Yo |
+| 12 | **El cortafuegos**: la cuenta atrás de 30 días ya está ✔; falta el cierre a los 60 días con pase y que las reglas no dejen reabrir sin premium (§8). | Yo |
+| 13 | **Herencia con preferencia por premium y por quien tiene sitio** ✔ (§8); falta la **caducidad** a los 12 meses sin movimiento (3.6). | Yo |
 | 14 | La casilla de pago para renunciar al desistimiento y las condiciones de pago (4.5). | Yo, con lo que diga el gestor |
 
 ### Funciones ya decididas que faltan

@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  autoClose, autoCloseNote, hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
+import { mustUpdate } from "../state/appConfig";
 
 // Diciembre de 2025: el lunes es el 15 y el martes el 16.
 const COMIDA = { id: "c", name: "Comida", icon: "🍽️" };
@@ -508,5 +509,33 @@ describe("hasPremiumSettings y openManaged (marcas de premium)", () => {
   it("cuenta las abiertas que gestiona: ni cerradas, ni con el plazo pasado, ni ajenas", () => {
     const polls = [base, { ...base, closed: true }, { ...base, deadline: 1 }, { ...base, ownerUid: "luis" }, null, { ...base, deadline: Date.now() + 1e6 }];
     expect(openManaged(polls, "ana")).toBe(2);
+  });
+});
+
+describe("autoClose y autoCloseNote (cuenta atrás que pone el servidor)", () => {
+  const base = { title: "x", type: "days", months: [], slots: [], ownerUid: "ana" } as PollData;
+  const now = Date.UTC(2026, 11, 1, 12);
+  it("solo si sigue abierta, con el motivo que llega antes", () => {
+    expect(autoClose(base, now)).toBeNull();
+    const p = { ...base, autoCloseAt: now + 5, autoCloseWhy: { premium: now + 9, limit: now + 5 } };
+    expect(autoClose(p, now)).toEqual({ at: now + 5, reason: "limit" });
+    expect(autoClose({ ...p, autoCloseAt: now + 9, autoCloseWhy: { premium: now + 9 } }, now)).toEqual({ at: now + 9, reason: "premium" });
+    expect(autoClose({ ...p, closed: true }, now)).toBeNull();
+    expect(autoClose({ ...p, deadline: now }, now)).toBeNull();
+  });
+  it("a quien la gestiona le dice qué hacer; a los demás, solo por qué", () => {
+    expect(autoCloseNote("limit", now, true)).toMatch(/Cierra otra/);
+    expect(autoCloseNote("limit", now, false)).toMatch(/Quien la gestiona/);
+    expect(autoCloseNote("premium", now, true)).toMatch(/Con premium/);
+    expect(autoCloseNote("premium", now, false)).not.toMatch(/Con premium/);
+  });
+});
+
+describe("mustUpdate (versión mínima de la app de Android)", () => {
+  it("solo en la app y por debajo de la mínima", () => {
+    expect(mustUpdate(null, 5)).toBe(false);
+    expect(mustUpdate(4, undefined)).toBe(false);
+    expect(mustUpdate(4, 5)).toBe(true);
+    expect(mustUpdate(5, 5)).toBe(false);
   });
 });

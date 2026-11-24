@@ -242,9 +242,30 @@ bloqueadas) aunque `closed` siga a false, y el creador puede cerrarla de verdad 
 para que se pueda volver a votar (`deadline: 0`). Reabrir una votación cerrada quita también un plazo ya pasado,
 para que no quede abierta y sin poder votar.
 
-*Ojo*: igual que el anonimato, el plazo lo hace cumplir **la app, no el servidor**. No hay Cloud Functions y las
-reglas de Firestore no comprueban `deadline`, así que solo las reglas de `closed` impiden escribir votos desde
-fuera de la app.
+El plazo lo hacen cumplir **la app y las reglas**: con el plazo pasado (hora del servidor), `votingOpen()` en
+`firestore.rules` no deja crear ni cambiar `picks`, igual que con la votación cerrada. El voto del desempate va
+aparte y se puede dar aunque el plazo haya pasado. Si el reloj del móvil va atrasado, la app puede dejar pulsar y
+las reglas rechazar el voto.
+
+## Se cierra sola (premium)
+
+El servidor (`functions/plan.js`, apagado mientras `config/plan.freeForAll` no sea `false`) pone una cuenta atrás a
+las votaciones que sobran a quien las gestiona o que usan funciones de pago sin premium: `autoCloseAt` (cuándo) y
+`autoCloseWhy` (por qué). La app solo lo enseña (`autoClose` y `autoCloseNote` en `model.ts`): la pastilla «⏳ Se
+cierra sola el …» para todos (con el motivo en el tooltip) y, para quien la gestiona, qué puede hacer. Si hay un
+plazo antes, solo sale el plazo. Las reglas no dejan a la app crear ni cambiar esos campos. Todos los casos, en
+`docs/funcionalidades-y-planes.md`, §8 y §9.
+
+## Versión mínima y aviso para todos (`config/app`)
+
+Lo que se cambia desde la consola de Firebase sin publicar otra versión de la app de Android
+(`state/appConfig.ts`, `components/AppNotices.tsx`):
+
+- `minBuild`: versionCode mínimo. Si la app de Android es anterior, enseña solo «Actualizar en Google Play» (por
+  ejemplo, cuando unas reglas nuevas dejan de aceptar lo que escribe una versión vieja). En la web no aplica.
+- `notice`: `{ id, text, url? }`. Un aviso arriba de la página, para todos y también sin sesión. «Entendido» lo cierra
+  en ese dispositivo; para volver a avisar, otro `id`. Sirve para el aviso de 30 días antes de premium o para una
+  incidencia. En el modo demo se prueba poniendo `config` en el `localStorage`.
 
 En `firestore.rules`, `ownerUpdate()` acepta `deadline` entre sus claves (como un entero ≥ 0), que es lo que
 permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
@@ -431,8 +452,14 @@ Para activarlos:
    cd functions && npm install && cd ..
    app/node_modules/.bin/firebase deploy --only functions --project votaciones-9bc95
    ```
-   La del plazo (`onDeadline`) es programada: usa Cloud Scheduler, que se activa solo al desplegarla (gratis hasta
-   3 tareas por cuenta de facturación). Si no la quieres, bórrala de `functions/index.js` antes de desplegar.
+   Hay tres programadas, que usan Cloud Scheduler (se activa solo al desplegarlas; gratis hasta 3 tareas por cuenta
+   de facturación, así que no caben más sin pagar unos céntimos al mes): `onDeadline` (aviso de fin del plazo, cada
+   15 minutos), `onAutoClose` (cierra las votaciones con la cuenta atrás cumplida, cada hora) y `onPlanSweep` (pone o
+   quita las cuentas atrás, cada día a las 4:00). Las dos últimas, con `config/plan.freeForAll` sin poner a `false`,
+   solo quitan cuentas atrás.
+   Para probar las functions y las reglas en local: `firebase emulators:exec --only auth,firestore,functions
+   --project demo-hilemos "<script>"` (el emulador necesita Java 11 o más; vale el de Android Studio) y
+   `cd functions && npm test` para la lógica de `plan.js`.
 4. **App de Android**: con la clave ya en `config.ts`, `npm run android` y subir la versión nueva.
 5. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
 

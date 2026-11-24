@@ -4,7 +4,7 @@
 // Voto `polls/{id}/votes/{uid}`: { name, photo, picks: ["<slot>|<opción>", ...], tb: { id, pick } }
 
 import * as D from "./dates";
-import type { ChatReport, MemberStatus, MyPollData, PersonReport, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
+import type { AutoCloseReason, ChatReport, MemberStatus, MyPollData, PersonReport, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
 import type { IconName } from "../components/Icon";
 
 export interface TypeInfo {
@@ -55,6 +55,32 @@ export function hasPremiumSettings(p: PollData) {
 /** Votaciones abiertas que gestiona `uid` (las que creó o heredó), para el límite FREE_OPEN (§9). */
 export function openManaged(polls: (PollData | null | undefined)[], uid: string) {
   return polls.filter(p => p && p.ownerUid === uid && !p.closed && !deadlinePassed(p)).length;
+}
+
+/** Campos de la votación que solo escribe el servidor (functions/plan.js): las reglas no dejan crearlos ni cambiarlos. */
+export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCloseWarned", "autoClosedAt"] as const;
+
+/**
+ * La cuenta atrás que cerrará sola la votación, si sigue abierta: cuándo y por qué (el primer motivo que llega). La
+ * pone el servidor cuando quien la gestiona no tiene premium y le sobra o usa funciones de pago (§8).
+ */
+export function autoClose(p: PollData, now = Date.now()): { at: number; reason: AutoCloseReason } | null {
+  if (!p.autoCloseAt || p.closed || deadlinePassed(p, now)) return null;
+  const reason = (Object.entries(p.autoCloseWhy || {}).find(([, at]) => at === p.autoCloseAt)?.[0] || "limit") as AutoCloseReason;
+  return { at: p.autoCloseAt, reason };
+}
+
+/** Por qué se cerrará sola y qué se puede hacer, para quien la gestiona (`manager`) o para los demás. */
+export function autoCloseNote(reason: AutoCloseReason, at: number, manager: boolean) {
+  const when = fmtDeadline(at);
+  if (reason === "limit") {
+    return manager
+      ? `Tienes más de ${FREE_OPEN} votaciones abiertas a la vez: esta se cerrará sola el ${when}. Cierra otra para mantenerla abierta.`
+      : `Quien la gestiona tiene más votaciones abiertas de las que permite su plan: se cerrará sola el ${when}.`;
+  }
+  return manager
+    ? `Usa funciones premium y no tienes premium: se cerrará sola el ${when}. Con premium seguirá abierta.`
+    : `Usa funciones premium y quien la gestiona ya no tiene premium: se cerrará sola el ${when}.`;
 }
 /** Desde cuántos participantes aparecen el buscador y los filtros de la tabla. */
 export const PEOPLE_FILTER_FROM = 10;
