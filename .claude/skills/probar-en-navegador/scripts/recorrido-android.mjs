@@ -432,6 +432,35 @@ await check("Denunciar a una persona desde su perfil (con el dedo)", async () =>
   fs.writeFileSync(`${OUT}/perfil-denunciado.png`, adbBuf("exec-out", "screencap", "-p"));
   await tap(btn(actions(ana), "Cerrar"));
 });
+await check("Chat: en el móvil se denuncia manteniendo pulsado el mensaje", async () => {
+  await go(ana, days);
+  await ana.locator("#ptabbtn-chat").click();
+  const msg = ana.locator(".chat__msg", { hasText: "Hola desde Android" });
+  await msg.waitFor();
+  expect(await msg.getByRole("button", { name: /Denunciar mensaje de/ }).count() === 0, "sale la bandera en el móvil");
+  expect(await msg.getByRole("button", { name: "Ocultar el mensaje" }).count() === 0, "se puede ocultar sin denunciar");
+  expect((await ana.locator(".chat__note").innerText()).includes("Mantén pulsado"), "falta la pista");
+  // Pulsación larga de verdad, con adb (un deslizamiento sin moverse que dura 900 ms).
+  const body = msg.locator(".chat__body");
+  await body.evaluate(e => e.scrollIntoView({ block: "center" }));
+  await sleep(300);
+  const [x, y] = await screenPoint(body);
+  sh(`input swipe ${x} ${y} ${x} ${y} 900`);
+  await ana.locator("dialog[open] h2", { hasText: "Denunciar mensaje" }).waitFor({ timeout: 5000 });
+  await tap(ana.locator("dialog[open] label", { hasText: "Spam o publicidad" }));
+  await tap(btn(ana, "Enviar denuncia"));
+  await msg.locator(".chat__tool--done").waitFor();
+  await msg.getByRole("button", { name: "Ocultar el mensaje" }).waitFor();
+  fs.writeFileSync(`${OUT}/chat-denunciado.png`, adbBuf("exec-out", "screencap", "-p"));
+  // Desplazar el chat con el dedo no abre la denuncia.
+  const other = ana.locator(".chat__msg:not(.chat__msg--own) .chat__body--pressable").first();
+  if (await other.count()) {
+    const [ox, oy] = await screenPoint(other);
+    sh(`input swipe ${ox} ${oy} ${ox} ${oy - 200} 900`);
+    await sleep(500);
+    expect(await ana.locator("dialog[open]").count() === 0, "desplazar abre la denuncia");
+  }
+});
 await check("Descargar mis datos: menú de compartir del sistema", async () => {
   await go(ana, "#/perfil");
   return await systemShare(() => tap(btn(ana, "Descargar mis datos")));

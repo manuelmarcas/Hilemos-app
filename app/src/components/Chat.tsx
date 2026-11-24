@@ -1,10 +1,10 @@
 // Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía. Además de los
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import * as D from "../lib/dates";
 import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage } from "../lib/model";
 import type { ChatMessage, ChatReport, Poll, ReportReason, Votes } from "../lib/types";
-import { bem, cls, errMsg } from "../lib/util";
+import { bem, cls, errMsg, hasMouse } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { ReportDialog } from "./ReportDialog";
@@ -12,6 +12,9 @@ import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
 import { Icon } from "./Icon";
 import { Spinner } from "./Loading";
+
+/** Cuánto hay que mantener pulsado un mensaje (en el móvil) para denunciarlo. */
+const LONG_PRESS_MS = 550;
 
 function fmtWhen(at: number) {
   const dt = new Date(at);
@@ -42,6 +45,24 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
   const list = useRef<HTMLDivElement>(null);
   // Baja sola con cada mensaje nuevo, salvo que estés leyendo más arriba.
   const pinned = useRef(true);
+
+  // En el móvil (sin ratón) se denuncia manteniendo pulsado el mensaje, en vez de con una bandera en cada uno: así el
+  // chat queda limpio y la bandera solo sale, en rojo, en lo que ya has denunciado. Con ratón, la bandera de siempre.
+  const touch = !hasMouse();
+  const press = useRef<{ timer: number; x: number; y: number } | null>(null);
+  const cancelPress = () => { if (press.current) clearTimeout(press.current.timer); press.current = null; };
+  const startPress = (e: PointerEvent, act: () => void) => {
+    if (e.pointerType === "mouse") return;
+    cancelPress();
+    const timer = window.setTimeout(() => { press.current = null; navigator.vibrate?.(15); act(); }, LONG_PRESS_MS);
+    press.current = { timer, x: e.clientX, y: e.clientY };
+  };
+  // Si el dedo se mueve (está desplazando el chat), no es una pulsación larga.
+  const movePress = (e: PointerEvent) => {
+    const p = press.current;
+    if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) cancelPress();
+  };
+  useEffect(() => cancelPress, []);
 
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
   const since = chatSince(poll, user.uid, votes[user.uid]);
@@ -110,6 +131,7 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
         {poll.anonymous
           ? "Habla con el grupo aquí mismo. Los votos son anónimos, pero en el chat se ve tu nombre."
           : "Habla con el grupo aquí mismo, sin salir de la votación."}
+        {canWrite && touch && " Mantén pulsado un mensaje para denunciarlo."}
       </p>
       <div className="chat__card">
         <div className="chat__list" ref={list} onScroll={() => {
@@ -140,10 +162,20 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
                 const hidden = !!m.hidden;
                 const flagged = reports.get(m.id) || [];
                 const reasons = [...new Set(flagged.map(r => REPORT_REASONS[r.reason]))].join(" · ");
+                const mine = reportedByMe.has(m.id);
+                // Se puede denunciar: no es tuyo, no está oculto y aún no lo has denunciado.
+                const reportable = canWrite && !own && !hidden && !mine;
+                const report = () => setReporting({ msg: m, name });
+                const pressable = touch && reportable;
                 return (
                   <div key={m.id} className={cls("chat__msg", own && "chat__msg--own")}>
                     <Avatar name={name} photo={own ? user.photo : v?.photo} size={28} seed={m.uid} />
-                    <div className={bem("chat__body", { hidden })}>
+                    <div className={bem("chat__body", { hidden, pressable })}
+                      {...(pressable ? {
+                        onPointerDown: (e: PointerEvent) => startPress(e, report), onPointerMove: movePress,
+                        onPointerUp: cancelPress, onPointerCancel: cancelPress, onPointerLeave: cancelPress,
+                        onContextMenu: (e: { preventDefault: () => void }) => e.preventDefault(),
+                      } : {})}>
                       <div className="chat__head">
                         <span className="chat__name">{own ? "Tú" : name}</span>
                         <span className="chat__when">{fmtWhen(m.at)}</span>
@@ -153,16 +185,16 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
                           </span>
                         )}
                         <span className="chat__tools">
-                          {canWrite && !own && !hidden && (reportedByMe.has(m.id)
-                            ? (
-                              <span className="chat__tool chat__tool--done" role="img" aria-label="Ya has denunciado este mensaje"
-                                data-tip="Ya lo has denunciado"><Icon name="flag" /></span>
-                            )
-                            : (
-                              <button type="button" className="chat__tool" aria-label={`Denunciar mensaje de ${name}`} data-tip="Denunciar mensaje"
-                                onClick={() => setReporting({ msg: m, name })}><Icon name="flag" /></button>
-                            ))}
-                          {admin && (
+                          {canWrite && !own && !hidden && mine && (
+                            <span className="chat__tool chat__tool--done" role="img" aria-label="Ya has denunciado este mensaje"
+                              data-tip="Ya lo has denunciado"><Icon name="flag" /></span>
+                          )}
+                          {reportable && !touch && (
+                            <button type="button" className="chat__tool" aria-label={`Denunciar mensaje de ${name}`} data-tip="Denunciar mensaje"
+                              onClick={report}><Icon name="flag" /></button>
+                          )}
+                          {/* Ocultar, solo lo denunciado (y volver a mostrar lo que ya está oculto). */}
+                          {admin && (flagged.length > 0 || hidden) && (
                             <button type="button" className="chat__tool" aria-label={hidden ? "Volver a mostrar el mensaje" : "Ocultar el mensaje"}
                               data-tip={hidden ? "Volver a mostrar" : "Ocultar a todos"} onClick={() => setHidden(m, !hidden)}>
                               <Icon name={hidden ? "eye" : "eyeOff"} />

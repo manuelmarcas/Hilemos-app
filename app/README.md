@@ -328,8 +328,11 @@ permite «Quitar el plazo» y reabrir una votación con el plazo pasado.
 - **Moderación del chat**: «Denunciar» en cada mensaje ajeno (`ReportDialog`) guarda `polls/{id}/reports/{msgId}_{uid}`
   con una copia del mensaje; las reglas comprueban que el texto y el autor son los del mensaje de verdad, que no es un
   aviso ni propio, y que no se repite. Quien administra la votación ve la marca «Denunciado» (`watchReports`,
-  `reportsByMessage`) y puede ocultar cualquier mensaje (`setMessageHidden`, campo `hidden`): los demás ven «Mensaje
-  ocultado por quien administra la votación». La Cloud Function `onReport` avisa a quien modera Hilemos según
+  `reportsByMessage`) y puede ocultar los mensajes denunciados (`setMessageHidden`, campo `hidden`; el botón solo sale en
+  lo denunciado y en lo ya oculto, para volver a mostrarlo): los demás ven «Mensaje ocultado por quien administra la
+  votación». Con ratón se denuncia con la bandera de cada mensaje; en el móvil (sin ratón, `hasMouse`), manteniendo
+  pulsado el mensaje (550 ms, se cancela si el dedo se mueve) y la bandera solo sale, en rojo, en lo que ya has
+  denunciado (`watchMyReports`, también en el perfil de una persona: «Ya le has denunciado»). La Cloud Function `onReport` avisa a quien modera Hilemos según
   `config/moderation` (solo la lee el servidor): `uids` para avisos push y `email` + `brevoKey` para un correo con
   la denuncia. Sin configurar, la denuncia se queda guardada y se ve en la consola de Firebase. Los correos llevan el
   asunto «[Hilemos] Denuncia en «…»», para filtrarlos en Gmail.

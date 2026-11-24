@@ -315,6 +315,8 @@ await check("Denunciar a una persona desde su perfil", async () => {
 await check("Chat: el mensaje que ya has denunciado queda marcado", async () => {
   await ana.locator("#ptabbtn-chat").click();
   const msg = ana.locator(".chat__msg", { hasText: "¡Hola!" });
+  // «Ocultar» solo sale en lo denunciado.
+  expect(await msg.getByRole("button", { name: "Ocultar el mensaje" }).count() === 0, "se puede ocultar sin denunciar");
   await msg.getByRole("button", { name: /Denunciar mensaje de/ }).click();
   await ana.getByLabel("Spam o publicidad").check();
   await btn(ana, "Enviar denuncia").click();
@@ -323,6 +325,10 @@ await check("Chat: el mensaje que ya has denunciado queda marcado", async () => 
   await ana.reload();
   await ana.locator("#ptabbtn-chat").click();
   await ana.locator(".chat__msg", { hasText: "¡Hola!" }).locator(".chat__tool--done").waitFor();
+  const again = ana.locator(".chat__msg", { hasText: "¡Hola!" });
+  await again.getByRole("button", { name: "Ocultar el mensaje" }).click();
+  await again.getByRole("button", { name: "Volver a mostrar el mensaje" }).click();
+  await again.getByRole("button", { name: "Ocultar el mensaje" }).waitFor();
 });
 await check("Descargar mis datos (Tu perfil)", async () => {
   await go(ana, "#/perfil");

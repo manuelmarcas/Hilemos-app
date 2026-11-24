@@ -55,6 +55,9 @@
 }
 /* Mensaje oculto: borde de puntos; los demás ven un aviso en cursiva y quien administra, el texto en gris */
 .chat__body--hidden{border:1px dashed var(--line)}
+/* En el móvil se denuncia manteniendo pulsado: sin seleccionar el texto ni el menú del sistema mientras tanto */
+.chat__body--pressable{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.chat__body--pressable:active{filter:brightness(.96)}
 .chat__text--hidden{color:var(--muted);font-style:italic}
 .chat__hidden-note{margin:2px 0 0;font-size:.75rem;color:var(--muted)}
 /* Aviso de un cambio en la votación (lo escribe la app al editarla): una línea centrada, sin burbuja */
