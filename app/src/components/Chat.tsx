@@ -1,6 +1,6 @@
 // Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía. Además de los
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import * as D from "../lib/dates";
 import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage } from "../lib/model";
 import type { ChatMessage, ChatReport, Poll, ReportReason, Votes } from "../lib/types";
@@ -12,6 +12,9 @@ import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
 import { Icon } from "./Icon";
 import { Spinner } from "./Loading";
+
+/** Alto máximo del campo de escribir (unas 5 líneas); con más texto, se desplaza dentro. */
+const CHAT_FIELD_MAX = 140;
 
 /** Cuánto hay que mantener pulsado un mensaje (en el móvil) para denunciarlo. */
 const LONG_PRESS_MS = 550;
@@ -41,7 +44,7 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
   const [text, setText] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const field = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
   const list = useRef<HTMLDivElement>(null);
   // Baja sola con cada mensaje nuevo, salvo que estés leyendo más arriba.
   const pinned = useRef(true);
@@ -63,6 +66,14 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
     if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) cancelPress();
   };
   useEffect(() => cancelPress, []);
+
+  // El campo crece con el texto (saltos de línea incluidos) hasta CHAT_FIELD_MAX px; a partir de ahí, se desplaza.
+  useLayoutEffect(() => {
+    const el = field.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight + 2, CHAT_FIELD_MAX)}px`;
+  }, [text]);
 
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
   const since = chatSince(poll, user.uid, votes[user.uid]);
@@ -91,8 +102,8 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
     if (el && active && pinned.current) el.scrollTop = el.scrollHeight;
   }, [msgs, active]);
 
-  async function send(e: FormEvent) {
-    e.preventDefault();
+  async function send(e?: FormEvent) {
+    e?.preventDefault();
     const t = text.trim();
     if (!t || busy) return;
     setBusy(true);
@@ -216,9 +227,15 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
         </div>
         {canWrite ? (
           <form className="chat__form" onSubmit={send}>
-            <div className="emoji-field chat__field">
-              <input ref={field} className="input emoji-field__input" maxLength={MAX_CHAT} placeholder="Escribe un mensaje" autoComplete="off"
-                aria-label="Mensaje" enterKeyHint="send" value={text} onChange={e => setText(e.target.value)} />
+            <div className="emoji-field emoji-field--area chat__field">
+              {/* Intro hace un salto de línea: solo envía el botón «Enviar» (y, como atajo con teclado físico,
+                  Ctrl o Cmd + Intro). */}
+              <textarea ref={field} className="input emoji-field__input chat__input" rows={1} maxLength={MAX_CHAT}
+                placeholder="Escribe un mensaje" autoComplete="off" aria-label="Mensaje" enterKeyHint="enter"
+                value={text} onChange={e => setText(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); }
+                }} />
               <EmojiButton field={() => field.current} setValue={setText} />
             </div>
             {/* Pulsar «Enviar» no le quita el foco al campo: en el móvil, así el teclado no se cierra y se vuelve a abrir. */}

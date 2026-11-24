@@ -17,6 +17,7 @@ import {
 } from "./plan.js";
 import { dailyStats } from "./stats.js";
 import { DAY, fmtWhen } from "./time.js";
+import { reportMail } from "./reportMail.js";
 
 initializeApp();
 const db = getFirestore();
@@ -293,21 +294,41 @@ const REASONS = {
 const CONSOLE = "https://console.firebase.google.com/project/votaciones-9bc95/firestore/data";
 
 /** Correo con Brevo (su API, sin dependencias). `from` tiene que ser un remitente verificado en Brevo. */
-async function sendMail(key, from, to, subject, text) {
+async function sendMail(key, from, to, subject, { html, text }) {
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": key, "content-type": "application/json", accept: "application/json" },
-    body: JSON.stringify({ sender: { name: "Hilemos", email: from }, to: [{ email: to }], subject, textContent: text }),
+    body: JSON.stringify({ sender: { name: "Hilemos", email: from }, to: [{ email: to }], subject, htmlContent: html, textContent: text }),
   });
   if (!res.ok) console.error("No se pudo mandar el correo de la denuncia", res.status, await res.text());
   else console.log("Correo de la denuncia aceptado por Brevo para", to);
 }
 
+/** Dominio del correo interno de las cuentas con clave de acceso (app/src/lib/store/accessKey.ts): no es un correo. */
+const KEY_DOMAIN = "@clave.hilemos.web.app";
+
+/**
+ * Correo y tipo de cuenta de alguien, para el correo de la denuncia: de la cuenta de inicio de sesión de Firebase. Las
+ * cuentas sin registro (anónimas o con clave de acceso) no tienen correo de verdad.
+ */
+async function accountOf(uid) {
+  try {
+    const u = await getAuth().getUser(uid);
+    const google = u.providerData.find(p => p.providerId === "google.com");
+    const email = (google?.email || u.email || "").toLowerCase();
+    if (google) return { email, account: "Cuenta de Google" };
+    if (email && !email.endsWith(KEY_DOMAIN)) return { email, account: "Cuenta con correo" };
+    return { email: "", account: "Sin registro (clave de acceso)" };
+  } catch {
+    return { email: "", account: "Cuenta eliminada o no encontrada" };
+  }
+}
+
 // Denuncias (de un mensaje del chat o de una persona): se avisa a quien modera Hilemos. Lo que hay que avisar se
 // configura en config/moderation (solo lo lee el servidor): `uids` (avisos push a esas cuentas), `email` y `brevoKey`
-// (un correo con la denuncia). Sin configurar, la denuncia queda guardada y se ve en la consola de Firebase.
+// (un correo con la denuncia, ver reportMail.js). Sin configurar, la denuncia queda guardada y se ve en la consola.
 // Los asuntos de los correos empiezan siempre por «[Hilemos] Denuncia», para poder filtrarlos en el correo.
-async function alertModerators({ pollId, path, push, subject, lines }) {
+async function alertModerators({ pollId, path, push, subject, mail }) {
   const [poll, cfg] = await Promise.all([db.doc(`polls/${pollId}`).get(), db.doc("config/moderation").get()]);
   const title = poll.get("title") || "Votación";
   const tasks = [];
@@ -326,16 +347,18 @@ async function alertModerators({ pollId, path, push, subject, lines }) {
     uids: uids.length,
   });
   if (email && key) {
-    const text = [
-      ...lines(title).filter(l => l !== null),
-      "",
-      `Votación: ${pollUrl(pollId)}`,
-      `Denuncia en la consola: ${CONSOLE}/~2F${path.split("/").map(encodeURIComponent).join("~2F")}`,
-    ].join("\n");
-    tasks.push(sendMail(key, email, email, `[Hilemos] Denuncia en «${title}»: ${subject}`, text));
+    const consoleUrl = `${CONSOLE}/~2F${path.split("/").map(encodeURIComponent).join("~2F")}`;
+    const content = await mail({ pollTitle: title, pollUrl: pollUrl(pollId), consoleUrl });
+    tasks.push(sendMail(key, email, email, `[Hilemos] Denuncia en «${title}»: ${subject}`, content));
   }
   if (!tasks.length) console.warn("Denuncia sin moderación configurada (config/moderation)", path);
   await Promise.all(tasks);
+}
+
+/** Las dos personas de una denuncia, con su correo y su tipo de cuenta. */
+async function reportPeople(reported, reporter) {
+  const [a, b] = await Promise.all([accountOf(reported.uid), accountOf(reporter.uid)]);
+  return { reported: { ...reported, ...a }, reporter: { ...reporter, ...b } };
 }
 
 export const onReport = onDocumentCreated("polls/{pollId}/reports/{reportId}", async event => {
@@ -344,14 +367,10 @@ export const onReport = onDocumentCreated("polls/{pollId}/reports/{reportId}", a
   const reason = REASONS[r.reason] || r.reason;
   await alertModerators({
     pollId: event.params.pollId, path: event.data.ref.path, push: "Denuncia en el chat", subject: reason,
-    lines: title => [
-      `Han denunciado un mensaje del chat de «${title}».`,
-      "",
-      `Motivo: ${reason}`,
-      r.comment ? `Comentario: ${r.comment}` : null,
-      `Mensaje de ${r.msgName}: «${r.msgText}»`,
-      `Lo denuncia: ${r.byName}`,
-    ],
+    mail: async base => reportMail({
+      ...base, kind: "message", reason, comment: r.comment, message: r.msgText, at: r.at,
+      ...(await reportPeople({ name: r.msgName, uid: r.msgUid }, { name: r.byName, uid: r.by })),
+    }),
   });
 });
 
@@ -361,13 +380,9 @@ export const onPersonReport = onDocumentCreated("polls/{pollId}/personReports/{r
   const reason = REASONS[r.reason] || r.reason;
   await alertModerators({
     pollId: event.params.pollId, path: event.data.ref.path, push: "Denuncia de una persona", subject: `${r.targetName}, ${reason}`,
-    lines: title => [
-      `Han denunciado a ${r.targetName} en «${title}».`,
-      "",
-      `Motivo: ${reason}`,
-      r.comment ? `Comentario: ${r.comment}` : null,
-      r.targetPhoto ? "Tenía foto de perfil: está copiada en la denuncia (campo targetPhoto)." : "No tenía foto de perfil.",
-      `Lo denuncia: ${r.byName}`,
-    ],
+    mail: async base => reportMail({
+      ...base, kind: "person", reason, comment: r.comment, at: r.at,
+      ...(await reportPeople({ name: r.targetName, uid: r.targetUid, photo: r.targetPhoto }, { name: r.byName, uid: r.by })),
+    }),
   });
 });

@@ -202,7 +202,7 @@ await check("Bea entra con el enlace y vota", async () => {
 });
 await check("Chat: mensaje y contador de no leídos", async () => {
   await bea.locator("#ptabbtn-chat").click();
-  await bea.fill("input[aria-label='Mensaje']", "¡Hola!");
+  await bea.fill("[aria-label='Mensaje']", "¡Hola!");
   await btn(bea, "Enviar").click();
   await bea.waitForSelector(".chat__msg--own");
   await go(ana, days);
@@ -213,10 +213,30 @@ await check("Chat: mensaje y contador de no leídos", async () => {
   await ana.waitForSelector(".chat__msg:has-text('¡Hola!')");
   return "no leídos: " + badge;
 });
+await check("Chat: Intro hace un salto de línea y solo envía el botón", async () => {
+  await go(bea, days);
+  await bea.locator("#ptabbtn-chat").click();
+  const field = bea.locator("[aria-label='Mensaje']");
+  await field.click();
+  await bea.keyboard.type("Primera línea");
+  await bea.keyboard.press("Enter");
+  await bea.keyboard.type("Segunda línea");
+  expect((await field.inputValue()) === "Primera línea\nSegunda línea", "Intro ha enviado: " + JSON.stringify(await field.inputValue()));
+  const h = (await field.boundingBox()).height;
+  await btn(bea, "Enviar").click();
+  const msg = bea.locator(".chat__msg--own", { hasText: "Primera línea" });
+  await msg.waitFor();
+  expect((await msg.locator(".chat__text").innerText()).includes("\n"), "el mensaje no conserva el salto");
+  expect((await field.inputValue()) === "", "el campo no se vacía");
+  return `campo con 2 líneas: ${Math.round(h)} px`;
+});
 await check("Avisar a quien falta (Cris entra sin votar)", async () => {
   const cris = await page("Cris");
   await login(cris, "Cris");
   await go(cris, days);
+  // Que le dé tiempo a entrar (se guarda al abrir la votación) antes de cerrar su pestaña.
+  await cris.waitForSelector(".poll-tabs");
+  await cris.waitForTimeout(600);
   await cris.close();
   await go(ana, days);
   await ana.locator("#ptabbtn-people").click();

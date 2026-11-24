@@ -347,7 +347,7 @@ await check("Bea entra con el enlace y vota", async () => {
 });
 await check("Chat: mensaje con el teclado del móvil y contador de no leídos", async () => {
   await bea.locator("#ptabbtn-chat").click();
-  const input = bea.locator("input[aria-label='Mensaje']");
+  const input = bea.locator("[aria-label='Mensaje']");
   await tap(input);
   sh("input text Hola%sdesde%sAndroid");
   await sleep(600);
@@ -365,10 +365,13 @@ await check("Chat: mensaje con el teclado del móvil y contador de no leídos", 
 await check("Chat: al enviar, el campo se vacía al momento y el teclado sigue abierto", async () => {
   await go(bea, days);
   await bea.locator("#ptabbtn-chat").click();
-  const input = bea.locator("input[aria-label='Mensaje']");
+  const input = bea.locator("[aria-label='Mensaje']");
   await tap(input);
   sh("input text Segundo%smensaje");
+  sh("input keyevent KEYCODE_ENTER");
+  sh("input text en%sdos%slineas");
   await sleep(600);
+  expect((await input.inputValue()) === "Segundo mensaje\nen dos lineas", "Intro ha enviado: " + JSON.stringify(await input.inputValue()));
   expect(keyboardShown(), "el teclado no se abre");
   await tap(btn(bea, "Enviar"));
   expect((await input.inputValue()) === "", "el campo no se vacía: " + await input.inputValue());
