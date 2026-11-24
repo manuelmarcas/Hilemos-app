@@ -108,6 +108,8 @@
   color:var(--brand-strong);
 }
 .mode-pill--anon{background:var(--soft);color:var(--ink)}
+/* Cuenta atrás del servidor («Se cierra en 5 días», «Último día»): ámbar de aviso, para que no se confunda con un plazo puesto a propósito */
+.mode-pill--closing{background:var(--tie-soft);color:var(--tie-ink)}
 /* «Salir de la votación», al final de la votación: discreto, como acción destructiva de bloque */
 .poll-leave{margin:28px 0 8px;padding-top:14px;border-top:1px solid var(--line);text-align:center}
 .poll-leave__btn{font-size:.86rem}

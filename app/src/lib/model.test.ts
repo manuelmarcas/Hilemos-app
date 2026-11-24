@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  autoClose, autoCloseNote, hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  autoClose, autoCloseNote, closingLabel, hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -522,6 +522,19 @@ describe("autoClose y autoCloseNote (cuenta atrás que pone el servidor)", () =>
     expect(autoClose({ ...p, autoCloseAt: now + 9, autoCloseWhy: { premium: now + 9 } }, now)).toEqual({ at: now + 9, reason: "premium" });
     expect(autoClose({ ...p, closed: true }, now)).toBeNull();
     expect(autoClose({ ...p, deadline: now }, now)).toBeNull();
+    // Un plazo que llega antes la cierra primero: la cuenta atrás no cuenta.
+    expect(autoClose({ ...p, deadline: now + 3 }, now)).toBeNull();
+    expect(autoClose({ ...p, deadline: now + 7 }, now)).toEqual({ at: now + 5, reason: "limit" });
+  });
+  it("la etiqueta cuenta los días que quedan, hasta «Último día»", () => {
+    const at = new Date(2026, 11, 8, 23, 59).getTime(); // se cierra al acabar el 8 de diciembre
+    expect(closingLabel(at, new Date(2026, 11, 1, 10).getTime())).toBe("Se cierra en 7 días");
+    expect(closingLabel(at, new Date(2026, 11, 6, 23, 0).getTime())).toBe("Se cierra en 2 días");
+    expect(closingLabel(at, new Date(2026, 11, 7, 0, 30).getTime())).toBe("Se cierra mañana");
+    expect(closingLabel(at, new Date(2026, 11, 8, 0, 1).getTime())).toBe("Último día");
+    expect(closingLabel(at, new Date(2026, 11, 8, 23, 58).getTime())).toBe("Último día");
+    // Con el cambio de hora por medio (25 de octubre) siguen siendo días enteros.
+    expect(closingLabel(new Date(2026, 9, 27, 23, 59).getTime(), new Date(2026, 9, 24, 12).getTime())).toBe("Se cierra en 3 días");
   });
   it("a quien la gestiona le dice qué hacer; a los demás, solo por qué", () => {
     expect(autoCloseNote("limit", now, true)).toMatch(/Cierra otra/);

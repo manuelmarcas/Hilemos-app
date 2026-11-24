@@ -50,6 +50,8 @@
 .badge{font-size:.7rem;font-weight:700;background:var(--danger-soft);color:var(--danger);padding:3px 8px;border-radius:99px;white-space:nowrap}
 .badge--mine{background:var(--brand-soft);color:var(--brand-strong)}
 .badge--gone{background:var(--soft);color:var(--muted)}
+/* Se cerrará sola (cuenta atrás del servidor): ámbar de aviso, como la pastilla de dentro de la votación */
+.badge--closing{background:var(--tie-soft);color:var(--tie-ink)}
 .poll-card__more{
   flex:none;
   width:44px;

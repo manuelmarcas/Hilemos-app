@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
   isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
-  MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN, autoClose, autoCloseNote,
+  MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN, autoClose, autoCloseNote, closingLabel,
 } from "../../lib/model";
 import type { MemberStatus, PersonReport, Poll, ReportReason, Vote, Votes } from "../../lib/types";
 import { Avatar } from "../../components/Avatar";
@@ -524,10 +524,10 @@ export function PollPage({ id }: { id: string }) {
             <span className={`mode-pill ${poll.anonymous ? "mode-pill--anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
             {poll.emailsOnly && <span className="mode-pill mode-pill--anon"><Icon name="mail" /> Solo invitados</span>}
             {poll.approval && <span className="mode-pill mode-pill--anon"><Icon name="approve" /> Con aprobación</span>}
-            {!!poll.deadline && !expired && !poll.closed && (!closing || poll.deadline <= closing.at) && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
-            {closing && (!poll.deadline || closing.at < poll.deadline) && (
-              <span className="mode-pill" data-tip={autoCloseNote(closing.reason, closing.at, isOwner)}>
-                <Icon name="hourglass" /> Se cierra sola el {fmtDeadline(closing.at)}
+            {!!poll.deadline && !expired && !poll.closed && !closing && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
+            {closing && (
+              <span className="mode-pill mode-pill--closing" data-tip={autoCloseNote(closing.reason, closing.at, isOwner)}>
+                <Icon name="hourglass" /> {closingLabel(closing.at)}
               </span>
             )}
           </div>

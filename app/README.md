@@ -251,8 +251,10 @@ las reglas rechazar el voto.
 
 El servidor (`functions/plan.js`, apagado mientras `config/plan.freeForAll` no sea `false`) pone una cuenta atrás a
 las votaciones que sobran a quien las gestiona o que usan funciones de pago sin premium: `autoCloseAt` (cuándo) y
-`autoCloseWhy` (por qué). La app solo lo enseña (`autoClose` y `autoCloseNote` en `model.ts`): la pastilla «⏳ Se
-cierra sola el …» para todos (con el motivo en el tooltip) y, para quien la gestiona, qué puede hacer. Si hay un
+`autoCloseWhy` (por qué). La app solo lo enseña (`autoClose`, `closingLabel` y `autoCloseNote` en `model.ts`): una etiqueta ámbar con lo
+que le queda, por días del calendario («Se cierra en 5 días», «Se cierra mañana», «Último día»), en la tarjeta de
+«Mis votaciones» y en la cabecera de la votación, con el motivo en el tooltip; y, para quien la gestiona, qué puede
+hacer. El servidor cierra al acabar el último día (23:59, hora de España). Si hay un
 plazo antes, solo sale el plazo. Las reglas no dejan a la app crear ni cambiar esos campos. Todos los casos, en
 `docs/funcionalidades-y-planes.md`, §8 y §9.
 

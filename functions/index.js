@@ -226,7 +226,7 @@ export const onAutoClose = onSchedule({ schedule: "every 60 minutes", timeZone: 
     const fix = p.autoCloseWhy?.limit === p.autoCloseAt
       ? "Cierra otra votación para mantenerla abierta."
       : "Con premium sigue abierta.";
-    await notifyCountdown(p.ownerUid, d.id, p, `Se cerrará sola el ${fmtWhen(p.autoCloseAt)}: queda menos de un día. ${fix}`);
+    await notifyCountdown(p.ownerUid, d.id, p, `Es su último día: se cerrará sola al acabar el ${fmtWhen(p.autoCloseAt)}. ${fix}`);
   }));
 });
 

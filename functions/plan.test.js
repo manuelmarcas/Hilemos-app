@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DAY, FREE_OPEN, GRACE, INHERIT_GRACE, addedReasons, betterHeir, closeAtOf, countdownPatch, extrasOf, isOpen,
+  DAY, FREE_OPEN, GRACE, INHERIT_GRACE, addedReasons, betterHeir, closeAtOf, countdownPatch, endOfDay, extrasOf, fmtWhen, isOpen,
   nextWhy, openLimit, paidSettings,
 } from "./plan.js";
 
@@ -45,19 +45,19 @@ test("extrasOf: sobran las últimas en llegar a sus manos (heredada = ownerSince
 
 test("nextWhy: cuentas atrás nuevas, conservadas y quitadas", () => {
   // Hereda sin sitio: 7 días.
-  assert.deepEqual(nextWhy({}, { extra: true, paid: false, premium: false, now, extraGrace: INHERIT_GRACE }), { limit: now + 7 * DAY });
+  assert.deepEqual(nextWhy({}, { extra: true, paid: false, premium: false, now, extraGrace: INHERIT_GRACE }), { limit: endOfDay(now + 7 * DAY) });
   // Sobra sin herencia: 30 días.
-  assert.deepEqual(nextWhy({}, { extra: true, paid: false, premium: false, now }), { limit: now + GRACE });
+  assert.deepEqual(nextWhy({}, { extra: true, paid: false, premium: false, now }), { limit: endOfDay(now + GRACE) });
   // Ya corría: la fecha no vuelve a empezar (pasarla entre dos cuentas llenas no la alarga).
   assert.deepEqual(nextWhy({ limit: now + DAY }, { extra: true, paid: false, premium: false, now, extraGrace: INHERIT_GRACE }), { limit: now + DAY });
   // Deja de sobrar: se quita.
   assert.deepEqual(nextWhy({ limit: now + DAY }, { extra: false, paid: false, premium: false, now }), {});
   // Funciones de pago sin premium: 30 días; con premium, nada.
-  assert.deepEqual(nextWhy({}, { extra: false, paid: true, premium: false, now }), { premium: now + GRACE });
+  assert.deepEqual(nextWhy({}, { extra: false, paid: true, premium: false, now }), { premium: endOfDay(now + GRACE) });
   assert.deepEqual(nextWhy({ premium: now + DAY }, { extra: false, paid: true, premium: true, now }), {});
   // Las dos a la vez: cada una con su fecha.
   assert.deepEqual(nextWhy({ premium: now + DAY }, { extra: true, paid: true, premium: false, now, extraGrace: INHERIT_GRACE }),
-    { limit: now + INHERIT_GRACE, premium: now + DAY });
+    { limit: endOfDay(now + INHERIT_GRACE), premium: now + DAY });
 });
 
 test("closeAtOf: la primera fecha, o 0", () => {
@@ -95,4 +95,21 @@ test("betterHeir: administrador con premium, luego con sitio, luego cualquier pa
   assert.equal(await betterHeir({ admins: ["a3"], others: ["p1", "p2"] }, room), "p2");
   assert.equal(await betterHeir({ admins: ["a3"], others: ["p1"] }, room), null);
   assert.equal(await betterHeir({ admins: [], others: [] }, room), null);
+});
+
+test("endOfDay: las 23:59 de ese día en hora de España (invierno y verano)", () => {
+  assert.equal(endOfDay(Date.UTC(2026, 11, 1, 12)), Date.UTC(2026, 11, 1, 22, 59)); // invierno: UTC+1
+  assert.equal(endOfDay(Date.UTC(2026, 6, 10, 12)), Date.UTC(2026, 6, 10, 21, 59)); // verano: UTC+2
+  // Las 00:30 del 2 de diciembre en España (23:30 UTC del 1): acaba el día 2.
+  assert.equal(endOfDay(Date.UTC(2026, 11, 1, 23, 30)), Date.UTC(2026, 11, 2, 22, 59));
+  // Ya son las 23:59: se queda igual.
+  assert.equal(endOfDay(Date.UTC(2026, 11, 1, 22, 59)), Date.UTC(2026, 11, 1, 22, 59));
+  // Días de cambio de hora (29 de marzo y 25 de octubre de 2026).
+  assert.equal(endOfDay(Date.UTC(2026, 2, 29, 12)), Date.UTC(2026, 2, 29, 21, 59));
+  assert.equal(endOfDay(Date.UTC(2026, 9, 25, 12)), Date.UTC(2026, 9, 25, 22, 59));
+});
+
+test("fmtWhen: sin hora al acabar el día; con hora si no", () => {
+  assert.equal(fmtWhen(Date.UTC(2026, 11, 1, 22, 59)), "1 de diciembre");
+  assert.equal(fmtWhen(Date.UTC(2026, 11, 1, 17, 0)), "1 de diciembre a las 18:00");
 });

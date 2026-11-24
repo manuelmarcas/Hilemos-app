@@ -45,15 +45,37 @@ export function extrasOf(polls, limit) {
   return new Set(sorted.slice(limit).map(p => p.id));
 }
 
+const MADRID = "Europe/Madrid";
+/** Año, mes y día (y hora) de `ts` en hora de España. */
+function madridParts(ts) {
+  const f = new Intl.DateTimeFormat("en-US", {
+    timeZone: MADRID, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+  return Object.fromEntries(f.formatToParts(new Date(ts)).filter(p => p.type !== "literal").map(p => [p.type, Number(p.value)]));
+}
+
+/**
+ * Las 23:59 del día de `ts` en hora de España. Las cuentas atrás acaban al final de un día, como un plazo sin hora:
+ * así «Último día» en la app quiere decir que al día siguiente ya está cerrada.
+ */
+export function endOfDay(ts) {
+  const { year, month, day } = madridParts(ts);
+  const wall = Date.UTC(year, month - 1, day, 23, 59);
+  // Lo que España va por delante de UTC a esa hora (1 o 2 horas; los cambios de hora son de madrugada).
+  const p = madridParts(wall);
+  const offset = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - wall;
+  return wall - offset;
+}
+
 /**
  * Las cuentas atrás que le tocan a una votación abierta. `why` es la que tiene ({ limit?, premium? }: cuándo se
  * cierra por cada motivo); una que ya corre conserva su fecha (no vuelve a empezar). `extraGrace`: 7 días si sobra por
- * una herencia, 30 si no.
+ * una herencia, 30 si no. Acaban al final de ese día (endOfDay).
  */
 export function nextWhy(why = {}, { extra, paid, premium, now, extraGrace = GRACE }) {
   const out = {};
-  if (extra) out.limit = why.limit || now + extraGrace;
-  if (paid && !premium) out.premium = why.premium || now + GRACE;
+  if (extra) out.limit = why.limit || endOfDay(now + extraGrace);
+  if (paid && !premium) out.premium = why.premium || endOfDay(now + GRACE);
   return out;
 }
 
@@ -113,11 +135,13 @@ export async function betterHeir({ admins, others }, room) {
   return null;
 }
 
-/** «2 de diciembre a las 18:00», en hora de España (la de los avisos). */
+/** «2 de diciembre» (al acabar el día, como las cuentas atrás) o «2 de diciembre a las 18:00», en hora de España. */
 export function fmtWhen(ts) {
   const d = new Date(ts);
-  const day = d.toLocaleDateString("es-ES", { day: "numeric", month: "long", timeZone: "Europe/Madrid" });
-  const time = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+  const day = d.toLocaleDateString("es-ES", { day: "numeric", month: "long", timeZone: MADRID });
+  const { hour, minute } = madridParts(ts);
+  if (hour === 23 && minute === 59) return day;
+  const time = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: MADRID });
   return `${day} a las ${time}`;
 }
 

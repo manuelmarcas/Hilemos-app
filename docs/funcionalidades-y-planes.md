@@ -372,14 +372,21 @@ premium: una segunda cuenta (las cuentas sin registro son gratis) crea 3 votacio
 Vuelve a tener 0 abiertas, crea otras 3, y así sin fin.
 
 **La regla.** Si el heredero, con la votación heredada, pasa de 3 abiertas y no tiene premium, **la votación se
-cierra sola a los 7 días** con el resultado que tenga en ese momento. Sin el freno, quien no paga podría juntar en su
+cierra sola a los 7 días** con el resultado que tenga en ese momento.
+
+**Cómo se ve.** Desde que empieza la cuenta atrás, la votación lleva una etiqueta ámbar en «Mis votaciones» y en su
+cabecera que cambia cada día: «Se cierra en 7 días», «Se cierra en 6 días»… «Se cierra mañana» y, el último,
+«Último día». Todas las cuentas atrás (también las de 30 días) acaban **al final de un día** (23:59, hora de España),
+como un plazo sin hora: el día de «Último día» se puede seguir votando y al día siguiente ya está cerrada, salvo que
+antes cambie algo (cierra otra, consigue premium o la hereda alguien con sitio). Si la votación tiene un plazo que
+llega antes, solo se ve el plazo. Sin el freno, quien no paga podría juntar en su
 cuenta todas las que quisiera; con él, cada votación heredada de más dura como mucho una semana, así que el truco deja
 de compensar. A quien vota no se le corta de golpe: tiene una semana para terminar (1.1).
 
 | Caso | Qué pasa |
 | --- | --- |
 | El heredero tiene premium o, con la heredada, se queda en 3 o menos | Nada: la hereda sin cuenta atrás. |
-| El heredero, sin premium, pasa de 3 con la heredada | Cuenta atrás de 7 días. Todos ven «⏳ Se cierra sola el …» (el motivo, en el tooltip). El heredero ve en la votación qué puede hacer y recibe un aviso al heredarla («La has heredado y ya tienes más de 3 votaciones abiertas: se cerrará sola el …. Cierra otra para mantenerla abierta») y otro cuando queda menos de un día. |
+| El heredero, sin premium, pasa de 3 con la heredada | Cuenta atrás de 7 días. Todos ven la etiqueta ámbar con lo que le queda, en «Mis votaciones» y en la votación (el motivo, en el tooltip). El heredero ve en la votación qué puede hacer y recibe un aviso al heredarla («La has heredado y ya tienes más de 3 votaciones abiertas: se cerrará sola el …. Cierra otra para mantenerla abierta») y otro cuando queda menos de un día. |
 | Durante la cuenta atrás, el heredero cierra o elimina otras y baja a 3 o menos | Se cancela la cuenta atrás (en el barrido diario: como mucho, un día después). |
 | Tiene varias que le sobran (por ejemplo, 5 abiertas) y cierra una (queda en 4) | **Sobran siempre las últimas en llegar a sus manos** (§9): con 5 sobran 2; al cerrar una, sobra 1 y a la otra se le quita la cuenta atrás. Así elige él cuáles se quedan, cerrando las que no necesita. |
 | Durante la cuenta atrás, el heredero consigue premium | Se cancela. Si después lo pierde, las que le sobren tendrán la cuenta atrás de 30 días (ver «De premium a gratis»). |
@@ -458,7 +465,7 @@ administradores, plazo o resultados ocultos):
 
 1. **Si quien la gestiona deja de tener premium, la votación se cierra sola a los 30 días** con el resultado que
    tenga en ese momento. Pasa igual si se da de baja, si se le acaba la suscripción o si la hereda alguien sin
-   premium. Durante esos 30 días todo sigue funcionando como siempre. Todos ven «Se cierra sola el …», y quien la
+   premium. Durante esos 30 días todo sigue funcionando como siempre. Todos ven la etiqueta con lo que le queda («Se cierra en 30 días»… «Último día»), y quien la
    gestiona recibe un aviso al empezar la cuenta atrás y otro cuando queda menos de un día (el mismo que en las
    demás cuentas atrás). Si al cerrarse hay empate, queda cerrada con el empate y se puede desempatar, porque
    desempatar es gratis.
@@ -506,7 +513,7 @@ es lo mismo: `plans/{uid}.premiumUntil` queda en el pasado.
 | La votación tiene pase (4.2) o es su primera votación premium gratis (4.4) | El pase es de la votación: no le afecta que el gestor pierda premium. Acaba en su primer cierre o a los 60 días. Pendiente de hacer con el pase. |
 | Fundadores (premium de regalo al estrenar premium, fase 5) | Al acabar el regalo, como cualquier suscripción que acaba. |
 | Al encender premium (se apaga el «todo gratis») | El primer barrido aplica todo lo anterior a todas las votaciones abiertas: las que sobran y las de pago sin premium, a 30 días. Como el estreno se avisa 30 días antes (`config/app.notice` y las condiciones de uso, que ya lo dicen), hay tiempo de sobra para cerrar lo que no se use o pagar. |
-| Tiene apagados los avisos de cambios de estado | No le llegan los push de la cuenta atrás, pero lo ve en la votación («⏳ Se cierra sola el …» y qué puede hacer). |
+| Tiene apagados los avisos de cambios de estado | No le llegan los push de la cuenta atrás, pero lo ve en «Mis votaciones» y en la votación (la etiqueta con lo que le queda y qué puede hacer). |
 | Cambia la hora del móvil | No sirve: las fechas las pone y las compara el servidor. |
 | Elimina su cuenta con premium | Sale de todas, como siempre. **Ojo, al cobrar:** eliminar la cuenta no cancela una suscripción de Google Play; hay que decirlo al eliminarla y en las condiciones de pago. |
 | Pagó con otra cuenta de Hilemos | Premium es de la cuenta (el uid) que hizo la compra. Al cobrar hará falta «Restaurar compras» para pasarla a la cuenta en la que se entra. |

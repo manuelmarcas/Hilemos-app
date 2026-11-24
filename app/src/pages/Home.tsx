@@ -1,7 +1,7 @@
 // Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
 // En el móvil cada votación se desliza: → archivar (o desarchivar), ← salir de ella (con confirmación).
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { TYPE, pollMeta, isAdmin } from "../lib/model";
+import { TYPE, pollMeta, isAdmin, autoClose, autoCloseNote, closingLabel } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
 import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
@@ -108,6 +108,8 @@ export function Home() {
       e.archived && groupName ? `grupo «${groupName}»` : "",
     ].filter(Boolean).join(" · ");
     const open = expanded === e.id;
+    // Cuenta atrás del servidor (heredada por encima del límite, le sobra o premium): se ve sin entrar en ella.
+    const closing = p ? autoClose(p) : null;
     const toggleArchive = () => setArchived(e.id, !e.archived);
     return (
       <SwipeRow
@@ -130,6 +132,11 @@ export function Home() {
             <span className="poll-card__badges">
               {gone && <span className="badge badge--gone">Eliminada</span>}
               {p?.closed && <span className="badge">Cerrada</span>}
+              {closing && (
+                <span className="badge badge--closing" data-tip={autoCloseNote(closing.reason, closing.at, owner)}>
+                  {closingLabel(closing.at)}
+                </span>
+              )}
               {p?.anonymous && <span className="badge badge--anon">Anónima</span>}
               {owner && <span className="badge badge--mine">Tuya</span>}
               {!owner && p && isAdmin(p, user.uid) && <span className="badge badge--mine">Admin</span>}

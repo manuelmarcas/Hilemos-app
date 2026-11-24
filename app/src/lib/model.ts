@@ -62,12 +62,25 @@ export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCl
 
 /**
  * La cuenta atrás que cerrará sola la votación, si sigue abierta: cuándo y por qué (el primer motivo que llega). La
- * pone el servidor cuando quien la gestiona no tiene premium y le sobra o usa funciones de pago (§8).
+ * pone el servidor cuando quien la gestiona no tiene premium y le sobra o usa funciones de pago (§8). Si el plazo
+ * llega antes, no cuenta: la cierra el plazo.
  */
 export function autoClose(p: PollData, now = Date.now()): { at: number; reason: AutoCloseReason } | null {
-  if (!p.autoCloseAt || p.closed || deadlinePassed(p, now)) return null;
+  if (!p.autoCloseAt || p.closed || deadlinePassed(p, now) || (!!p.deadline && p.deadline <= p.autoCloseAt)) return null;
   const reason = (Object.entries(p.autoCloseWhy || {}).find(([, at]) => at === p.autoCloseAt)?.[0] || "limit") as AutoCloseReason;
   return { at: p.autoCloseAt, reason };
+}
+
+/**
+ * Lo que le queda a una cuenta atrás, en días del calendario (cambia cada día): «Se cierra en 5 días», «Se cierra
+ * mañana» y, el último, «Último día». El servidor la cierra al acabar ese día, así que al siguiente ya está cerrada.
+ */
+export function closingLabel(at: number, now = Date.now()) {
+  const day = (ts: number) => D.parseDay(D.keyOfDate(new Date(ts))).getTime();
+  const days = Math.round((day(at) - day(now)) / 86400000); // round: los días del cambio de hora no duran 24 h
+  if (days <= 0) return "Último día";
+  if (days === 1) return "Se cierra mañana";
+  return `Se cierra en ${days} días`;
 }
 
 /** Por qué se cerrará sola y qué se puede hacer, para quien la gestiona (`manager`) o para los demás. */
