@@ -16,7 +16,7 @@ Playwright. Hay cuatro herramientas en `scripts/`. Elige según lo que hayas cam
 | Algo grande o «que no se rompa nada» | Todo: capturas, estados y `recorrido.mjs` |
 | «Hilemos en tu móvil» (instalar la app) | `instalar.mjs <carpeta>`: simula un iPhone, un Android y un ordenador |
 | Solicitudes de entrada (votaciones con aprobación) | `solicitudes.mjs <carpeta>`: mete 100 solicitudes en el modo demo y prueba plegar, «Ver las 100», buscar y aceptar o rechazar en lote |
-| Ficha de Google Play | `ficha.mjs <carpeta> <icono-512.png>`: las 6 capturas del móvil (1080×2160, pantalla de 412×824) con datos de ejemplo y la imagen destacada (1024×500). Resultado y textos en `docs/ficha-google-play/` |
+| Ficha de Google Play | `ficha.mjs <carpeta> <icono-512.png>`: las 7 capturas del móvil (1080×2160, pantalla de 412×824) con datos de ejemplo y la imagen destacada (1024×500). Resultado y textos en `docs/ficha-google-play/` |
 
 ## Preparar (una vez por sesión)
 

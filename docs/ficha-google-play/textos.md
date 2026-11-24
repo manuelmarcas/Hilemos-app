@@ -51,7 +51,7 @@ Sin anuncios. Votar, ver el resultado y el chat son gratis. También funciona de
 | --- | --- | --- |
 | Icono de la aplicación | `icono-512.png` | 512 × 512, PNG de 32 bits |
 | Gráfico de funciones (imagen destacada) | `imagen-destacada-1024x500.png` | 1024 × 500 |
-| Capturas de pantalla del teléfono | `1-votar.png` … `6-crear.png`, en ese orden | 1080 × 2160 (2:1, el máximo que admite Play) |
+| Capturas de pantalla del teléfono | `1-votacion.png` … `7-crear.png`, en ese orden | 1080 × 2160 (2:1, el máximo que admite Play) |
 
 No hacen falta capturas de tableta ni vídeo.
 
