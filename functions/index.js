@@ -320,7 +320,10 @@ async function alertModerators({ pollId, path, push, subject, lines }) {
   // Qué hay en la configuración (sin la clave), para saber en el registro por qué no llega un aviso.
   console.log("Denuncia recibida", path, {
     configExiste: cfg.exists, campos: cfg.exists ? Object.keys(cfg.data()) : [], email: email || null,
-    brevoKey: key ? `${key.length} caracteres` : null, uids: uids.length,
+    // El principio de la clave dice de qué tipo es (no es secreto): la de API empieza por «xkeysib-»; la SMTP
+    // («xsmtpsib-») no sirve para la API y Brevo responde «Key not found».
+    brevoKey: key ? `${key.length} caracteres, tipo ${key.startsWith("xkeysib-") ? "API (correcta)" : key.startsWith("xsmtpsib-") ? "SMTP (no sirve: hace falta la de API)" : "desconocido"}` : null,
+    uids: uids.length,
   });
   if (email && key) {
     const text = [

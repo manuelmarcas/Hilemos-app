@@ -6,6 +6,7 @@ import type { Store } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { makeAccessKey } from "../state/accessKey";
 import { GateCard } from "./GateCard";
+import { MAX_EMAIL } from "../lib/model";
 
 type Step = "checking" | "email" | "error";
 
@@ -58,7 +59,7 @@ export function EmailLinkFinish({ store, url, onDone }: {
       {step === "email" && (
         <form className="gate__form" onSubmit={submitEmail}>
           <p>Para terminar de entrar, confirma el correo al que te mandamos el enlace.</p>
-          <input className="input gate__input" type="email" autoComplete="email" placeholder="tu@correo.com" required autoFocus
+          <input maxLength={MAX_EMAIL} className="input gate__input" type="email" autoComplete="email" placeholder="tu@correo.com" required autoFocus
             data-error="Escribe el correo al que te mandamos el enlace."
             value={email} onChange={e => setEmail(e.target.value)} />
           <button className="btn btn--primary" type="submit" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>

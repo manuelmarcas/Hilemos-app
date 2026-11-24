@@ -97,15 +97,18 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
     if (!t || busy) return;
     setBusy(true);
     setStatus("");
+    // El campo se vacía al momento (como en cualquier chat) y el foco no se va, para que el teclado del móvil siga
+    // abierto; si falla, el texto vuelve al campo para no perderlo.
+    setText("");
+    field.current?.focus();
     try {
       pinned.current = true;
       await store.sendChat(id, { uid: user.uid, name: user.name, text: t.slice(0, MAX_CHAT), at: Date.now() });
-      setText("");
     } catch (err) {
+      setText(cur => cur || t);
       setStatus("No se pudo enviar el mensaje. " + errMsg(err));
     }
     setBusy(false);
-    field.current?.focus();
   }
 
   const report = (msg: ChatMessage, name: string) => async (reason: ReportReason, comment: string) => {
@@ -215,10 +218,12 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
           <form className="chat__form" onSubmit={send}>
             <div className="emoji-field chat__field">
               <input ref={field} className="input emoji-field__input" maxLength={MAX_CHAT} placeholder="Escribe un mensaje" autoComplete="off"
-                aria-label="Mensaje" value={text} onChange={e => setText(e.target.value)} />
+                aria-label="Mensaje" enterKeyHint="send" value={text} onChange={e => setText(e.target.value)} />
               <EmojiButton field={() => field.current} setValue={setText} />
             </div>
-            <button className="btn chat__send" type="submit" disabled={busy || !text.trim()}>{busy ? "Enviando…" : "Enviar"}</button>
+            {/* Pulsar «Enviar» no le quita el foco al campo: en el móvil, así el teclado no se cierra y se vuelve a abrir. */}
+            <button className="btn chat__send" type="submit" disabled={busy || !text.trim()}
+              onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()}>{busy ? "Enviando…" : "Enviar"}</button>
           </form>
         ) : (
           <p className="chat__note chat__closed">Entra en la votación para escribir en el chat.</p>

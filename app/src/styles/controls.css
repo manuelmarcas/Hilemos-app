@@ -232,3 +232,6 @@ select.input:hover{background-color:var(--hover)}
 .premium-tag:hover{background:color-mix(in srgb, var(--premium) 18%, var(--premium-soft))}
 .premium-note{margin:14px 0 0;color:var(--muted);font-size:.82rem;line-height:1.6}
 .premium-star{--icon-color:var(--premium);display:inline-flex}
+/* Contador de caracteres al acercarse al máximo (CharCount) */
+.char-count{display:block;margin-top:4px;text-align:right;font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.char-count--full{color:var(--danger);font-weight:700}

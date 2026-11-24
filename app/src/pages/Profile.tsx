@@ -12,6 +12,7 @@ import { useUi } from "../state/ui";
 import { Avatar } from "../components/Avatar";
 import { Icon, type IconName } from "../components/Icon";
 import { makeAccessKey } from "../state/accessKey";
+import { MAX_EMAIL } from "../lib/model";
 
 const THEMES: [ThemePref, IconName, string, string][] = [
   ["auto", "themeAuto", "Automático", "Como tu dispositivo"],
@@ -272,7 +273,7 @@ export function Profile() {
               </p>
             ) : (
               <form className="profile__mail" onSubmit={sendMail}>
-                <input className="input profile__mail-input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
+                <input maxLength={MAX_EMAIL} className="input profile__mail-input" type="email" autoComplete="email" placeholder="tu@correo.com" aria-label="Tu correo"
                   required data-error="Escribe tu correo para que te mandemos el enlace."
                   value={mail} onChange={e => setMail(e.target.value)} />
                 <button className="btn" type="submit" disabled={mailBusy}><Icon name="mail" /> {mailBusy ? "Enviando…" : "Enviarme el enlace"}</button>

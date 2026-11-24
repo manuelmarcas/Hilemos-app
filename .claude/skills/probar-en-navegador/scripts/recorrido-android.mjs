@@ -362,6 +362,30 @@ await check("Chat: mensaje con el teclado del móvil y contador de no leídos", 
   await ana.waitForSelector(".chat__msg:has-text('Hola desde Android')");
   return "no leídos: " + badge;
 });
+await check("Chat: al enviar, el campo se vacía al momento y el teclado sigue abierto", async () => {
+  await go(bea, days);
+  await bea.locator("#ptabbtn-chat").click();
+  const input = bea.locator("input[aria-label='Mensaje']");
+  await tap(input);
+  sh("input text Segundo%smensaje");
+  await sleep(600);
+  expect(keyboardShown(), "el teclado no se abre");
+  await tap(btn(bea, "Enviar"));
+  expect((await input.inputValue()) === "", "el campo no se vacía: " + await input.inputValue());
+  await bea.waitForSelector(".chat__msg--own:has-text('Segundo mensaje')");
+  await sleep(500);
+  expect(keyboardShown(), "el teclado se ha cerrado al enviar");
+  expect(await input.evaluate(e => e === document.activeElement), "el campo ha perdido el foco");
+  sh("input keyevent KEYCODE_BACK");
+  await sleep(500);
+});
+await check("En la app no se ofrece «Hilemos en tu móvil» (instalar)", async () => {
+  await go(ana, "#/");
+  await sleep(3500);
+  expect(await ana.locator("dialog[open].install").count() === 0, "sale el aviso de instalar dentro de la app");
+  await go(ana, "#/perfil");
+  expect(await btn(ana, "Cómo instalarla").count() === 0, "el perfil ofrece instalarla dentro de la app");
+});
 await check("Avisar a quien falta (Cris entra sin votar)", async () => {
   const cris = person("Cris");
   await login(cris, "Cris");

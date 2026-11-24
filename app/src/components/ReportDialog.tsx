@@ -5,6 +5,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { MAX_REPORT_COMMENT, REPORT_REASONS } from "../lib/model";
 import type { ReportReason } from "../lib/types";
 import { errMsg } from "../lib/util";
+import { CharCount } from "./CharCount";
 import { Dialog } from "./Dialog";
 
 export function ReportDialog({ title, quote, question, note, already, onSend, onClose }: {
@@ -57,6 +58,7 @@ export function ReportDialog({ title, quote, question, note, already, onSend, on
       <label className="field-label report-dialog__label" htmlFor="report-comment">Comentario <span className="muted">(opcional)</span></label>
       <textarea id="report-comment" className="input" rows={2} maxLength={MAX_REPORT_COMMENT} value={comment}
         onChange={e => setComment(e.target.value)} />
+      <CharCount value={comment} max={MAX_REPORT_COMMENT} />
       <p className="dialog__msg report-dialog__note">{note}</p>
       <div className="status" role="alert">{err}</div>
       <div className="dialog__actions">

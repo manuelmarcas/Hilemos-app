@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import * as D from "../lib/dates";
 import {
-  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, FREE_PEOPLE, FREE_OPEN, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
+  TYPES, TYPE, MAX_OPTIONS, MAX_PEOPLE, FREE_PEOPLE, FREE_OPEN, MAX_DESCRIPTION, MAX_EMAILS, MAX_CHOICES, MIN_CHOICES, DEFAULT_CHOICE_ICON, parseEmails, plural,
   fmtDeadline, lostVotedUnit, unitLabel, unitParts,
 } from "../lib/model";
 import { describeChanges } from "../lib/changes";
@@ -19,6 +19,7 @@ import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
 import { PremiumNote, PremiumTag } from "../components/Premium";
+import { CharCount } from "../components/CharCount";
 import type { PremiumFeature } from "../lib/premium";
 import { useDismiss } from "../hooks/useDismiss";
 import { Spinner } from "../components/Loading";
@@ -591,10 +592,11 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             <EmojiButton field={() => titleRef.current} setValue={setTitle} />
           </div>
           <div className="emoji-field emoji-field--area">
-            <textarea ref={descRef} className="input emoji-field__input" maxLength={300} rows={2} placeholder="Descripción (opcional)"
+            <textarea ref={descRef} className="input emoji-field__input" maxLength={MAX_DESCRIPTION} rows={2} placeholder="Descripción (opcional)"
               value={description} onChange={e => setDescription(e.target.value)} />
             <EmojiButton field={() => descRef.current} setValue={setDescription} />
           </div>
+          <CharCount value={description} max={MAX_DESCRIPTION} />
           <div className="create__group" hidden={editing}>
             <label htmlFor="f-group">Guardar en el grupo</label>
             <GroupSelect id="f-group" className="input create__group-select" groups={groups} value={validGroupId}

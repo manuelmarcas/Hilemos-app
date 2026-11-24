@@ -8,6 +8,7 @@ import { GateCard } from "./GateCard";
 import { Icon } from "./Icon";
 import { Spinner } from "./Loading";
 import { makeAccessKey } from "../state/accessKey";
+import { MAX_EMAIL } from "../lib/model";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -139,7 +140,7 @@ export function Gate({ store, demo }: { store: Store; demo: boolean }) {
           ) : (
             <form className="gate__form" onSubmit={sendLink}>
               <label className="gate__label" htmlFor="email-input">Entra con tu correo, sin contraseña</label>
-              <input id="email-input" className="input gate__input" type="email" autoComplete="email" placeholder="tu@correo.com"
+              <input maxLength={MAX_EMAIL} id="email-input" className="input gate__input" type="email" autoComplete="email" placeholder="tu@correo.com"
                 required autoFocus data-error="Escribe tu correo para que te mandemos el enlace."
                 value={email} onChange={e => setEmail(e.target.value)} />
               <p className="gate__note">Te mandaremos un enlace: al pulsarlo, entras. Sirve en cualquier dispositivo.</p>

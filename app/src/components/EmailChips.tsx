@@ -6,7 +6,7 @@
 // El texto a medio escribir (`draft`) también es del padre: al guardar, lo que quede sin cerrar cuenta (y si no es un
 // correo, se avisa en vez de perderlo en silencio).
 import { useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { parseEmails } from "../lib/model";
+import { MAX_EMAIL, parseEmails } from "../lib/model";
 import { bem } from "../lib/util";
 import { Icon } from "./Icon";
 
@@ -84,7 +84,7 @@ export function EmailChips({ id, emails, draft, onChange, placeholder, disabled,
           ))}
         </ul>
       )}
-      <input ref={input} id={id} className="email-chips__input" type="text" inputMode="email" enterKeyHint="enter"
+      <input maxLength={MAX_EMAIL} ref={input} id={id} className="email-chips__input" type="text" inputMode="email" enterKeyHint="enter"
         autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} disabled={disabled}
         aria-invalid={wrong} aria-describedby={describedBy}
         placeholder={emails.length ? "Añadir otro correo…" : placeholder}

@@ -110,8 +110,12 @@ export const REPORT_REASONS: Record<ReportReason, string> = {
   inapropiado: "Contenido inapropiado o peligroso",
   otro: "Otro motivo",
 };
+/** Largo máximo de la descripción de una votación (el mismo que validan las reglas). */
+export const MAX_DESCRIPTION = 300;
+/** Largo máximo de una dirección de correo (RFC 5321). */
+export const MAX_EMAIL = 254;
 /** Largo máximo del comentario de una denuncia (el mismo que validan las reglas). */
-export const MAX_REPORT_COMMENT = 300;
+export const MAX_REPORT_COMMENT = 200;
 /** Las denuncias agrupadas por mensaje (msgId → sus denuncias), para marcarlos a quien administra. */
 export function reportsByMessage(reports: ChatReport[]) {
   const out = new Map<string, ChatReport[]>();

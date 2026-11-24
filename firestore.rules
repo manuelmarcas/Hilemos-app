@@ -273,7 +273,7 @@ service cloud.firestore {
             && d.msgName is string && d.msgName.size() <= 100
             && d.byName is string && d.byName.size() <= 100
             && d.reason in ['ofensivo', 'spam', 'inapropiado', 'otro']
-            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 300))
+            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 200))
             && d.at is int
             && (pollData(pollId).ownerUid == request.auth.uid
                 || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null));
@@ -301,7 +301,7 @@ service cloud.firestore {
             && d.get('targetPhoto', '') == target.get('photo', '')
             && d.byName is string && d.byName.size() <= 100
             && d.reason in ['ofensivo', 'spam', 'inapropiado', 'otro']
-            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 300))
+            && (!('comment' in d) || (d.comment is string && d.comment.size() <= 200))
             && d.at is int
             && (pollData(pollId).ownerUid == request.auth.uid
                 || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null));
