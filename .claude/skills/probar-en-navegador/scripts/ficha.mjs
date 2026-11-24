@@ -133,7 +133,7 @@ await fg.setContent(`<!doctype html><html><head>
   .s{font-size:34px;font-weight:600;line-height:1.25;margin:0}
 </style></head><body>
 <img src="data:image/png;base64,${icon}">
-<div class="t"><p class="w"><span class="h">Hile</span>mos</p><p class="s">Elegid juntos el día, la hora o el plan, sin líos de mensajes.</p></div>
+<div class="t"><p class="w"><span class="h">Hile</span>mos</p><p class="s">¿Cuándo quedamos? Votadlo en un momento y a disfrutar.</p></div>
 </body></html>`);
 await fg.waitForTimeout(1500);
 await fg.screenshot({ path: `${OUT}/imagen-destacada-1024x500.png` });

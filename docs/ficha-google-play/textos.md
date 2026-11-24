@@ -11,48 +11,40 @@ Hilemos
 
 ## Descripción breve (80 caracteres como mucho)
 
-Votad en grupo el día, la hora o el plan y quedad sin líos de mensajes.
+¿Cuándo quedamos? Votadlo en un momento y olvidaos de los mil mensajes.
 
 ## Descripción completa (4.000 caracteres como mucho)
 
-¿Cuándo quedamos? ¿Comida o cena? ¿Italiano o japonés? Con Hilemos se acaban los mensajes cruzados en el grupo:
-creas una votación, compartes el enlace y cada uno marca lo que le viene bien. En un vistazo se ve lo que gana.
+Cada párrafo y cada viñeta van en una sola línea, para copiarla y pegarla tal cual en Play Console.
 
-CREA UNA VOTACIÓN EN UN MINUTO
-• Por días, con hasta cuatro opciones por día (comida, cena, tarde…).
-• Por horas: franjas de 30 minutos, 1 o 2 horas, u horas sueltas distintas cada día.
-• Por semanas o por meses, para viajes y vacaciones.
-• De opciones libres: restaurante, regalo, destino… con su emoji.
+¿Cuándo quedamos? ¿Viernes o sábado? ¿Pizza o sushi? Si en tu grupo cada plan acaba en cien mensajes y nadie se aclara, Hilemos es para vosotros.
 
-COMPÁRTELA COMO QUIERAS
-• Por WhatsApp, Telegram, correo, código QR o con el menú de compartir del móvil.
-• Quien la abre puede votar al momento, también sin crearse una cuenta: basta con su nombre.
+Creas una votación, la mandas por WhatsApp y cada uno marca lo que le viene bien. En un momento veis qué gana. Y a quedar.
 
-VOTA Y MIRA EL RESULTADO
-• Pulsa en las casillas que te vengan bien; puedes cambiar tu voto hasta que se cierre.
-• La más votada sale marcada en verde y las cinco primeras, ordenadas.
-• ¿Empate? Abre un desempate entre las empatadas y cada uno elige una.
-• Votos visibles o anónimos, según prefieras.
-• Añade el resultado a tu calendario o comparte una imagen con la ganadora.
+PARA TODOS VUESTROS PLANES
+• La cena de Navidad con la familia, el cumple, la escapada con los amigos, el partido del domingo…
+• Votad días (con comida, cena o lo que se os ocurra), horas, semanas, meses o una lista de opciones: restaurante, regalo, destino.
 
-TODO EL GRUPO EN UN SITIO
-• Chat en cada votación para rematar los detalles.
-• Avisa a quien falta por votar con un mensaje listo para enviar.
-• Avisos cuando alguien vota, se cierra la votación o hay un desempate.
-• Organiza tus votaciones en grupos: familia, amigos, trabajo, el club…
+FÁCIL PARA TODO EL GRUPO
+• Comparte el enlace por WhatsApp, Telegram, correo o con un código QR.
+• Tus amigos y tu familia pueden votar sin registrarse: les basta con poner su nombre.
+• Cada uno cambia su voto cuando quiera, hasta que se cierre.
 
-PARA ORGANIZAR CON MÁS CONTROL
-• Plazo para votar, máximo de personas, aprobar a quien entra o dejar entrar solo a unos correos.
-• Nombra a otras personas para que gestionen la votación contigo.
-• Exporta los resultados en CSV, Excel o PDF.
+EL RESULTADO, CLARITO
+• Lo que gana sale marcado en verde.
+• ¿Empate? Lo desempatáis en un momento entre las empatadas.
+• Manda al grupo una imagen con el resultado o apúntalo en tu calendario.
 
-TUS DATOS, CUIDADOS
-• Sin anuncios.
-• Puedes descargar tus datos o eliminar tu cuenta desde la app cuando quieras.
-• Modo oscuro y funciona también en el navegador, en hilemos.web.app.
+Y ADEMÁS
+• Un chat en cada votación para rematar los detalles: quién reserva, quién lleva el postre…
+• Un mensaje listo para darle un toque a quien aún no ha votado.
+• Avisos cuando alguien vota o se cierra la votación.
+• Grupos para tener ordenadas tus votaciones: familia, amigos, el equipo…
+• Modo oscuro.
 
-Votar, ver los resultados, desempatar, el chat y los grupos son gratis.
+¿Organizas algo más grande, como una boda o una quedada del club? También puedes poner un plazo para votar, decidir quién entra, nombrar a otros organizadores y sacar los resultados en Excel o PDF.
 
+Sin anuncios. Votar, ver el resultado y el chat son gratis. También funciona desde el navegador, en hilemos.web.app. 
 ## Gráficos
 
 | Campo | Archivo | Medidas |

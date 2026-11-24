@@ -8,6 +8,12 @@ description: Cómo se escriben los textos de Hilemos — interfaz (botones, avis
 La app la usa gente que no es técnica para quedar con su grupo. Los textos tienen que entenderse a la primera y no
 asustar. Todo va en **castellano de España**: la interfaz, los comentarios del código, los commits y la documentación.
 
+**El tono es desenfadado y cercano**: Hilemos es sobre todo para quedar con los amigos y la familia (la cena de
+Navidad, el cumple, la escapada), no una herramienta de empresa. Se nota sobre todo en lo que se lee fuera de la app
+(la ficha de Google Play en `docs/ficha-google-play/`, la imagen destacada, los avisos para todos de `config/app`):
+ejemplos de planes de verdad, frases cortas, algún guiño. Los grupos grandes, las asociaciones y lo «profesional»
+van en segundo plano.
+
 ## En la interfaz
 
 - **Frases normales y cortas**, con su punto. Tuteo («Pulsa en los días que te vengan bien»).
