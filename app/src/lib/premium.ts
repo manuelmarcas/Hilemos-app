@@ -16,7 +16,7 @@ export interface PremiumInfo {
 export const PREMIUM_INFO: Record<PremiumFeature, PremiumInfo> = {
   deadline: {
     title: "Plazo para votar",
-    what: "La votación deja de admitir votos sola, el día y a la hora que elijas.",
+    what: "La votación deja de admitir votos el día y a la hora que elijas.",
     why: "Es una herramienta para organizar con fecha límite, sobre todo eventos. Quitar un plazo que ya está puesto seguirá siendo gratis.",
   },
   approval: {
