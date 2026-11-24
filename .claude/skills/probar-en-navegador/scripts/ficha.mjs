@@ -78,7 +78,7 @@ const db = {
 };
 
 async function phone() {
-  const ctx = await browser.newContext({ viewport: { width: 360, height: 640 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: "light", locale: "es-ES", timezoneId: "Europe/Madrid" });
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 824 }, deviceScaleFactor: 1080 / 412, isMobile: true, hasTouch: true, colorScheme: "light", locale: "es-ES", timezoneId: "Europe/Madrid" });
   const p = await ctx.newPage();
   await p.clock.setFixedTime(NOW);
   await p.addInitScript(([d, u]) => {
@@ -102,14 +102,13 @@ async function shot(p, hash, name, before) {
 const p = await phone();
 await shot(p, "#/v/p1", "1-votar", async q => {
   await q.getByText(/^diciembre 2026$/i).first()
-    .evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 90));
+    .evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 76));
 });
 await shot(p, "#/v/p1", "2-mas-votadas", async q => {
-  await q.locator("#ptab-summary").scrollIntoViewIfNeeded();
-  await q.evaluate(() => window.scrollBy(0, -80));
+  await q.getByRole("tab", { name: /Más votadas/ }).evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 66));
 });
 await shot(p, "#/v/p2", "3-opciones", async q => {
-  await q.evaluate(() => { const h = [...document.querySelectorAll("h1")][0]; window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - 80); });
+  await q.evaluate(() => { const h = [...document.querySelectorAll("p")].find(e => e.textContent.startsWith("Pulsa en las opciones")); window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - 90); });
 });
 await shot(p, "#/", "4-mis-votaciones");
 await shot(p, "#/v/p1", "5-chat", async q => {
@@ -117,7 +116,9 @@ await shot(p, "#/v/p1", "5-chat", async q => {
   await q.waitForTimeout(500);
   await q.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 });
-await shot(p, "#/nueva", "6-crear");
+await shot(p, "#/nueva", "6-crear", async q => {
+  await q.getByText("¿Qué se vota?").first().evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 90));
+});
 
 // ---------- Imagen destacada ----------
 const icon = fs.readFileSync(process.argv[3]).toString("base64");
