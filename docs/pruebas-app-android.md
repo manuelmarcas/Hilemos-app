@@ -113,6 +113,9 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
       demo) y las reglas en el emulador (28 casos).*
 - [x] «Descargar mis datos» en «Tu perfil» (archivo JSON; en la app, con el menú de compartir del sistema).
 - [ ] Recordatorios y plazo de cierre. *Funciones premium; sin probar.*
+- [x] Versión mínima (`config/app.minBuild`): la app lee su versionCode (1) y, con una mínima mayor, solo enseña
+      «Actualizar en Google Play»; con la misma, funciona normal. Aviso para todos (`config/app.notice`) y
+      «Entendido». *En el móvil, modo demo, 24 de noviembre de 2026.*
 
 ## 5. Integración con Android
 
