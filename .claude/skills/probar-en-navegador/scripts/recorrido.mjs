@@ -213,17 +213,17 @@ await check("Chat: mensaje y contador de no leídos", async () => {
   await ana.waitForSelector(".chat__msg:has-text('¡Hola!')");
   return "no leídos: " + badge;
 });
-await check("Chat: Intro hace un salto de línea y solo envía el botón", async () => {
+await check("Chat (ordenador): Mayúsculas + Intro hace un salto de línea e Intro envía", async () => {
   await go(bea, days);
   await bea.locator("#ptabbtn-chat").click();
   const field = bea.locator("[aria-label='Mensaje']");
   await field.click();
   await bea.keyboard.type("Primera línea");
-  await bea.keyboard.press("Enter");
+  await bea.keyboard.press("Shift+Enter");
   await bea.keyboard.type("Segunda línea");
   expect((await field.inputValue()) === "Primera línea\nSegunda línea", "Intro ha enviado: " + JSON.stringify(await field.inputValue()));
   const h = (await field.boundingBox()).height;
-  await btn(bea, "Enviar").click();
+  await bea.keyboard.press("Enter");
   const msg = bea.locator(".chat__msg--own", { hasText: "Primera línea" });
   await msg.waitFor();
   expect((await msg.locator(".chat__text").innerText()).includes("\n"), "el mensaje no conserva el salto");

@@ -228,13 +228,13 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
         {canWrite ? (
           <form className="chat__form" onSubmit={send}>
             <div className="emoji-field emoji-field--area chat__field">
-              {/* Intro hace un salto de línea: solo envía el botón «Enviar» (y, como atajo con teclado físico,
-                  Ctrl o Cmd + Intro). */}
+              {/* Con ratón y teclado (ordenador), Intro envía y Mayúsculas + Intro hace el salto de línea, como en
+                  cualquier chat. En el móvil, Intro hace el salto y envía el botón «Enviar». */}
               <textarea ref={field} className="input emoji-field__input chat__input" rows={1} maxLength={MAX_CHAT}
-                placeholder="Escribe un mensaje" autoComplete="off" aria-label="Mensaje" enterKeyHint="enter"
+                placeholder="Escribe un mensaje" autoComplete="off" aria-label="Mensaje" enterKeyHint={hasMouse() ? "send" : "enter"}
                 value={text} onChange={e => setText(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); }
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && hasMouse()) { e.preventDefault(); send(); }
                 }} />
               <EmojiButton field={() => field.current} setValue={setText} />
             </div>
