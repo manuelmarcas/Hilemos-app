@@ -8,13 +8,13 @@
 //
 // La primera parte son funciones puras (se prueban con `npm test` en functions/); la segunda lee Firestore.
 import { FieldValue } from "firebase-admin/firestore";
+import { DAY, endOfDay, fmtWhen } from "./time.js";
 
 /** Igual que FREE_OPEN, FREE_PEOPLE en app/src/lib/model.ts: si cambian, en los dos sitios. */
 export const FREE_OPEN = 3;
 export const PREMIUM_OPEN = 50;
 export const FREE_PEOPLE = 20;
 
-export const DAY = 86400000;
 /** Heredar por encima del límite (§8): se cierra a los 7 días. */
 export const INHERIT_GRACE = 7 * DAY;
 /** Sobrar sin herencia (se acabó premium, o al estrenar el límite) o usar funciones de pago sin premium: 30 días. */
@@ -43,28 +43,6 @@ export const managedSince = p => p.ownerSince || p.createdAt || 0;
 export function extrasOf(polls, limit) {
   const sorted = [...polls].sort((a, b) => managedSince(a) - managedSince(b) || (a.id < b.id ? -1 : 1));
   return new Set(sorted.slice(limit).map(p => p.id));
-}
-
-const MADRID = "Europe/Madrid";
-/** Año, mes y día (y hora) de `ts` en hora de España. */
-function madridParts(ts) {
-  const f = new Intl.DateTimeFormat("en-US", {
-    timeZone: MADRID, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
-  });
-  return Object.fromEntries(f.formatToParts(new Date(ts)).filter(p => p.type !== "literal").map(p => [p.type, Number(p.value)]));
-}
-
-/**
- * Las 23:59 del día de `ts` en hora de España. Las cuentas atrás acaban al final de un día, como un plazo sin hora:
- * así «Último día» en la app quiere decir que al día siguiente ya está cerrada.
- */
-export function endOfDay(ts) {
-  const { year, month, day } = madridParts(ts);
-  const wall = Date.UTC(year, month - 1, day, 23, 59);
-  // Lo que España va por delante de UTC a esa hora (1 o 2 horas; los cambios de hora son de madrugada).
-  const p = madridParts(wall);
-  const offset = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) - wall;
-  return wall - offset;
 }
 
 /**
@@ -133,16 +111,6 @@ export async function betterHeir({ admins, others }, room) {
   // Participantes: de uno en uno, para no leer los planes de 150 personas si el primero ya vale.
   for (const uid of shuffle(others)) if ((await room(uid)).fits) return uid;
   return null;
-}
-
-/** «2 de diciembre» (al acabar el día, como las cuentas atrás) o «2 de diciembre a las 18:00», en hora de España. */
-export function fmtWhen(ts) {
-  const d = new Date(ts);
-  const day = d.toLocaleDateString("es-ES", { day: "numeric", month: "long", timeZone: MADRID });
-  const { hour, minute } = madridParts(ts);
-  if (hour === 23 && minute === 59) return day;
-  const time = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: MADRID });
-  return `${day} a las ${time}`;
 }
 
 /** Texto del aviso de una cuenta atrás nueva, según el motivo. */

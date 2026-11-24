@@ -190,6 +190,8 @@ index.html                    Redirección de GitHub Pages a hilemos.web.app (no
 | `plans/{uid}` | Plan de cada usuario: `premiumUntil` (hasta cuándo tiene premium). Solo lo escribe el servidor al comprobar un pago y solo lo lee su dueño. No va en `users/{uid}` porque eso lo escribe la propia persona |
 | `config/plan` | Interruptor del lanzamiento gratis: `freeForAll` (si no es `false`, o no existe, todo es gratis y el servidor no limita nada). Solo lo lee el servidor |
 | `config/app` | Lo que se cambia sin publicar otra versión de Android: `minBuild` (versionCode mínimo; con uno anterior, la app pide actualizarla) y `notice` (`{ id, text, url? }`: aviso para todos arriba de la página). Lo lee cualquiera; se escribe desde la consola |
+| `stats/{día}` y `stats/{mes}` | Estadísticas de uso: totales anónimos que calcula el servidor cada noche (`functions/stats.js`). Solo las lee el servidor (y la consola) |
+| `pings/{id}` | Lo que la app cuenta desde el dispositivo (exportar, compartir la imagen, duplicar): `f` (qué) y `at` (hora del servidor), sin quién. Solo se crean; el servidor los suma y los borra |
 | `config/moderation` | A quién avisar de cada denuncia: `uids` (push), `email` y `brevoKey`. Solo lo lee el servidor |
 
 Cualquier usuario con sesión puede abrir una votación si tiene el enlace; solo el creador puede cerrarla o

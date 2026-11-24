@@ -322,7 +322,7 @@ Decidido: se mantiene entrar sin cuenta. Estas son las piezas, en el orden en qu
 | Paso | Qué | Cómo | Quién |
 | --- | --- | --- | --- |
 | 1 | **Alerta de presupuesto** ✔ | Puesta a 5 €. En Google Cloud, un presupuesto (por ejemplo, 5 € al mes) que avisa por correo al 50 %, 90 % y 100 %. No corta el servicio, pero avisa a tiempo. | Tú, en la consola (5 minutos) |
-| 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | Yo, el código; tú, crear las claves en la consola de Firebase |
+| 2 | **App Check** | Firebase solo acepta peticiones de la app de verdad. En la web, con reCAPTCHA Enterprise (invisible para quien usa la app); en Android, con Play Integrity. Primero se activa en modo «solo medir» unos días para ver que no rechaza a nadie legítimo, y después se exige. | El código, hecho ✔ (en Android va en el primer `.aab`); tú, las claves y registrar la app (pasos en `app/README.md`, «App Check») |
 | 3 | **Denunciar un mensaje** ✔ | En el chat, «Denunciar» en cada mensaje ajeno, con el motivo y un comentario opcional. Queda guardado para revisarlo (quién, qué mensaje, motivo) y quien administra la votación lo ve marcado «Denunciado». | Hecho |
 | 3b | **Denunciar a una persona** ✔ | En «Participantes», el nombre abre su perfil y desde ahí se le denuncia por su nombre, su foto o su comportamiento. Se guarda una copia de su nombre y su foto. Quien administra la votación la ve marcada en la tabla y en su perfil. | Hecho |
 | 4 | **Ocultar un mensaje** ✔ | Quien administra la votación oculta un mensaje del chat y puede volver a mostrarlo; los demás ven «Mensaje ocultado por quien administra la votación». Junto con expulsar (2.5.13), cubre lo que piden las tiendas: denunciar, retirar el contenido y apartar a quien molesta. | Hecho |
@@ -482,7 +482,7 @@ Con la cuenta atrás ya no hace falta limitar la edición: durante esos 30 días
 después la votación queda cerrada. Con suscripción no hace falta nada más: mientras se paga, reutilizarla es un uso
 legítimo.
 
-**Cómo se comprueba (hecho, apagado durante el lanzamiento).** El barrido diario (`onPlanSweep`, a las 4:00) mira
+**Cómo se comprueba (hecho, apagado durante el lanzamiento).** El barrido diario (`onDaily`, a las 4:00) mira
 todas las votaciones abiertas. A las que tienen ajustes de pago y cuyo gestor no tiene premium les apunta
 `autoCloseWhy.premium` (dentro de 30 días); si lo recupera, se lo quita. `onAutoClose`, cada hora, avisa cuando queda
 menos de un día y la cierra al llegar la fecha. Las reglas no dejan escribir esos campos desde la app. Falta (con el
@@ -534,7 +534,7 @@ el servidor solo apunta `ownerSince` al heredar y quita cualquier cuenta atrás.
 | Función | Cuándo | Qué hace |
 | --- | --- | --- |
 | `onPollPlan` | La votación cambia de manos o se cierra a mano | Apunta `ownerSince`. Con premium encendido, busca heredero con sitio y, si no hay, pone la cuenta atrás de 7 días (sin volver a empezar la que ya corría). Al cerrarla a mano, quita la cuenta atrás. |
-| `onPlanSweep` | Cada día a las 4:00 | Recorre las abiertas por gestor: las que sobran (30 días) y las de pago sin premium (30 días). Pone las nuevas, quita las que ya no tocan y avisa de las nuevas. |
+| `onDaily` | Cada día a las 4:00 | El barrido de premium y las estadísticas del día anterior (en la misma tarea, porque Cloud Scheduler solo da 3 gratis). El barrido recorre las abiertas por gestor: las que sobran (30 días) y las de pago sin premium (30 días). Pone las nuevas, quita las que ya no tocan y avisa de las nuevas. |
 | `onAutoClose` | Cada hora | Avisa cuando queda menos de un día y cierra las que han llegado a la fecha (`autoClosedAt`). |
 
 Las abiertas de cada persona se cuentan con una consulta (`ownerUid` y `closed == false`, sin las de plazo pasado),
@@ -653,7 +653,7 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | 2 | Poner ese correo de contacto en la política de privacidad y en las condiciones (7.1). ✔ | Hecho |
 | 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1), de 5 €. ✔ | Hecho |
 | 4 | **Moderación configurada** (7.4, paso 5): tu cuenta de Hilemos en `config/moderation` para los avisos push de denuncias, y un panel de moderación en la app para verlas y actuar. El correo con Brevo queda como opción, no hace falta. | Yo |
-| 5 | **App Check** (7.4, paso 2): crear la clave de reCAPTCHA Enterprise (web) y activar Play Integrity (Android) en la consola de Firebase. Después lo pongo en la app en modo «solo medir» unos días y luego lo exijo. | Tú, las claves; yo, el código |
+| 5 | **App Check** (7.4, paso 2): el código ya está ✔, también en Android. Falta crear la clave de reCAPTCHA Enterprise (web), registrar la app de Android con Play Integrity (con la huella SHA-256 de la firma de Play Console) y, tras unos días en «solo medir», exigirlo. | Tú, las claves; yo, ponerla en la web y exigirlo |
 | 6 | Probar un **aviso push real** en el móvil (7.5). | Los dos |
 | 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Hecho: verificada ✔ |
 | 7b | **Versión mínima y aviso para todos** (`config/app`) ✔: retirar una versión vieja de Android o avisar de algo sin publicar otra. Tiene que ir en el primer `.aab`. | Hecho |

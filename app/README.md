@@ -258,6 +258,37 @@ hacer. El servidor cierra al acabar el último día (23:59, hora de España). Si
 plazo antes, solo sale el plazo. Las reglas no dejan a la app crear ni cambiar esos campos. Todos los casos, en
 `docs/funcionalidades-y-planes.md`, §8 y §9.
 
+## App Check (`lib/appCheck.ts`)
+
+Cada petición a Firebase lleva un justificante de que viene de la app de verdad. En Android, Play Integrity con el
+plugin nativo `@capacitor-firebase/app-check` (Firestore va por el SDK web dentro del WebView y recibe el token con
+un `CustomProvider`). En la web, reCAPTCHA Enterprise, solo si `appCheckSiteKey` de `config.ts` tiene clave. Se
+activa antes de Firestore y Auth; si falla, la app sigue sin justificante. Mientras en la consola de Firebase no se
+pulse «Exigir», nada se rechaza: solo se mide cuántas peticiones llegan con y sin justificante.
+
+Para activarlo (consola de Firebase → App Check):
+
+1. **Android**: registrar la app con Play Integrity. Pide la huella SHA-256 del certificado de firma de la app, que
+   está en Play Console → Integridad de la app → Firma de apps (la de Google, no la de subida). En Play Console,
+   vincular el proyecto de Google Cloud en Integridad de la app → API Play Integrity.
+2. **Web**: crear una clave de reCAPTCHA Enterprise (tipo web, dominios `hilemos.web.app` y `localhost`), registrarla
+   en App Check y ponerla en `appCheckSiteKey`. Se publica solo la web; no hace falta otra versión de Android.
+3. Dejarlo unos días en «solo medir» (App Check → APIs → Cloud Firestore: peticiones verificadas y no verificadas).
+   Si casi todas están verificadas, «Exigir».
+4. **Versiones de depuración** (adb, Android Studio) y `localhost`: no pasan Play Integrity ni reCAPTCHA. Con
+   `localStorage["hilemos-appcheck-debug"] = "1"` (en localhost, siempre) se usa el proveedor de depuración: su token
+   sale en logcat o en la consola del navegador y se da de alta en App Check → Gestionar tokens de depuración. El
+   modo demo no usa Firebase, así que las pruebas automáticas no lo necesitan.
+
+## Estadísticas de uso (`functions/stats.js`)
+
+Totales anónimos por día (`stats/2026-11-24`) y por mes (`stats/2026-11`, el día 1), calculados cada noche por
+`onDaily` a partir de lo que ya está guardado: votaciones creadas (por tipo y por función de pago), personas distintas
+que organizan y que votan, votos, entradas, mensajes del chat, denuncias y cuentas nuevas (con y sin registro). Lo
+que solo pasa en el dispositivo (exportar en CSV, Excel o PDF, compartir la imagen del resultado y duplicar) lo apunta
+la app con `store.track()` en `pings/{id}`, sin quién; `onDaily` lo suma y lo borra. Se mira en la consola de
+Firebase (Firestore → `stats`). Qué se mide y para qué: `docs/plan-hasta-premium.md`.
+
 ## Versión mínima y aviso para todos (`config/app`)
 
 Lo que se cambia desde la consola de Firebase sin publicar otra versión de la app de Android
@@ -456,12 +487,14 @@ Para activarlos:
    ```
    Hay tres programadas, que usan Cloud Scheduler (se activa solo al desplegarlas; gratis hasta 3 tareas por cuenta
    de facturación, así que no caben más sin pagar unos céntimos al mes): `onDeadline` (aviso de fin del plazo, cada
-   15 minutos), `onAutoClose` (cierra las votaciones con la cuenta atrás cumplida, cada hora) y `onPlanSweep` (pone o
-   quita las cuentas atrás, cada día a las 4:00). Las dos últimas, con `config/plan.freeForAll` sin poner a `false`,
-   solo quitan cuentas atrás.
+   15 minutos), `onAutoClose` (cierra las votaciones con la cuenta atrás cumplida, cada hora) y `onDaily` (cada día a
+   las 4:00: pone o quita las cuentas atrás y calcula las estadísticas del día anterior, `functions/stats.js`). Con
+   `config/plan.freeForAll` sin poner a `false`, las de premium solo quitan cuentas atrás.
+   Las estadísticas usan consultas de grupo de colecciones (`votes`, `chat`, `reports`, `personReports` por fecha):
+   sus índices están en `firestore.indexes.json` y se publican con `firebase deploy --only firestore:indexes`.
    Para probar las functions y las reglas en local: `firebase emulators:exec --only auth,firestore,functions
    --project demo-hilemos "<script>"` (el emulador necesita Java 11 o más; vale el de Android Studio) y
-   `cd functions && npm test` para la lógica de `plan.js`.
+   `cd functions && npm test` para la lógica de `plan.js`, `stats.js` y `time.js`.
 4. **App de Android**: con la clave ya en `config.ts`, `npm run android` y subir la versión nueva.
 5. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
 

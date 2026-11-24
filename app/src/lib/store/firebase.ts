@@ -19,6 +19,7 @@ import type { AuthCredential, User as FbUser } from "firebase/auth";
 import type { DocumentData, DocumentReference, DocumentSnapshot, Query, QuerySnapshot, WriteBatch } from "firebase/firestore";
 import { CHAT_LIMIT, chatSince, ghostName, hasLimit, isPresent, keepsVotesOnLeave, pickHeir, pollForExport } from "../model";
 import { isNative, PUBLIC_ORIGIN } from "../native";
+import { initAppCheck } from "../appCheck";
 import type {
   AppConfig, AuthUser, ChatMessage, ChatReport, Group, Library, LibraryEntry, MyPollData, PersonReport, Poll, PollAccess, PollData,
   Profile, Store, Vote,
@@ -39,6 +40,8 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     import("firebase/firestore"),
   ]);
   const app = initializeApp(config);
+  // Antes que Firestore y Auth, para que sus peticiones ya lleven el justificante de App Check.
+  await initAppCheck(app);
   // En la app (Capacitor) no hay ventanas emergentes: el login con Google es nativo (googleCredential) y la
   // sesión se guarda en IndexedDB sin cargar el iframe de redirecciones de getAuth.
   const native = isNative();
@@ -534,6 +537,10 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
     },
 
     // ---------- Perfil ----------
+    track(event) {
+      F.addDoc(F.collection(db, "pings"), { f: event, at: F.serverTimestamp() }).catch(() => { /* solo estadística */ });
+    },
+
     async getAppConfig() {
       const s = await F.getDoc(F.doc(db, "config", "app")).catch(() => null);
       return s?.exists() ? (s.data() as AppConfig) : null;

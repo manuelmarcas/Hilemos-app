@@ -404,6 +404,8 @@ export function createDemoStore(): Store {
     },
 
     // ---------- Perfil ----------
+    track() { /* en la demo no se mide nada */ },
+
     // Para probar el aviso y la versión mínima en la demo, se escribe a mano en `config` del localStorage.
     async getAppConfig() { const c = load().config; return c ? clone(c) : null; },
 

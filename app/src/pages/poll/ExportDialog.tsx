@@ -8,6 +8,7 @@ import { errMsg } from "../../lib/util";
 import { Dialog } from "../../components/Dialog";
 import { Icon, type IconName } from "../../components/Icon";
 import { PremiumNote, PremiumTag } from "../../components/Premium";
+import { useSession } from "../../state/session";
 
 const FORMATS: { id: ExportFormat; icon: IconName; title: string; text: string; premium?: boolean }[] = [
   { id: "csv", icon: "download", title: "CSV", text: "Para guardar la votación y abrirla en cualquier hoja de cálculo." },
@@ -18,6 +19,7 @@ const FORMATS: { id: ExportFormat; icon: IconName; title: string; text: string; 
 export function ExportDialog({ poll, T, TB, onClose, toast }: {
   poll: Poll; T: Tally; TB: TiebreakTally | null; onClose: () => void; toast: (m: string) => void;
 }) {
+  const { store } = useSession();
   const [busy, setBusy] = useState<ExportFormat | null>(null);
   const [err, setErr] = useState("");
   const dlg = useRef<HTMLDialogElement | null>(null);
@@ -27,6 +29,7 @@ export function ExportDialog({ poll, T, TB, onClose, toast }: {
     setErr("");
     try {
       if (await exportResults(poll, T, TB, format) === "downloaded") toast("Archivo descargado");
+      store.track(format);
       dlg.current?.close();
     } catch (e) {
       setErr("No se pudo generar el archivo. " + errMsg(e));

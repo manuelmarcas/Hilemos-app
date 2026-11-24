@@ -10,10 +10,13 @@ import { getMessaging } from "firebase-admin/messaging";
 import { setGlobalOptions } from "firebase-functions/v2";
 import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { getAuth } from "firebase-admin/auth";
 import {
-  CLEAR_COUNTDOWN, DAY, INHERIT_GRACE, addedReasons, betterHeir, countdownPatch, countdownText, extrasOf, fmtWhen,
-  freeForAll, hasPremium, isOpen, nextWhy, openLimit, openPollsOf, paidSettings,
+  CLEAR_COUNTDOWN, INHERIT_GRACE, addedReasons, betterHeir, countdownPatch, countdownText, extrasOf, freeForAll,
+  hasPremium, isOpen, nextWhy, openLimit, openPollsOf, paidSettings,
 } from "./plan.js";
+import { dailyStats } from "./stats.js";
+import { DAY, fmtWhen } from "./time.js";
 
 initializeApp();
 const db = getFirestore();
@@ -230,12 +233,19 @@ export const onAutoClose = onSchedule({ schedule: "every 60 minutes", timeZone: 
   }));
 });
 
-// Cada día: pone o quita las cuentas atrás de todas las votaciones abiertas (§8 y §9), por si alguien ha perdido o
-// recuperado premium, ha cerrado otras o ha empezado el límite. Sobran las que pasan del límite (las últimas en
-// llegar a sus manos) y las que usan funciones de pago sin premium: 30 días. Con el lanzamiento gratis, las quita.
-// Lee todas las abiertas una vez al día: a esta escala, unas pocas miles de lecturas.
-export const onPlanSweep = onSchedule({ schedule: "every day 04:00", timeZone: "Europe/Madrid" }, async () => {
+// Cada día a las 4:00: el barrido de premium y las estadísticas del día anterior. Van en la misma tarea programada
+// porque Cloud Scheduler da 3 gratis y ya están las otras dos (onDeadline y onAutoClose). Si una falla, la otra sigue.
+export const onDaily = onSchedule({ schedule: "every day 04:00", timeZone: "Europe/Madrid" }, async () => {
   const now = Date.now();
+  const results = await Promise.allSettled([planSweep(now), dailyStats(db, getAuth(), now)]);
+  results.forEach(r => { if (r.status === "rejected") console.error("onDaily", r.reason); });
+});
+
+// Pone o quita las cuentas atrás de todas las votaciones abiertas (§8 y §9), por si alguien ha perdido o recuperado
+// premium, ha cerrado otras o ha empezado el límite. Sobran las que pasan del límite (las últimas en llegar a sus
+// manos) y las que usan funciones de pago sin premium: 30 días. Con el lanzamiento gratis, las quita.
+// Lee todas las abiertas una vez al día: a esta escala, unas pocas miles de lecturas.
+async function planSweep(now) {
   if (await freeForAll(db)) {
     const s = await db.collection("polls").where("autoCloseAt", ">", 0).get();
     await Promise.all(s.docs.map(d => d.ref.update(CLEAR_COUNTDOWN)));
@@ -270,7 +280,7 @@ export const onPlanSweep = onSchedule({ schedule: "every day 04:00", timeZone: "
       }, "state");
     }
   }
-});
+}
 
 // ---------- Moderación ----------
 

@@ -64,13 +64,20 @@ function Privacy() {
         </li>
         <li>
           <strong>Datos técnicos.</strong> Como cualquier servicio en internet, los servidores registran datos como la
-          dirección IP para funcionar y protegerse de abusos.
+          dirección IP para funcionar y protegerse de abusos. Para comprobar que las peticiones vienen de la app de
+          verdad y no de un programa automático, Google verifica la app (Play Integrity, en Android) o el navegador
+          (reCAPTCHA, en la web), sin que tengas que hacer nada.
+        </li>
+        <li>
+          <strong>Totales de uso, anónimos.</strong> Cada día contamos cuántas votaciones se crean, cuántas personas
+          votan o escriben en el chat, cuántas cuentas se crean y cuántas veces se exporta o se comparte un resultado.
+          Son solo totales: no guardan quién hizo qué.
         </li>
       </ul>
       <p>
         En tu dispositivo se guardan el tema elegido, una copia de tus datos para que la app abra rápido y aguante
         cortes de conexión, y lo necesario para mantener la sesión abierta. Hilemos no usa cookies de publicidad ni
-        herramientas de analítica, y no vende ni cede tus datos a nadie.
+        herramientas de analítica de terceros, y no vende ni cede tus datos a nadie.
       </p>
     </Section>
     <Section title="Para qué y con qué base">
@@ -84,8 +91,9 @@ function Privacy() {
           puedes retirarlo cuando quieras desde «Tu perfil» o los ajustes de tu dispositivo.
         </li>
         <li>
-          <strong>Para mantener el servicio seguro</strong> y evitar abusos. La base es el interés legítimo en que
-          Hilemos funcione bien para todos (artículo 6.1.f).
+          <strong>Para mantener el servicio seguro</strong> y evitar abusos, y <strong>para saber cuánto se usa</strong>
+          (los totales anónimos) y decidir cómo mejorarlo. La base es el interés legítimo en que Hilemos funcione bien
+          para todos (artículo 6.1.f).
         </li>
         <li>
           <strong>Correos de una votación privada</strong>: los escribe quien la crea para decidir quién puede entrar.

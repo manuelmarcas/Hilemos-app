@@ -91,6 +91,9 @@ export interface PollData {
   autoClosedAt?: number;
 }
 
+/** Lo que se cuenta desde el dispositivo para las estadísticas (Store.track). La misma lista, en las reglas (pings). */
+export type UsageEvent = "csv" | "xlsx" | "pdf" | "image" | "duplicate";
+
 /** Motivos de la cuenta atrás de una votación (docs/funcionalidades-y-planes.md, §8). */
 export type AutoCloseReason = "limit" | "premium";
 
@@ -405,6 +408,11 @@ export interface Store {
 
   /** `config/app` (versión mínima y aviso para todos); null si no hay o no se puede leer. */
   getAppConfig(): Promise<AppConfig | null>;
+  /**
+   * Cuenta una vez algo que solo pasa en el dispositivo (exportar, compartir la imagen, duplicar), sin decir quién:
+   * `pings/{id}` con el qué y la hora; el servidor lo suma a las estadísticas del día y lo borra. Si falla, nada.
+   */
+  track(event: UsageEvent): void;
 
   getProfile(uid: string): Promise<Profile | null>;
   saveProfile(uid: string, data: Profile): Promise<void>;

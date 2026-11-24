@@ -552,6 +552,7 @@ export function PollPage({ id }: { id: string }) {
             {T.top.length > 0 && (
               <button className="btn poll-head__action" onClick={() => act(async () => {
                 if (await shareResultCard(poll, T, TB) === "downloaded") toast("Imagen del resultado descargada");
+                store.track("image");
               })}>
                 <Icon name="image" /> Compartir resultado
               </button>

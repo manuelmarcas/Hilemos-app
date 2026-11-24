@@ -449,6 +449,16 @@ service cloud.firestore {
       allow read: if signedIn() && request.auth.uid == uid;
     }
 
+    // ---------- Estadísticas anónimas (Store.track y functions/stats.js) ----------
+    // La app apunta lo que solo pasa en el dispositivo (exportar, compartir la imagen, duplicar): el qué y la hora del
+    // servidor, sin quién. Nadie los lee desde la app; el servidor los suma cada noche en stats/ y los borra.
+    match /pings/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['f', 'at'])
+        && request.resource.data.f in ['csv', 'xlsx', 'pdf', 'image', 'duplicate']
+        && request.resource.data.at == request.time;
+    }
+
     // ---------- Configuración ----------
     // config/app (versión mínima de la app de Android y aviso para todos): la lee cualquiera, también antes de entrar.
     // El resto de config (plan, moderation) solo lo lee el servidor. Nada se escribe desde la app.

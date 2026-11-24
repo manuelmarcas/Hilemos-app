@@ -35,11 +35,11 @@ primer día.
 
 | # | Trabajo | Quién |
 | --- | --- | --- |
-| 1.1 | **Medir el uso** (ver «Qué se mide»): contadores diarios que calcula el servidor, sin herramientas de analítica ni cookies. | Yo |
+| 1.1 | **Medir el uso** (ver «Qué se mide») ✔: totales diarios y mensuales que calcula el servidor cada noche en `stats/`, sin herramientas de analítica ni cookies. Se miran en la consola de Firebase. | Hecho |
 | 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. ✔ | Hecho |
 | 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
 | 1.4 | **Panel de moderación** en la app, solo para quien modera Hilemos: ver las denuncias, ocultar el mensaje, descartar la denuncia y bloquear una cuenta. Aviso push de cada denuncia a esa cuenta, sin correo. | Yo |
-| 1.5 | **App Check** en modo «solo medir». | Tú, las claves; yo, el código |
+| 1.5 | **App Check** en modo «solo medir». El código ya está (también en Android, con Play Integrity: va en el primer `.aab`); faltan las claves y registrar la app en la consola (pasos en `app/README.md`, «App Check»). | Tú, las claves; yo, el código ✔ |
 | 1.6 | **Descargar mis datos** (7.16), que lo exige el RGPD en cuanto hay usuarios de verdad. ✔ | Hecho |
 | 1.7 | **Clave de subida y primer `.aab`**; huellas de Google Play en Firebase. | Yo, con tu sitio para guardar la clave |
 | 1.8 | **Play Console**: verificar la cuenta, crear la app, los formularios (privacidad, seguridad de los datos, clasificación, público, borrar la cuenta) y estado de «no comerciante». | Tú, con mi ayuda en las respuestas |
@@ -127,19 +127,25 @@ se decide si seguir igual, cambiar el enfoque o mantenerla gratis como proyecto 
 
 ## Qué se mide
 
-Contadores **agregados**, sin datos de cada persona: los calcula una Cloud Function y se guardan en `stats/{día}`.
-No hace falta Google Analytics ni pedir permiso de cookies, y la política de privacidad solo tiene que decir que se
-cuentan totales anónimos.
+Contadores **agregados**, sin datos de cada persona: los calcula cada noche la Cloud Function `onDaily`
+(`functions/stats.js`) a partir de lo que ya está guardado, y se guardan en `stats/{día}` (el día anterior) y, el
+día 1, en `stats/{mes}`. No hace falta Google Analytics ni pedir permiso de cookies; la política de privacidad ya dice
+que se cuentan totales anónimos. Lo único que manda la app son los `pings` (exportar, compartir la imagen, duplicar):
+qué y cuándo, sin quién, y se borran al sumarlos.
 
-| Dato | Para qué |
-| --- | --- |
-| Votaciones creadas, por tipo | Uso general |
-| Personas que organizan (distintas, por mes) | La señal principal de la fase 3 |
-| Personas que votan (distintas, por mes) y cuentas nuevas | Alcance: cada organizador trae a su grupo |
-| Votos y mensajes del chat | Actividad y coste (cada uno es una escritura y muchas lecturas) |
-| Organizadores que repiten (crean otra votación en 30 días) | Si engancha o es de un solo uso |
-| Uso de cada función marcada «Premium»: aprobación, solo correos, varios administradores, plazo, más de 20 personas, Excel o PDF, imagen sin marca, duplicar | Qué paga la gente de verdad y si los límites están bien puestos |
-| Denuncias | Si hace falta más moderación |
+| Dato | Campo | Para qué |
+| --- | --- | --- |
+| Votaciones creadas, por tipo | `polls`, `byType` (día y mes) | Uso general |
+| Personas que organizan (distintas) | `organizers` (día y mes) | La señal principal de la fase 3: mirar el del mes |
+| Personas que votan (distintas) | `voters` (día; en el mes, aproximado: quien cambia su voto el mes siguiente cuenta en ese) | Alcance: cada organizador trae a su grupo |
+| Cuentas nuevas, con y sin registro, y total | `accounts.registered`, `accounts.anonymous`, `totalAccounts` (día) | Alcance y cuántos se registran |
+| Votos tocados, entradas en votaciones y mensajes del chat | `votes`, `joins`, `chat` (día) | Actividad y coste (cada uno es una escritura y muchas lecturas) |
+| Organizadores que vuelven | `returning` (mes): de quienes organizan este mes, cuántos organizaron también el anterior | Si engancha o es de un solo uso |
+| Uso de cada función marcada «Premium» | `features` (plazo, aprobación, correos, administradores, más de 20 personas), `withPremium` y `premiumShare` (% del mes); `clicks` (`xlsx`, `pdf`, `csv`, `image`, `duplicate`) | Qué paga la gente de verdad y si los límites están bien puestos; `premiumShare` es la señal del 15 % |
+| Denuncias | `reports` (día) | Si hace falta más moderación |
+
+Lo que no se mide: quién hace qué, desde dónde ni con qué dispositivo. La imagen sin marca aún no existe; cuando
+exista, se añade a `clicks`.
 
 ## Qué cuesta Firebase
 

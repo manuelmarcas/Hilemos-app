@@ -477,6 +477,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
       if (gid === "__new") gid = await store.createGroup(user.uid, newGroup.trim());
       const acc: PollAccess | null = access === "emails" ? { emails: parsed.emails } : null;
       const id = await store.createPoll(poll, acc);
+      if (!editing && tpl?.duplicated) store.track("duplicate");
       await store.saveLibraryEntry(user.uid, id, {
         title: poll.title, type: poll.type, role: "owner", ownerName: poll.ownerName,
         groupId: gid, addedAt: createdAt,

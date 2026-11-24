@@ -17,6 +17,7 @@
     "deploy:antigua": "firebase deploy --only hosting:antigua"
   },
   "dependencies": {
+    "@capacitor-firebase/app-check": "^8.6.0",
     "@capacitor-firebase/authentication": "^8.6.0",
     "@capacitor/android": "^8.6.2",
     "@capacitor/app": "^8.1.2",
@@ -45,6 +46,9 @@
   },
   "overrides": {
     "@capacitor-firebase/authentication": {
+      "firebase": "$firebase"
+    },
+    "@capacitor-firebase/app-check": {
       "firebase": "$firebase"
     }
   }
