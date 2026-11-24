@@ -300,6 +300,7 @@ async function sendMail(key, from, to, subject, text) {
     body: JSON.stringify({ sender: { name: "Hilemos", email: from }, to: [{ email: to }], subject, textContent: text }),
   });
   if (!res.ok) console.error("No se pudo mandar el correo de la denuncia", res.status, await res.text());
+  else console.log("Correo de la denuncia aceptado por Brevo para", to);
 }
 
 // Denuncias (de un mensaje del chat o de una persona): se avisa a quien modera Hilemos. Lo que hay que avisar se
@@ -314,8 +315,13 @@ async function alertModerators({ pollId, path, push, subject, lines }) {
   if (uids.length) {
     tasks.push(notify(uids, { title: push, body: `«${title}»: ${subject}`, url: pollUrl(pollId), tag: `report-${pollId}` }, "reports"));
   }
-  const email = cfg.get("email");
-  const key = cfg.get("brevoKey");
+  const email = typeof cfg.get("email") === "string" ? cfg.get("email").trim() : "";
+  const key = typeof cfg.get("brevoKey") === "string" ? cfg.get("brevoKey").trim() : "";
+  // Qué hay en la configuración (sin la clave), para saber en el registro por qué no llega un aviso.
+  console.log("Denuncia recibida", path, {
+    configExiste: cfg.exists, campos: cfg.exists ? Object.keys(cfg.data()) : [], email: email || null,
+    brevoKey: key ? `${key.length} caracteres` : null, uids: uids.length,
+  });
   if (email && key) {
     const text = [
       ...lines(title).filter(l => l !== null),

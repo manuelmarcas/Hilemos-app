@@ -564,6 +564,15 @@ compilarla con `npm run android` y subir una versión nueva a Google Play.
   mirar si tiene `.then()` lo toma por un método nativo y falla en silencio). Se importa el módulo y se usa
   `(await import("…")).Plugin.metodo()`.
 
+### Recomendar la app desde la web
+
+«Hilemos en tu móvil» (`components/InstallDialog.tsx`, lógica en `lib/install.ts`) explica las dos formas de tenerla
+como app: en Android, Google Play (con `PLAY_PUBLISHED = true` cuando esté publicada; hasta entonces, instalar la web
+desde Chrome, con su botón propio si el navegador lanza `beforeinstallprompt`), y en iPhone, «Añadir a pantalla de
+inicio» desde Safari (no hay app de la App Store). La del móvil que se usa va primero y resaltada. Se abre sola al
+entrar desde el navegador de un móvil, si no hay otra ventana abierta; «Ahora no» la aplaza 30 días. Nunca dentro de la
+app ni en la web ya instalada, y en el ordenador solo desde «Tu perfil» → «Cómo instalarla».
+
 ### Probarla en un móvil
 
 1. Instalar [Android Studio](https://developer.android.com/studio) (trae el JDK y el SDK de Android).

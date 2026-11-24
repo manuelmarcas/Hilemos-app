@@ -10,6 +10,7 @@ import { Icon } from "./Icon";
 import { AccessKeyDialog } from "./AccessKeyDialog";
 import { NameDialog } from "./NameDialog";
 import { PremiumHost } from "./Premium";
+import { InstallHost } from "./InstallDialog";
 import { Sidebar } from "./Sidebar";
 import { Home } from "../pages/Home";
 import { Create } from "../pages/Create";
@@ -120,6 +121,7 @@ export function Shell() {
       <AccessKeyDialog />
       <NameDialog />
       <PremiumHost />
+      <InstallHost />
     </div>
   );
 }

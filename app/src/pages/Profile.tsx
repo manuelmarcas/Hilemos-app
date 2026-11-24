@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { errMsg, imageToAvatar, isIos, makeThumb } from "../lib/util";
 import { todayKey } from "../lib/dates";
 import { saveFile } from "../lib/files";
+import { canOfferInstall, openInstall } from "../lib/install";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import { disablePush, enablePush, isStandalone, pushState, type PushState } from "../lib/push";
 import type { NotifyPrefs } from "../lib/types";
@@ -333,6 +334,13 @@ export function Profile() {
             </div>
           )}
         </section>
+        {canOfferInstall() && (
+          <section className="step">
+            <h2 className="step__title">Hilemos en tu móvil</h2>
+            <p className="hint">Tenla como una app más, en Android o en iPhone: se abre a pantalla completa y te avisa.</p>
+            <button className="btn" onClick={openInstall}><Icon name="download" /> Cómo instalarla</button>
+          </section>
+        )}
         <section className="step">
           <h2 className="step__title">Privacidad y condiciones</h2>
           <p className="hint">Qué datos guarda Hilemos, para qué y qué puedes hacer con ellos, y las normas de uso de la app.</p>

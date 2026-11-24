@@ -146,6 +146,15 @@
 .premium-dialog__text--muted{color:var(--muted);font-size:.86rem}
 .premium-dialog__list{display:grid;gap:6px;margin:12px 0 0;padding-left:18px;font-size:.9rem;line-height:1.45}
 .premium-dialog__free{margin:16px 0 0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--premium-soft);color:var(--ink);font-size:.9rem;line-height:1.5}
+/* «Hilemos en tu móvil» (InstallDialog): Android y iPhone, la del móvil que se usa primero y resaltada */
+.install__options{display:grid;gap:10px;margin-top:4px}
+.install__option{padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--card)}
+.install__option--here{border:2px solid var(--brand);background:var(--brand-soft)}
+.install__name{--icon-color:var(--brand);display:flex;align-items:center;gap:8px;margin:0;font-size:1rem;color:var(--brand-strong)}
+.install__text{margin:6px 0 0;font-size:.9rem;line-height:1.45;color:var(--ink)}
+.install__steps{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:.9rem;line-height:1.45}
+.install__inline-icon{--icon-size:1.05em}
+.install__btn{margin-top:10px}
 /* «Exportar resultados»: un botón grande por formato, con lo que trae */
 .export-dialog__list{display:grid;gap:8px}
 .export-dialog__option{
