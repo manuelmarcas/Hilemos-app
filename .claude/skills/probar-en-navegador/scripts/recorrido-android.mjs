@@ -371,7 +371,8 @@ await check("Chat: al enviar, el campo se vacía al momento y el teclado sigue a
   sh("input keyevent KEYCODE_ENTER");
   sh("input text en%sdos%slineas");
   await sleep(600);
-  expect((await input.inputValue()) === "Segundo mensaje\nen dos lineas", "Intro ha enviado: " + JSON.stringify(await input.inputValue()));
+  // El teclado puede poner en mayúscula lo que va tras el salto de línea.
+  expect(/^Segundo mensaje\nen dos lineas$/i.test(await input.inputValue()), "Intro ha enviado: " + JSON.stringify(await input.inputValue()));
   expect(keyboardShown(), "el teclado no se abre");
   await tap(btn(bea, "Enviar"));
   expect((await input.inputValue()) === "", "el campo no se vacía: " + await input.inputValue());
