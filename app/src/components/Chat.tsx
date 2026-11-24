@@ -68,12 +68,14 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
   useEffect(() => cancelPress, []);
 
   // El campo crece con el texto (saltos de línea incluidos) hasta CHAT_FIELD_MAX px; a partir de ahí, se desplaza.
+  // Con la pestaña del chat oculta no se puede medir (scrollHeight es 0 y el campo quedaba aplastado al abrirla): se
+  // mide al abrirla.
   useLayoutEffect(() => {
     const el = field.current;
-    if (!el) return;
+    if (!el || !active) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight + 2, CHAT_FIELD_MAX)}px`;
-  }, [text]);
+  }, [text, active]);
 
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
   const since = chatSince(poll, user.uid, votes[user.uid]);
