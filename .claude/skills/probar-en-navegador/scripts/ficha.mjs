@@ -101,24 +101,24 @@ async function shot(p, hash, name, before) {
 
 const p = await phone();
 // La votación desde arriba del todo: título, descripción y botones de compartir.
-await shot(p, "#/v/p1", "1-votacion");
-await shot(p, "#/v/p1", "2-votar", async q => {
+await shot(p, "#/v/p1", "2-compartir");
+await shot(p, "#/v/p1", "3-votar", async q => {
   await q.getByText(/^diciembre 2026$/i).first()
     .evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 76));
 });
-await shot(p, "#/v/p1", "3-mas-votadas", async q => {
+await shot(p, "#/v/p1", "5-resultado", async q => {
   await q.getByRole("tab", { name: /Más votadas/ }).evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 66));
 });
 await shot(p, "#/v/p2", "4-opciones", async q => {
   await q.evaluate(() => { const h = [...document.querySelectorAll("p")].find(e => e.textContent.startsWith("Pulsa en las opciones")); window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - 90); });
 });
-await shot(p, "#/", "5-mis-votaciones");
+await shot(p, "#/", "7-mis-votaciones");
 await shot(p, "#/v/p1", "6-chat", async q => {
   await q.getByRole("tab", { name: /Chat/ }).click();
   await q.waitForTimeout(500);
   await q.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 });
-await shot(p, "#/nueva", "7-crear", async q => {
+await shot(p, "#/nueva", "1-crear", async q => {
   await q.getByText("¿Qué se vota?").first().evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 90));
 });
 
