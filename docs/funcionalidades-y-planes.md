@@ -349,11 +349,46 @@ alguien sin premium. Y si después vuelve a pagar, todo se desbloquea otra vez.
 Cuando el gestor sale, la votación pasa, en este orden, a:
 
 1. un administrador con premium;
-2. cualquier administrador;
-3. cualquier participante aceptado.
+2. un administrador **con sitio** (menos de 3 votaciones abiertas, §9);
+3. un participante aceptado con premium o con sitio;
+4. si nadie tiene sitio, cualquier administrador y, si no hay, cualquier participante aceptado.
 
 Dentro de cada grupo se elige al azar, como ahora. Hoy se prefiere a un administrador; el cambio es mirar antes si
-alguno tiene premium.
+alguno tiene premium o sitio. Quien también se fue (con sus votos) nunca hereda, y si no queda nadie, la votación se
+borra, como ahora.
+
+La votación nunca se queda sin gestor: si nadie tiene sitio, la hereda igualmente alguien del grupo 4, pero con la
+cuenta atrás de 7 días (ver «Heredar por encima del límite»).
+
+### Heredar por encima del límite
+
+**El problema.** Si la herencia no tuviera freno, se podría gestionar cualquier número de votaciones abiertas sin
+premium: una segunda cuenta (las cuentas sin registro son gratis) crea 3 votaciones, te une, sale y las heredas tú.
+Vuelve a tener 0 abiertas, crea otras 3, y así sin fin.
+
+**La regla.** Si el heredero, con la votación heredada, pasa de 3 abiertas y no tiene premium, **la votación se
+cierra sola a los 7 días** con el resultado que tenga en ese momento. Sin el freno, quien no paga podría juntar en su
+cuenta todas las que quisiera; con él, cada votación heredada de más dura como mucho una semana, así que el truco deja
+de compensar. A quien vota no se le corta de golpe: tiene una semana para terminar (1.1).
+
+| Caso | Qué pasa |
+| --- | --- |
+| El heredero tiene premium o, con la heredada, se queda en 3 o menos | Nada: la hereda sin cuenta atrás. |
+| El heredero, sin premium, pasa de 3 con la heredada | Cuenta atrás de 7 días. Todos ven «Se cierra sola el …». El heredero recibe un aviso al heredarla («Has heredado «X». Como tienes más de 3 abiertas, se cerrará sola el …; cierra otra para mantenerla») y otro 1 día antes del final. |
+| Durante la cuenta atrás, el heredero cierra o elimina otras y baja a 3 o menos | Se cancela la cuenta atrás de todas sus votaciones heredadas por encima del límite. |
+| Tiene varias heredadas con cuenta atrás (por ejemplo, 5 abiertas) y cierra una (queda en 4) | Siguen todas las cuentas atrás: solo se cancelan cuando baja a 3 o menos. |
+| Durante la cuenta atrás, el heredero consigue premium | Se cancela. Si después lo pierde, se aplica lo de siempre (las suyas siguen abiertas, §9), no una cuenta atrás nueva por el límite. |
+| Durante la cuenta atrás, el heredero sale y la hereda otra persona sin sitio | **La fecha no cambia**: la cuenta atrás no vuelve a empezar. Si no, se alargaría para siempre pasándola entre dos cuentas llenas. |
+| Durante la cuenta atrás, el heredero sale y la hereda alguien con premium o con sitio | Se cancela. |
+| La votación tiene además ajustes de pago (cuenta atrás de 30 días) | Cuenta la fecha que llegue antes. Cada cuenta atrás se cancela por su propio motivo: la de 7 días al tener sitio o premium; la de 30, al tener premium. |
+| La votación tiene pase (4.2) | También tiene la cuenta atrás de 7 días: el pase da funciones, no más votaciones abiertas. Si además lleva 60 días con el pase, cuenta la fecha que llegue antes. |
+| Se acaba el plazo durante la cuenta atrás | Se cierra por el plazo, como siempre (−1 en las abiertas). La cuenta atrás ya no hace nada. |
+| Se cierra por la cuenta atrás | Queda cerrada como si la hubiera cerrado el gestor: −1 en sus abiertas, aviso de cierre a los participantes y, si hay empate, se puede desempatar. Reabrirla cuenta como abrir (§9): solo con sitio. |
+| Las votaciones que el heredero creó él mismo | Nunca tienen esta cuenta atrás. Solo se aplica a la heredada que le hace pasar del límite. |
+| Durante el lanzamiento gratis (sin límite) | No se aplica nada de esto. |
+
+**Lo que no se cierra del todo.** Alguien puede usar varias cuentas y entrar en cada una por separado: es el límite
+de cualquier app con cuentas gratis. Lo que este freno evita es juntarlas todas en una sola cuenta.
 
 ### Ejemplo
 
@@ -385,14 +420,16 @@ Además:
 - **Si tiene ajustes de pago, se cierra sola a los 30 días**, salvo que antes vuelva a gestionarla alguien con
   premium (ver «Reutilizar una votación con funciones de pago»).
 - **La votación caduca** como las gratuitas (3.6).
-- **Cuenta en sus «abiertas a la vez»** (§9), aunque con ella pase del límite: la herencia no se puede rechazar.
-  Mientras esté por encima, no podrá crear ni reabrir votaciones.
+- **Cuenta en sus «abiertas a la vez»** (§9). La herencia no se puede rechazar; si con ella pasa del límite, la
+  votación se cierra sola a los 7 días (ver «Heredar por encima del límite»). Mientras esté por encima, no podrá
+  crear ni reabrir votaciones.
 
 ### Fisuras que cierra
 
 | Truco | Por qué no funciona |
 | --- | --- |
-| Pagar un mes, crear muchas votaciones grandes y pasárselas a amigos sin premium | Los amigos no pueden ampliarlas ni nombrar administradores, y cada una cuenta en sus abiertas, así que no pueden crear más. Además, el tope de 50 abiertas en premium (3.8) limita cuántas se pueden fabricar. |
+| Pagar un mes, crear muchas votaciones grandes y pasárselas a amigos sin premium | Los amigos no pueden ampliarlas ni nombrar administradores, y cada una cuenta en sus abiertas, así que no pueden crear más. Las que les hagan pasar de 3 se cierran solas a los 7 días. Además, el tope de 50 abiertas en premium (3.8) limita cuántas se pueden fabricar. |
+| Crear votaciones con otra cuenta, salir y heredarlas todas en la propia | Las heredadas que hacen pasar de 3 se cierran solas a los 7 días, y la cuenta atrás no vuelve a empezar al pasarlas a otra cuenta llena (ver «Heredar por encima del límite»). |
 | Darse de baja y seguir gestionando con funciones de pago | Las reglas miran el plan en cada cambio: sin premium, lo de pago queda congelado. |
 | Ser administrador de alguien con premium para usar sus funciones | Solo sirve en las votaciones de esa persona, no en las propias. |
 | Cerrar y reabrir para esquivar el límite de abiertas | Reabrir cuenta como abrir (§9). |
@@ -442,7 +479,12 @@ uso: acaba en su primer cierre, y si sigue abierta a los 60 días, se cierra sol
 El plan se guarda en `users/{uid}.premiumUntil` (hasta cuándo tiene premium), que solo escribe el servidor al
 comprobar el pago. Las reglas lo leen del gestor actual en cada cambio de pago y lo comparan con la hora del
 servidor, así que el premium caduca solo, sin que haga falta escribir nada al acabar la suscripción. Para elegir
-heredero con premium, la app tiene que poder leer ese dato de los administradores (como mucho 20).
+heredero con premium o con sitio, la app de quien sale tiene que poder leer `premiumUntil` y el contador de abiertas
+de quienes siguen en la votación (como mucho 150 lecturas, y solo al salir). Esa preferencia es una comodidad, no la
+protección: aunque alguien eligiera a propósito un heredero lleno, la Cloud Function que apunta la herencia en el
+contador (§9) mira las abiertas del heredero y, si pasa de 3 sin premium, apunta `autoCloseAt` a 7 días (o deja la
+fecha que ya tuviera, si es anterior). La tarea diaria del cortafuegos cancela esa cuenta atrás cuando el gestor
+tiene premium o 3 abiertas o menos.
 
 ---
 
@@ -463,7 +505,8 @@ premium (y 50 con premium, 3.8).
 | Cierra una votación con el plazo ya pasado | Nada: ya se descontó al acabar el plazo | — |
 | Elimina una votación abierta | −1 | — |
 | Archiva una votación | Nada: archivar solo la quita de su panel | — |
-| Sale de una votación abierta que gestiona | −1 para quien sale y +1 para quien la hereda | La herencia no se bloquea: el heredero puede pasar del límite (§8). |
+| Sale de una votación abierta que gestiona | −1 para quien sale y +1 para quien la hereda | Se prefiere un heredero con premium o con sitio. Si nadie tiene sitio, la herencia no se bloquea, pero la votación se cierra sola a los 7 días salvo que el heredero baje a 3 o consiga premium (§8, «Heredar por encima del límite»). |
+| Se cierra sola por heredarla por encima del límite | −1 (lo hace la tarea programada que la cierra) | — |
 | Elimina su cuenta | Como salir de cada una | — |
 | Se le acaba el premium con 10 abiertas | Nada cambia en ellas: siguen abiertas y funcionando | No puede crear ni reabrir hasta bajar de 3. |
 | Crea una votación con pase (4.2) | +1, como cualquier otra | El pase da funciones, no más votaciones: con 3 abiertas tampoco puede crearla. |
@@ -488,6 +531,7 @@ cuenta, porque pasa el tiempo.**
 | Se ha cerrado o se ha vuelto a abrir | Participantes | Esencial (gratis) |
 | Hay un desempate; resultado definitivo o desempate sin ganadora | Participantes | Esencial (gratis) |
 | Se ha acabado el plazo | Participantes | Esencial (gratis; el plazo ya es premium) |
+| «Has heredado «X»; se cerrará sola el …» y, 1 día antes, «Mañana se cierra «X»» (al heredarla por encima del límite, §8) | Heredero | Esencial (gratis) |
 | «Te falta votar» (por ejemplo, 2 días después de entrar sin votar) | Quien no ha votado | Recordatorio (premium) |
 | «Quedan 24 horas para votar» | Quien no ha votado | Recordatorio (premium) |
 | «Faltan 4 personas por votar» | Gestor | Recordatorio (premium) |
@@ -553,7 +597,7 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | 10 | **Los límites en las reglas**: 3 abiertas a la vez y 50 en premium (§9), 20 personas (3.3), funciones de control (3.4), duplicar (2.2.15), imagen sin marca, Excel y PDF. | Yo |
 | 11 | **Pase de 0,60 € y primera votación gratis** (4.2 y 4.4), con las opciones de premium visibles al crear. | Yo |
 | 12 | **El cortafuegos**: cuenta atrás de 30 días, cierre a los 60 días con pase y reabrir solo con premium (§8). | Yo |
-| 13 | **Herencia con preferencia por premium** (§8) y **caducidad** a los 12 meses sin movimiento (3.6). | Yo |
+| 13 | **Herencia con preferencia por premium y por quien tiene sitio**, con cierre a los 7 días si se hereda por encima del límite (§8), y **caducidad** a los 12 meses sin movimiento (3.6). | Yo |
 | 14 | La casilla de pago para renunciar al desistimiento y las condiciones de pago (4.5). | Yo, con lo que diga el gestor |
 
 ### Funciones ya decididas que faltan
