@@ -364,6 +364,13 @@ export function createDemoStore(): Store {
       all[rid] = clone(report);
       write(db);
     },
+    watchMyReports: (id, uid, cb) => watch(() => {
+      const db = load();
+      cb({
+        messages: new Set(Object.values(db.reports?.[id] || {}).filter(r => r.by === uid).map(r => r.msgId)),
+        people: new Set(Object.values(db.personReports?.[id] || {}).filter(r => r.by === uid).map(r => r.targetUid)),
+      });
+    }),
     watchPersonReports: (id, cb) => watch(() => {
       const db = load();
       const p = db.polls[id];

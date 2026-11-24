@@ -20,12 +20,14 @@ function fmtWhen(at: number) {
   return key === D.todayKey() ? hhmm : `${D.fmtDayShort(key)}, ${hhmm}`;
 }
 
-export function Chat({ poll, id, votes, canWrite, admin, active, seenAt, onUnread, onSeen }: {
+export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, seenAt, onUnread, onSeen }: {
   poll: Poll; id: string; votes: Votes;
   /** Puede escribir (y denunciar mensajes): está dentro de la votación. */
   canWrite: boolean;
   /** Administra la votación: ve qué mensajes se han denunciado y puede ocultarlos. */
   admin: boolean;
+  /** Mensajes que ya ha denunciado (se marcan y no se pueden volver a denunciar). */
+  reportedByMe: Set<string>;
   active: boolean; seenAt: number; onUnread: (n: number) => void; onSeen: (at: number) => void;
 }) {
   const { store, user } = useSession();
@@ -151,10 +153,15 @@ export function Chat({ poll, id, votes, canWrite, admin, active, seenAt, onUnrea
                           </span>
                         )}
                         <span className="chat__tools">
-                          {canWrite && !own && !hidden && (
-                            <button type="button" className="chat__tool" aria-label={`Denunciar mensaje de ${name}`} data-tip="Denunciar mensaje"
-                              onClick={() => setReporting({ msg: m, name })}><Icon name="flag" /></button>
-                          )}
+                          {canWrite && !own && !hidden && (reportedByMe.has(m.id)
+                            ? (
+                              <span className="chat__tool chat__tool--done" role="img" aria-label="Ya has denunciado este mensaje"
+                                data-tip="Ya lo has denunciado"><Icon name="flag" /></span>
+                            )
+                            : (
+                              <button type="button" className="chat__tool" aria-label={`Denunciar mensaje de ${name}`} data-tip="Denunciar mensaje"
+                                onClick={() => setReporting({ msg: m, name })}><Icon name="flag" /></button>
+                            ))}
                           {admin && (
                             <button type="button" className="chat__tool" aria-label={hidden ? "Volver a mostrar el mensaje" : "Ocultar el mensaje"}
                               data-tip={hidden ? "Volver a mostrar" : "Ocultar a todos"} onClick={() => setHidden(m, !hidden)}>

@@ -394,6 +394,11 @@ export interface Store {
   setMessageHidden(id: string, msgId: string, hidden: boolean): Promise<void>;
   /** Denuncia a otra persona de la votación (una vez por persona). */
   reportPerson(id: string, report: Omit<PersonReport, "id">): Promise<void>;
+  /**
+   * Lo que ha denunciado `uid` en la votación: ids de los mensajes y uids de las personas. Para marcarlos como ya
+   * denunciados (cada uno solo puede denunciar una vez lo mismo). Las reglas dejan leer a cada uno las suyas.
+   */
+  watchMyReports(id: string, uid: string, cb: (r: { messages: Set<string>; people: Set<string> }) => void, onErr?: ErrorCb): Unsubscribe;
   /** Denuncias de personas de la votación (solo quienes la administran). */
   watchPersonReports(id: string, cb: (reports: PersonReport[]) => void, onErr?: ErrorCb): Unsubscribe;
 

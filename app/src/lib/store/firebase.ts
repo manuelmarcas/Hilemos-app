@@ -483,6 +483,15 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
       if ((await F.getDoc(ref).catch(() => null))?.exists()) throw Object.assign(new Error("ya-denunciado"), { code: "already-exists" });
       await F.setDoc(ref, report);
     },
+    watchMyReports(id, uid, cb, onErr) {
+      let messages: Set<string> | null = null, people: Set<string> | null = null;
+      const emit = () => { if (messages && people) cb({ messages, people }); };
+      const u1 = F.onSnapshot(F.query(reportsCol(id), F.where("by", "==", uid)),
+        s => { messages = new Set(s.docs.map(d => d.get("msgId") as string)); emit(); }, onErr);
+      const u2 = F.onSnapshot(F.query(personReportsCol(id), F.where("by", "==", uid)),
+        s => { people = new Set(s.docs.map(d => d.get("targetUid") as string)); emit(); }, onErr);
+      return () => { u1(); u2(); };
+    },
     watchPersonReports: (id, cb, onErr) => F.onSnapshot(personReportsCol(id),
       snap => cb(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<PersonReport, "id">) }))), onErr),
 

@@ -46,6 +46,8 @@
   border:none;border-radius:var(--radius-sm);background:none;color:var(--muted);cursor:pointer;
 }
 .chat__tool:hover{background:var(--hover);color:var(--ink)}
+/* Ya lo has denunciado: la bandera en rojo, siempre a la vista y sin poder pulsarla otra vez */
+.chat__tool--done,.chat__tool--done:hover{background:none;color:var(--danger);cursor:default}
 .chat__flag{
   --icon-size:12px;
   display:inline-flex;align-items:center;gap:3px;flex:none;padding:1px 7px;border-radius:var(--radius-pill);

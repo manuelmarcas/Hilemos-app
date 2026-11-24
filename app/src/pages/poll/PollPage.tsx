@@ -64,6 +64,8 @@ export function PollPage({ id }: { id: string }) {
   const [profileUid, setProfileUid] = useState<string | null>(null);
   const [reportUid, setReportUid] = useState<string | null>(null);
   const [personReports, setPersonReports] = useState<PersonReport[]>([]);
+  // Lo que ya has denunciado tú: se marca en el chat y en el perfil, y no se puede repetir.
+  const [myReports, setMyReports] = useState<{ messages: Set<string>; people: Set<string> }>(() => ({ messages: new Set(), people: new Set() }));
   const [tab, setTab] = useState<PollTab>("summary");
   const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
@@ -118,6 +120,12 @@ export function PollPage({ id }: { id: string }) {
       .catch(() => { if (alive) setSharedIds([]); });
     return () => { alive = false; };
   }, [store, id, user.uid, profileUid]);
+  // Solo quien está dentro puede denunciar: sin voto (o sin ser quien la gestiona) no hay nada que escuchar.
+  const canReport = !!poll && (poll.ownerUid === user.uid || isPresent(votes[user.uid]));
+  useEffect(() => {
+    if (!canReport) return;
+    return store.watchMyReports(id, user.uid, setMyReports, () => {});
+  }, [store, id, user.uid, canReport]);
   // Denuncias de personas: solo las lee quien administra (se marcan en «Participantes» y en su perfil).
   const amAdmin = !!poll && isAdmin(poll, user.uid);
   const openCount = useOpenManaged();
@@ -654,7 +662,7 @@ export function PollPage({ id }: { id: string }) {
       </section>
       </div>
       <div className="poll-tabs__panel" id="ptab-chat" role="tabpanel" aria-labelledby="ptabbtn-chat" hidden={tab !== "chat"}>
-        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} admin={admin} active={tab === "chat"}
+        <Chat poll={poll} id={id} votes={shown} canWrite={canChat} admin={admin} active={tab === "chat"} reportedByMe={myReports.messages}
           seenAt={chatSeenAt} onUnread={setChatUnread} onSeen={markChatSeen} />
       </div>
       {votes[user.uid] && (
@@ -666,6 +674,7 @@ export function PollPage({ id }: { id: string }) {
       {profilePerson && (
         <PersonDialog poll={poll} person={profilePerson} vote={votes[profilePerson.uid]} me={user.uid}
           reports={admin ? reportsOf.get(profilePerson.uid) || [] : []} canReport={canChat}
+          reportedByMe={myReports.people.has(profilePerson.uid)}
           shared={profilePerson.uid === user.uid ? undefined
             : sharedIds && sharedIds.map(pid => ({ id: pid, title: lib?.polls[pid]?.title || "Votación", type: lib?.polls[pid]?.type }))}
           onReport={() => { setReportUid(profilePerson.uid); setProfileUid(null); }} onClose={() => setProfileUid(null)} />

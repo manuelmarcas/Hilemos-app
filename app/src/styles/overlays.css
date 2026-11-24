@@ -130,6 +130,7 @@
   margin:16px 0 0;padding:10px 12px;border-radius:var(--radius-sm);
   background:var(--danger-soft);color:var(--danger);font-size:.88rem;line-height:1.45;
 }
+.person-card__reported{--icon-size:15px;display:inline-flex;align-items:center;gap:6px;margin-right:auto;color:var(--danger);font-size:.9rem;font-weight:600}
 .person-card__reports-title{display:flex;align-items:center;gap:6px;margin:0}
 .person-card__reasons{margin:6px 0 0;padding-left:22px}
 .person-card__comment{display:block;color:var(--ink);font-style:italic;overflow-wrap:anywhere}

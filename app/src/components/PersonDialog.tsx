@@ -19,7 +19,7 @@ export interface SharedPoll {
   type?: PollType;
 }
 
-export function PersonDialog({ poll, person, vote, me, reports, shared, canReport, onReport, onClose }: {
+export function PersonDialog({ poll, person, vote, me, reports, shared, canReport, reportedByMe, onReport, onClose }: {
   poll: Poll;
   person: Person;
   vote: Vote | undefined;
@@ -30,6 +30,8 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
   shared?: SharedPoll[] | null;
   /** Puede denunciar: está dentro de la votación (aceptado). */
   canReport: boolean;
+  /** Ya le ha denunciado (solo se puede una vez). */
+  reportedByMe?: boolean;
   onReport: () => void;
   onClose: () => void;
 }) {
@@ -103,11 +105,13 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
       <div className="dialog__actions">
         {own
           ? <a className="btn dialog__btn" href="#/perfil"><Icon name="edit" /> Editar tu perfil</a>
-          : canReport && (
-            <button type="button" className="btn btn--danger dialog__btn" onClick={onReport}>
-              <Icon name="flag" /> Denunciar
-            </button>
-          )}
+          : canReport && (reportedByMe
+            ? <span className="person-card__reported"><Icon name="flag" /> Ya le has denunciado</span>
+            : (
+              <button type="button" className="btn btn--danger dialog__btn" onClick={onReport}>
+                <Icon name="flag" /> Denunciar
+              </button>
+            ))}
         <button type="button" className="btn dialog__btn" onClick={() => dlg.current?.close()}>Cerrar</button>
       </div>
     </Dialog>

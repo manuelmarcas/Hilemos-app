@@ -307,11 +307,22 @@ await check("Denunciar a una persona desde su perfil", async () => {
   await ana.getByRole("button", { name: "Ver el perfil de Bea" }).click();
   const t = await dialogText(ana);
   expect(t.includes("Le han denunciado una vez") && t.includes("Spam o publicidad") && t.includes("«Prueba»"), "el perfil no dice la denuncia: " + t);
-  await btn(ana.locator("dialog[open]"), "Denunciar").click();
-  await ana.getByLabel("Insultos, acoso u ofensas").check();
+  // Ya denunciada: el perfil lo dice y no deja repetir.
+  expect(t.includes("Ya le has denunciado"), "no dice que ya la denunció: " + t);
+  expect(await btn(ana.locator("dialog[open] .dialog__actions"), "Denunciar").count() === 0, "deja volver a denunciar");
+  await btn(ana.locator("dialog[open] .dialog__actions"), "Cerrar").click();
+});
+await check("Chat: el mensaje que ya has denunciado queda marcado", async () => {
+  await ana.locator("#ptabbtn-chat").click();
+  const msg = ana.locator(".chat__msg", { hasText: "¡Hola!" });
+  await msg.getByRole("button", { name: /Denunciar mensaje de/ }).click();
+  await ana.getByLabel("Spam o publicidad").check();
   await btn(ana, "Enviar denuncia").click();
-  await ana.locator("dialog[open] .status", { hasText: "Ya habías denunciado a Bea" }).waitFor();
-  await btn(ana.locator("dialog[open] .dialog__actions"), "Cancelar").click();
+  await msg.locator(".chat__tool--done").waitFor();
+  expect(await msg.getByRole("button", { name: /Denunciar mensaje de/ }).count() === 0, "sigue el botón de denunciar");
+  await ana.reload();
+  await ana.locator("#ptabbtn-chat").click();
+  await ana.locator(".chat__msg", { hasText: "¡Hola!" }).locator(".chat__tool--done").waitFor();
 });
 await check("Descargar mis datos (Tu perfil)", async () => {
   await go(ana, "#/perfil");
