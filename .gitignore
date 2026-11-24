@@ -1,3 +1,6 @@
 # Lo local de Claude Code (worktrees, ajustes) no se sube; las skills del proyecto sí.
 .claude/*
 !.claude/skills/
+
+# Registros de los emuladores de Firebase (firebase emulators:exec)
+*-debug.log
