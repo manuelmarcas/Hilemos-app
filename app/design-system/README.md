@@ -63,7 +63,7 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 - Cerrar sesión está en «Tu perfil», no en la barra superior: se usa poco y, sin cuenta, es peligroso.
 - Poco texto fijo: la pantalla de una votación empieza por las etiquetas que cambian cómo se vota (anónima, solo
   invitados, con aprobación, plazo), el título y, a su lado, el botón ⓘ (`info-btn`), que abre «Sobre esta votación»
-  con el resto: tipo, quién la creó, participantes, fechas, si los votos se ven y cómo se usa. «Cómo se vota» solo sale
+  con el resto: la descripción, tipo, quién la creó, participantes, fechas, si los votos se ven y cómo se entra. «Cómo se vota» solo sale
   hasta que votas. Lo que ya dice una etiqueta o un icono no se repite en una frase.
 - Campos de varias líneas (`textarea`): siempre `.input .input--area`, sin tirador para agrandarlos a mano; crecen
   solos con el texto (`useAutoGrow`) hasta un alto máximo y, a partir de ahí, se desplazan dentro.

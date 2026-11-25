@@ -460,8 +460,8 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
 - **Botón flotante del chat** (`ChatFab`): mientras las pestañas quedan por debajo de la pantalla, un botón redondo
   abajo a la derecha, con los mensajes sin leer, abre el chat y baja hasta él.
 - No hay avisos push del chat: se quitaron para no gastar lecturas por cada mensaje.
-- **Sin texto fijo**: cómo denunciar un mensaje (mantener pulsado en el móvil, la bandera con ratón) está en
-  «Sobre esta votación» (ⓘ junto al título). El chat solo avisa, si es anónima, de que en él se ve tu nombre.
+- **Sin texto fijo**: no se explica cómo denunciar (mantener pulsado en el móvil, la bandera con ratón): se descubre
+  solo. El chat solo avisa, si es anónima, de que en él se ve tu nombre.
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
 ## Avisos (notificaciones)

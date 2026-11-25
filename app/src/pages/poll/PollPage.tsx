@@ -559,7 +559,7 @@ export function PollPage({ id }: { id: string }) {
           </div>
           <div className="poll-head__title-row">
             <h1 className="poll-head__title">{poll.title}</h1>
-            <PollAbout poll={poll} creator={creator} people={present.length} isOwner={isOwner} canWrite={canChat} />
+            <PollAbout poll={poll} creator={creator} people={present.length} isOwner={isOwner} />
             {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
                 onCloseOrReopen={poll.closed && tbDone ? undefined : closeOrReopen}
@@ -571,7 +571,6 @@ export function PollPage({ id }: { id: string }) {
                 onPeople={() => setPanel("people")} onExport={() => setExportOpen(true)} />
             )}
           </div>
-          {poll.description && <p className="poll-head__desc">{poll.description}</p>}
           <div className="poll-head__actions">
             <button className="btn btn--primary poll-head__action" onClick={() => share({ url: pollUrl(id), title: poll.title })}>
               <Icon name="link" /> Compartir

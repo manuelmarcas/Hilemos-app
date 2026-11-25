@@ -467,11 +467,6 @@ await check("Chat: en el móvil se denuncia manteniendo pulsado el mensaje", asy
   await msg.waitFor();
   expect(await msg.getByRole("button", { name: /Denunciar mensaje de/ }).count() === 0, "sale la bandera en el móvil");
   expect(await msg.getByRole("button", { name: "Ocultar el mensaje" }).count() === 0, "se puede ocultar sin denunciar");
-  // La pista está en «Sobre esta votación» (ⓘ junto al título).
-  await ana.getByRole("button", { name: "Información de la votación" }).click();
-  const about = await ana.locator(".about-dialog").innerText();
-  await ana.locator(".about-dialog .dialog__close").click();
-  expect(about.includes("Mantén pulsado"), "falta la pista");
   // Pulsación larga de verdad, con adb (un deslizamiento sin moverse que dura 900 ms).
   const body = msg.locator(".chat__body");
   await body.evaluate(e => e.scrollIntoView({ block: "center" }));

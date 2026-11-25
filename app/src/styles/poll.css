@@ -7,6 +7,7 @@
 /* Nota en gris (pantalla de espera, Access.tsx). */
 .poll-info__note{color:var(--muted);font-size:.88rem;margin:0;line-height:1.5}
 .poll-head__title{font-size:1.75rem;margin:0;line-height:1.2;color:var(--brand-strong);overflow-wrap:anywhere}
+/* Descripción bajo el título: solo en la pantalla de espera (Access.tsx); en la votación está en ⓘ. */
 .poll-head__desc{margin:6px 0 0;line-height:1.5;white-space:pre-line}
 .poll-head__actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 @container view (max-width:559.98px){
@@ -27,11 +28,10 @@
 }
 .info-btn:hover{background:var(--hover);color:var(--ink)}
 /* Ventana «Sobre esta votación» (PollAbout.tsx) */
+.about-dialog__desc{margin:10px 0 0;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
 .about-dialog__list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
 .about-dialog__row{display:flex;gap:10px;align-items:flex-start;line-height:1.45;font-size:.94rem}
 .about-dialog__icon{flex:none;margin-top:2px;--icon-color:var(--brand)}
-.about-dialog__label{margin:18px 0 6px;font-size:.95rem;color:var(--ink)}
-.about-dialog__tips{margin:0;padding-left:18px;display:grid;gap:6px;color:var(--muted);font-size:.9rem;line-height:1.45}
 /* Título con el menú ⋯ (solo administradores) a la derecha */
 .poll-head__title-row{display:flex;align-items:flex-start;gap:10px}
 .poll-head__title{flex:1;min-width:0}
