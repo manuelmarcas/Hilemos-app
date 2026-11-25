@@ -627,6 +627,36 @@ se ve la votación, para que un evento se reconozca y quede bonito al compartirl
 - **Imagen del resultado y PDF personalizados**: con ese color y esa portada, además de sin marca (2.4.5).
 - **Vista previa del enlace**: que, al compartirlo por WhatsApp, salga la portada y el título de la votación.
 
+### Votación por intervalos de fechas (premium)
+
+Un tipo de votación nuevo: cada opción es un intervalo entre dos fechas («del 27 de febrero al 7 de abril», «del 10
+al 25 de abril») y se vota cuál viene mejor. Pensado para viajes, vacaciones, bodas o turnos: quien organiza eso es
+también quien suele comprar el pase (4.2). Es premium porque añade algo nuevo sin quitar nada de lo gratis: los
+cuatro tipos de fechas (días, horas, semanas y meses) y las opciones libres siguen gratis.
+
+Hoy se puede imitar escribiendo «27 feb – 7 abr» como opción libre. Para que merezca pagar, tiene que dar lo que eso
+no da:
+
+- **Elegir las fechas en el calendario**, con la duración al lado («40 días, 39 noches») y un aviso si el final es
+  anterior al inicio.
+- **Un nombre opcional** para cada intervalo («Semana Santa», «Puente de mayo»).
+- **Ordenados por fecha** y dibujados en una línea de tiempo o un calendario, para ver de un vistazo cuáles se solapan.
+- **Al cerrar, «Añadir al calendario»** con el intervalo ganador como un evento de varios días, y las fechas bien
+  escritas en la imagen del resultado, en Excel y en PDF.
+
+**Decidido:**
+
+- De 2 a 20 intervalos.
+- Se pueden solapar: es normal comparar «del 1 al 15» con «del 10 al 25».
+- Solo fechas, sin horas.
+- Se vota el intervalo entero, como ahora la semana entera. Votar solo una parte («me vale del 1 al 5») queda fuera,
+  al menos al principio, porque complica mucho el recuento.
+- Premium o con pase, con la etiqueta «Premium» visible al crear, como el resto.
+
+**Trabajo:** parecido a lo que costaron las opciones libres. Hay que tocar el modelo y las reglas, crear y editar (sin
+dejar quitar un intervalo con votos), los avisos del chat, los tableros, el calendario `.ics`, las exportaciones y
+duplicar.
+
 ### Otras ideas
 
 | Idea | Qué sería | Para quién |
