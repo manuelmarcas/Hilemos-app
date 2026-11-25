@@ -18,10 +18,11 @@ export const firebaseConfig: FirebaseOptions = {
 };
 
 /**
- * Clave de reCAPTCHA Enterprise para App Check en la web (lib/appCheck.ts). Es pública, como el resto. Vacía: en la
- * web no se activa App Check (en Android va con Play Integrity y no necesita clave aquí).
+ * Clave de reCAPTCHA Enterprise para App Check en la web (lib/appCheck.ts). Es pública, como el resto, y solo vale en
+ * los dominios que tiene dados de alta (hilemos.web.app). Vacía, en la web no se activa App Check (en Android va con
+ * Play Integrity y no necesita clave aquí).
  */
-export const appCheckSiteKey = "";
+export const appCheckSiteKey = "6LcSWTIuAAAAAJ3q3bZqk4pHXhRSotZCQN6jq4NH";
 
 /**
  * Clave pública de los avisos (Configuración del proyecto > Cloud Messaging > Certificados push web).

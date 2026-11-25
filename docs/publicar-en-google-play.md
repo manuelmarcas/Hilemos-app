@@ -3,7 +3,10 @@
 Guía paso a paso de todo el proceso, tal como se hizo la primera vez (24 y 25 de noviembre de 2026): generar el
 `.aab`, crear la app en Play Console, rellenar todos los formularios, montar la prueba cerrada con un grupo de
 Google, pasar la revisión, conseguir los enlaces para los testers y dejar Firebase preparado para que la app de la
-tienda funcione. Al final, App Check y lo que hay que hacer en cada versión nueva.
+tienda funcione.
+
+**Los apartados 1 a 16 van en el orden en que se hacen.** Del 17 en adelante: las versiones siguientes y lo que se
+consulta cuando hace falta.
 
 Los menús de Play Console cambian a menudo: si un nombre no coincide, busca el más parecido o usa la lupa de arriba.
 
@@ -19,14 +22,18 @@ Los menús de Play Console cambian a menudo: si un nombre no coincide, busca el 
 6. Prueba cerrada: países y testers
 7. Crear la versión y subir el `.aab`
 8. Enviar a revisión
-9. Tras la aprobación: los enlaces para los testers
-10. Huellas de la firma en Firebase (imprescindible)
-11. Comprobarlo antes de invitar a nadie
-12. Invitar a los testers y los 14 días
-13. Versiones siguientes
-14. App Check, en detalle
-15. Problemas frecuentes
-16. Datos de referencia
+9. Huellas de la firma en Firebase (imprescindible)
+10. App Check: registrar las apps y empezar a medir
+11. Tras la aprobación: los enlaces para los testers
+12. Comprobarlo antes de invitar a nadie
+13. Invitar a los testers
+14. Durante los 14 días
+15. Exigir App Check (tras una semana midiendo)
+16. Pedir el acceso a producción
+17. Versiones siguientes
+18. App Check, en detalle (consulta)
+19. Problemas frecuentes
+20. Datos de referencia
 
 ---
 
@@ -191,7 +198,8 @@ Al terminar: **Siguiente** → la vista previa debe decir «No se comparten dato
 
 ## 5. Ficha de la tienda
 
-**Crecimiento → Presencia en Google Play → Ficha principal.** Todo está en `docs/ficha-google-play/`
+**Aumentar usuarios → Presencia en Play Store → Fichas de Play Store → ficha principal** (o predeterminada); ver 5.1 si no
+aparece. Todo está en `docs/ficha-google-play/`
 (textos en `textos.md`, con el tono desenfadado de la app).
 
 | Campo | Qué poner |
@@ -213,6 +221,22 @@ Otros ajustes de la ficha:
 
 Las capturas y la imagen destacada se rehacen con datos de ejemplo con
 `.claude/skills/probar-en-navegador/scripts/ficha.mjs` (ver la skill `probar-en-navegador`).
+
+### 5.1 Cambiar la ficha más adelante (también durante la prueba)
+
+La descripción, las capturas y el resto de la ficha **no están en el código de la app**: se cambian en Play Console.
+No hace falta compilar ni subir otro `.aab`, y `textos.md` es solo la copia: editarlo no cambia nada en la tienda.
+
+1. Entrar en la app **Hilemos** (en la lista de todas las aplicaciones el menú es otro).
+2. Menú izquierdo → **Aumentar usuarios** (o «Aumenta la cantidad de usuarios»; antes, «Crecimiento») → **Presencia en
+   Play Store** → **Fichas de Play Store** → ficha principal o predeterminada → flecha o lápiz.
+3. Cambiar los textos (breve: 80 caracteres; completa: 4.000) y **Guardar**.
+4. **Resumen de la publicación** (o «Vista general de la publicación») → enviar los cambios a revisión si salen como
+   pendientes. No se ven hasta que Google los aprueba.
+5. Copiar el texto nuevo a `textos.md`.
+
+Si no aparece el menú: escribir «ficha» en el buscador de arriba, usar un ordenador o abrir el menú con **☰**. No hay
+que tocar la versión de la prueba ni a los testers.
 
 ---
 
@@ -269,7 +293,95 @@ Menú izquierdo → **Resumen de la publicación**.
 
 ---
 
-## 9. Tras la aprobación: los enlaces para los testers
+## 9. Huellas de la firma en Firebase (imprescindible)
+
+Se puede hacer en cuanto está subido el primer `.aab`, mientras Google revisa. Como Google firma la app con **sus**
+claves, Firebase tiene que conocerlas. Si no:
+- «Entrar con Google» **falla** en la app descargada de la tienda;
+- los enlaces de `hilemos.web.app` se abren en el navegador en vez de en la app;
+- App Check no reconoce la app.
+
+### 9.1 Dónde están
+Play Console → **escudo «Protegida con Play»** → fila **«Protección de Play Store»** (desplegar con ⌄) →
+**Firma de apps de Play** → «Certificado de la clave de firma de la aplicación». Con la firma preparada para la era
+cuántica hay **varias**: «Clave clásica», «Clave criptográfica poscuántica» y, en «Copiar todas las huellas
+digitales», una tercera. Se copian **todas**, SHA-1 y SHA-256. También las de la **clave de subida**.
+
+Las huellas **no son secretas** (cualquiera las saca de la app instalada). Lo secreto es el `.jks`, sus contraseñas y
+`keystore.properties`.
+
+### 9.2 Añadirlas a la app de Android de Firebase
+Consola de Firebase → ⚙️ Configuración del proyecto → General → «Tus apps» → `app.hilemos` → **Añadir huella digital**,
+una a una. O desde la terminal (en minúsculas y sin `:`):
+
+```bash
+firebase apps:android:sha:create 1:1092387940683:android:5b56f82b080e66f632a0ce <huella> --project votaciones-9bc95
+firebase apps:android:sha:list   1:1092387940683:android:5b56f82b080e66f632a0ce --project votaciones-9bc95
+```
+
+### 9.3 Enlaces que abren la app (`assetlinks.json`)
+Firebase Hosting genera solo `/.well-known/assetlinks.json`, **pero no se actualizó al añadir las huellas**. Por eso
+se publica a mano: `app/public/.well-known/assetlinks.json` con todas las SHA-256 (Play, subida y depuración), y
+`app/firebase.json` ya no ignora las carpetas que empiezan por punto. Después de cambiarlo: `npm run deploy` en `app/`.
+
+Comprobar que Google lo ve:
+
+```bash
+curl "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://hilemos.web.app&relation=delegate_permission/common.handle_all_urls"
+```
+
+No hace falta generar otro `.aab` ni descargar otro `google-services.json`.
+
+---
+
+## 10. App Check: registrar las apps y empezar a medir
+
+Con las huellas ya en Firebase, se registran las dos apps. En esta fase **solo se mide**: no se rechaza nada. Qué es
+App Check y cómo está hecho, en el apartado 18. El código ya va en el primer `.aab`.
+
+### 10.1 Android (Play Integrity)
+1. Play Console → escudo **«Protegida con Play»** → fila **«API Play Integrity»** → **Empezar** → **vincular el
+   proyecto de Google Cloud** `votaciones-9bc95` (número `1092387940683`). No hace falta nada más ahí.
+2. Consola de Firebase → **App Check** (menú «Compilación» o «Seguridad», o en los accesos directos) → pestaña
+   **Apps** → `app.hilemos` → **Play Integrity**.
+3. Las casillas **«Huella digital del certificado SHA-256» salen ya rellenas** con las que se añadieron en el
+   apartado 9. **No hay que cambiarlas, borrarlas ni añadir otras**: se comprueban contra la tabla del apartado 20 (son cinco:
+   las tres de Google Play, la de subida y la de depuración). Si salieran vacías, se pegan las SHA-256 de esa tabla.
+4. Dejar las demás opciones como están, aceptar las condiciones si las pide y **Guardar**. Esto también activa la API
+   de App Check en el proyecto.
+5. En la pestaña **Apps**, `app.hilemos` tiene que salir como **«Registrada»** con Play Integrity. La app web seguirá
+   con el botón **Registrar**: es el paso siguiente.
+
+### 10.2 Web: crear la clave de reCAPTCHA Enterprise
+1. [reCAPTCHA en Google Cloud](https://console.cloud.google.com/security/recaptcha?project=votaciones-9bc95), con el
+   proyecto `votaciones-9bc95` seleccionado. Si pide activar la API, activarla.
+2. **Crear clave** → tipo **Web** («Sitio web»), nombre `Hilemos web`.
+3. Dominios: **solo `hilemos.web.app`**, sin `https://`. **`localhost` no se añade**: en local la app usa el proveedor
+   de depuración (apartado 18.3), y darlo de alta dejaría conseguir justificantes válidos desde fuera de la web.
+4. **Sin desafío de casilla** (clave de puntuación).
+5. Crear y copiar el **ID de la clave** (la «clave del sitio»).
+
+### 10.3 Web: registrarla en Firebase
+Firebase → App Check → **Apps** → fila **«App web»** → **Registrar** → **reCAPTCHA Enterprise** (no «reCAPTCHA v3»:
+el código usa Enterprise) → pegar el ID de la clave → dejar los demás valores → **Guardar**.
+
+### 10.4 Web: poner la clave en el código y publicar
+1. El ID de la clave (es público) va en `appCheckSiteKey`, en `app/src/lib/config.ts`.
+2. `npm test` y `npm run deploy` en `app/`. No hace falta otro `.aab`.
+
+Hasta este paso la web no manda justificante, aunque Firebase la dé por registrada.
+
+### 10.5 Comprobar
+- En **Apps**, las dos salen como **«Registrada»**.
+- Al abrir `https://hilemos.web.app`, la petición `exchangeRecaptchaEnterpriseToken` (pestaña Red del navegador)
+  responde **200**.
+- **No pulsar «Exigir» todavía** (apartado 15).
+
+*Hecho el 25 de noviembre de 2026: las dos registradas y la web publicada con la clave.*
+
+---
+
+## 11. Tras la aprobación: los enlaces para los testers
 
 Prueba cerrada → Alpha → pestaña **Testers** → abajo, **«Cómo se unen los testers a la prueba»**:
 
@@ -285,47 +397,7 @@ Antes de la aprobación estos enlaces no aparecen (o no funcionan).
 
 ---
 
-## 10. Huellas de la firma en Firebase (imprescindible)
-
-Como Google firma la app con **sus** claves, Firebase tiene que conocerlas. Si no:
-- «Entrar con Google» **falla** en la app descargada de la tienda;
-- los enlaces de `hilemos.web.app` se abren en el navegador en vez de en la app;
-- App Check no reconoce la app.
-
-### 10.1 Dónde están
-Play Console → **escudo «Protegida con Play»** → fila **«Protección de Play Store»** (desplegar con ⌄) →
-**Firma de apps de Play** → «Certificado de la clave de firma de la aplicación». Con la firma preparada para la era
-cuántica hay **varias**: «Clave clásica», «Clave criptográfica poscuántica» y, en «Copiar todas las huellas
-digitales», una tercera. Se copian **todas**, SHA-1 y SHA-256. También las de la **clave de subida**.
-
-Las huellas **no son secretas** (cualquiera las saca de la app instalada). Lo secreto es el `.jks`, sus contraseñas y
-`keystore.properties`.
-
-### 10.2 Añadirlas a la app de Android de Firebase
-Consola de Firebase → ⚙️ Configuración del proyecto → General → «Tus apps» → `app.hilemos` → **Añadir huella digital**,
-una a una. O desde la terminal (en minúsculas y sin `:`):
-
-```bash
-firebase apps:android:sha:create 1:1092387940683:android:5b56f82b080e66f632a0ce <huella> --project votaciones-9bc95
-firebase apps:android:sha:list   1:1092387940683:android:5b56f82b080e66f632a0ce --project votaciones-9bc95
-```
-
-### 10.3 Enlaces que abren la app (`assetlinks.json`)
-Firebase Hosting genera solo `/.well-known/assetlinks.json`, **pero no se actualizó al añadir las huellas**. Por eso
-se publica a mano: `app/public/.well-known/assetlinks.json` con todas las SHA-256 (Play, subida y depuración), y
-`app/firebase.json` ya no ignora las carpetas que empiezan por punto. Después de cambiarlo: `npm run deploy` en `app/`.
-
-Comprobar que Google lo ve:
-
-```bash
-curl "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://hilemos.web.app&relation=delegate_permission/common.handle_all_urls"
-```
-
-No hace falta generar otro `.aab` ni descargar otro `google-services.json`.
-
----
-
-## 11. Comprobarlo antes de invitar a nadie
+## 12. Comprobarlo antes de invitar a nadie
 
 1. **Desinstalar** del móvil cualquier versión de depuración (firmada con otra clave: Play no instala encima).
 2. Unirse al grupo `hilemos-testers` con la cuenta de Google del móvil.
@@ -337,7 +409,7 @@ No hace falta generar otro `.aab` ni descargar otro `google-services.json`.
 
 ---
 
-## 12. Invitar a los testers y los 14 días
+## 13. Invitar a los testers
 
 **Requisito de Google:** al menos **12 testers apuntados durante 14 días seguidos**. Conviene invitar a 15-20 por si
 alguien se sale. Solo cuentan los que **aceptan la prueba** (no basta con estar en el grupo) y conviene que la usen:
@@ -346,35 +418,90 @@ Google puede denegar producción si no ve actividad. Todos con Android.
 Orden para cada tester: **1) unirse al grupo → 2) abrir el enlace de la prueba → 3) instalar desde Google Play**, con
 la misma cuenta de Google. Si abren el enlace antes de unirse al grupo, les dice que no tienen acceso.
 
-Mensaje para WhatsApp (cambiar los dos enlaces):
+Mensaje para WhatsApp (en WhatsApp, `*texto*` sale en negrita). Antes de enviarlo, comprobar el enlace del paso 2 con
+el de **«Unirse en la Web»** (apartado 11) y que el del grupo deja unirse desde otra cuenta:
 
-> ¡Hola! 👋 Estoy a punto de sacar **Hilemos**, una app para quedar con tu gente sin liarse con mil mensajes: se
-> propone el plan, cada uno vota y listo. 🎉
->
-> Antes de publicarla, Google me pide que la prueben al menos 12 personas durante 14 días. ¿Me echas una mano? Son
-> 3 pasos:
->
-> 1️⃣ Únete al grupo de pruebas: https://groups.google.com/g/hilemos-testers
-> 2️⃣ Apúntate a la prueba: [enlace «Unirse en la Web»]
-> 3️⃣ Instálala desde Google Play.
->
-> ⚠️ Usa siempre la misma cuenta de Google, la que tienes en Google Play. Y no la borres en 14 días.
->
-> Úsala para tu próximo plan (una cena, un cumple, una escapada) y cuéntame qué te parece o qué falla. ¡Mil
-> gracias! 🙌
->
-> (Por ahora solo para Android. Desde iPhone se puede usar en hilemos.web.app.)
+```text
+¡Hola! 👋 Estoy a punto de sacar *Hilemos*, una app para quedar sin liarse con mil mensajes. 🎉
 
-Durante los 14 días: mirar **Android vitals** y las opiniones cada pocos días. Subir una versión nueva al canal
-cerrado **no reinicia** el plazo (según lo que se sabe; comprobarlo en Play Console). Al terminar: **pedir el acceso a
-producción** desde el panel.
+Creas una votación (qué día quedamos, dónde cenamos, qué regalamos…), la pasas al grupo y cada uno marca lo que le viene bien. Así se ve rápido qué gana. También tiene un chat para rematar los detalles.
+
+*¿Qué necesito?* 🙏
+Antes de publicarla, Google me pide que al menos 12 personas estén apuntadas a la prueba durante 14 días seguidos. ¿Me echas una mano? Necesitas un móvil Android.
+
+*Son 3 pasos, en este orden:*
+
+1️⃣ Únete al grupo de pruebas:
+https://groups.google.com/g/hilemos-testers
+
+2️⃣ Apúntate a la prueba:
+https://play.google.com/apps/testing/app.hilemos
+
+3️⃣ Instala la app desde Google Play.
+
+⚠️ *Importante:*
+• Usa siempre la misma cuenta de Google, la que tienes en Google Play.
+• En esos 14 días, no te salgas de la prueba ni del grupo, y no borres la app.
+• Ábrela de vez en cuando y úsala para algún plan de verdad.
+
+Si algo falla, no se entiende o echas algo de menos, ¡cuéntamelo! 💬
+
+¡Mil gracias! 🙌
+
+🍏 *¿Tienes iPhone?* No cuentas para la prueba, pero puedes usar Hilemos como una aplicación:
+1. Abre https://hilemos.web.app en Safari.
+2. Pulsa el botón de compartir (el cuadrado con la flecha hacia arriba).
+3. Elige «Añadir a pantalla de inicio» y pulsa «Añadir».
+
+Te saldrá el icono de Hilemos junto a tus otras apps. 📲
+```
+
+Según la versión de iOS, el botón de compartir puede estar dentro del menú **⋯**, y puede que haya que bajar en la
+lista para encontrar «Añadir a pantalla de inicio».
 
 ---
 
-## 13. Versiones siguientes
+## 14. Durante los 14 días
+
+- Comprobar cuántos testers hay **apuntados**: que no bajen de 12.
+- Mirar cada pocos días **Android vitals** y las opiniones, y arreglar lo urgente.
+- Mirar las métricas de App Check (abajo).
+- La ficha se puede cambiar en cualquier momento (apartado 5.1).
+- Se pueden subir versiones nuevas al canal cerrado (apartado 17). Según lo que se sabe, **no reinicia** el plazo
+  (comprobarlo en Play Console).
+
+**Medir App Check (una semana como mínimo):** Firebase → App Check → pestaña **APIs** → **Cloud Firestore** (y
+Authentication). Muestra las peticiones de los últimos días: **verificadas**, **no verificadas: clientes obsoletos**
+(versiones sin App Check), **no verificadas: origen desconocido** (scripts) y **no válidas**. Lo deseable es que casi
+todo sea «verificadas».
+
+---
+
+## 15. Exigir App Check (tras una semana midiendo)
+
+Solo cuando se cumplan las dos cosas:
+- Android **y** web están registrados y la web publicada con la clave (si se exige sin la web, **la web deja de
+  funcionar**);
+- las peticiones verificadas son prácticamente todas durante **al menos una semana**.
+
+Entonces: App Check → APIs → **Cloud Firestore → Exigir**. Authentication, de momento, no. Se puede **desactivar en
+cualquier momento** con el mismo botón si algo falla.
+
+Las Cloud Functions no se ven afectadas: escriben con permisos de servidor.
+
+---
+
+## 16. Pedir el acceso a producción
+
+Con **14 días seguidos y al menos 12 testers apuntados**, pedir el **acceso a producción** desde el panel de la app.
+Antes, repasar que no queda ningún fallo que cierre la app o pierda datos (`docs/plan-hasta-premium.md`, fase 2).
+
+---
+
+## 17. Versiones siguientes
 
 1. Subir `versionCode` (y `versionName`) en `app/android/app/build.gradle`.
-2. Secciones 2.3 a 2.5 (compilar, `bundleRelease`, comprobar la firma).
+2. Apartados 2.3 a 2.5 (compilar, `bundleRelease`, comprobar la firma).
 3. Prueba cerrada → Alpha → **Crear nueva versión** → subir el `.aab` → notas → guardar y publicar.
 4. Resumen de la publicación → enviar a revisión.
 5. Si la versión anterior deja de funcionar con algún cambio del servidor, poner en Firestore `config/app.minBuild` con
@@ -386,9 +513,9 @@ anteriores» y hay que añadir las nuevas).
 
 ---
 
-## 14. App Check, en detalle
+## 18. App Check, en detalle (consulta)
 
-### 14.1 Qué es y por qué
+### 18.1 Qué es y por qué
 La configuración de Firebase de la web es pública (está en el código de la página). Con ella, cualquiera podría
 escribir un programa que lea y escriba en la base de datos saltándose la app: las reglas impiden ver lo que no es
 suyo, pero no impiden crear miles de cuentas y votaciones, y la factura la paga Hilemos.
@@ -398,78 +525,47 @@ suyo, pero no impiden crear miles de cuentas y votaciones, y la factura la paga 
   real.
 - **Web → reCAPTCHA Enterprise:** invisible; nadie tiene que marcar casillas.
 
-### 14.2 Cómo está en Hilemos
+### 18.2 Cómo está en Hilemos
 - `app/src/lib/appCheck.ts` lo activa antes de Firestore y Auth. En Android usa el plugin nativo
   `@capacitor-firebase/app-check` (Play Integrity) y le pasa el token al SDK web con un `CustomProvider`.
 - **El código ya va en el primer `.aab`.** Mientras no se registre en la consola, el token falla y la app funciona
   igual (comprobado en un móvil real el 24 de noviembre).
-- En la web solo se activa si `appCheckSiteKey` (en `app/src/lib/config.ts`) tiene una clave. Ahora está vacía.
+- En la web solo se activa si `appCheckSiteKey` (en `app/src/lib/config.ts`) tiene una clave. La tiene desde el
+  25 de noviembre de 2026.
+- Los pasos, en orden: registrar y medir (apartado 10), mirar las métricas (14) y exigir (15).
 
-### 14.3 Las dos fases
-1. **Solo medir (sin exigir):** las peticiones sin justificante siguen funcionando; la consola cuenta cuántas llegan
-   verificadas y cuántas no.
-2. **Exigir:** las peticiones sin justificante se rechazan.
-
-### 14.4 Pasos para activarlo
-
-**A. Android (Play Integrity)**
-1. Play Console → escudo **«Protegida con Play»** → fila **«API Play Integrity»** → **Empezar** → **vincular el
-   proyecto de Google Cloud** `votaciones-9bc95` (número `1092387940683`). No hace falta nada más ahí.
-2. Consola de Firebase → **App Check** (menú «Compilación» o «Seguridad») → pestaña **Apps** → `app.hilemos` →
-   **Play Integrity** → pegar la **SHA-256 clásica** (`03:C8:28:5D:…:A8:91`; si deja varias, también las demás) →
-   aceptar las condiciones → **Guardar**. Esto también activa la API de App Check en el proyecto.
-
-**B. Web (reCAPTCHA Enterprise)**
-1. Google Cloud Console (proyecto `votaciones-9bc95`) → **Seguridad → reCAPTCHA** → **Crear clave**:
-   tipo **Sitio web**, dominios `hilemos.web.app` y `localhost`, sin casilla («Puntuación»).
-2. Consola de Firebase → App Check → Apps → la app **web** → **reCAPTCHA Enterprise** → pegar la clave → Guardar.
-3. Pasar la clave (es pública) para ponerla en `appCheckSiteKey` y publicar la web. No hace falta `.aab`.
-
-**C. Medir (una semana como mínimo)**
-Firebase → App Check → pestaña **APIs** → **Cloud Firestore** (y Authentication). Muestra las peticiones de los
-últimos días: **verificadas**, **no verificadas: clientes obsoletos** (versiones sin App Check), **no verificadas:
-origen desconocido** (scripts) y **no válidas**. Lo deseable es que casi todo sea «verificadas».
-
-**D. Exigir**
-Solo cuando:
-- Android **y** web estén registrados (si se exige sin la web, **la web deja de funcionar**);
-- las verificadas sean prácticamente todas durante varios días.
-
-Entonces: App Check → APIs → **Cloud Firestore → Exigir**. Authentication, de momento, no. Se puede **desactivar
-en cualquier momento** con el mismo botón si algo falla.
-
-Las Cloud Functions no se ven afectadas: escriben con permisos de servidor.
-
-### 14.5 Desarrollo y pruebas
+### 18.3 Desarrollo y pruebas
 Las versiones de depuración (adb, Android Studio) y `localhost` no pasan Play Integrity ni reCAPTCHA. Con
 `localStorage["hilemos-appcheck-debug"] = "1"` (en `localhost`, siempre) se usa el **proveedor de depuración**: el
 token sale en logcat o en la consola del navegador y se da de alta en **App Check → Apps → ⋮ → Gestionar tokens de
 depuración**. El modo demo (`?demo`) no usa Firebase: las pruebas automáticas no lo necesitan.
 
-### 14.6 Coste
+### 18.4 Coste
 Play Integrity y reCAPTCHA Enterprise tienen cupo gratuito; a la escala de Hilemos no deberían costar nada.
 Comprobar los cupos actuales en sus páginas de precios antes de crecer.
 
 ---
 
-## 15. Problemas frecuentes
+## 19. Problemas frecuentes
 
 | Problema | Causa y solución |
 | --- | --- |
 | «Algunos idiomas tienen errores» en la ficha | Hay idiomas añadidos sin rellenar. Dejar solo es-ES en «Gestionar traducciones». |
 | El `.aab` sale con `CN=Android Debug` | Falta o está mal `app/android/keystore.properties`. |
-| «SDK location not found» al compilar | Falta `ANDROID_HOME` (sección 2.4). |
-| Gradle falla con Java 25 | Usar el JDK 21 (sección 2.4). |
-| «Entrar con Google» falla en la app de la tienda | Faltan las huellas de la firma de Google en Firebase (sección 10). |
+| «SDK location not found» al compilar | Falta `ANDROID_HOME` (apartado 2.4). |
+| Gradle falla con Java 25 | Usar el JDK 21 (apartado 2.4). |
+| «Entrar con Google» falla en la app de la tienda | Faltan las huellas de la firma de Google en Firebase (apartado 9). |
 | Los enlaces abren el navegador | `assetlinks.json` sin la SHA-256 de Google, o la app se instaló antes de publicarlo: reinstalar. |
 | «No tienes acceso» al abrir el enlace de la prueba | No está en el grupo, o con otra cuenta de Google, o su país no está marcado. |
-| No sale «Copiar enlace» | La versión aún no está aprobada y publicada (sección 8). |
+| No sale «Copiar enlace» | La versión aún no está aprobada y publicada (apartado 8). |
 | Play no deja instalar sobre la versión de depuración | Firmas distintas: desinstalar la de depuración. |
-| Al subir: «El código de versión ya se ha usado» | Subir `versionCode` (sección 13). |
+| Al subir: «El código de versión ya se ha usado» | Subir `versionCode` (apartado 17). |
+| No aparece «Crecimiento» en el menú | Cambió de nombre: ahora es «Aumentar usuarios» (apartado 5.1). |
+| La web no consigue el justificante de App Check (400 o 403) | La clave no está registrada en Firebase, no es la de `config.ts` o no tiene el dominio `hilemos.web.app` (apartado 10). |
 
 ---
 
-## 16. Datos de referencia
+## 20. Datos de referencia
 
 | Dato | Valor |
 | --- | --- |
@@ -477,7 +573,8 @@ Comprobar los cupos actuales en sus páginas de precios antes de crecer.
 | Proyecto de Firebase / Google Cloud | `votaciones-9bc95` (número `1092387940683`) |
 | App de Android en Firebase | `1:1092387940683:android:5b56f82b080e66f632a0ce` |
 | Canal de prueba | Prueba cerrada – Alpha |
-| Grupo de testers | `hilemos-testers@googlegroups.com` |
+| Grupo de testers | `hilemos-testers@googlegroups.com` (https://groups.google.com/g/hilemos-testers) |
+| Clave de reCAPTCHA Enterprise (web, pública) | `6LcSWTIuAAAAAJ3q3bZqk4pHXhRSotZCQN6jq4NH` |
 | Primera versión | `versionCode 1`, `1.0`, enviada el 24/11/2026, publicada en prueba cerrada el 25/11/2026 |
 
 Huellas registradas en Firebase (públicas):

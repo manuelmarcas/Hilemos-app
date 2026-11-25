@@ -39,13 +39,13 @@ primer día.
 | 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. ✔ | Hecho |
 | 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
 | 1.4 | **Aviso de cada denuncia** ✔: por correo a hilemos.app@gmail.com (Brevo). El panel de moderación en la app queda para más adelante (planes de futuro, §11 de funcionalidades-y-planes.md). | Hecho |
-| 1.5 | **App Check** en modo «solo medir». El código ya está (también en Android, con Play Integrity: va en el primer `.aab`); faltan las claves y registrar la app en la consola (pasos en `app/README.md`, «App Check»). | Tú, las claves; yo, el código ✔ |
+| 1.5 | **App Check** en modo «solo medir» ✔: Android (Play Integrity, va en el primer `.aab`) y web (reCAPTCHA Enterprise) registrados el 25 de noviembre de 2026. | Hecho |
 | 1.6 | **Descargar mis datos** (7.16), que lo exige el RGPD en cuanto hay usuarios de verdad. ✔ | Hecho |
 | 1.7 | **Clave de subida y primer `.aab`**; huellas de Google Play en Firebase. | Yo, con tu sitio para guardar la clave |
 | 1.8 | **Play Console**: verificar la cuenta, crear la app, los formularios (privacidad, seguridad de los datos, clasificación, público, borrar la cuenta) y estado de «no comerciante». | Tú, con mi ayuda en las respuestas |
 | 1.9 | **Ficha de la tienda**: capturas, imagen destacada y descripción. | Yo, las capturas y el texto; tú, revisarlos |
 | 1.10 | **Versión mínima y aviso para todos** (`config/app`) ✔: sin publicar otra versión, pedir que se actualice una versión vieja o avisar de algo (una incidencia, el estreno de premium). | Hecho |
-| 1.11 | **Lo que tiene que ir en el primer `.aab`**: todo lo que necesita código en la app y no se puede cambiar desde el servidor. Ya están la versión mínima, el aviso para todos y el aviso «Se cierra sola». Falta **App Check** (1.5): si se exige más adelante y la versión de la prueba no lo lleva, esa versión dejaría de funcionar. | Los dos |
+| 1.11 | **Lo que tiene que ir en el primer `.aab`**: todo lo que necesita código en la app y no se puede cambiar desde el servidor. Ya están la versión mínima, el aviso para todos, el aviso «Se cierra sola» y **App Check** (1.5): sin él, al exigirlo más adelante, la versión de la prueba dejaría de funcionar. ✔ | Hecho |
 
 **Para pasar a la fase 2:** el `.aab` está en la pista de prueba cerrada y hay al menos 12 personas apuntadas.
 

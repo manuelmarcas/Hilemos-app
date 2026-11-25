@@ -266,13 +266,15 @@ un `CustomProvider`). En la web, reCAPTCHA Enterprise, solo si `appCheckSiteKey`
 activa antes de Firestore y Auth; si falla, la app sigue sin justificante. Mientras en la consola de Firebase no se
 pulse «Exigir», nada se rechaza: solo se mide cuántas peticiones llegan con y sin justificante.
 
-Para activarlo (consola de Firebase → App Check):
+Activado en modo «solo medir» el 25 de noviembre de 2026 (Android y web); falta exigirlo. La guía paso a paso, en
+`docs/publicar-en-google-play.md` (apartados 10, 14 y 15). En resumen (consola de Firebase → App Check):
 
 1. **Android**: registrar la app con Play Integrity. Pide la huella SHA-256 del certificado de firma de la app, que
-   está en Play Console → Integridad de la app → Firma de apps (la de Google, no la de subida). En Play Console,
-   vincular el proyecto de Google Cloud en Integridad de la app → API Play Integrity.
-2. **Web**: crear una clave de reCAPTCHA Enterprise (tipo web, dominios `hilemos.web.app` y `localhost`), registrarla
-   en App Check y ponerla en `appCheckSiteKey`. Se publica solo la web; no hace falta otra versión de Android.
+   está en Play Console → «Protegida con Play» → Firma de apps de Play (la de Google, no la de subida). En Play
+   Console, vincular el proyecto de Google Cloud en «Protegida con Play» → API Play Integrity.
+2. **Web**: crear una clave de reCAPTCHA Enterprise (tipo web, sin casilla, solo el dominio `hilemos.web.app`:
+   `localhost` no se añade, usa el proveedor de depuración), registrarla en App Check y ponerla en `appCheckSiteKey`.
+   Se publica solo la web; no hace falta otra versión de Android.
 3. Dejarlo unos días en «solo medir» (App Check → APIs → Cloud Firestore: peticiones verificadas y no verificadas).
    Si casi todas están verificadas, «Exigir».
 4. **Versiones de depuración** (adb, Android Studio) y `localhost`: no pasan Play Integrity ni reCAPTCHA. Con

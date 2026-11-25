@@ -1,6 +1,7 @@
 # Ficha de Google Play (español de España)
 
-Lo que se copia en Play Console → Crecimiento → Presencia en Google Play → Ficha principal. Las imágenes están en
+Lo que se copia en Play Console → Aumentar usuarios → Presencia en Play Store → Fichas de Play Store → ficha principal
+(cómo cambiarla, en el apartado 5.1 de `docs/publicar-en-google-play.md`). Las imágenes están en
 esta misma carpeta. Las capturas (1080 × 1920 en proporción 2:1, es decir 1080 × 2160, con pantalla de 412 × 824) y la imagen destacada se rehacen con datos de ejemplo en el modo demo, sin el banner
 de la demo: desde la carpeta de Playwright de la skill `probar-en-navegador`, con el servidor de desarrollo en el
 puerto 5199, `node ficha.mjs <carpeta> <ruta de icono-512.png>`.
