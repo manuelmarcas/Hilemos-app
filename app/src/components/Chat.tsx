@@ -169,7 +169,8 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
                   return (
                     <div key={m.id} className="chat__sys">
                       <Icon name="edit" className="chat__sys-icon" />
-                      <p><strong>{own ? "Tú" : name}</strong> {sysTextFor(m.text, own, user.name)}</p>
+                      {/* Lo tuyo, sin nombre y en segunda persona («Has cambiado el título»); lo de los demás, con el suyo. */}
+                      <p>{own ? D.cap(sysTextFor(m.text, true, user.name)) : <><strong>{name}</strong> {sysTextFor(m.text, false, user.name)}</>}</p>
                       <span className="chat__when">{fmtWhen(m.at)}</span>
                     </div>
                   );

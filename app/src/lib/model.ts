@@ -141,7 +141,7 @@ export function pollForExport(p: PollData | null, uid: string): MyPollData["poll
 
 /**
  * Un aviso del chat (`sys`: «ha añadido el martes 16», «ha vuelto a admitir a Cris») contado a quien lo lee: si lo
- * hizo él, en segunda persona («has añadido…», detrás de «Tú»); si habla de él, con «te» («te ha vuelto a admitir»).
+ * hizo él, en segunda persona y sin su nombre («has añadido…»); si habla de él, con «te» («te ha vuelto a admitir»).
  */
 export function sysTextFor(text: string, own: boolean, myName: string) {
   if (own) return text.replace(/^ha /, "has ");

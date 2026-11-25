@@ -264,7 +264,7 @@ await check("Expulsar a Cris y volver a admitirle", async () => {
   await ana.waitForSelector(".people-table__row:has-text('Cris')");
   await btn(managePanel(ana), "Cerrar").click();
   await ana.locator("#ptabbtn-chat").click();
-  await ana.waitForSelector(".chat__sys:has-text('Tú has expulsado a Cris')");
+  await ana.waitForSelector(".chat__sys:has-text('Has expulsado a Cris')");
   await ana.locator("#ptabbtn-people").click();
 });
 await check("Exportar resultados en CSV, Excel y PDF", async () => {
