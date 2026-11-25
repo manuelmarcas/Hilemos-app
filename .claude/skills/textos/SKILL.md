@@ -17,6 +17,9 @@ van en segundo plano.
 ## En la interfaz
 
 - **Frases normales y cortas**, con su punto. Tuteo («Pulsa en los días que te vengan bien»).
+- **Lo que habla de quien lee, en segunda persona**, aunque el mismo texto vaya en tercera para los demás: «aún no
+  has votado», «Has elegido 3 opciones», «Entraste el…», «Te han denunciado», y en el chat «Tú has cambiado el título»
+  o «te ha vuelto a admitir» (`sysTextFor` en `lib/model.ts`).
 - **Comillas latinas** para nombrar algo de la interfaz o un valor: «Guardar cambios», «Cena de Navidad».
 - **Botones con la acción concreta**, en infinitivo o como acción: «Descartar cambios», «Salir de la votación»,
   «Finalizar: es definitivo». Nunca «Aceptar» o «Sí» si se puede decir qué hace.

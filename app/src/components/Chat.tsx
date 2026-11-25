@@ -2,7 +2,7 @@
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import * as D from "../lib/dates";
-import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage } from "../lib/model";
+import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage, sysTextFor } from "../lib/model";
 import type { ChatMessage, ChatReport, Poll, ReportReason, Votes } from "../lib/types";
 import { bem, cls, errMsg, hasMouse } from "../lib/util";
 import { useSession } from "../state/session";
@@ -169,7 +169,7 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
                   return (
                     <div key={m.id} className="chat__sys">
                       <Icon name="edit" className="chat__sys-icon" />
-                      <p><strong>{own ? user.name : name}</strong> {m.text}</p>
+                      <p><strong>{own ? "Tú" : name}</strong> {sysTextFor(m.text, own, user.name)}</p>
                       <span className="chat__when">{fmtWhen(m.at)}</span>
                     </div>
                   );

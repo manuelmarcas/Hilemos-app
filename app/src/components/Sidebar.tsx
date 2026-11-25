@@ -8,6 +8,7 @@ import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { useHashPath } from "../state/route";
 import { useListActions } from "../state/listActions";
+import { usePendingLeaves } from "../state/pendingLeave";
 import { Icon } from "./Icon";
 import { Spinner } from "./Loading";
 
@@ -25,6 +26,7 @@ type Form = { mode: "new" | "rename"; gid?: string; moveId?: string; value: stri
 
 export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onNavigate: () => void }) {
   const { store, user, library, setHomeFilter } = useSession();
+  const leaving = usePendingLeaves(); // de las que se está saliendo: ya no se ven
   const { toast } = useUi();
   const { setArchived, leave, moveTo, deleteGroup } = useListActions();
   const path = useHashPath();
@@ -142,11 +144,12 @@ export function Sidebar({ activeId, onNavigate }: { activeId: string | null; onN
     const groups = sortedGroups(lib.groups);
     // Orden estable (por fecha en que se añadió) para que el menú no salte al ir abriendo votaciones.
     // Las archivadas no se muestran aquí (tienen su zona en "Mis votaciones").
-    const items: Item[] = Object.entries(lib.polls)
+    const shown = Object.entries(lib.polls).filter(([id]) => !leaving.has(id));
+    const items: Item[] = shown
       .map(([id, e]) => ({ id, ...e }))
       .filter(e => !e.archived)
       .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-    archivedCount = Object.keys(lib.polls).length - items.length;
+    archivedCount = shown.length - items.length;
     total = items.length;
     const q = query.trim().toLowerCase();
     const searching = !!q;

@@ -72,8 +72,8 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
               {p.name}
               {p.uid === me && <> <span className="muted">(tú)</span></>}
               <RoleTag poll={poll} uid={p.uid} />
-              {reported?.has(p.uid) && <> <span className="people-table__flag" role="img" aria-label="Denunciado" data-tip="Le han denunciado"><Icon name="flag" /></span></>}
-              {!anon && !p.total && <> <span className="muted">· aún no ha votado</span></>}
+              {reported?.has(p.uid) && <> <span className="people-table__flag" role="img" aria-label="Denunciado" data-tip={p.uid === me ? "Te han denunciado" : "Le han denunciado"}><Icon name="flag" /></span></>}
+              {!anon && !p.total && <> <span className="muted">· {p.uid === me ? "aún no has votado" : "aún no ha votado"}</span></>}
             </span>
           </>;
           if (anon) {
@@ -121,7 +121,7 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
                   <span className="person-row">
                     {p.total
                       ? (
-                        <button type="button" className="person-row__caret" aria-expanded={open} aria-label={`Ver qué ha votado ${p.name}`}
+                        <button type="button" className="person-row__caret" aria-expanded={open} aria-label={p.uid === me ? "Ver qué has votado" : `Ver qué ha votado ${p.name}`}
                           onClick={() => onToggle(p.uid)}>▸</button>
                       )
                       : <span className="person-row__caret person-row__caret--none" aria-hidden="true" />}

@@ -11,6 +11,7 @@ import { SwipeRow } from "../components/SwipeRow";
 import { Icon } from "../components/Icon";
 import { PremiumTag } from "../components/Premium";
 import { useListActions } from "../state/listActions";
+import { usePendingLeaves } from "../state/pendingLeave";
 import { useDuplicate } from "../state/duplicate";
 import { PollListSkeleton } from "../components/Loading";
 
@@ -19,6 +20,8 @@ type Form = { mode: "new" | "rename"; gid?: string; value: string } | null;
 
 export function Home() {
   const { store, user, library, pollCache, homeFilter, setHomeFilter, setLastGroup } = useSession();
+  // De las que se está saliendo (con «Deshacer» en pantalla) ya no se ven, como si ya se hubiera salido.
+  const leaving = usePendingLeaves();
   const { toast, share } = useUi();
   const { setArchived, leave, moveTo, deleteGroup } = useListActions();
   const duplicate = useDuplicate();
@@ -64,6 +67,7 @@ export function Home() {
 
   const groups = sortedGroups(lib.groups);
   const entries: Entry[] = Object.entries(lib.polls)
+    .filter(([id]) => !leaving.has(id))
     .map(([id, e]) => ({ id, ...e }))
     .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)); // como el menú lateral: las añadidas más recientemente primero
   const all = entries.filter(e => !e.archived);

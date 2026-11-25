@@ -12,7 +12,7 @@ interface UiApi {
   /** Pregunta con ConfirmDialog; true si se acepta. */
   confirm: (opts: ConfirmOptions) => Promise<boolean>;
   /** Aviso con cuenta atrás y botón "Deshacer" (la acción ya está hecha; `onUndo` la revierte). */
-  undoable: (opts: { text: string; onUndo: () => void; seconds?: number }) => void;
+  undoable: (opts: { text: string; onUndo: () => void; seconds?: number; onExpire?: () => void }) => void;
   share: (target: ShareTarget) => void;
   /** Abre el selector junto a `anchor`; si ya estaba abierto ahí, lo cierra. */
   openEmoji: (req: EmojiRequest) => void;
@@ -54,13 +54,28 @@ export function UiProvider({ children }: { children: ReactNode }) {
     setConfirmReq({ opts, resolve, n: ++seq.current });
   }), []);
 
-  const undoable = useCallback(({ text, onUndo, seconds = 5 }: { text: string; onUndo: () => void; seconds?: number }) => {
+  // `onExpire`: lo que se hace cuando ya no se puede deshacer (al acabar la cuenta atrás o si un aviso más nuevo lo
+  // desplaza). Así una acción se puede aplazar hasta entonces (salir de una votación) en vez de hacerse y revertirse.
+  const expires = useRef(new Map<number, () => void>());
+  const undosRef = useRef<UndoItem[]>([]);
+  const fireExpire = (id: number) => { const f = expires.current.get(id); expires.current.delete(id); f?.(); };
+  const undoable = useCallback(({ text, onUndo, seconds = 5, onExpire }: { text: string; onUndo: () => void; seconds?: number; onExpire?: () => void }) => {
     const item = { id: ++seq.current, text, onUndo, seconds, until: Date.now() + seconds * 1000 };
-    setUndos(list => [...list, item].slice(-MAX_UNDO));
+    if (onExpire) expires.current.set(item.id, onExpire);
+    const next = [...undosRef.current, item];
+    next.slice(0, -MAX_UNDO).forEach(d => fireExpire(d.id));
+    undosRef.current = next.slice(-MAX_UNDO);
+    setUndos(undosRef.current);
   }, []);
-  const expireUndo = useCallback((id: number) => setUndos(list => list.filter(x => x.id !== id)), []);
+  const expireUndo = useCallback((id: number) => {
+    undosRef.current = undosRef.current.filter(x => x.id !== id);
+    setUndos(undosRef.current);
+    fireExpire(id);
+  }, []);
   const runUndo = useCallback((item: UndoItem) => {
-    setUndos(list => list.filter(x => x.id !== item.id));
+    undosRef.current = undosRef.current.filter(x => x.id !== item.id);
+    setUndos(undosRef.current);
+    expires.current.delete(item.id);
     item.onUndo();
   }, []);
 

@@ -87,7 +87,7 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
       {reports.length > 0 && (
         <div className="person-card__reports">
           <p className="person-card__reports-title">
-            <Icon name="flag" /> <strong>{reports.length === 1 ? "Le han denunciado una vez" : `Le han denunciado ${reports.length} veces`}</strong>
+            <Icon name="flag" /> <strong>{own ? "Te han denunciado" : "Le han denunciado"} {reports.length === 1 ? "una vez" : `${reports.length} veces`}</strong>
           </p>
           <ul className="person-card__reasons">
             {[...byReason].map(([reason, comments]) => (
@@ -97,9 +97,11 @@ export function PersonDialog({ poll, person, vote, me, reports, shared, canRepor
               </li>
             ))}
           </ul>
-          <p className="person-card__reports-hint">
-            Si hace falta, puedes expulsar a {person.name} en «Gestionar participantes».
-          </p>
+          {!own && (
+            <p className="person-card__reports-hint">
+              Si hace falta, puedes expulsar a {person.name} en «Gestionar participantes».
+            </p>
+          )}
         </div>
       )}
       <div className="dialog__actions">

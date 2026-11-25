@@ -799,6 +799,27 @@ await check("Deslizar con el dedo para archivar y deshacer", async () => {
   expect(await ana.locator(".poll-card").count() === before, "no se deshace");
   return `«${title}»`;
 });
+await check("Deslizar a la izquierda para salir: desaparece al momento y se puede deshacer", async () => {
+  await go(ana, "#/");
+  const fg = ana.locator(".swipe__fg").first();
+  const title = await fg.locator(".poll-card__title").innerText();
+  const before = await ana.locator(".poll-card").count();
+  const b = await fg.boundingBox();
+  const y = Math.round((b.y + b.height / 2) * dpr);
+  sh(`input swipe ${Math.round((b.x + b.width - 20) * dpr)} ${y} ${Math.round((b.x + 30) * dpr)} ${y} 350`);
+  await ana.waitForSelector("dialog[open] [data-answer=yes]", { timeout: 6000 });
+  await tap(ana.locator("dialog[open] [data-answer=yes]"));
+  await ana.locator(".undo", { hasText: "Saliendo de" }).waitFor({ timeout: 4000 });
+  expect(await ana.locator(".poll-card").count() === before - 1, "la fila no desaparece al momento");
+  expect(await ana.locator(".swipe__bg--danger").count() === 0, "se queda la franja roja");
+  fs.writeFileSync(`${OUT}/saliendo.png`, adbBuf("exec-out", "screencap", "-p"));
+  await tap(ana.locator(".undo__btn"));
+  await ana.waitForTimeout(400);
+  expect(await ana.locator(".poll-card").count() === before, "no vuelve al deshacer");
+  await ana.waitForTimeout(5500);
+  expect(await ana.locator(".poll-card", { hasText: title }).count() === 1, "ha salido aunque se deshizo");
+  return `«${title}»`;
+});
 await check("Cajón del menú: se abre con el botón y Atrás no saca de la app", async () => {
   await go(ana, days);
   await tap(ana.getByRole("button", { name: "Abrir mis votaciones" }));

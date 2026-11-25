@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
-  autoClose, autoCloseNote, closingLabel, hasPremiumSettings, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
+  autoClose, autoCloseNote, closingLabel, hasPremiumSettings, sysTextFor, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
 import type { Poll, PollData, Vote, Votes } from "./types";
@@ -550,5 +550,18 @@ describe("mustUpdate (versión mínima de la app de Android)", () => {
     expect(mustUpdate(4, undefined)).toBe(false);
     expect(mustUpdate(4, 5)).toBe(true);
     expect(mustUpdate(5, 5)).toBe(false);
+  });
+});
+
+describe("sysTextFor (avisos del chat en segunda persona)", () => {
+  it("lo que hiciste tú: «has…»", () => {
+    expect(sysTextFor("ha añadido el martes 16 de diciembre", true, "Ana")).toBe("has añadido el martes 16 de diciembre");
+  });
+  it("lo que habla de ti: «te…»", () => {
+    expect(sysTextFor("ha vuelto a admitir a Cris", false, "Cris")).toBe("te ha vuelto a admitir");
+  });
+  it("lo de los demás, igual", () => {
+    expect(sysTextFor("ha vuelto a admitir a Cris", false, "Bea")).toBe("ha vuelto a admitir a Cris");
+    expect(sysTextFor("ha cambiado el título", false, "")).toBe("ha cambiado el título");
   });
 });

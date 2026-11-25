@@ -264,7 +264,7 @@ await check("Expulsar a Cris y volver a admitirle", async () => {
   await ana.waitForSelector(".people-table__row:has-text('Cris')");
   await btn(managePanel(ana), "Cerrar").click();
   await ana.locator("#ptabbtn-chat").click();
-  await ana.waitForSelector(".chat__sys:has-text('ha expulsado a Cris')");
+  await ana.waitForSelector(".chat__sys:has-text('Tú has expulsado a Cris')");
   await ana.locator("#ptabbtn-people").click();
 });
 await check("Exportar resultados en CSV, Excel y PDF", async () => {
@@ -684,12 +684,28 @@ await check("Menú lateral: organizar → archivar", async () => {
 });
 
 // ======================= Salir y eliminar =======================
-await check("Bea sale de una votación", async () => {
+await check("Salir de una votación y deshacer: sigue dentro", async () => {
   await go(bea, opts);
   await bea.locator(".poll-leave__btn").click();
   await yes(bea);
   await bea.waitForURL(/#\/$/);
-  await bea.waitForTimeout(300);
+  // Desaparece al momento de la lista, con «Deshacer» mientras corre la cuenta atrás.
+  await bea.locator(".undo", { hasText: "Saliendo de" }).waitFor();
+  expect(!(await bea.locator(".app").innerText()).includes("¿Dónde cenamos?"), "no desaparece al momento");
+  await bea.locator(".undo__btn").click();
+  await bea.locator(".poll-card", { hasText: "¿Dónde cenamos?" }).waitFor();
+  await bea.waitForTimeout(6000);
+  await go(bea, opts);
+  expect(await bea.locator(".poll-leave__btn").count() === 1, "ha salido aunque se deshizo");
+});
+await check("Bea sale de una votación (al acabar la cuenta atrás)", async () => {
+  await go(bea, opts);
+  await bea.locator(".poll-leave__btn").click();
+  await yes(bea);
+  await bea.waitForURL(/#\/$/);
+  await bea.waitForFunction(() => document.querySelector("#toast")?.textContent?.includes("Has salido"), null, { timeout: 10000 });
+  await bea.reload();
+  await bea.waitForTimeout(500);
   expect(!(await bea.locator(".app").innerText()).includes("¿Dónde cenamos?"), "sigue en su lista");
 });
 await check("Ana elimina una votación", async () => {

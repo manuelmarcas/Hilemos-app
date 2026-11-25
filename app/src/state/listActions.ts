@@ -1,11 +1,12 @@
 // Acciones sobre la lista del usuario, compartidas por «Mis votaciones», el menú lateral y la propia votación:
 // archivar/desarchivar (al momento, con un aviso de «Deshacer» con cuenta atrás: así no se pierde nada si se cierra
-// la app), salir de una votación (siempre con confirmación: no se puede deshacer), mover una votación de grupo y
-// eliminar un grupo.
+// la app), salir de una votación (con confirmación, y después unos segundos para «Deshacer» antes de salir de verdad),
+// mover una votación de grupo y eliminar un grupo.
 import { useCallback } from "react";
 import { MAX_PEOPLE, hasLimit, isAdmin, keepsVotesOnLeave, memberStatus } from "../lib/model";
 import type { Library, Poll, Vote } from "../lib/types";
 import { errMsg } from "../lib/util";
+import { hidePoll, showPoll } from "./pendingLeave";
 import { useSession } from "./session";
 import { useUi } from "./ui";
 
@@ -89,9 +90,26 @@ export function useListActions() {
   }, [lib, store, user.uid, toast, undoable]);
 
   /**
+   * Tras confirmar la salida: la votación desaparece de la lista al momento (pendingLeave) y sale un aviso con
+   * «Deshacer»; la salida de verdad (`run`, que tarda: borra votos, renombra mensajes…) se hace al acabar la cuenta
+   * atrás. Así no se ve la fila esperando y «Deshacer» la cancela del todo. Si falla, la votación vuelve a la lista.
+   * Si se cierra la app antes de que acabe la cuenta, no se sale.
+   */
+  const deferLeave = useCallback((id: string, text: string, done: string, run: () => Promise<void>) => {
+    hidePoll(id);
+    undoable({
+      text,
+      onUndo: () => showPoll(id),
+      onExpire: () => {
+        run().then(() => toast(done), e => toast(errMsg(e))).finally(() => showPoll(id));
+      },
+    });
+  }, [undoable, toast]);
+
+  /**
    * Sale de la votación `id` tras confirmarlo, con un aviso de lo que pasará (leaveMessage). Si la votación ya no
    * existe, solo la quita de la lista. `known`: la votación y el voto propio, si ya se tienen (desde la propia
-   * votación), para no volver a pedirlos. Devuelve true si salió.
+   * votación), para no volver a pedirlos. Devuelve true si se confirmó (la salida, aplazada: deferLeave).
    */
   const leave = useCallback(async (id: string, known?: { poll: Poll; vote: Vote | null }) => {
     const gid = groupToDrop(lib, id);
@@ -107,8 +125,8 @@ export function useListActions() {
           confirmLabel: "Quitar",
           danger: true,
         }))) return false;
-        await store.removeLibraryEntry(user.uid, id, gid);
-        toast(`«${short(title)}» quitada de tu lista`);
+        deferLeave(id, `Quitando «${short(title)}» de tu lista`, `«${short(title)}» quitada de tu lista`,
+          () => store.removeLibraryEntry(user.uid, id, gid));
         return true;
       }
       const vote = known ? known.vote : await store.getVote(id, user.uid);
@@ -118,14 +136,14 @@ export function useListActions() {
         confirmLabel: "Salir",
         danger: true,
       }))) return false;
-      await store.leavePoll(id, user.uid, gid);
-      toast(`Has salido de «${short(poll.title || title)}»`);
+      const name = short(poll.title || title);
+      deferLeave(id, `Saliendo de «${name}»`, `Has salido de «${name}»`, () => store.leavePoll(id, user.uid, gid));
       return true;
     } catch (e) {
       toast(errMsg(e));
       return false;
     }
-  }, [lib, store, user.uid, confirm, toast]);
+  }, [lib, store, user.uid, confirm, toast, deferLeave]);
 
   /** Mueve una votación a un grupo (null o "" = «Sin grupo»). `groupName`: si el grupo se acaba de crear. */
   const moveTo = useCallback(async (id: string, gid: string | null, groupName?: string) => {
