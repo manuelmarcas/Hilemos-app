@@ -661,6 +661,7 @@ duplicar.
 
 | Idea | Qué sería | Para quién |
 | --- | --- | --- |
+| Panel de moderación | Una pantalla en la app, solo para quien modera Hilemos, con todas las denuncias: ver el mensaje o la persona, ocultar, descartar la denuncia y bloquear una cuenta. Hoy las denuncias llegan por correo (Brevo) y se gestionan desde la consola de Firebase; hará falta cuando haya tantas que el correo no baste | Quien modera |
 | Estadísticas para quien organiza (7.19) | Participación por votación, quién suele faltar, cuánto tardan en votar | Plan de organizaciones (4.3) |
 | Plan de organizaciones (4.3) | Más personas aún, varios organizadores con una factura, estadísticas | Asociaciones, clubes, empresas |
 | Recordatorios por correo | Además de push, para quien no tiene la app (necesita un servicio de envío, 6.5) | Premium |
@@ -682,7 +683,7 @@ cobrar), está en [plan-hasta-premium.md](plan-hasta-premium.md). Aquí queda la
 | 1 | Crear el correo **hilemos.app@gmail.com** (Gmail personal). ✔ | Hecho |
 | 2 | Poner ese correo de contacto en la política de privacidad y en las condiciones (7.1). ✔ | Hecho |
 | 3 | **Alerta de presupuesto** en Google Cloud (7.4, paso 1), de 5 €. ✔ | Hecho |
-| 4 | **Moderación configurada** (7.4, paso 5): tu cuenta de Hilemos en `config/moderation` para los avisos push de denuncias, y un panel de moderación en la app para verlas y actuar. El correo con Brevo queda como opción, no hace falta. | Yo |
+| 4 | **Moderación configurada** (7.4, paso 5) ✔: cada denuncia llega por correo a hilemos.app@gmail.com (Brevo, con la clave de API en `config/moderation`), con el mensaje, las dos personas, sus correos y sus uid. Los avisos push (`uids`) quedan descartados por ahora y el panel de moderación, en planes de futuro (§11). | Hecho |
 | 5 | **App Check** (7.4, paso 2): el código ya está ✔, también en Android. Falta crear la clave de reCAPTCHA Enterprise (web), registrar la app de Android con Play Integrity (con la huella SHA-256 de la firma de Play Console) y, tras unos días en «solo medir», exigirlo. | Tú, las claves; yo, ponerla en la web y exigirlo |
 | 6 | Probar un **aviso push real** en el móvil (7.5). | Los dos |
 | 7 | **Cuenta de desarrollador de Google Play** (25 $, una vez). Las cuentas personales nuevas tienen que hacer una prueba cerrada con al menos 12 personas durante 14 días antes de publicar. | Hecho: verificada ✔ |

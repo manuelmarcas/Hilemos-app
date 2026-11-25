@@ -38,7 +38,7 @@ primer día.
 | 1.1 | **Medir el uso** (ver «Qué se mide») ✔: totales diarios y mensuales que calcula el servidor cada noche en `stats/`, sin herramientas de analítica ni cookies. Se miran en la consola de Firebase. | Hecho |
 | 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. ✔ | Hecho |
 | 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
-| 1.4 | **Panel de moderación** en la app, solo para quien modera Hilemos: ver las denuncias, ocultar el mensaje, descartar la denuncia y bloquear una cuenta. Aviso push de cada denuncia a esa cuenta, sin correo. | Yo |
+| 1.4 | **Aviso de cada denuncia** ✔: por correo a hilemos.app@gmail.com (Brevo). El panel de moderación en la app queda para más adelante (planes de futuro, §11 de funcionalidades-y-planes.md). | Hecho |
 | 1.5 | **App Check** en modo «solo medir». El código ya está (también en Android, con Play Integrity: va en el primer `.aab`); faltan las claves y registrar la app en la consola (pasos en `app/README.md`, «App Check»). | Tú, las claves; yo, el código ✔ |
 | 1.6 | **Descargar mis datos** (7.16), que lo exige el RGPD en cuanto hay usuarios de verdad. ✔ | Hecho |
 | 1.7 | **Clave de subida y primer `.aab`**; huellas de Google Play en Firebase. | Yo, con tu sitio para guardar la clave |
