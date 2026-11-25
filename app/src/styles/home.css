@@ -44,11 +44,13 @@
 }
 .poll-card__icon{font-size:1.5rem;flex:none;display:flex}
 .poll-card__main{display:flex;flex-direction:column;min-width:0;flex:1;gap:2px}
-.poll-card__title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* El título y, a su lado, el icono de mensajes sin leer (el título se corta antes que el icono). */
+.poll-card__head{display:flex;align-items:center;gap:6px;min-width:0}
+.poll-card__title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .poll-card__meta{font-size:.8rem;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
 .poll-card__badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:none;max-width:40%}
 /* Mensajes sin leer en el chat: el bocadillo en lila con un punto, como el contador de la pestaña «Chat». */
-.poll-card__chat{position:relative;display:flex;align-items:center;padding:0 4px;font-size:1.15rem;--icon-color:var(--brand)}
+.poll-card__chat{position:relative;flex:none;display:flex;align-items:center;padding:0 4px;font-size:1.1rem;--icon-color:var(--brand)}
 .poll-card__chat::after{
   content:"";
   position:absolute;top:-2px;right:0;
@@ -122,8 +124,6 @@
     }
 }
 .swipe__icon{display:flex;font-size:1.3rem;transform:scale(calc(.8 + var(--p,0) * .4))}
-.library__swipe-hint{display:none;margin:14px 2px 0;font-size:.8rem;color:var(--muted);text-align:center}
-@media (hover:none){.library__swipe-hint{display:block}}
 .library__archived-note{margin:0 0 12px;font-size:.86rem;color:var(--muted);line-height:1.45}
 /* «Archivadas» al final de «Mis votaciones»: fila aparte con un lila muy suave, para no confundirla con un grupo */
 .archived-row{

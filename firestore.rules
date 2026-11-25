@@ -73,7 +73,7 @@ service cloud.firestore {
         return ['ownerSince', 'autoCloseAt', 'autoCloseWhy', 'autoCloseWarned', 'autoClosedAt'];
       }
 
-      allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());
+      allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount() || chatStamp());
 
       // Qué se vota: casillas y opciones. Las de días tienen como mucho 4 opciones por día; las de opciones libres
       // («options»), de 2 a 30, y sus casillas son esas mismas opciones.
@@ -170,6 +170,17 @@ service cloud.firestore {
           && request.resource.data.members == resource.data.get('members', 0) - 1
           && exists(myVotePath())
           && !existsAfter(myVotePath());
+      }
+
+      // Al escribir en el chat, quien está en él (el creador o un participante aceptado) apunta en la votación la hora
+      // del último mensaje (chatAt), en la misma escritura que el mensaje. Con eso «Mis votaciones» sabe si hay
+      // mensajes sin leer sin tener que leer el chat. No se exige que avance: los relojes de los móviles no van iguales,
+      // y un valor raro solo enciende el icono hasta que se abre el chat.
+      function chatStamp() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chatAt'])
+          && request.resource.data.chatAt is int
+          && (resource.data.ownerUid == request.auth.uid
+              || (exists(myVotePath()) && get(myVotePath()).data.get('status', null) == null));
       }
 
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;

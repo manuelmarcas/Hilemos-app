@@ -467,7 +467,13 @@ export async function createFirebaseStore(config: FirebaseOptions): Promise<Stor
         snap.forEach(d => out.push({ id: d.id, ...(d.data() as Omit<ChatMessage, "id">) }));
         cb(out.reverse());
       }, onErr),
-    async sendChat(id, msg) { await F.addDoc(chatCol(id), msg); },
+    // El mensaje y, en la misma escritura, la hora del último mensaje en la votación (chatAt, para «Mis votaciones»).
+    async sendChat(id, msg) {
+      const b = F.writeBatch(db);
+      b.set(F.doc(chatCol(id)), msg);
+      b.update(pollRef(id), { chatAt: msg.at });
+      await b.commit();
+    },
     // Una por persona y mensaje: el id lo dice, y las reglas no dejan cambiarla después.
     async reportMessage(id, report) {
       const ref = F.doc(reportsCol(id), `${report.msgId}_${report.by}`);

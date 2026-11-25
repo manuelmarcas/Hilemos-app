@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  TOP_N, acceptedVotes, chatSince, deadlinePassed, firstUnreadChat, hasUnreadChat, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
+  TOP_N, acceptedVotes, chatSince, deadlinePassed, hasUnreadChat, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
   autoClose, autoCloseNote, closingLabel, hasPremiumSettings, sysTextFor, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
@@ -330,13 +330,9 @@ describe("parseEmails", () => {
 
 describe("textos de la votación", () => {
   it("pollMeta", () => {
-    expect(pollMeta(days())).toBe("Días · 3 días · 2 opciones por día");
-    expect(pollMeta({ ...days(), type: "hours", slots: ["2025-12-15"], hours: ["10:00"], hourStep: 60 }))
-      .toBe("Horas · 1 día · 1 franja por día");
-    expect(pollMeta({
-      ...days(), type: "hours", slots: ["2025-12-15", "2025-12-16"], hourList: true,
-      hoursByDay: { "2025-12-15": ["09:00"], "2025-12-16": ["10:00", "11:00"] },
-    })).toBe("Horas · 2 días · 3 horas en total");
+    expect(pollMeta(days())).toBe("3 días");
+    expect(pollMeta({ ...days(), type: "hours", slots: ["2025-12-15"], hours: ["10:00"], hourStep: 60 })).toBe("1 día");
+    expect(pollMeta({ ...days(), type: "weeks", slots: ["2025-12-15", "2025-12-22"] })).toBe("2 semanas");
   });
 
   it("pollRange: seguidos o sueltos", () => {
@@ -566,17 +562,19 @@ describe("sysTextFor (avisos del chat en segunda persona)", () => {
   });
 });
 
-describe("firstUnreadChat y hasUnreadChat (avisos e icono del chat)", () => {
-  it("el primer mensaje sin leer avisa; los siguientes, no, hasta abrir el chat", () => {
-    expect(firstUnreadChat(undefined, 100)).toBe(true);
-    expect(firstUnreadChat({ chatSeenAt: 100 }, 100)).toBe(false);
-    expect(firstUnreadChat({ chatSeenAt: 50, chatAt: 100 }, 200)).toBe(false);
-    expect(firstUnreadChat({ chatSeenAt: 120, chatAt: 100 }, 200)).toBe(true);
+describe("hasUnreadChat (icono de mensajes sin leer en «Mis votaciones»)", () => {
+  const p = (chatAt?: number) => ({ ...days(), chatAt });
+  it("sin mensajes o con todo visto, no", () => {
+    expect(hasUnreadChat({}, p())).toBe(false);
+    expect(hasUnreadChat({ chatSeenAt: 100 }, p(100))).toBe(false);
+    expect(hasUnreadChat({ chatSeenAt: 150 }, p(100))).toBe(false);
   });
-  it("hay mensajes sin leer si el primero sin leer es posterior a lo visto", () => {
-    expect(hasUnreadChat({})).toBe(false);
-    expect(hasUnreadChat({ chatAt: 100 })).toBe(true);
-    expect(hasUnreadChat({ chatAt: 100, chatSeenAt: 100 })).toBe(false);
-    expect(hasUnreadChat({ chatAt: 100, chatSeenAt: 150 })).toBe(false);
+  it("un mensaje posterior a lo visto, sí", () => {
+    expect(hasUnreadChat({ chatSeenAt: 50 }, p(100))).toBe(true);
+    expect(hasUnreadChat({}, p(100))).toBe(true);
+  });
+  it("lo de antes de añadirla a su lista no cuenta", () => {
+    expect(hasUnreadChat({ addedAt: 200 }, p(100))).toBe(false);
+    expect(hasUnreadChat({ addedAt: 50 }, p(100))).toBe(true);
   });
 });

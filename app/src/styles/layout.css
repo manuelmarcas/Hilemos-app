@@ -67,16 +67,6 @@
 .topbar__avatar{display:flex;flex:none}
 .topbar__name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}
 @media (max-width:520px){.topbar__name{display:none}.topbar__me{padding:3px}}
-.topbar__logout{
-  border:1px solid var(--line);
-  background:var(--card);
-  border-radius:8px;
-  padding:7px 12px;
-  font-size:.85rem;
-  cursor:pointer;
-  color:var(--ink);
-}
-.topbar__logout:hover{background:var(--hover)}
 /* Cada pantalla nueva entra con «aparecer» (main lleva key={path}: se vuelve a montar al navegar). */
 .app__view{container:view / inline-size;min-width:0;animation:appear-in var(--motion-enter)}
 .sidebar{display:none}

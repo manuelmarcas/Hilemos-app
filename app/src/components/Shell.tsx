@@ -21,18 +21,7 @@ import { Legal } from "../pages/Legal";
 
 export function Shell() {
   const { store, user } = useSession();
-  const { toast, confirm } = useUi();
-
-  // Sin cuenta, para volver a entrar hace falta la clave de acceso: se recuerda antes de salir.
-  const logout = async () => {
-    if (user.anon && store.mode === "firebase" && !(await confirm({
-      title: "¿Salir de tu cuenta sin registro?",
-      message: "Para volver a entrar como «" + user.name + "» necesitarás tu clave de acceso (en «Entrar con tu clave»). Si no la tienes guardada, crea una nueva en «Tu perfil» antes de salir: sin ella perderás tus votaciones y no podrás cambiar tus votos.",
-      confirmLabel: "Salir",
-      danger: true,
-    }))) return;
-    store.signOut();
-  };
+  const { toast } = useUi();
   const path = useHashPath();
   const route = parseRoute(path);
   const [drawer, setDrawer] = useState(false);
@@ -64,8 +53,7 @@ export function Shell() {
   }, [route.name]);
 
   // Al cambiar de pantalla: cerrar el cajón y volver arriba. Antes de pintar (useLayoutEffect): así no se ve un instante
-  // la pantalla nueva con el desplazamiento de la anterior, y no pisa a una pantalla que se mueve sola al cargarse
-  // (#/v/<id>/chat baja hasta el chat).
+  // la pantalla nueva con el desplazamiento de la anterior.
   useLayoutEffect(() => {
     setDrawer(false);
     window.scrollTo(0, 0);
@@ -91,7 +79,7 @@ export function Shell() {
     case "home": page = <Home />; break;
     case "create": page = <Create />; break;
     case "profile": page = <Profile />; break;
-    case "poll": page = <PollPage key={route.id} id={route.id} chat={route.chat} />; break;
+    case "poll": page = <PollPage key={route.id} id={route.id} />; break;
     case "edit": page = <EditPoll key={route.id} id={route.id} />; break;
     case "legal": page = <Legal doc={route.doc} />; break;
   }
@@ -112,7 +100,6 @@ export function Shell() {
             <span id="me-avatar" className="topbar__avatar"><Avatar name={user.name} photo={user.photo} size={30} seed={user.uid} /></span>
             <span id="who-name" className="topbar__name">{user.name}</span>
           </a>
-          <button className="topbar__logout" onClick={logout}>Salir</button>
         </div>
       </header>
       <div className="app__layout">

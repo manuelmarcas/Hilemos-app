@@ -31,13 +31,14 @@ import { ManagePeople } from "./ManagePeople";
 import { ExportDialog } from "./ExportDialog";
 import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
-import { Loading } from "../../components/Loading";
+import { ChatFab } from "./ChatFab";
+import { PollSkeleton } from "../../components/Loading";
 
 /** Votaciones de tu lista en las que se mira si coincides con alguien («Votaciones en común» de su perfil). */
 const SHARED_LOOKUP = 40;
 
-/** Una votación. `chat`: se abre en la pestaña del chat (#/v/<id>/chat, el enlace de los avisos del chat). */
-export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
+/** Una votación: cabecera, tablero para votar y, debajo, las pestañas (más votadas, participantes y chat). */
+export function PollPage({ id }: { id: string }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
   const duplicate = useDuplicate();
@@ -67,27 +68,21 @@ export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
   const [personReports, setPersonReports] = useState<PersonReport[]>([]);
   // Lo que ya has denunciado tú: se marca en el chat y en el perfil, y no se puede repetir.
   const [myReports, setMyReports] = useState<{ messages: Set<string>; people: Set<string> }>(() => ({ messages: new Set(), people: new Set() }));
-  const [tab, setTab] = useState<PollTab>(chat ? "chat" : "summary");
+  const [tab, setTab] = useState<PollTab>("summary");
+  // Las pestañas, para el botón flotante del chat (saber si se ven y bajar hasta ellas).
+  const [tabsEl, setTabsEl] = useState<HTMLDivElement | null>(null);
   const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
   const lib = library.data;
 
-  // Abierta desde un aviso del chat: en cuanto se pinta, baja hasta las pestañas (están debajo del calendario), sin
-  // quedar tapadas por la barra superior. Solo una vez: después, cada uno se mueve por la página como quiera.
-  // Hasta que no llegan los votos no está el calendario (y aún no se sabe dónde quedan las pestañas): se espera a eso, y
-  // solo se da por hecho cuando las pestañas ya están en la página.
-  const chatScrolled = useRef(false);
-  useEffect(() => {
-    if (!chat || !poll || !votesLoaded || chatScrolled.current) return;
-    const raf = requestAnimationFrame(() => {
-      const tabs = document.querySelector<HTMLElement>(".poll-tabs");
-      if (!tabs) return;
-      chatScrolled.current = true;
-      const bar = document.querySelector<HTMLElement>(".topbar")?.offsetHeight || 0;
-      window.scrollTo({ top: tabs.getBoundingClientRect().top + window.scrollY - bar - 8, behavior: "smooth" });
-    });
-    return () => cancelAnimationFrame(raf);
-  });
+  // Botón flotante del chat: abre la pestaña y baja hasta las pestañas, sin que las tape la barra superior.
+  const goToChat = () => {
+    setTab("chat");
+    if (!tabsEl) return;
+    const bar = document.querySelector<HTMLElement>(".topbar")?.offsetHeight || 0;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: tabsEl.getBoundingClientRect().top + window.scrollY - bar - 8, behavior: smooth ? "smooth" : "auto" });
+  };
 
   // «Visto hasta» del chat: va en la biblioteca del usuario, así se sincroniza entre sus dispositivos.
   const inLibrary = !!lib?.polls[id];
@@ -98,6 +93,14 @@ export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
     seenWritten.current = at;
     store.saveLibraryEntry(user.uid, id, { chatSeenAt: at }).catch(() => { seenWritten.current = 0; });
   }, [inLibrary, store, user.uid, id]);
+
+  // Quien espera a que le acepten o está fuera (rechazado o expulsado) no ve el chat: lo que se escriba no le cuenta
+  // como sin leer en «Mis votaciones».
+  const outOfChat = !!(votes[user.uid] ?? myVote)?.status;
+  const pollChatAt = poll?.chatAt || 0;
+  useEffect(() => {
+    if (outOfChat && pollChatAt > chatSeenAt) markChatSeen(pollChatAt);
+  }, [outOfChat, pollChatAt, chatSeenAt, markChatSeen]);
 
   const ownOnly = !!poll && isRestricted(poll) && !isAdmin(poll, user.uid);
   const canReadAll = !!poll && (!ownOnly || (!!myVote && memberStatus(myVote) === "accepted"));
@@ -238,14 +241,14 @@ export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
   if (fatal) {
     return <><div className="empty-box empty-box--error">{fatal}</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
-  if (!pollLoaded) return <Loading>Cargando votación…</Loading>;
+  if (!pollLoaded) return <PollSkeleton label="Cargando votación…" />;
   if (!poll) {
     return <><div className="empty-box">Esta votación no existe o ha sido eliminada.</div><p><a href="#/"><Icon name="back" /> Volver a mis votaciones</a></p></>;
   }
 
   if (blocked) return <BlockedView poll={poll} kind={blocked} email={user.email} onRetry={retryJoin} />;
   if (ownOnly && !canReadAll) {
-    if (!myLoaded || !myVote) return <Loading>Cargando votación…</Loading>;
+    if (!myLoaded || !myVote) return <PollSkeleton label="Cargando votación…" />;
     return <WaitingView poll={poll} status={memberStatus(myVote)} removed={isRemoved(myVote)} />;
   }
   // En las abiertas, a quien han expulsado le llegan todos los votos, pero ya no participa.
@@ -630,7 +633,8 @@ export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
           remind={<RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} />} />
       )}
       {board}
-      <PollTabs tab={tab} setTab={setTab} counts={{ people: present.length }} unread={tab === "chat" ? 0 : chatUnread} />
+      <PollTabs tab={tab} setTab={setTab} counts={{ people: present.length }} unread={tab === "chat" ? 0 : chatUnread} tabsRef={setTabsEl} />
+      {canChat && <ChatFab tabs={tabsEl} unread={tab === "chat" ? 0 : chatUnread} onOpen={goToChat} />}
       <div className="poll-tabs__panel" id="ptab-summary" role="tabpanel" aria-labelledby="ptabbtn-summary" hidden={tab !== "summary"}>
       <section className="summary">
         {cal && (

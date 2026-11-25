@@ -24,7 +24,6 @@ const NOTIFY: [keyof NotifyPrefs, string][] = [
   ["votes", "Alguien vota por primera vez en una votación en la que estás"],
   ["state", "Se cierra, hay desempate o se acaba el plazo"],
   ["members", "Te aceptan, o alguien quiere entrar en una que administras"],
-  ["chat", "Hay mensajes sin leer en el chat (solo del primero, hasta que lo abras)"],
 ];
 
 export function Profile() {
@@ -70,6 +69,17 @@ export function Profile() {
       setStatus("No se pudieron cambiar los avisos. " + errMsg(e));
     }
     setPushBusy(false);
+  }
+
+  // Sin cuenta, para volver a entrar hace falta la clave de acceso: se recuerda antes de salir.
+  async function logout() {
+    if (user.anon && store.mode === "firebase" && !(await confirm({
+      title: "¿Cerrar sesión sin registro?",
+      message: "Para volver a entrar como «" + user.name + "» necesitarás tu clave de acceso (en «Entrar con tu clave»). Si no la tienes guardada, crea una nueva aquí arriba antes de salir: sin ella perderás tus votaciones y no podrás cambiar tus votos.",
+      confirmLabel: "Cerrar sesión",
+      danger: true,
+    }))) return;
+    store.signOut();
   }
 
   function toggleNotify(key: keyof NotifyPrefs) {
@@ -359,6 +369,11 @@ export function Profile() {
             <Icon name="download" /> {exporting ? "Preparando…" : "Descargar mis datos"}
           </button>
           {dataMsg && <div className="status" role="alert">{dataMsg}</div>}
+        </section>
+        {/* Antes estaba en la barra superior: se usa poco y, sin cuenta, salir sin la clave es perderlo todo. */}
+        <section className="step">
+          <h2 className="step__title">Cerrar sesión</h2>
+          <button className="btn" onClick={logout}><Icon name="leave" /> Cerrar sesión</button>
         </section>
         <section className="step step--danger">
           <h2 className="step__title">Eliminar mi cuenta</h2>

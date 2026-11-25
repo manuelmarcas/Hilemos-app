@@ -174,13 +174,11 @@ export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.a
 export const chatSince = (p: PollData, uid: string, vote: Vote | null | undefined) =>
   p.ownerUid === uid ? 0 : vote?.joinedAt || 0;
 /**
- * Si el mensaje de la hora `at` es el primero que no ha visto quien tiene esta entrada de biblioteca: el que le avisa
- * y se apunta en `chatAt`. Los siguientes no avisan hasta que abra el chat. La misma regla que functions/chat.js.
+ * Tiene mensajes sin leer en el chat de esa votación (el icono de «Mis votaciones»): el último mensaje (`chatAt` de la
+ * votación) es posterior a lo que ha visto y a cuando la añadió a su lista (lo de antes de entrar no es para él).
  */
-export const firstUnreadChat = (e: LibraryEntry | undefined, at: number) =>
-  (e?.chatSeenAt || 0) < at && (e?.chatAt || 0) <= (e?.chatSeenAt || 0);
-/** Tiene mensajes sin leer en el chat de esa votación (para el icono de «Mis votaciones»). */
-export const hasUnreadChat = (e: LibraryEntry) => (e.chatAt || 0) > (e.chatSeenAt || 0);
+export const hasUnreadChat = (e: LibraryEntry, p: PollData) =>
+  (p.chatAt || 0) > Math.max(e.chatSeenAt || 0, e.addedAt || 0);
 /** Un administrador le expulsó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
 export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
 
@@ -540,25 +538,11 @@ export function slotShort(poll: PollData, slot: string) {
   }
 }
 
-// Descripción corta para listados: "Días · 17 días · 2 opciones".
+// Descripción corta para listados: cuántas casillas se votan («17 días», «5 opciones»). El tipo ya lo dice el icono.
 export function pollMeta(poll: PollData) {
-  const t = TYPE[poll.type];
-  const parts = [t.name];
-  if (poll.type === "hours") {
-    parts.push(plural(poll.slots.length, ["día", "días"]));
-    if (poll.hourList) {
-      const total = poll.slots.reduce((a, d) => a + hoursForDay(poll, d).length, 0);
-      parts.push(plural(total, ["hora", "horas"]) + " en total");
-    } else {
-      parts.push(plural(poll.hours?.length || 0, ["franja", "franjas"]) + " por día");
-    }
-  } else if (poll.type === "options") {
-    parts.push(plural(poll.options?.length || 0, t.unit));
-  } else {
-    parts.push(plural(poll.slots.length, t.unit));
-  }
-  if (poll.type === "days") parts.push(plural(pollOptions(poll).length, ["opción", "opciones"]) + " por día");
-  return parts.join(" · ");
+  if (poll.type === "options") return plural(poll.options?.length || 0, TYPE.options.unit);
+  // Las de horas se cuentan por días: es lo que se recuerda («el viernes y el sábado»), no las franjas.
+  return plural(poll.slots.length, poll.type === "hours" ? ["día", "días"] : TYPE[poll.type].unit);
 }
 
 // Texto con el periodo en el que se puede votar.

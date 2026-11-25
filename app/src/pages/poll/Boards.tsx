@@ -1,7 +1,8 @@
 // Tableros para votar, uno por tipo de votación: calendario de días (con sus opciones), semanas, meses, horas y
 // opciones libres.
 // Cada casilla votable es un botón con su recuento; «on» es mi voto y «best» la más votada de su opción.
-import type { CSSProperties, ReactNode } from "react";
+// Las de días con pocos días votables se votan en una lista (BoardDayList) en vez de en el calendario del mes.
+import { useRef, type CSSProperties, type ReactNode } from "react";
 import * as D from "../../lib/dates";
 import { DEFAULT_CHOICE_ICON, hoursForDay, slotLabel, unitKey, type Tally } from "../../lib/model";
 import type { Poll } from "../../lib/types";
@@ -15,23 +16,36 @@ export interface BoardProps {
   onVote: (u: string) => void;
 }
 
+/** Con estos días votables o menos, las de días se votan en una lista: un mes casi entero apagado no ayuda. */
+const DAY_LIST_MAX = 10;
+
 /** Casilla para votar. `base`: su clase BEM (p. ej. «cell__opt»), que recibe los modificadores `mods` y, según el
- *  recuento, --on (mi voto) y --best (la más votada). */
+ *  recuento, --on (mi voto) y --best (la más votada). Al pulsarla, el móvil vibra un instante (donde se puede). */
 function VoteBtn({ base, mods = {}, u, T, mine, enabled, label, onVote, children }: {
   base: string; mods?: Record<string, unknown>; u: string; T: Tally; mine: Set<string>; enabled: boolean; label?: string;
   onVote: (u: string) => void; children: ReactNode;
 }) {
   return (
     <button className={bem(base, { ...mods, on: mine.has(u), best: T.best.has(u) })} aria-pressed={mine.has(u)}
-      aria-label={label} disabled={!enabled} onClick={() => onVote(u)}>
+      aria-label={label} disabled={!enabled} onClick={() => { navigator.vibrate?.(10); onVote(u); }}>
       {children}
     </button>
   );
 }
 
-const Count = ({ T, u }: { T: Tally; u: string }) => <span className="count">{T.counts[u] || 0}</span>;
+/**
+ * Recuento de una casilla. Cuando cambia (alguien vota o quita su voto), da un pequeño salto: la `key` lo vuelve a
+ * montar para repetir la animación, y la clase se queda puesta desde el primer cambio (no salta al cargar).
+ */
+function Count({ T, u }: { T: Tally; u: string }) {
+  const n = T.counts[u] || 0;
+  const first = useRef(n);
+  return <span key={n} className={bem("count", { bump: n !== first.current })}>{n}</span>;
+}
 
-export function BoardDays({ poll, T, mine, canVote, onVote }: BoardProps) {
+export function BoardDays(props: BoardProps) {
+  if (props.poll.slots.length <= DAY_LIST_MAX) return <BoardDayList {...props} />;
+  const { poll, T, mine, canVote, onVote } = props;
   const slots = new Set(poll.slots);
   return (
     <div className="calendar">
@@ -70,6 +84,41 @@ export function BoardDays({ poll, T, mine, canVote, onVote }: BoardProps) {
           <div key={mk} className="calendar__month">
             <h2 className="calendar__title">{D.fmtMonth(mk)}</h2>
             <div className="calendar__grid" style={cols}>{cells}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Votación de días con pocos días: una fila por día votable, con la fecha y un botón grande por opción. */
+function BoardDayList({ poll, T, mine, canVote, onVote }: BoardProps) {
+  // Con una o dos opciones hay sitio para su nombre; con más, solo el icono (la leyenda de arriba dice cuál es cuál).
+  const named = T.opts.length <= 2;
+  return (
+    <div className="day-list">
+      {[...poll.slots].sort().map(k => {
+        const dt = D.parseDay(k);
+        return (
+          <div key={k} className="day-list__row">
+            <div className="day-list__date" aria-hidden="true">
+              <span className="day-list__dow">{D.DSHORT[D.dowMon(dt)]}</span>
+              <span className="day-list__num">{dt.getDate()}</span>
+              <span className="day-list__mon">{D.MSHORT[dt.getMonth()]}</span>
+            </div>
+            <div className="day-list__opts">
+              {T.opts.map((o, i) => {
+                const u = unitKey(k, o.id);
+                return (
+                  <VoteBtn key={o.id} base="day-list__opt" mods={{ [`c${i}`]: true }} u={u} T={T} mine={mine} enabled={canVote}
+                    label={`${D.fmtDayLong(k)} · ${o.name}`} onVote={onVote}>
+                    <span className="day-list__icon">{o.icon}</span>
+                    {named && <span className="day-list__name">{o.name}</span>}
+                    <Count T={T} u={u} />
+                  </VoteBtn>
+                );
+              })}
+            </div>
           </div>
         );
       })}

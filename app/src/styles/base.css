@@ -126,6 +126,11 @@ button,input,select,textarea{font:inherit}
 .skeleton__lines{display:grid;gap:8px;flex:1;min-width:0}
 .skeleton__line{height:10px;width:45%;border-radius:var(--radius-pill);background:var(--soft)}
 .skeleton__line--title{height:14px;width:70%}
+/* Esqueleto de una votación (PollSkeleton): cabecera y calendario vacíos. */
+.skeleton__head{display:grid;gap:12px;padding:4px 0 10px}
+.skeleton__line--heading{height:26px;width:60%}
+.skeleton__card--board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.skeleton__cell{height:56px;border-radius:var(--radius-md);background:var(--soft)}
 .empty-box{
   background:var(--card);
   border:1px dashed var(--line);
@@ -172,6 +177,7 @@ button,input,select,textarea{font:inherit}
 }
 a.menu__item{text-decoration:none}
 button.cell__opt:not(:disabled):not(.cell__opt--on):hover{background:var(--hover)}
+button.day-list__opt:not(:disabled):not(.day-list__opt--on):hover{background:var(--hover)}
 button.week-board__row:not(:disabled):not(.week-board__row--on):hover{background:var(--hover)}
 button.month-board__tile:not(:disabled):not(.month-board__tile--on):hover{background:var(--hover)}
 button.hour-board__cell:not(:disabled):not(.hour-board__cell--on):hover{background:var(--hover)}

@@ -89,6 +89,12 @@ export interface PollData {
   autoCloseWarned?: number;
   /** Cuándo la cerró sola una cuenta atrás (el aviso de cierre dice entonces «se ha cerrado sola»). */
   autoClosedAt?: number;
+  /**
+   * Hora (`at`) del último mensaje del chat: la apunta quien lo escribe, en la misma escritura. «Mis votaciones» la
+   * compara con `chatSeenAt` de la biblioteca para el icono de mensajes sin leer. Falta si nunca ha habido mensajes
+   * (o son de antes de guardarla).
+   */
+  chatAt?: number;
 }
 
 /** Lo que se cuenta desde el dispositivo para las estadísticas (Store.track). La misma lista, en las reglas (pings). */
@@ -231,11 +237,6 @@ export interface LibraryEntry {
   archived?: boolean; // archivada: sale del panel principal y del menú lateral, pero conserva su grupo
   /** Fecha (`at`) del último mensaje del chat que ha visto: lo posterior de otros cuenta como no leído. */
   chatSeenAt?: number;
-  /**
-   * Fecha del primer mensaje que no ha visto desde la última vez que abrió el chat (lo apunta el servidor al avisarle,
-   * `onChatMessage`). Si es posterior a `chatSeenAt`, tiene mensajes sin leer. Falta si nunca ha tenido ninguno.
-   */
-  chatAt?: number;
 }
 
 export interface Group {
@@ -256,8 +257,6 @@ export interface NotifyPrefs {
   state?: boolean;
   /** Le han aceptado (o readmitido), o alguien quiere entrar en una votación que administra. */
   members?: boolean;
-  /** Hay mensajes sin leer en el chat de una votación (solo el primero desde que lo abrió). */
-  chat?: boolean;
 }
 
 /** Documento `users/{uid}` (privado). */

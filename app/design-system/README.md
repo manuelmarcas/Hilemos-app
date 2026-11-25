@@ -40,7 +40,7 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 - Usa los pasos de 4px: `space-1` dentro de contadores, `space-2` entre controles de una fila, `space-3` entre filas, `space-4` como relleno de tarjetas y vía lateral mínima, `space-6` entre secciones y `space-8` antes de bloques grandes.
 - Radios: `radius-sm` (8px) en celdas de hora y filas del menú; `radius-md` (10px) en botones, campos, celdas del calendario, filas del ranking, opciones del desempate y banners; `radius-lg` (14px) en tableros de mes, tarjetas, menú lateral y desempate; `radius-xl` (18px) en diálogos; `radius-pill` (999px) en chips, etiquetas, contadores, puestos y avatares.
 - Solo lleva sombra lo que flota: `shadow-card` en tableros, menú lateral y desempate; `shadow-pop` en menús y aviso flotante; `shadow-dialog` en diálogos. Filas, celdas y opciones se separan con borde `line`, sin sombra.
-- Lo que no se puede votar se apaga con `opacity-off` sobre `soft`; los botones desactivados, con `opacity-disabled`. En el calendario de días, un día que no se vota solo lleva su número (sin las opciones apagadas) y los días de la semana sin ninguno votable ese mes van a media anchura, para dar sitio a los demás.
+- Lo que no se puede votar se apaga con `opacity-off` sobre `soft`; los botones desactivados, con `opacity-disabled`. En el calendario de días, un día que no se vota solo lleva su número (sin las opciones apagadas) y los días de la semana sin ninguno votable ese mes van a media anchura, para dar sitio a los demás. Con 10 días votables o menos, no hay calendario: se vota en una lista (`day-list`), una fila por día con un botón grande por opción, con los mismos colores y la misma «más votada».
 
 ## Estados
 
@@ -54,6 +54,13 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
   `.appear` y solo se funde, para no sumar dos desplazamientos. «Cargando» y el esqueleto esperan `motion-wait` antes
   de verse, para que lo rápido no parpadee. Las animaciones no dejan ningún `transform` puesto al acabar. Con
   «reducir movimiento», todo solo se funde.
+- Al votar, el móvil vibra un instante y el número de la casilla da un pequeño salto (`count--bump`) cada vez que
+  cambia; al cargar no salta.
+- Esperas: la lista de votaciones y una votación muestran un esqueleto con su forma (`skeleton`, con el brillo que
+  pasa); el círculo de «Cargando» queda para lo pequeño.
+- Botón flotante (`chat-fab`): solo el del chat, abajo a la derecha, relleno `brand` con `shadow-pop`; aparece y
+  desaparece con `motion-enter` y, oculto, no se puede pulsar.
+- Cerrar sesión está en «Tu perfil», no en la barra superior: se usa poco y, sin cuenta, es peligroso.
 - Campos de varias líneas (`textarea`): siempre `.input .input--area`, sin tirador para agrandarlos a mano; crecen
   solos con el texto (`useAutoGrow`) hasta un alto máximo y, a partir de ahí, se desplazan dentro.
 

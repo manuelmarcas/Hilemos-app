@@ -155,7 +155,7 @@ await check("Crear: panel de emojis inserta en el título", async () => {
 let days;
 await check("Crear votación de días con 2 opciones", async () => {
   days = await createDays(ana, "Cena de Navidad", [4, 5, 11], ["Comida", "Cena"]);
-  const n = await ana.locator(".cell__opt:not([disabled])").count();
+  const n = await ana.locator(".cell__opt:not([disabled]), .day-list__opt:not([disabled])").count();
   expect(n === 6, "casillas votables: " + n);
   return days;
 });
@@ -164,7 +164,7 @@ await check("Votar y quitar el voto", async () => {
   await b.click(); await ana.waitForTimeout(200);
   expect(await b.getAttribute("aria-pressed") === "true", "no se marca");
   expect((await b.locator(".count").innerText()) === "1", "el contador no sube");
-  expect((await b.getAttribute("class")).includes("cell__opt--on"), "sin --on");
+  expect((await b.getAttribute("class")).includes("__opt--on"), "sin --on");
   await b.click(); await ana.waitForTimeout(200);
   expect(await b.getAttribute("aria-pressed") === "false", "no se desmarca");
   await b.click(); await ana.waitForTimeout(200);
@@ -198,7 +198,7 @@ await check("Bea entra con el enlace y vota", async () => {
   await go(bea, days);
   await bea.getByRole("button", { name: "viernes 11 de diciembre · Cena" }).click();
   await bea.waitForTimeout(200);
-  expect(await bea.locator(".cell__opt--on").count() === 1, "voto no marcado");
+  expect(await bea.locator(".cell__opt--on, .day-list__opt--on").count() === 1, "voto no marcado");
 });
 await check("Chat: mensaje y contador de no leídos", async () => {
   await bea.locator("#ptabbtn-chat").click();

@@ -26,9 +26,11 @@ export function Home() {
   const { setArchived, leave, moveTo, deleteGroup } = useListActions();
   const duplicate = useDuplicate();
   const lib = library.data;
-  // Datos de cada votación (o null si ya no existe). Solo se piden las que no se han leído en esta sesión.
+  // Datos de cada votación (o null si ya no existe). Se pinta al momento lo leído antes en esta sesión y se vuelven a
+  // leer todas al entrar en la pantalla (una lectura por votación): así el icono de mensajes sin leer, «Cerrada» y el
+  // título están al día sin tener una escucha abierta por cada una.
   const [cache, setCache] = useState<Record<string, Poll | null>>(() => Object.fromEntries(pollCache));
-  const requested = useRef(new Set<string>(pollCache.keys()));
+  const requested = useRef(new Set<string>());
   const [expanded, setExpanded] = useState<string | null>(null); // votación con el menú ⋯ abierto
   const [form, setForm] = useState<Form>(null);
   const [status, setStatus] = useState("");
@@ -106,11 +108,13 @@ export function Home() {
     const type = TYPE[(p?.type || e.type)!];
     const owner = (p?.ownerUid || null) === user.uid || e.role === "owner";
     const groupName = e.groupId ? lib.groups[e.groupId]?.name : "";
+    // Debajo del título, solo cuántas casillas tiene y de quién es (si es tuya ya lo dice «Tuya»); el tipo, el icono.
     const meta = [
-      p ? pollMeta(p) : type?.name || "",
-      owner ? "creada por ti" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
+      p ? pollMeta(p) : "",
+      owner ? "" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
       e.archived && groupName ? `grupo «${groupName}»` : "",
     ].filter(Boolean).join(" · ");
+    const unread = !gone && !!p && hasUnreadChat(e, p);
     const open = expanded === e.id;
     // Cuenta atrás del servidor (heredada por encima del límite, le sobra o premium): se ve sin entrar en ella.
     const closing = p ? autoClose(p) : null;
@@ -128,18 +132,21 @@ export function Home() {
       <div className={`poll-card ${gone ? "poll-card--gone" : ""}`}>
         <div className="poll-card__row">
           <a className="poll-card__link" href={`#/v/${e.id}`}>
-            <span className="poll-card__icon"><Icon name={type?.icon || "vote"} /></span>
+            <span className="poll-card__icon" role="img" aria-label={`Votación por ${(type?.name || "votos").toLowerCase()}`}
+              data-tip={type?.name}><Icon name={type?.icon || "vote"} /></span>
             <span className="poll-card__main">
-              <span className="poll-card__title">{p?.title || e.title || "Votación"}</span>
-              <span className="poll-card__meta">{meta}</span>
+              <span className="poll-card__head">
+                <span className="poll-card__title">{p?.title || e.title || "Votación"}</span>
+                {/* Mensajes sin leer en su chat: el último mensaje (chatAt) es posterior a lo que has visto. */}
+                {unread && (
+                  <span className="poll-card__chat" role="img" aria-label="Mensajes sin leer en el chat" data-tip="Mensajes sin leer en el chat">
+                    <Icon name="chat" />
+                  </span>
+                )}
+              </span>
+              {meta && <span className="poll-card__meta">{meta}</span>}
             </span>
             <span className="poll-card__badges">
-              {/* Mensajes sin leer en su chat (el servidor apunta el primero que no has visto: chatAt). */}
-              {!gone && hasUnreadChat(e) && (
-                <span className="poll-card__chat" role="img" aria-label="Mensajes sin leer en el chat" data-tip="Mensajes sin leer en el chat">
-                  <Icon name="chat" />
-                </span>
-              )}
               {gone && <span className="badge badge--gone">Eliminada</span>}
               {p?.closed && <span className="badge">Cerrada</span>}
               {closing && (
@@ -260,11 +267,6 @@ export function Home() {
             <Icon name="back" className="archived-row__go" />
           </button>
         )}
-        {(filter === "archived" ? archived.length : all.length) > 0 && (
-          <p className="library__swipe-hint">
-            Desliza una votación → para {filter === "archived" ? "desarchivarla" : "archivarla"} o ← para salir de ella.
-          </p>
-        )}
       </div>
     </>
   );
@@ -273,10 +275,7 @@ export function Home() {
 function HomeHead() {
   return (
     <div className="home__head">
-      <div>
-        <h1 className="home__title">Mis votaciones</h1>
-        <p className="subtitle">Las que has creado y aquellas en las que participas. Organízalas en grupos.</p>
-      </div>
+      <h1 className="home__title">Mis votaciones</h1>
       <a className="btn btn--primary btn--big" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
     </div>
   );

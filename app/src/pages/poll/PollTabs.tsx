@@ -12,8 +12,10 @@ const TABS: { id: PollTab; icon: IconName; label: string }[] = [
 ];
 
 // El calendario queda siempre arriba; debajo se alterna lo demás para que la pantalla no se haga eterna.
-export function PollTabs({ tab, setTab, counts, unread }: {
+export function PollTabs({ tab, setTab, counts, unread, tabsRef }: {
   tab: PollTab; setTab: (t: PollTab) => void; counts: Partial<Record<PollTab, number>>; unread: number;
+  /** Recibe la fila de pestañas (el botón flotante del chat mira si se ve). */
+  tabsRef?: (el: HTMLDivElement | null) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   function onKey(e: ReactKeyboardEvent<HTMLDivElement>) {
@@ -25,7 +27,7 @@ export function PollTabs({ tab, setTab, counts, unread }: {
     refs.current[j]?.focus();
   }
   return (
-    <div className="poll-tabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
+    <div ref={tabsRef} className="poll-tabs" role="tablist" aria-label="Qué ver debajo del calendario" onKeyDown={onKey}>
       {TABS.map((t, i) => {
         const on = tab === t.id, n = counts[t.id];
         const badge = t.id === "chat" && unread > 0 ? unread : 0;

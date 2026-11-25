@@ -1,5 +1,4 @@
-// Rutas con #: #/, #/nueva, #/perfil, #/v/<id>, #/v/<id>/chat (abre la pestaña del chat: los avisos del chat llevan
-// ahí), #/v/<id>/editar, #/privacidad y #/condiciones. Se mantiene el
+// Rutas con #: #/, #/nueva, #/perfil, #/v/<id>, #/v/<id>/editar, #/privacidad y #/condiciones. Se mantiene el
 // formato de la web original para que los enlaces ya compartidos sigan funcionando.
 import { useSyncExternalStore } from "react";
 
@@ -15,7 +14,7 @@ export type Route =
   | { name: "home" }
   | { name: "create" }
   | { name: "profile" }
-  | { name: "poll"; id: string; chat?: boolean }
+  | { name: "poll"; id: string }
   | { name: "edit"; id: string }
   | { name: "legal"; doc: LegalDoc }
   | { name: "unknown" };
@@ -32,8 +31,8 @@ export function parseRoute(path: string): Route {
   if (path === "/perfil") return { name: "profile" };
   const doc = legalDoc(path);
   if (doc) return { name: "legal", doc };
-  const m = path.match(/^\/v\/([A-Za-z0-9_-]+)(\/editar|\/chat)?$/);
-  if (m) return m[2] === "/editar" ? { name: "edit", id: m[1] } : { name: "poll", id: m[1], ...(m[2] ? { chat: true } : {}) };
+  const m = path.match(/^\/v\/([A-Za-z0-9_-]+)(\/editar)?$/);
+  if (m) return m[2] ? { name: "edit", id: m[1] } : { name: "poll", id: m[1] };
   return { name: "unknown" };
 }
 

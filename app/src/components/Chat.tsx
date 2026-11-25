@@ -89,12 +89,14 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
     if (msgs) onUnread(msgs.filter(m => m.uid !== user.uid && m.at > seenAt).length);
   }, [msgs, seenAt, user.uid, onUnread]);
 
-  // Con la pestaña abierta y la app a la vista, todo lo que llega se da por leído. Con la app en segundo plano, no:
-  // así el servidor sabe que no lo has visto y te avisa (onChatMessage); se marca al volver.
+  // Con la pestaña abierta y la app a la vista, todo lo que llega se da por leído (en segundo plano, no: se marca al
+  // volver). Hasta el último mensaje de la votación (chatAt), aunque sea de antes de que entraras y no lo veas: si no,
+  // el icono de «Mis votaciones» no se apagaría nunca.
   const visible = usePageVisible();
+  const lastAt = Math.max(latestAt, poll.chatAt || 0);
   useEffect(() => {
-    if (active && visible && latestAt > seenAt) onSeen(latestAt);
-  }, [active, visible, latestAt, seenAt, onSeen]);
+    if (active && visible && lastAt > seenAt) onSeen(lastAt);
+  }, [active, visible, lastAt, seenAt, onSeen]);
 
   // Oculto (otra pestaña) no tiene altura, así que hay que bajar al último mensaje al mostrarlo.
   useEffect(() => {

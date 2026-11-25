@@ -254,7 +254,7 @@ await check("Teclado: al tocar un campo se abre y el campo queda a la vista", as
 let days;
 await check("Crear votación de días con 2 opciones", async () => {
   days = await createDays(ana, "Cena de Navidad", [4, 5, 11], ["Comida", "Cena"]);
-  const n = await ana.locator(".cell__opt:not([disabled])").count();
+  const n = await ana.locator(".cell__opt:not([disabled]), .day-list__opt:not([disabled])").count();
   expect(n === 6, "casillas votables: " + n);
   return days;
 });
@@ -343,7 +343,7 @@ await check("Bea entra con el enlace y vota", async () => {
   await go(bea, days);
   await bea.getByRole("button", { name: "viernes 11 de diciembre · Cena" }).click();
   await bea.waitForTimeout(300);
-  expect(await bea.locator(".cell__opt--on").count() === 1, "voto no marcado");
+  expect(await bea.locator(".cell__opt--on, .day-list__opt--on").count() === 1, "voto no marcado");
 });
 await check("Chat: mensaje con el teclado del móvil y contador de no leídos", async () => {
   await bea.locator("#ptabbtn-chat").click();
@@ -934,8 +934,8 @@ await check("Enlace de una votación abierto desde fuera abre la app en esa vota
   expect(ana.url().endsWith("#/v/" + id), "no va a la votación: " + ana.url());
 });
 await check("Salir de la cuenta vuelve a la pantalla de entrada", async () => {
-  await go(ana, "#/");
-  await btn(ana, "Salir").click();
+  await go(ana, "#/perfil");
+  await btn(ana, "Cerrar sesión").click();
   await ana.waitForSelector("#demo-login");
 });
 

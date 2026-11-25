@@ -70,4 +70,39 @@
 .chat__sys-icon{margin-top:1px}
 .chat__form{display:flex;align-items:flex-end;gap:8px;min-width:0;margin-top:12px}
 .chat__send{flex:none}
+/* Botón flotante del chat (ChatFab.tsx): abajo a la derecha mientras las pestañas quedan por debajo de la pantalla.
+   Oculto, no se puede pulsar ni enfocar (visibility); aparece creciendo un poco y fundiéndose. */
+.chat-fab{
+  position:fixed;
+  right:16px;
+  bottom:calc(16px + var(--safe-bottom));
+  z-index:30;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:56px;
+  height:56px;
+  border:none;
+  border-radius:var(--radius-pill);
+  background:var(--brand);
+  color:var(--on-brand);
+  box-shadow:var(--shadow-pop);
+  font-size:1.45rem;
+  cursor:pointer;
+  opacity:0;
+  visibility:hidden;
+  transform:scale(.85) translateY(var(--motion-rise));
+  transition:opacity var(--motion-enter), transform var(--motion-enter), visibility 0s linear .24s;
+}
+.chat-fab--shown{opacity:1;visibility:visible;transform:none;transition:opacity var(--motion-enter), transform var(--motion-enter)}
+.chat-fab:hover{background:var(--brand-strong)}
+.chat-fab__badge{
+  position:absolute;top:-3px;right:-3px;
+  min-width:22px;height:22px;padding:0 6px;
+  border-radius:var(--radius-pill);
+  background:var(--card);color:var(--brand-strong);
+  box-shadow:0 0 0 2px var(--brand);
+  font-size:.72rem;font-weight:800;line-height:22px;text-align:center;font-variant-numeric:tabular-nums;
+}
+@media (prefers-reduced-motion:reduce){.chat-fab,.chat-fab--shown{transform:none}}
 .chat__closed{margin:12px 0 0}

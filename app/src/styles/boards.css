@@ -54,6 +54,49 @@
 .cell--n3 .cell__opt,.cell--n4 .cell__opt{flex-direction:row;gap:3px;font-size:.8rem;padding:1px 2px}
 .cell__opt .cell__label{line-height:1}
 .cell__opt:disabled{cursor:default}
+/* Votación de días con pocos días (BoardDayList): una fila por día, con la fecha a la izquierda y un botón por
+   opción. Los colores de cada opción y «la más votada» son los mismos que en el calendario. */
+.day-list{
+  display:grid;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:4px 10px;
+  box-shadow:var(--shadow-card);
+  --count-size:20px;--count-pad:0 6px;--count-font:.74rem;
+}
+.day-list__row{display:flex;align-items:center;gap:10px;padding:8px 0;min-width:0}
+.day-list__row + .day-list__row{border-top:1px solid var(--line)}
+.day-list__date{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.day-list__dow{font-size:.72rem;font-weight:600;color:var(--muted)}
+.day-list__num{font-size:1.3rem;font-weight:800;color:var(--ink)}
+.day-list__mon{font-size:.72rem;color:var(--muted)}
+.day-list__opts{flex:1;display:flex;gap:6px;min-width:0}
+.day-list__opt{
+  flex:1 1 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:0;
+  min-height:48px;
+  padding:6px 4px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  background:var(--card);
+  color:var(--ink);
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.day-list__opt:disabled{cursor:default}
+.day-list__icon{font-size:1.25rem;line-height:1}
+.day-list__name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.day-list__opt--c0.day-list__opt--on{background:var(--c0);border-color:var(--c0);color:var(--c0-ink)}
+.day-list__opt--c1.day-list__opt--on{background:var(--c1);border-color:var(--c1);color:var(--c1-ink)}
+.day-list__opt--c2.day-list__opt--on{background:var(--c2);border-color:var(--c2);color:var(--c2-ink)}
+.day-list__opt--c3.day-list__opt--on{background:var(--c3);border-color:var(--c3);color:var(--c3-ink)}
+.day-list__opt--best{box-shadow:var(--best-ring)}
 /* Contador de votos. Lo que lo lleva dentro le cambia el tamaño y el color con variables (--count-…), sin tocar
    .count desde fuera (BEM). */
 .count{
@@ -71,8 +114,12 @@
   font-weight:800;
   line-height:1;
 }
+/* Al cambiar el recuento (Count en Boards.tsx), el número da un pequeño salto: la respuesta a tu voto. */
+.count--bump{animation:count-bump var(--motion-enter)}
+@keyframes count-bump{40%{transform:scale(1.35)}}
+@media (prefers-reduced-motion:reduce){.count--bump{animation:none}}
 /* Sobre una casilla votada (con color), el contador va en blanco para que se lea. */
-.cell__opt--on,.week-board__row--on,.month-board__tile--on,.hour-board__cell--on,.choice-board__item--on,
+.cell__opt--on,.day-list__opt--on,.week-board__row--on,.month-board__tile--on,.hour-board__cell--on,.choice-board__item--on,
 .tiebreak__option--on{--count-bg:var(--card);--count-ink:var(--ink)}
 .cell__opt--c0.cell__opt--on{background:var(--c0);color:var(--c0-ink)}
 .cell__opt--c1.cell__opt--on{background:var(--c1);color:var(--c1-ink)}
