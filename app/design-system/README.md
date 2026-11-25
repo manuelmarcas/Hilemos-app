@@ -40,7 +40,7 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 - Usa los pasos de 4px: `space-1` dentro de contadores, `space-2` entre controles de una fila, `space-3` entre filas, `space-4` como relleno de tarjetas y vía lateral mínima, `space-6` entre secciones y `space-8` antes de bloques grandes.
 - Radios: `radius-sm` (8px) en celdas de hora y filas del menú; `radius-md` (10px) en botones, campos, celdas del calendario, filas del ranking, opciones del desempate y banners; `radius-lg` (14px) en tableros de mes, tarjetas, menú lateral y desempate; `radius-xl` (18px) en diálogos; `radius-pill` (999px) en chips, etiquetas, contadores, puestos y avatares.
 - Solo lleva sombra lo que flota: `shadow-card` en tableros, menú lateral y desempate; `shadow-pop` en menús y aviso flotante; `shadow-dialog` en diálogos. Filas, celdas y opciones se separan con borde `line`, sin sombra.
-- Lo que no se puede votar se apaga con `opacity-off` sobre `soft`; los botones desactivados, con `opacity-disabled`.
+- Lo que no se puede votar se apaga con `opacity-off` sobre `soft`; los botones desactivados, con `opacity-disabled`. En el calendario de días, un día que no se vota solo lleva su número (sin las opciones apagadas) y los días de la semana sin ninguno votable ese mes van a media anchura, para dar sitio a los demás.
 
 ## Estados
 
@@ -49,6 +49,13 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
 - Campos con un fallo: nunca la burbuja del navegador («Completa este campo»). `src/lib/fieldErrors.ts` la sustituye en toda la app: el campo pasa a borde `danger` y debajo sale un aviso `card` con borde `danger`, `shadow-pop`, flecha hacia el campo y un «!» en `on-danger` sobre `danger`. Se quita al escribir. El texto sale de `data-error` en el campo («Escribe tu nombre: es el que verán los demás.»); si no hay, uno genérico según el fallo. Tampoco se usan `alert`, `prompt` ni `confirm` del navegador: avisos flotantes y `ConfirmDialog`.
 - Foco de teclado: anillo sólido de 2px en `focus`, separado 2px. Tiene más de 3:1 sobre `bg` y `card` en los dos temas.
 - Transiciones de .15s solo en fondo, borde y la flecha de «N votos»; el aviso flotante aparece en .2s. Sin animaciones decorativas.
+- Movimiento (tokens `motion-*`), como en una app de móvil: cada pantalla nueva y cada pestaña aparecen subiendo
+  `motion-rise` mientras se funden (`motion-enter`); lo que llega de una vez al terminar de cargar lleva la mezcla
+  `.appear` y solo se funde, para no sumar dos desplazamientos. «Cargando» y el esqueleto esperan `motion-wait` antes
+  de verse, para que lo rápido no parpadee. Las animaciones no dejan ningún `transform` puesto al acabar. Con
+  «reducir movimiento», todo solo se funde.
+- Campos de varias líneas (`textarea`): siempre `.input .input--area`, sin tirador para agrandarlos a mano; crecen
+  solos con el texto (`useAutoGrow`) hasta un alto máximo y, a partir de ahí, se desplazan dentro.
 
 ## Composición
 

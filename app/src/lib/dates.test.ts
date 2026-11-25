@@ -40,3 +40,14 @@ describe("dates", () => {
     expect(D.fmtWeek("2025-12-15")).toBe("Semana 51 · 15–21 dic");
   });
 });
+
+describe("weekdaysWith (columnas del calendario con algún día votable)", () => {
+  it("marca solo los días de la semana que tienen algún día del conjunto ese mes", () => {
+    // Noviembre de 2026: el 25 es miércoles, el 26 jueves, el 27 viernes y el 30 lunes.
+    const days = new Set(["2026-11-25", "2026-11-26", "2026-11-27", "2026-11-30", "2026-12-01"]);
+    expect(D.weekdaysWith(2026, 10, days)).toEqual([true, false, true, true, true, false, false]);
+  });
+  it("sin días ese mes, ninguna", () => {
+    expect(D.weekdaysWith(2026, 10, new Set())).toEqual([false, false, false, false, false, false, false]);
+  });
+});

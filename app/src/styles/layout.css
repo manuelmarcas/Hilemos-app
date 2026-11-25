@@ -77,7 +77,8 @@
   color:var(--ink);
 }
 .topbar__logout:hover{background:var(--hover)}
-.app__view{container:view / inline-size;min-width:0}
+/* Cada pantalla nueva entra con «aparecer» (main lleva key={path}: se vuelve a montar al navegar). */
+.app__view{container:view / inline-size;min-width:0;animation:appear-in var(--motion-enter)}
 .sidebar{display:none}
 .page--with-sidebar .sidebar{display:flex}
 .sidebar{

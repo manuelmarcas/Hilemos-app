@@ -22,6 +22,7 @@ import { PremiumNote, PremiumTag } from "../components/Premium";
 import { CharCount } from "../components/CharCount";
 import type { PremiumFeature } from "../lib/premium";
 import { useDismiss } from "../hooks/useDismiss";
+import { useAutoGrow } from "../hooks/useAutoGrow";
 import { Spinner } from "../components/Loading";
 import { EmailChips, joinEmails, splitEmails } from "../components/EmailChips";
 
@@ -41,6 +42,8 @@ interface Choice { key: string; id?: string; name: string; icon: string }
 let choiceSeq = 0;
 const newChoice = (c?: TemplateOption): Choice => ({ key: `ch${++choiceSeq}`, name: "", icon: "", ...c });
 const CHOICE_EXAMPLES = ["Restaurante italiano", "Asador", "Japonés"];
+/** Alto máximo de la descripción (unas 8 líneas); con más texto, se desplaza dentro. */
+const DESC_FIELD_MAX = 200;
 
 /** Id nuevo con `prefix` que no esté en `used` (o1, o2… / c1, c2…). Lo añade a `used`. */
 function freshId(prefix: string, used: Set<string>) {
@@ -149,6 +152,8 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
   const root = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
+  // La descripción crece con el texto (hasta unas 8 líneas), sin tirador.
+  useAutoGrow(descRef, description, DESC_FIELD_MAX);
   const newGroupRef = useRef<HTMLInputElement>(null);
   const optRefs = useRef<(HTMLInputElement | null)[]>([]);
   const choiceRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -592,7 +597,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             <EmojiButton field={() => titleRef.current} setValue={setTitle} />
           </div>
           <div className="emoji-field emoji-field--area">
-            <textarea ref={descRef} className="input emoji-field__input" maxLength={MAX_DESCRIPTION} rows={2} placeholder="Descripción (opcional)"
+            <textarea ref={descRef} className="input input--area emoji-field__input" maxLength={MAX_DESCRIPTION} rows={2} placeholder="Descripción (opcional)"
               value={description} onChange={e => setDescription(e.target.value)} />
             <EmojiButton field={() => descRef.current} setValue={setDescription} />
           </div>

@@ -1,7 +1,7 @@
 // Pantalla "Mis votaciones": la colección del usuario organizada en grupos, y la zona de archivadas.
 // En el móvil cada votación se desliza: → archivar (o desarchivar), ← salir de ella (con confirmación).
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { TYPE, pollMeta, isAdmin, autoClose, autoCloseNote, closingLabel } from "../lib/model";
+import { TYPE, pollMeta, isAdmin, autoClose, autoCloseNote, closingLabel, hasUnreadChat } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
 import { errMsg, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
@@ -134,6 +134,12 @@ export function Home() {
               <span className="poll-card__meta">{meta}</span>
             </span>
             <span className="poll-card__badges">
+              {/* Mensajes sin leer en su chat (el servidor apunta el primero que no has visto: chatAt). */}
+              {!gone && hasUnreadChat(e) && (
+                <span className="poll-card__chat" role="img" aria-label="Mensajes sin leer en el chat" data-tip="Mensajes sin leer en el chat">
+                  <Icon name="chat" />
+                </span>
+              )}
               {gone && <span className="badge badge--gone">Eliminada</span>}
               {p?.closed && <span className="badge">Cerrada</span>}
               {closing && (
@@ -206,7 +212,8 @@ export function Home() {
   return (
     <>
       <HomeHead />
-      <div id="home-body">
+      {/* La misma caja que la del esqueleto de carga: al añadirle «appear», lo que llega aparece en vez de saltar. */}
+      <div id="home-body" className="appear">
         {filter === "archived" ? (
           <div className="archived-head">
             <button className="link-btn back-link" onClick={() => { setStatus(""); setFilter("all"); }}>

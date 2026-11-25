@@ -2,7 +2,7 @@
 // localStorage de este navegador. Se usa con ?demo en la dirección (o si config.ts no tiene la configuración de
 // Firebase). Hace las mismas comprobaciones que las reglas de Firestore, para que se comporte igual.
 import {
-  CHAT_LIMIT, MAX_CHAT, SERVER_KEYS, chatSince, deadlinePassed, ghostName, hasLimit, isAdmin, isPresent, keepsVotesOnLeave, pickHeir,
+  CHAT_LIMIT, MAX_CHAT, SERVER_KEYS, chatSince, deadlinePassed, firstUnreadChat, ghostName, hasLimit, isAdmin, isPresent, keepsVotesOnLeave, pickHeir,
   pollForExport,
 } from "../model";
 import { slugify } from "../util";
@@ -317,6 +317,13 @@ export function createDemoStore(): Store {
       const text = msg.text.trim();
       if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
       ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };
+      // Lo que hace el servidor (onChatMessage): apunta el primer mensaje sin leer de cada participante, para el icono
+      // de «Mis votaciones». En el modo demo no hay avisos.
+      const others = [db.polls[id].ownerUid, ...Object.keys(db.votes[id] || {}).filter(u => isPresent(db.votes[id][u]))];
+      for (const u of new Set(others)) {
+        const e = db.users[u]?.polls[id];
+        if (u !== msg.uid && e && firstUnreadChat(e, msg.at)) e.chatAt = msg.at;
+      }
       write(db);
     },
     // Como las reglas: una por persona y mensaje, de un mensaje ajeno (no un aviso) y con su texto tal cual.

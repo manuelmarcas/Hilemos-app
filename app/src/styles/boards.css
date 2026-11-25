@@ -13,7 +13,8 @@
 }
 @container view (min-width:820px){.calendar__month{padding:18px}}
 .calendar__title{font-size:1.15rem;margin:0 0 14px;text-align:center;text-transform:capitalize;color:var(--brand-strong)}
-.calendar__grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+/* --calendar-cols (Boards.tsx): los días de la semana sin ningún día votable ese mes, más estrechos. */
+.calendar__grid{display:grid;grid-template-columns:var(--calendar-cols,repeat(7,minmax(0,1fr)));gap:4px}
 @container view (min-width:820px){.calendar__grid{gap:6px}}
 .calendar__dow{font-size:.72rem;color:var(--muted);text-align:center;padding:2px 0;font-weight:600}
 .cell{
@@ -28,8 +29,9 @@
 }
 .cell--n3{min-height:84px}
 .cell--n4{min-height:100px}
-.cell--empty{border:none;background:transparent}
-.cell--off{opacity:var(--opacity-off);background:var(--soft)}
+.cell--empty{border:none;background:transparent;min-height:0}
+/* Día que no se vota: solo el número, apagado y sin altura mínima (la fila solo crece si tiene días votables). */
+.cell--off{opacity:var(--opacity-off);background:var(--soft);min-height:0}
 .cell__day{font-size:.74rem;font-weight:700;padding:4px 6px 2px;color:var(--ink)}
 .cell__opt{
   flex:1;
@@ -84,6 +86,7 @@
   .cell{min-height:96px}
   .cell--n3{min-height:114px}
   .cell--n4{min-height:132px}
+  .cell--empty,.cell--off{min-height:0}
   .cell__opt{flex-direction:row;gap:5px;font-size:.8rem}
 }
 /* Con una sola opción, esa opción es la casilla entera: el icono y el contador crecen para llenarla (con el tamaño

@@ -4,7 +4,7 @@
 // Voto `polls/{id}/votes/{uid}`: { name, photo, picks: ["<slot>|<opción>", ...], tb: { id, pick } }
 
 import * as D from "./dates";
-import type { AutoCloseReason, ChatReport, MemberStatus, MyPollData, PersonReport, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
+import type { AutoCloseReason, ChatReport, LibraryEntry, MemberStatus, MyPollData, PersonReport, Poll, PollData, PollOption, PollType, ReportReason, Vote, Votes } from "./types";
 import type { IconName } from "../components/Icon";
 
 export interface TypeInfo {
@@ -173,6 +173,14 @@ export const isAdmin = (p: PollData, uid: string) => p.ownerUid === uid || !!p.a
  */
 export const chatSince = (p: PollData, uid: string, vote: Vote | null | undefined) =>
   p.ownerUid === uid ? 0 : vote?.joinedAt || 0;
+/**
+ * Si el mensaje de la hora `at` es el primero que no ha visto quien tiene esta entrada de biblioteca: el que le avisa
+ * y se apunta en `chatAt`. Los siguientes no avisan hasta que abra el chat. La misma regla que functions/chat.js.
+ */
+export const firstUnreadChat = (e: LibraryEntry | undefined, at: number) =>
+  (e?.chatSeenAt || 0) < at && (e?.chatAt || 0) <= (e?.chatSeenAt || 0);
+/** Tiene mensajes sin leer en el chat de esa votación (para el icono de «Mis votaciones»). */
+export const hasUnreadChat = (e: LibraryEntry) => (e.chatAt || 0) > (e.chatSeenAt || 0);
 /** Un administrador le expulsó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
 export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
 

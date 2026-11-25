@@ -1,7 +1,7 @@
 // Tableros para votar, uno por tipo de votación: calendario de días (con sus opciones), semanas, meses, horas y
 // opciones libres.
 // Cada casilla votable es un botón con su recuento; «on» es mi voto y «best» la más votada de su opción.
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import * as D from "../../lib/dates";
 import { DEFAULT_CHOICE_ICON, hoursForDay, slotLabel, unitKey, type Tally } from "../../lib/model";
 import type { Poll } from "../../lib/types";
@@ -41,22 +41,37 @@ export function BoardDays({ poll, T, mine, canVote, onVote }: BoardProps) {
         for (let i = 0, first = D.dowMon(new Date(y, m, 1)); i < first; i++) cells.push(<div key={`e${i}`} className="cell cell--empty"></div>);
         for (let d = 1, n = D.daysInMonth(y, m); d <= n; d++) {
           const k = D.dayKey(y, m, d), on = slots.has(k);
+          // Un día que no se vota solo lleva su número: sin las opciones apagadas, la fila ocupa menos.
+          if (!on) {
+            cells.push(<div key={k} className="cell cell--off"><div className="cell__day">{d}</div></div>);
+            continue;
+          }
           cells.push(
-            <div key={k} className={bem("cell", { [`n${T.opts.length}`]: true, off: !on })}>
+            <div key={k} className={bem("cell", { [`n${T.opts.length}`]: true })}>
               <div className="cell__day">{d}</div>
               {T.opts.map((o, i) => {
                 const u = unitKey(k, o.id);
                 return (
-                  <VoteBtn key={o.id} base="cell__opt" mods={{ [`c${i}`]: true }} u={u} T={T} mine={mine} enabled={on && canVote}
+                  <VoteBtn key={o.id} base="cell__opt" mods={{ [`c${i}`]: true }} u={u} T={T} mine={mine} enabled={canVote}
                     label={`${D.fmtDayLong(k)} · ${o.name}`} onVote={onVote}>
-                    <span className="cell__label">{o.icon}</span>{on && <Count T={T} u={u} />}
+                    <span className="cell__label">{o.icon}</span><Count T={T} u={u} />
                   </VoteBtn>
                 );
               })}
             </div>,
           );
         }
-        return <div key={mk} className="calendar__month"><h2 className="calendar__title">{D.fmtMonth(mk)}</h2><div className="calendar__grid">{cells}</div></div>;
+        // Los días de la semana sin ningún día votable ese mes van más estrechos, para dar sitio a los que sí.
+        const wide = D.weekdaysWith(y, m, slots);
+        const cols = wide.some(Boolean) && !wide.every(Boolean)
+          ? { "--calendar-cols": wide.map(w => (w ? "minmax(0,1fr)" : "minmax(0,.5fr)")).join(" ") } as CSSProperties
+          : undefined;
+        return (
+          <div key={mk} className="calendar__month">
+            <h2 className="calendar__title">{D.fmtMonth(mk)}</h2>
+            <div className="calendar__grid" style={cols}>{cells}</div>
+          </div>
+        );
       })}
     </div>
   );

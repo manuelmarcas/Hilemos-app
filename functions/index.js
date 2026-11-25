@@ -18,6 +18,7 @@ import {
 import { dailyStats } from "./stats.js";
 import { DAY, fmtWhen } from "./time.js";
 import { reportMail } from "./reportMail.js";
+import { firstUnread } from "./chat.js";
 
 initializeApp();
 const db = getFirestore();
@@ -26,7 +27,10 @@ setGlobalOptions({ region: "europe-west1", maxInstances: 5 });
 const SITE = "https://hilemos.web.app";
 const pollUrl = id => `${SITE}/#/v/${id}`;
 const DEAD_TOKEN = new Set(["messaging/registration-token-not-registered", "messaging/invalid-registration-token"]);
+const chatUrl = id => `${pollUrl(id)}/chat`;
 const DEADLINE_EVERY_MIN = 15;
+/** Lo que se espera antes de mirar quién ha leído un mensaje del chat (ver onChatMessage). */
+const CHAT_GRACE_MS = 8000;
 const ANDROID_CHANNEL = "avisos";
 
 /** Manda el aviso a los dispositivos de `uids` que no hayan apagado ese tipo (`pref`) y limpia los caducados. */
@@ -73,7 +77,7 @@ async function participants(pollId) {
   return s.docs.filter(d => !d.get("status") && !d.get("gone")).map(d => d.id);
 }
 
-// Alguien pide entrar, le aceptan o vota por primera vez. Solo la primera vez: cada casilla que se
+// Alguien pide entrar, le aceptan (o readmiten) o vota por primera vez. Solo la primera vez: cada casilla que se
 // pulsa guarda el voto, y avisar en cada cambio sería un aviso por clic. «Primera vez» cuenta desde que entró o,
 // si le expulsaron y le readmitieron (o le aceptaron), desde entonces: joinedAt es ese momento y updatedAt, el del
 // último voto guardado.
@@ -83,7 +87,8 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   if (!after) return;
   // Antes de leer nada: cada casilla que se pulsa dispara esta función, y casi nunca hay que avisar.
   const requested = !before && after.status === "pending";
-  const accepted = before?.status === "pending" && !after.status;
+  // Aceptado tras pedir entrar, o readmitido tras un rechazo o una expulsión.
+  const accepted = (before?.status === "pending" || before?.status === "rejected") && !after.status;
   const hasPicks = (after.picks || []).length > 0 && !after.status;
   const firstVote = hasPicks && (!(before?.picks || []).length
     // Primer voto desde que volvió: el anterior era de antes de la readmisión y este, de después.
@@ -95,17 +100,45 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   const msg = { title: poll.title || "Votación", url: pollUrl(pollId) };
   const name = after.name || "Alguien";
 
+  // A todos los que pueden aceptarle: el creador y los administradores.
   if (requested && uid !== poll.ownerUid) {
-    return notify([poll.ownerUid], { ...msg, body: `${name} quiere entrar en la votación`, tag: `members-${pollId}` }, "members");
+    const admins = [poll.ownerUid, ...(poll.admins || [])];
+    return notify(admins, { ...msg, body: `${name} quiere entrar en la votación`, tag: `members-${pollId}` }, "members");
   }
   if (accepted) {
-    return notify([uid], { ...msg, body: "Te han aceptado: ya puedes votar", tag: `members-${pollId}` }, "members");
+    const body = before.removed ? "Te han vuelto a admitir: ya puedes votar" : "Te han aceptado: ya puedes votar";
+    return notify([uid], { ...msg, body, tag: `members-${pollId}` }, "members");
   }
   // El primer voto de alguien: a todos los que están en la votación (y al creador), menos a quien ha votado.
   if (firstVote) {
     const uids = [poll.ownerUid, ...(await participants(pollId))].filter(u => u !== uid);
     return notify(uids, { ...msg, body: `${name} ha votado`, tag: `votes-${pollId}` }, "votes");
   }
+});
+
+// Mensaje nuevo en el chat: se avisa a cada participante solo del primero que no ha visto (functions/chat.js), y se
+// apunta en su biblioteca (`chatAt`) para el icono de «Mis votaciones». Antes se esperan unos segundos: quien tiene el
+// chat abierto lo marca como visto al momento (`chatSeenAt`) y así no recibe un aviso de lo que está leyendo.
+// Coste por mensaje: los votos y una entrada de biblioteca por participante (lecturas), y solo escribe y avisa a
+// quien pasa de tenerlo todo leído a tener algo sin leer.
+export const onChatMessage = onDocumentCreated("polls/{pollId}/chat/{msgId}", async event => {
+  const m = event.data?.data();
+  if (!m || typeof m.at !== "number") return;
+  await new Promise(r => setTimeout(r, CHAT_GRACE_MS));
+  const { pollId } = event.params;
+  const [poll, members] = await Promise.all([db.doc(`polls/${pollId}`).get(), participants(pollId)]);
+  if (!poll.exists) return;
+  const others = [...new Set([poll.get("ownerUid"), ...members])].filter(u => u && u !== m.uid);
+  if (!others.length) return;
+  const entries = await db.getAll(...others.map(u => db.doc(`users/${u}/polls/${pollId}`)));
+  const fresh = entries.filter(e => e.exists && firstUnread(e.data(), m.at));
+  if (!fresh.length) return;
+  const batch = db.batch();
+  fresh.forEach(e => batch.update(e.ref, { chatAt: m.at }));
+  await batch.commit();
+  await notify(fresh.map(e => e.ref.parent.parent.id), {
+    title: poll.get("title") || "Votación", body: "Tienes mensajes sin leer en el chat", url: chatUrl(pollId), tag: `chat-${pollId}`,
+  }, "chat");
 });
 
 // Cambios de estado de la votación que interesan a todos los participantes (menos a quien los hace: el creador).

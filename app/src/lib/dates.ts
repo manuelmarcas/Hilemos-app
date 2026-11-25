@@ -21,6 +21,12 @@ export const addDays = (dt: Date, n: number) => new Date(dt.getFullYear(), dt.ge
 export const dowMon = (dt: Date) => (dt.getDay() + 6) % 7; // 0 = lunes ... 6 = domingo
 export const mondayOf = (dt: Date) => addDays(dt, -dowMon(dt));
 export const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+/** Qué columnas del calendario (de lunes a domingo) tienen algún día de `days` en ese mes. */
+export function weekdaysWith(y: number, m: number, days: Set<string>) {
+  const cols = DOW.map(() => false);
+  for (let d = 1, n = daysInMonth(y, m); d <= n; d++) if (days.has(dayKey(y, m, d))) cols[dowMon(new Date(y, m, d))] = true;
+  return cols;
+}
 export const todayKey = () => keyOfDate(new Date());
 export const currentMonthKey = () => todayKey().slice(0, 7);
 export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  TOP_N, acceptedVotes, chatSince, deadlinePassed, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
+  TOP_N, acceptedVotes, chatSince, deadlinePassed, firstUnreadChat, hasUnreadChat, fmtDeadline, isAdmin, isFinal, isFull, isRemoved, keepsVotesOnLeave, losingAccess, lostVotedUnit,
   autoClose, autoCloseNote, closingLabel, hasPremiumSettings, sysTextFor, managedPeople, memberStatus, minMaxPeople, openManaged, pollForExport, reportsByMessage, reportsByPerson, parseEmails, pickHeir, pollMeta, pollRange, repeatCandidates, roleOf, slotKeys, tally,
   tiebreakShift, tiebreakTally, tiebreakUnsolved, unitParts, validUnits, winnerKey, withTiebreakAdjusted,
 } from "./model";
@@ -563,5 +563,20 @@ describe("sysTextFor (avisos del chat en segunda persona)", () => {
   it("lo de los demás, igual", () => {
     expect(sysTextFor("ha vuelto a admitir a Cris", false, "Bea")).toBe("ha vuelto a admitir a Cris");
     expect(sysTextFor("ha cambiado el título", false, "")).toBe("ha cambiado el título");
+  });
+});
+
+describe("firstUnreadChat y hasUnreadChat (avisos e icono del chat)", () => {
+  it("el primer mensaje sin leer avisa; los siguientes, no, hasta abrir el chat", () => {
+    expect(firstUnreadChat(undefined, 100)).toBe(true);
+    expect(firstUnreadChat({ chatSeenAt: 100 }, 100)).toBe(false);
+    expect(firstUnreadChat({ chatSeenAt: 50, chatAt: 100 }, 200)).toBe(false);
+    expect(firstUnreadChat({ chatSeenAt: 120, chatAt: 100 }, 200)).toBe(true);
+  });
+  it("hay mensajes sin leer si el primero sin leer es posterior a lo visto", () => {
+    expect(hasUnreadChat({})).toBe(false);
+    expect(hasUnreadChat({ chatAt: 100 })).toBe(true);
+    expect(hasUnreadChat({ chatAt: 100, chatSeenAt: 100 })).toBe(false);
+    expect(hasUnreadChat({ chatAt: 100, chatSeenAt: 150 })).toBe(false);
   });
 });

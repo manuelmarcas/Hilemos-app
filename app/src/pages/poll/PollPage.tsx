@@ -36,7 +36,8 @@ import { Loading } from "../../components/Loading";
 /** Votaciones de tu lista en las que se mira si coincides con alguien («Votaciones en común» de su perfil). */
 const SHARED_LOOKUP = 40;
 
-export function PollPage({ id }: { id: string }) {
+/** Una votación. `chat`: se abre en la pestaña del chat (#/v/<id>/chat, el enlace de los avisos del chat). */
+export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
   const duplicate = useDuplicate();
@@ -66,10 +67,27 @@ export function PollPage({ id }: { id: string }) {
   const [personReports, setPersonReports] = useState<PersonReport[]>([]);
   // Lo que ya has denunciado tú: se marca en el chat y en el perfil, y no se puede repetir.
   const [myReports, setMyReports] = useState<{ messages: Set<string>; people: Set<string> }>(() => ({ messages: new Set(), people: new Set() }));
-  const [tab, setTab] = useState<PollTab>("summary");
+  const [tab, setTab] = useState<PollTab>(chat ? "chat" : "summary");
   const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
   const lib = library.data;
+
+  // Abierta desde un aviso del chat: en cuanto se pinta, baja hasta las pestañas (están debajo del calendario), sin
+  // quedar tapadas por la barra superior. Solo una vez: después, cada uno se mueve por la página como quiera.
+  // Hasta que no llegan los votos no está el calendario (y aún no se sabe dónde quedan las pestañas): se espera a eso, y
+  // solo se da por hecho cuando las pestañas ya están en la página.
+  const chatScrolled = useRef(false);
+  useEffect(() => {
+    if (!chat || !poll || !votesLoaded || chatScrolled.current) return;
+    const raf = requestAnimationFrame(() => {
+      const tabs = document.querySelector<HTMLElement>(".poll-tabs");
+      if (!tabs) return;
+      chatScrolled.current = true;
+      const bar = document.querySelector<HTMLElement>(".topbar")?.offsetHeight || 0;
+      window.scrollTo({ top: tabs.getBoundingClientRect().top + window.scrollY - bar - 8, behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  });
 
   // «Visto hasta» del chat: va en la biblioteca del usuario, así se sincroniza entre sus dispositivos.
   const inLibrary = !!lib?.polls[id];
@@ -521,7 +539,7 @@ export function PollPage({ id }: { id: string }) {
   }[poll.type];
 
   return (
-    <>
+    <div className="appear">
       <div className="poll-head">
         <div className="poll-head__main">
           <div className="poll-head__kicker">
@@ -687,6 +705,6 @@ export function PollPage({ id }: { id: string }) {
           note="La verán quienes administran la votación, que pueden expulsarla, y el equipo de Hilemos."
           onSend={sendPersonReport(reportPerson.uid)} onClose={() => setReportUid(null)} />
       )}
-    </>
+    </div>
   );
 }

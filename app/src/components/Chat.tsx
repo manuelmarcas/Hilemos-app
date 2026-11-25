@@ -1,12 +1,14 @@
 // Chat de una votación: la conversación que antes se iba al grupo de WhatsApp y allí se perdía. Además de los
 // mensajes, los avisos de los cambios que hace un administrador al editar la votación (sys).
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import * as D from "../lib/dates";
 import { MAX_CHAT, MAX_REPORT_COMMENT, REPORT_REASONS, chatSince, isPresent, reportsByMessage, sysTextFor } from "../lib/model";
 import type { ChatMessage, ChatReport, Poll, ReportReason, Votes } from "../lib/types";
 import { bem, cls, errMsg, hasMouse } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
+import { useAutoGrow } from "../hooks/useAutoGrow";
+import { usePageVisible } from "../hooks/usePageVisible";
 import { ReportDialog } from "./ReportDialog";
 import { Avatar } from "./Avatar";
 import { EmojiButton } from "./EmojiButton";
@@ -68,14 +70,8 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
   useEffect(() => cancelPress, []);
 
   // El campo crece con el texto (saltos de línea incluidos) hasta CHAT_FIELD_MAX px; a partir de ahí, se desplaza.
-  // Con la pestaña del chat oculta no se puede medir (scrollHeight es 0 y el campo quedaba aplastado al abrirla): se
-  // mide al abrirla.
-  useLayoutEffect(() => {
-    const el = field.current;
-    if (!el || !active) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight + 2, CHAT_FIELD_MAX)}px`;
-  }, [text, active]);
+  // Con la pestaña del chat oculta no se puede medir: se mide al abrirla.
+  useAutoGrow(field, text, CHAT_FIELD_MAX, active);
 
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
   const since = chatSince(poll, user.uid, votes[user.uid]);
@@ -93,10 +89,12 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
     if (msgs) onUnread(msgs.filter(m => m.uid !== user.uid && m.at > seenAt).length);
   }, [msgs, seenAt, user.uid, onUnread]);
 
-  // Con la pestaña abierta, todo lo que llega se da por leído.
+  // Con la pestaña abierta y la app a la vista, todo lo que llega se da por leído. Con la app en segundo plano, no:
+  // así el servidor sabe que no lo has visto y te avisa (onChatMessage); se marca al volver.
+  const visible = usePageVisible();
   useEffect(() => {
-    if (active && latestAt > seenAt) onSeen(latestAt);
-  }, [active, latestAt, seenAt, onSeen]);
+    if (active && visible && latestAt > seenAt) onSeen(latestAt);
+  }, [active, visible, latestAt, seenAt, onSeen]);
 
   // Oculto (otra pestaña) no tiene altura, así que hay que bajar al último mensaje al mostrarlo.
   useEffect(() => {
@@ -233,7 +231,7 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
             <div className="emoji-field emoji-field--area chat__field">
               {/* Con ratón y teclado (ordenador), Intro envía y Mayúsculas + Intro hace el salto de línea, como en
                   cualquier chat. En el móvil, Intro hace el salto y envía el botón «Enviar». */}
-              <textarea ref={field} className="input emoji-field__input chat__input" rows={1} maxLength={MAX_CHAT}
+              <textarea ref={field} className="input input--area emoji-field__input" rows={1} maxLength={MAX_CHAT}
                 placeholder="Escribe un mensaje" autoComplete="off" aria-label="Mensaje" enterKeyHint={hasMouse() ? "send" : "enter"}
                 value={text} onChange={e => setText(e.target.value)}
                 onKeyDown={e => {

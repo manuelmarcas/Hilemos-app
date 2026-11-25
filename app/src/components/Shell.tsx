@@ -1,5 +1,5 @@
 // Estructura de la app con sesión: barra superior, menú lateral y pantalla actual.
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { parseRoute, useHashPath } from "../state/route";
@@ -63,8 +63,10 @@ export function Shell() {
     if (route.name === "unknown") location.replace("#/");
   }, [route.name]);
 
-  // Al cambiar de pantalla: cerrar el cajón y volver arriba.
-  useEffect(() => {
+  // Al cambiar de pantalla: cerrar el cajón y volver arriba. Antes de pintar (useLayoutEffect): así no se ve un instante
+  // la pantalla nueva con el desplazamiento de la anterior, y no pisa a una pantalla que se mueve sola al cargarse
+  // (#/v/<id>/chat baja hasta el chat).
+  useLayoutEffect(() => {
     setDrawer(false);
     window.scrollTo(0, 0);
   }, [path]);
@@ -89,7 +91,7 @@ export function Shell() {
     case "home": page = <Home />; break;
     case "create": page = <Create />; break;
     case "profile": page = <Profile />; break;
-    case "poll": page = <PollPage key={route.id} id={route.id} />; break;
+    case "poll": page = <PollPage key={route.id} id={route.id} chat={route.chat} />; break;
     case "edit": page = <EditPoll key={route.id} id={route.id} />; break;
     case "legal": page = <Legal doc={route.doc} />; break;
   }

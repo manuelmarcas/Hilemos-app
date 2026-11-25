@@ -47,6 +47,16 @@
 .poll-card__title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .poll-card__meta{font-size:.8rem;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
 .poll-card__badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:none;max-width:40%}
+/* Mensajes sin leer en el chat: el bocadillo en lila con un punto, como el contador de la pestaña «Chat». */
+.poll-card__chat{position:relative;display:flex;align-items:center;padding:0 4px;font-size:1.15rem;--icon-color:var(--brand)}
+.poll-card__chat::after{
+  content:"";
+  position:absolute;top:-2px;right:0;
+  width:9px;height:9px;
+  border-radius:50%;
+  background:var(--brand);
+  box-shadow:0 0 0 2px var(--card);
+}
 .badge{font-size:.7rem;font-weight:700;background:var(--danger-soft);color:var(--danger);padding:3px 8px;border-radius:99px;white-space:nowrap}
 .badge--mine{background:var(--brand-soft);color:var(--brand-strong)}
 .badge--gone{background:var(--soft);color:var(--muted)}

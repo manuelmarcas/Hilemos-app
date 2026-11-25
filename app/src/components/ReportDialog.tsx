@@ -7,6 +7,10 @@ import type { ReportReason } from "../lib/types";
 import { errMsg } from "../lib/util";
 import { CharCount } from "./CharCount";
 import { Dialog } from "./Dialog";
+import { useAutoGrow } from "../hooks/useAutoGrow";
+
+/** Alto máximo del comentario (unas 6 líneas). */
+const COMMENT_MAX = 160;
 
 export function ReportDialog({ title, quote, question, note, already, onSend, onClose }: {
   title: string;
@@ -26,6 +30,8 @@ export function ReportDialog({ title, quote, question, note, already, onSend, on
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const dlg = useRef<HTMLDialogElement | null>(null);
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+  useAutoGrow(commentRef, comment, COMMENT_MAX);
 
   const send = async () => {
     if (!reason) { setErr("Elige un motivo."); return; }
@@ -56,7 +62,7 @@ export function ReportDialog({ title, quote, question, note, already, onSend, on
         ))}
       </fieldset>
       <label className="field-label report-dialog__label" htmlFor="report-comment">Comentario <span className="muted">(opcional)</span></label>
-      <textarea id="report-comment" className="input" rows={2} maxLength={MAX_REPORT_COMMENT} value={comment}
+      <textarea ref={commentRef} id="report-comment" className="input input--area" rows={2} maxLength={MAX_REPORT_COMMENT} value={comment}
         onChange={e => setComment(e.target.value)} />
       <CharCount value={comment} max={MAX_REPORT_COMMENT} />
       <p className="dialog__msg report-dialog__note">{note}</p>

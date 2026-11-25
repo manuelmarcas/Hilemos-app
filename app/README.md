@@ -448,7 +448,12 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
 - Los mensajes no se editan ni se borran: las reglas no tienen `update` ni `delete`.
 - **No leídos**: el icono 💬 de la pestaña lleva un globo con los mensajes de los demás que aún no has visto, y
   desaparece al abrir la pestaña. «Visto hasta» se guarda como `chatSeenAt` en tu biblioteca
-  (`users/{uid}/polls/{id}`), así que lo que leas en el móvil también cuenta como leído en el ordenador.
+  (`users/{uid}/polls/{id}`), así que lo que leas en el móvil también cuenta como leído en el ordenador. Solo se da
+  por leído con la pestaña abierta **y la app a la vista** (`usePageVisible`): en segundo plano, no.
+- **Mensajes sin leer en «Mis votaciones»**: la tarjeta lleva un bocadillo con un punto cuando `chatAt` (el primer
+  mensaje sin leer, que apunta el servidor) es posterior a `chatSeenAt` (`hasUnreadChat`). En el modo demo lo apunta
+  el propio almacén al enviar el mensaje.
+- `#/v/<id>/chat` abre la votación en la pestaña del chat y baja hasta ella: es el enlace de los avisos del chat.
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
 ## Avisos (notificaciones)
@@ -461,8 +466,13 @@ Qué avisa y a quién (cada persona puede apagar cada tipo en «Tu perfil → Pr
 - **A todos los que están en la votación (y al creador), menos a quien vota**: alguien vota por primera vez (no en
   cada cambio, que sería un aviso por clic). Si le expulsaron y le readmitieron, cuenta otra vez su primer voto
   desde que volvió.
-- **Al creador**: alguien pide entrar en una votación con aprobación.
-- **A quien pidió entrar**: le han aceptado.
+- **Al creador y a los administradores**: alguien pide entrar en una votación con aprobación.
+- **A quien pidió entrar**: le han aceptado. **A quien estaba rechazado o expulsado**: le han vuelto a admitir.
+- **A cada participante (y al creador), menos a quien escribe**: hay mensajes sin leer en el chat. Solo del primero
+  que no ha visto: los siguientes no avisan hasta que vuelva a abrir el chat (`onChatMessage`, con la regla en
+  `functions/chat.js`). El servidor espera 8 segundos antes de mirarlo, porque quien tiene el chat abierto lo marca
+  como visto al momento y así no recibe el aviso de lo que está leyendo. Al avisar apunta `chatAt` en su biblioteca,
+  que es también lo que enciende el icono de «Mis votaciones».
 - **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate termina («Ya hay
   resultado definitivo» si tiene ganadora) y se acaba el plazo para votar.
 
@@ -499,7 +509,7 @@ Para activarlos:
    sus índices están en `firestore.indexes.json` y se publican con `firebase deploy --only firestore:indexes`.
    Para probar las functions y las reglas en local: `firebase emulators:exec --only auth,firestore,functions
    --project demo-hilemos "<script>"` (el emulador necesita Java 11 o más; vale el de Android Studio) y
-   `cd functions && npm test` para la lógica de `plan.js`, `stats.js` y `time.js`.
+   `cd functions && npm test` para la lógica de `plan.js`, `chat.js`, `stats.js` y `time.js`.
 4. **App de Android**: con la clave ya en `config.ts`, `npm run android` y subir la versión nueva.
 5. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
 
@@ -507,6 +517,10 @@ Qué es gratis con Blaze (cuotas de cada mes): los envíos de Firebase Cloud Mes
 2 millones de invocaciones y su tiempo de cálculo; Cloud Scheduler, 3 tareas; Artifact Registry (donde se guardan las
 functions desplegadas), 0,5 GB. Las lecturas que hacen las functions cuentan en el margen diario de Firestore (50.000
 lecturas). `onVoteWritten` no lee nada salvo cuando hay que avisar, porque salta con cada casilla que se pulsa.
+`onChatMessage` lee, por cada mensaje, la votación, sus votos y la biblioteca de cada participante (con 20 personas,
+unas 41 lecturas), y escribe solo en la de quien pasa a tener algo sin leer. Con 100 mensajes al día en grupos de 20,
+unas 4.100 lecturas: dentro del margen gratuito. Los 8 segundos de espera cuentan como tiempo de cálculo, también
+dentro de la cuota gratuita a esta escala.
 
 **iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
 Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de

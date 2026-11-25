@@ -24,6 +24,7 @@ export function tokensCss(json: string): string {
     ...t.radius.tokens,
     ...t.spacing.tokens,
     ...t.opacity.tokens,
+    ...(t.motion?.tokens ?? []),
     ...(t.app?.tokens ?? []),
     ...Object.entries(t.type.families as Record<string, string>).map(([k, v]) => ({ name: `font-${k}`, value: v })),
   ];

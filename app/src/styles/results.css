@@ -72,7 +72,8 @@
   /* En fila, el contador sobresale a la derecha del emoji: hueco para que no tape el texto */
   .poll-tabs__icon--badge{margin-right:12px}
 }
-.poll-tabs__panel{min-width:0}
+/* Al cambiar de pestaña, la nueva aparece (pasa de hidden a visible, y eso vuelve a lanzar la animación). */
+.poll-tabs__panel{min-width:0;animation:appear-in var(--motion-enter)}
 .person{display:inline-flex;align-items:center;gap:8px}
 /* «Creador», «Delegado» y «Admin» junto al nombre */
 .role-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);

@@ -80,8 +80,18 @@ button,input,select,textarea{font:inherit}
   animation:spinner-turn .75s linear infinite;
 }
 @keyframes spinner-turn{to{transform:rotate(360deg)}}
+/* Aparecer (tokens motion-*), como en una app de móvil: una pantalla nueva, una pestaña o lo que llega después de
+   cargar sube un poco mientras se funde, en vez de salir de golpe. Sin «forwards»: al acabar no queda ningún transform
+   puesto (con uno, los position:fixed de dentro se colocarían mal). */
+@keyframes appear-in{from{opacity:0;transform:translateY(var(--motion-rise))}to{opacity:1;transform:none}}
+@keyframes fade-in{from{opacity:0}}
+/* Mezcla para lo que llega de una vez al terminar de cargar (el contenido de una votación, la lista de votaciones):
+   solo se funde, porque la pantalla ya sube al entrar (.app__view) y no deben sumarse los dos desplazamientos. */
+.appear{animation:fade-in var(--motion-enter)}
+/* «Cargando» se funde tras una espera: si los datos llegan antes, no se ve parpadear. */
 .loading{
   --spinner-size:28px;
+  animation:fade-in var(--motion-enter) var(--motion-wait) backwards;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -91,7 +101,7 @@ button,input,select,textarea{font:inherit}
   text-align:center;
 }
 /* Lista de votaciones mientras llega: tarjetas vacías con un brillo que pasa. */
-.skeleton{display:grid;gap:10px}
+.skeleton{display:grid;gap:10px;animation:fade-in var(--motion-enter) var(--motion-wait) backwards}
 .skeleton__card{
   position:relative;
   overflow:hidden;
@@ -154,6 +164,8 @@ button,input,select,textarea{font:inherit}
 /* Gira sobre su propio centro (fill-box), no sobre el del dibujo. */
 .boot__eye{transform-box:fill-box;transform-origin:center;animation:spinner-turn .9s linear infinite}
 @media (prefers-reduced-motion:reduce){
+  /* Con «reducir movimiento», lo que aparece solo se funde, sin subir. */
+  .app__view,.poll-tabs__panel{animation-name:fade-in}
   .spinner{animation-duration:2s}
   .boot__eye{animation-duration:2.4s}
   .skeleton__card::after{animation:none}

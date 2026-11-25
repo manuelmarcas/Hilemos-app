@@ -65,6 +65,8 @@
 @keyframes field-error-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .input--big{font-size:1.1rem;padding:12px 14px}
 .input--small{width:auto;padding:6px 10px;font-size:.88rem}
+/* Campo de varias líneas (textarea): sin tirador para agrandarlo a mano; crece solo con el texto (useAutoGrow). */
+.input--area{display:block;resize:none;overflow-y:auto;font-size:.95rem;line-height:1.4}
 /* Campo de correos con burbujas (components/EmailChips.tsx): se ve como un campo, con los correos ya añadidos en
    burbujas y el cursor detrás. */
 .email-chips{
@@ -124,7 +126,6 @@
   color:var(--ink);
   font-size:1rem;
 }
-textarea.input{resize:vertical;font-size:.95rem}
 /* Campo como los demás, con la flecha propia. Donde se puede (Chrome, Edge y la app de Android, con
    appearance:base-select) también la lista: tarjeta con sombra de menú, filas como las del menú ⋯ y la elegida
    en lila. Safari y Firefox abren su lista nativa, pero el campo es el mismo. */
