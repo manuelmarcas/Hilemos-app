@@ -586,12 +586,13 @@ app ni en la web ya instalada, y en el ordenador solo desde «Tu perfil» → «
 2. Subir `versionCode` (y `versionName`) en `android/app/build.gradle` en cada versión nueva.
 3. Android Studio: *Build > Generate Signed App Bundle* crea la clave de subida (`.jks`, **guardarla con su
    contraseña fuera del repositorio**: sin ella no se pueden subir actualizaciones) y el `.aab`.
-4. Con la firma de apps de Google Play, Google vuelve a firmar la app con su propia clave: añadir en Firebase las
-   huellas SHA-1 de la clave de subida y de la de Google Play (*Play Console > Prueba y publica > Integridad de
-   la app*); si no, el login con Google falla en la app descargada de la tienda.
-5. Enlaces que abren la app: Firebase Hosting genera solo `https://hilemos.web.app/.well-known/assetlinks.json` con
-   las huellas SHA-256 de la app Android registrada en Firebase (ahora solo la de depuración). Basta con añadir allí
-   también la SHA-256 de la clave de Google Play; no hay que publicar el archivo a mano (además `firebase.json` ignora
-   las carpetas que empiezan por punto). Si falta la huella, los enlaces se abren en el navegador.
+4. Con la firma de apps de Google Play, Google vuelve a firmar la app con sus claves: añadir en Firebase las huellas
+   SHA-1 y SHA-256 de **todas** (clásica, poscuántica y la tercera que sale en «Copiar todas las huellas») y las de la
+   clave de subida (*Play Console > escudo «Protegida con Play» > Protección de Play Store > Firma de apps*); si no, el
+   login con Google falla en la app descargada de la tienda. Añadidas el 25 de noviembre de 2026.
+5. Enlaces que abren la app: `public/.well-known/assetlinks.json`, con las SHA-256 de las claves de Google Play, la de
+   subida y la de depuración. El que genera Firebase Hosting solo no se actualizaba al añadir huellas; por eso
+   `firebase.json` ya no ignora las carpetas que empiezan por punto. Si cambia una clave, hay que añadirla ahí y
+   publicar. Si falta la huella, los enlaces se abren en el navegador.
 6. Ficha de la tienda: icono de 512 px (`design-system/logo/play-store-512.png`), imagen destacada de 1024×500,
    capturas, política de privacidad y la forma de pedir que se borre la cuenta.

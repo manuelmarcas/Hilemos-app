@@ -1,0 +1,18 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.hilemos",
+      "sha256_cert_fingerprints": [
+        "03:C8:28:5D:27:AE:18:49:CB:7E:8A:03:38:CF:2D:A2:43:6D:E0:5B:22:14:40:75:1E:F5:8B:C5:8F:34:A8:91",
+        "EF:33:38:E1:DA:E7:08:42:93:77:85:9D:FB:D6:56:E2:90:64:53:CD:43:B6:0E:EC:75:21:7E:DF:93:13:46:1C",
+        "1B:66:39:D3:1F:FF:12:96:8D:2A:71:59:19:22:2C:E8:7E:C8:9E:58:64:1E:63:78:CD:00:71:D3:4C:FD:02:B1",
+        "3F:6F:27:A8:26:1B:93:44:E8:85:F7:4A:10:72:92:F9:F2:C1:20:E5:5E:6D:22:6D:D6:D1:A4:A4:CF:22:4E:02",
+        "08:B9:2D:90:D2:43:6F:77:10:78:C8:0B:0E:02:C3:B9:39:DC:03:5D:FE:22:44:36:F1:E6:0A:E8:22:90:54:98"
+      ]
+    }
+  }
+]
