@@ -17,7 +17,7 @@ export interface BoardProps {
 }
 
 /** Con estos días votables o menos, las de días se votan en una lista: un mes casi entero apagado no ayuda. */
-const DAY_LIST_MAX = 10;
+const DAY_LIST_MAX = 5;
 
 /** Casilla para votar. `base`: su clase BEM (p. ej. «cell__opt»), que recibe los modificadores `mods` y, según el
  *  recuento, --on (mi voto) y --best (la más votada). Al pulsarla, el móvil vibra un instante (donde se puede). */
