@@ -450,9 +450,9 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
   desaparece al abrir la pestaña. «Visto hasta» se guarda como `chatSeenAt` en tu biblioteca
   (`users/{uid}/polls/{id}`), así que lo que leas en el móvil también cuenta como leído en el ordenador. Solo se da
   por leído con la pestaña abierta **y la app a la vista** (`usePageVisible`): en segundo plano, no.
-- **Mensajes sin leer en «Mis votaciones»**: al escribir, la app apunta en la votación la hora del último mensaje
-  (`chatAt`, en la misma escritura que el mensaje; la regla `chatStamp()` solo deja cambiar ese campo a quien está en
-  el chat). La tarjeta lleva un bocadillo junto al título cuando es posterior a `chatSeenAt` y a cuando la añadiste a
+- **Mensajes sin leer en «Mis votaciones»**: con cada mensaje, el servidor apunta en la votación la hora del último
+  (`chatAt`, con `onChatMessage`: una escritura y ninguna lectura). Lo hace el servidor y no la app para que funcione
+  también con versiones de Android que no lo saben; las reglas no dejan que la app lo escriba. La tarjeta lleva un bocadillo junto al título cuando es posterior a `chatSeenAt` y a cuando la añadiste a
   tu lista (`hasUnreadChat`). «Mis votaciones» vuelve a leer las votaciones cada vez que entras (una lectura por
   votación), así que el icono está al día sin una escucha abierta por cada una. Al abrir el chat se marca como visto
   hasta `chatAt`, aunque sea de antes de que entraras; quien está pendiente, rechazado o expulsado lo marca al abrir la
@@ -460,6 +460,8 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
 - **Botón flotante del chat** (`ChatFab`): mientras las pestañas quedan por debajo de la pantalla, un botón redondo
   abajo a la derecha, con los mensajes sin leer, abre el chat y baja hasta él.
 - No hay avisos push del chat: se quitaron para no gastar lecturas por cada mensaje.
+- **Sin texto fijo**: cómo denunciar un mensaje (mantener pulsado en el móvil, la bandera con ratón) está en
+  «Sobre esta votación» (ⓘ junto al título). El chat solo avisa, si es anónima, de que en él se ve tu nombre.
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
 
 ## Avisos (notificaciones)
@@ -518,8 +520,8 @@ Qué es gratis con Blaze (cuotas de cada mes): los envíos de Firebase Cloud Mes
 2 millones de invocaciones y su tiempo de cálculo; Cloud Scheduler, 3 tareas; Artifact Registry (donde se guardan las
 functions desplegadas), 0,5 GB. Las lecturas que hacen las functions cuentan en el margen diario de Firestore (50.000
 lecturas). `onVoteWritten` no lee nada salvo cuando hay que avisar, porque salta con cada casilla que se pulsa.
-Cada mensaje del chat cambia `chatAt` de la votación, así que `onPollUpdated` y `onPollPlan` se ejecutan una vez
-por mensaje, pero salen sin leer nada.
+`onChatMessage` no lee nada: solo escribe `chatAt` en la votación. Ese cambio hace que `onPollUpdated` y `onPollPlan`
+se ejecuten una vez por mensaje, pero salen sin leer nada.
 
 **iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
 Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de

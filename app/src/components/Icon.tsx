@@ -19,6 +19,7 @@ const ICONS = {
   plus: <path d="M12 5v14M5 12h14" />,
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
+  info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" />{dot(12, 7.8, 1.2)}</>,
   edit: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4" />,
 
   // El logotipo con el trazo de los iconos: el calendario con la cabecera algo más arriba, para que quepa la cara

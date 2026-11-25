@@ -73,13 +73,13 @@
   .poll-tabs__icon--badge{margin-right:12px}
 }
 /* Al cambiar de pestaña, la nueva aparece (pasa de hidden a visible, y eso vuelve a lanzar la animación). */
+.people-panel__hint{font-size:.82rem;color:var(--muted);margin:0 0 6px}
 .poll-tabs__panel{min-width:0;animation:appear-in var(--motion-enter)}
 .person{display:inline-flex;align-items:center;gap:8px}
 /* «Creador», «Delegado» y «Admin» junto al nombre */
 .role-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--soft);color:var(--muted);
   font-size:.68rem;font-weight:700;letter-spacing:.02em;vertical-align:1px}
 .role-tag--owner{background:var(--brand-soft);color:var(--brand-strong)}
-.people-panel__hint{font-size:.82rem;color:var(--muted);margin:0 0 6px}
 .person__btn{
   border:none;
   background:none;

@@ -90,9 +90,9 @@ export interface PollData {
   /** Cuándo la cerró sola una cuenta atrás (el aviso de cierre dice entonces «se ha cerrado sola»). */
   autoClosedAt?: number;
   /**
-   * Hora (`at`) del último mensaje del chat: la apunta quien lo escribe, en la misma escritura. «Mis votaciones» la
-   * compara con `chatSeenAt` de la biblioteca para el icono de mensajes sin leer. Falta si nunca ha habido mensajes
-   * (o son de antes de guardarla).
+   * Hora (`at`) del último mensaje del chat: la apunta el servidor (onChatMessage). «Mis votaciones» la compara con
+   * `chatSeenAt` de la biblioteca para el icono de mensajes sin leer. Falta si nunca ha habido mensajes (o son de
+   * antes de guardarla).
    */
   chatAt?: number;
 }

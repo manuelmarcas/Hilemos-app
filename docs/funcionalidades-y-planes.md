@@ -137,8 +137,9 @@ En las tablas:
 Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 
 **Mensajes sin leer (2.6.2), caso por caso.** Sin avisos push: se probaron y se quitaron, porque cada mensaje costaba
-una lectura por participante. Ahora quien escribe apunta en la votación la hora del último mensaje (`chatAt`), en la
-misma escritura, y «Mis votaciones» la compara con lo último que has visto (`chatSeenAt`, en tu lista).
+una lectura por participante. Ahora el servidor apunta en la votación la hora del último mensaje (`chatAt`, una
+escritura sin lecturas, también para los mensajes que llegan desde versiones viejas de la app), y «Mis votaciones» la
+compara con lo último que has visto (`chatSeenAt`, en tu lista).
 
 | Caso | Qué pasa |
 | --- | --- |
@@ -153,8 +154,8 @@ misma escritura, y «Mis votaciones» la compara con lo último que has visto (`
 | Alguien escribe con el reloj del móvil adelantado | El bocadillo puede quedarse encendido hasta que Luis abra el chat, que lo marca visto hasta esa hora. |
 | Los mensajes de antes de este cambio | No encienden el bocadillo; el primero que llegue después, sí. |
 
-**Coste.** Una escritura más por mensaje (en la votación, junto al mensaje) y, al entrar en «Mis votaciones», una
-lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
+**Coste.** Una escritura más por mensaje (en la votación, la hace el servidor sin leer nada) y, al entrar en «Mis
+votaciones», una lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
 persona conectada, que ya recibía el mensaje).
 
 ---

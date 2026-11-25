@@ -143,12 +143,8 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
 
   return (
     <section className="chat">
-      <p className="chat__note">
-        {poll.anonymous
-          ? "Habla con el grupo aquí mismo. Los votos son anónimos, pero en el chat se ve tu nombre."
-          : "Habla con el grupo aquí mismo, sin salir de la votación."}
-        {canWrite && touch && " Mantén pulsado un mensaje para denunciarlo."}
-      </p>
+      {/* Solo lo que puede sorprender; cómo denunciar un mensaje está en ⓘ (PollAbout). */}
+      {poll.anonymous && <p className="chat__note">Los votos son anónimos, pero en el chat se ve tu nombre.</p>}
       <div className="chat__card">
         <div className="chat__list" ref={list} onScroll={() => {
           const el = list.current;

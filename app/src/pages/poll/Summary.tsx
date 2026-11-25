@@ -10,7 +10,7 @@ export function instructions(poll: Poll, T: Tally) {
     case "days":
       return T.opts.length === 1
         ? `Pulsa en ${T.opts[0].icon} los días que te vengan bien.`
-        : `Cada día disponible tiene ${T.opts.length} opciones (de arriba abajo: ${T.opts.map(o => `${o.icon} ${o.name}`).join(", ")}). Pulsa en las que te vengan bien.`;
+        : "Pulsa en las opciones de cada día que te vengan bien.";
     case "weeks": return "Pulsa en las semanas que te vengan bien.";
     case "months": return "Pulsa en los meses que te vengan bien.";
     case "options": return "Pulsa en las opciones que te gusten. Puedes elegir varias.";

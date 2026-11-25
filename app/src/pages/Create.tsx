@@ -581,9 +581,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         )}
         {!editing && user.anon && store.mode === "firebase" && (
           <p className="subtitle subtitle--anon">
-            Has entrado sin cuenta: para gestionar esta votación (cerrarla, desempatar o eliminarla) desde otro
-            dispositivo o después de cerrar sesión, necesitarás tu clave de acceso. Si prefieres no depender de ella,
-            guarda tu cuenta con tu correo o con Google en <a href="#/perfil">«Tu perfil»</a>.
+            Sin cuenta, para gestionarla desde otro móvil necesitarás tu clave. <a href="#/perfil">Guarda tu cuenta</a>
           </p>
         )}
       </div>

@@ -58,7 +58,7 @@ export function openManaged(polls: (PollData | null | undefined)[], uid: string)
 }
 
 /** Campos de la votación que solo escribe el servidor (functions/plan.js): las reglas no dejan crearlos ni cambiarlos. */
-export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCloseWarned", "autoClosedAt"] as const;
+export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCloseWarned", "autoClosedAt", "chatAt"] as const;
 
 /**
  * La cuenta atrás que cerrará sola la votación, si sigue abierta: cuándo y por qué (el primer motivo que llega). La

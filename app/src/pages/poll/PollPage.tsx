@@ -2,7 +2,7 @@
 // Aquí están el estado de la votación (que se escucha en directo) y sus acciones; cada parte se pinta en su archivo.
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  TYPE, tally, tiebreakTally, pollRange, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
+  tally, tiebreakTally, plural, MAX_PEOPLE, isRestricted, memberStatus, acceptedVotes, hasLimit,
   isFull, deadlinePassed, fmtDeadline, isAdmin, isPresent, isRemoved, withTiebreakAdjusted, isFinal, repeatCandidates, winnerKey, type LosingAccess,
   MAX_REPORT_COMMENT, reportsByPerson, hasPremiumSettings, FREE_OPEN, autoClose, autoCloseNote, closingLabel,
 } from "../../lib/model";
@@ -31,6 +31,7 @@ import { ManagePeople } from "./ManagePeople";
 import { ExportDialog } from "./ExportDialog";
 import { CalendarMenu, OwnerMenu } from "./Menus";
 import { PollTabs, type PollTab } from "./PollTabs";
+import { PollAbout } from "./PollAbout";
 import { ChatFab } from "./ChatFab";
 import { PollSkeleton } from "../../components/Loading";
 
@@ -256,7 +257,6 @@ export function PollPage({ id }: { id: string }) {
     return <WaitingView poll={poll} status="rejected" removed={isRemoved(votes[user.uid])} />;
   }
 
-  const t = TYPE[poll.type];
   // Uno mismo se ve siempre con su nombre e imagen actuales (los de los demás vienen copiados en su voto).
   const shown: Votes = votes[user.uid] ? { ...votes, [user.uid]: { ...votes[user.uid], name: user.name, photo: user.photo } } : votes;
   // Pendientes y rechazados no cuentan en recuentos, ranking ni tabla.
@@ -277,7 +277,7 @@ export function PollPage({ id }: { id: string }) {
   // Quien la creó y se fue sale con su nombre sin dueño; si ha vuelto, con el suyo.
   const founderBack = !!poll.founder && isPresent(shown[poll.founder]);
   const creator = poll.founder
-    ? founderBack ? (poll.founder === user.uid ? "ti" : shown[poll.founder].name) : poll.founderName || "alguien"
+    ? founderBack ? (poll.founder === user.uid ? "ti" : shown[poll.founder].name || "alguien") : poll.founderName || "alguien"
     : poll.ownerUid === user.uid ? "ti" : poll.ownerName || "alguien";
   // El aviso de que el desempate cambió porque alguien se fue deja de valer cuando un administrador lo cambia.
   const clearTbNote = poll.tbNote ? { tbNote: null } : {};
@@ -545,12 +545,9 @@ export function PollPage({ id }: { id: string }) {
     <div className="appear">
       <div className="poll-head">
         <div className="poll-head__main">
-          <div className="poll-head__kicker">
-            <Icon name={t.icon} /> Votación por {t.name.toLowerCase()} · creada por {creator} · <Icon name="users" /> {plural(present.length, ["participante", "participantes"])}
-            {hasLimit(poll) && (isOwner || (poll.maxPeople as number) < MAX_PEOPLE) && <> (máx. {poll.maxPeople})</>}
-          </div>
+          {/* Solo lo que cambia cómo se vota; el resto (tipo, quién la creó, fechas…) está en ⓘ. */}
           <div className="poll-head__modes">
-            <span className={`mode-pill ${poll.anonymous ? "mode-pill--anon" : ""}`}>{poll.anonymous ? <><Icon name="incognito" /> Anónima</> : <><Icon name="eye" /> Votos visibles</>}</span>
+            {poll.anonymous && <span className="mode-pill mode-pill--anon"><Icon name="incognito" /> Anónima</span>}
             {poll.emailsOnly && <span className="mode-pill mode-pill--anon"><Icon name="mail" /> Solo invitados</span>}
             {poll.approval && <span className="mode-pill mode-pill--anon"><Icon name="approve" /> Con aprobación</span>}
             {!!poll.deadline && !expired && !poll.closed && !closing && <span className="mode-pill"><Icon name="hourglass" /> Se cierra el {fmtDeadline(poll.deadline)}</span>}
@@ -562,6 +559,7 @@ export function PollPage({ id }: { id: string }) {
           </div>
           <div className="poll-head__title-row">
             <h1 className="poll-head__title">{poll.title}</h1>
+            <PollAbout poll={poll} creator={creator} people={present.length} isOwner={isOwner} canWrite={canChat} />
             {admin && (
               <OwnerMenu closed={!!poll.closed} anonymous={!!poll.anonymous}
                 onCloseOrReopen={poll.closed && tbDone ? undefined : closeOrReopen}
@@ -615,14 +613,10 @@ export function PollPage({ id }: { id: string }) {
         </div>
       )}
       <div className="poll-info">
-        {canVote && <p className="poll-info__how">{instructions(poll, T)}</p>}
+        {/* Cómo se vota, solo hasta que votas: después ya lo sabes. */}
+        {canVote && mine.size === 0 && <p className="poll-info__how">{instructions(poll, T)}</p>}
         {/* Solo quien la gestiona puede evitarlo: a él se le explica aquí (el tooltip no llega al móvil). */}
         {closing && isOwner && <p className="poll-info__how">{autoCloseNote(closing.reason, closing.at, true)}</p>}
-        <p className="poll-info__note">
-          {pollRange(poll)} {poll.anonymous
-            ? "Es anónima: nadie ve qué ha votado cada persona, solo los totales."
-            : "Los demás participantes pueden ver qué ha votado cada uno."}
-        </p>
         <div className="legend poll-info__legend"><Legend poll={poll} T={T} /></div>
       </div>
       <div className="status poll-status" id="poll-status" role="alert">{status}</div>
@@ -661,13 +655,6 @@ export function PollPage({ id }: { id: string }) {
       <div className="poll-tabs__panel" id="ptab-people" role="tabpanel" aria-labelledby="ptabbtn-people" hidden={tab !== "people"}>
       <section className="people-panel">
         {admin && <div className="summary__head"><RemindMissing poll={poll} T={T} TB={TB} open={canVote} me={user.uid} url={pollUrl(id)} /></div>}
-        {present.length > 0 && (
-          <p className="people-panel__hint">
-            {!poll.anonymous && T.people.some(p => p.total)
-              ? "Pulsa en un nombre para ver su perfil, y en el resto de la fila para ver qué ha votado."
-              : "Pulsa en un nombre para ver su perfil."}
-          </p>
-        )}
         <PeopleList people={present} query={peopleQuery} setQuery={setPeopleQuery} filter={peopleFilter} setFilter={setPeopleFilter}
           all={peopleAll} setAll={setPeopleAll}>
           {(people, empty) => (

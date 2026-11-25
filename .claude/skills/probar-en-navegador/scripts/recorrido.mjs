@@ -441,8 +441,11 @@ await check("Acceso y plazas: cambiar el máximo", async () => {
   await ana.fill("#ap-max", "5");
   await ana.locator(".access-panel__actions button", { hasText: "Guardar" }).click();
   await ana.waitForTimeout(300);
-  const k = await ana.locator(".poll-head__kicker").innerText();
-  expect(k.includes("máx. 5"), k);
+  // El máximo está en «Sobre esta votación» (ⓘ junto al título).
+  await ana.getByRole("button", { name: "Información de la votación" }).click();
+  const k = await ana.locator(".about-dialog").innerText();
+  await ana.locator(".about-dialog .dialog__close").click();
+  expect(k.includes("máximo 5"), k);
 });
 await check("Premium en el menú: la etiqueta de «Duplicar» explica y no duplica", async () => {
   await go(ana, opts);
