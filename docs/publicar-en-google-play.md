@@ -76,8 +76,8 @@ versionName "1.1"    // el que ve la gente
 ```
 
 La primera versión salió como `1.0` con `versionCode 3`, porque Play ya daba por usados el 1 y el 2: un código
-subido no se puede repetir. La siguiente es la `1.1`, con `versionCode 4`. Antes de compilar otra, mirar en
-`build.gradle` el último y sumar uno.
+subido no se puede repetir. Antes de compilar otra, mirar en `build.gradle` el último y sumar uno (la `1.1` fue la 4
+y la `1.2`, la 5).
 
 ### 2.3 Compilar la web para Android y sincronizar
 
