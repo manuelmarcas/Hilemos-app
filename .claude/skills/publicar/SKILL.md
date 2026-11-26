@@ -25,6 +25,23 @@ redirige). Esta skill es el orden seguro para hacerlo y los tropiezos que ya han
    node .claude/skills/limpieza-codigo/scripts/selectores-bem.mjs
    node .claude/skills/limpieza-codigo/scripts/clases-css.mjs
    ```
+4. **Documentación al día (obligatorio, sin que lo pidan).** Cada cambio sale con su documentación en el mismo commit.
+   Busca (grep) en todos estos sitios lo que el cambio deja viejo (textos, clases, nombres de funciones, pantallas) y
+   añade lo nuevo:
+   - `README.md` (raíz): «Qué se puede hacer», «Publicar» y la tabla «Modelo de datos (Firestore)».
+   - `app/README.md`: la sección de esa parte de la app («Mis votaciones», «Pantalla de una votación», «Chat»,
+     «Avisos»…).
+   - `app/design-system/README.md` y `app/design-system/components/*.md` (una ficha por componente; si nace uno,
+     ficha nueva y fila en su `README.md`); valores nuevos, en `tokens.json`.
+   - `docs/funcionalidades-y-planes.md`: la fila del inventario (§2) y, si es una regla, su casuística caso por caso.
+   - `docs/plan-hasta-premium.md`, `docs/pruebas-app-android.md`, `docs/publicar-en-google-play.md` (si cambia, vuelve
+     a generar su `.pdf`) y `docs/ficha-google-play/textos.md` si el cambio se ve en la ficha.
+   - Las skills de `.claude/skills/` y sus scripts de prueba (`recorrido.mjs`, `recorrido-android.mjs`…) si buscan
+     textos o clases que han cambiado.
+   - `app/src/pages/Legal.tsx` si cambia qué datos se guardan.
+   - La memoria del proyecto (`~/.claude/projects/c--Users-Marcas-repos-HILEMOS/memory/`) si queda vieja.
+   Al reescribir un trozo con un script, comprueba después que no se ha llevado nada más: compara los títulos (`grep
+   "^#"`) con la versión de antes. Una vez un recorte «hasta el siguiente `---`» borró tres secciones enteras.
 
 ## ¿Hay otra sesión trabajando?
 
@@ -57,8 +74,14 @@ Mira `git status`, `git log origin/main..` y `ListAgents`. Si otra sesión tiene
    ```
 6. **Push**: `git push origin main`.
 
-Las Cloud Functions (`functions/`) solo se despliegan si has cambiado `functions/index.js` (el proyecto está en Blaze desde
-el 2026-11-22): `app/node_modules/.bin/firebase deploy --only functions --project votaciones-9bc95`.
+Las Cloud Functions (`functions/`) solo se despliegan si has cambiado `functions/` (el proyecto está en Blaze desde
+el 2026-11-22): `app/node_modules/.bin/firebase deploy --only functions --project votaciones-9bc95`. Si quitas una
+función del código, bórrala también del servidor (`firebase functions:delete <nombre> --region europe-west1 --force`):
+el despliegue sin preguntas no la borra.
+
+**La app de Android no se entera de nada de esto**: lleva la web empaquetada. Para que tenga los cambios hace falta una
+versión nueva (`versionCode` + `npm run android` + `.aab`, ver `docs/publicar-en-google-play.md`). Dilo al terminar si
+el cambio se ve en la app; una captura sin barra de direcciones suele ser de la app.
 
 ## Tropiezos conocidos
 

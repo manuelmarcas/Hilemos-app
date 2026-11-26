@@ -59,7 +59,7 @@ El script está en `.claude/skills/probar-en-navegador/scripts/recorrido-android
 - [x] «Entrar con Google» abre el selector de cuentas del móvil.
 - [x] Al elegir la cuenta se entra con su nombre y su foto.
 - [x] Entrar sin cuenta con un nombre (modo demo) y el aviso propio si falta el nombre.
-- [x] Salir de la cuenta vuelve a la pantalla de entrada.
+- [x] Cerrar sesión (desde «Tu perfil»; ya no está en la barra superior) vuelve a la pantalla de entrada.
 - [x] Entrar con el correo: el enlace del correo abre la app (App Link con `oobCode`) y entra con esa cuenta.
       *Comprobado a mano.*
 - [ ] Entrar sin cuenta de verdad y guardar o compartir la clave de acceso. *Crea una cuenta real.*

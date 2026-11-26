@@ -27,13 +27,25 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
   4. Los días (o semanas) concretos que se podrán votar dentro de esos meses. El resto aparecen bloqueados.
      Hay atajos (todos, ninguno, lunes a viernes, fines de semana) y, en ordenador, Mayús + clic marca un rango.
   5. En las de **días**: de 1 a 4 opciones por día (p. ej. comida y cena), cada una con su nombre y su icono.
-     El icono se ve en el calendario y el nombre en la leyenda.
   6. En las de **horas**: franjas periódicas (rango desde/hasta y duración, repetidas en cada día) u horas
      sueltas elegidas día por día, que pueden ser distintas entre un día y otro.
 - **Votar** pulsando en el calendario, con el contador en cada casilla, el borde verde en lo más votado,
-  el resumen de "opciones más votadas" y la tabla por participante, igual que en el original.
+  el resumen de "opciones más votadas" y la tabla por participante, igual que en el original. En las de días, con
+  **menos de 6 días votables** se vota en una **lista** (un día por fila, un botón grande por opción); en el
+  calendario, los días que no se votan solo llevan su número y los días de la semana sin ninguno votable van más
+  estrechos. Al votar, el móvil vibra un instante y el número da un pequeño salto.
+- **Pantalla de una votación con poco texto**: arriba solo las etiquetas que cambian cómo se vota (anónima, solo
+  invitados, con aprobación, plazo), el título y el botón **ⓘ «Sobre esta votación»** (descripción, tipo, quién la
+  creó, participantes, fechas, si los votos se ven y cómo se entra). «Cómo se vota» sale solo hasta que votas. La
+  tabla de «Participantes» tiene dos columnas (quién y «Votos»); el reparto por opción sale al desplegar la fila.
+  Mientras carga, un esqueleto con la forma de la votación; las pantallas y pestañas entran con una transición.
+- **Botón flotante del chat** dentro de una votación, con los mensajes sin leer, mientras el chat queda por debajo.
 - **Mis votaciones**: cada usuario tiene su colección (las que ha creado y aquellas en las que ha entrado)
-  y puede organizarla en **grupos** con el nombre que quiera (crear, renombrar, eliminar, mover votaciones).
+  y puede organizarla en **grupos** con el nombre que quiera (crear, renombrar, eliminar, mover votaciones). Cada
+  tarjeta dice solo cuántas casillas tiene («19 días») y de quién es si no es tuya (el tipo lo dice el icono); un
+  **bocadillo junto al título** si hay mensajes de otros sin leer en su chat y un **candado rojo** si está cerrada.
+  «Nueva votación» es un «+» morado: flotante abajo a la derecha en el móvil y junto al título con ratón. Al final,
+  una nota explica la estrella de premium.
 - **Menú lateral** dentro de cada votación: todas tus votaciones por grupos para saltar de una a otra sin volver
   a la portada, con buscador. Desde ahí se organizan (menú ⋯ o arrastrando a otro grupo) y se crean, renombran,
   pliegan o eliminan grupos.
@@ -43,6 +55,9 @@ Inventario de funcionalidades y propuesta de planes (gratis y premium):
 - **Perfil**: cada usuario elige el nombre que ven los demás y su imagen (subida desde el dispositivo, la de Google
   o ninguna, y entonces se muestra su inicial). El cambio se aplica a todas las votaciones en las que participa.
 - **Modo oscuro**: en «Tu perfil → Preferencias», tema Automático (como el dispositivo), Claro u Oscuro. Se recuerda en cada dispositivo.
+- **Cerrar sesión** está en «Tu perfil» (no en la barra superior): sin cuenta, avisa de que hace falta la clave para
+  volver. En el móvil no hay «Volver» arriba: se vuelve con el gesto o el botón atrás del sistema.
+- **Premium** se marca con una estrella (sin texto); al tocarla explica esa función. De momento todo es gratis.
 - **Compartir** con enlace, **código QR** (también descargable en PNG), WhatsApp, Telegram, correo
   o el menú de compartir del móvil.
 - Quien abre el enlace e inicia sesión **queda como participante** (aparece en la tabla aunque aún no haya votado)
@@ -113,7 +128,15 @@ caducan y cambian de dirección.
    y `.firebaserc` de la raíz), o pegarlas en
    *Firebase Console › Firestore Database › Reglas*. Incluyen también la regla de `/votes` de la votación de
    Navidad original.
-2. **Web**: `cd app && npm run deploy` (compila y publica en <https://hilemos.web.app>).
+2. **Web**: `cd app && npm run deploy` (compila y publica en <https://hilemos.web.app>). La página (`/` e
+   `index.html`) se sirve sin caché (`app/firebase.json`), así que cada publicación llega al momento; los archivos de
+   `assets/` llevan su huella en el nombre y se guardan un año.
+3. **Cloud Functions** (solo si cambia `functions/`): `app/node_modules/.bin/firebase deploy --only functions
+   --project votaciones-9bc95` desde la raíz.
+4. **App de Android**: lleva la web empaquetada dentro, así que **no recibe nada de lo publicado en la web** hasta
+   generar una versión nueva (`npm run android`, subir `versionCode` y el `.aab` a Google Play, ver
+   [`docs/publicar-en-google-play.md`](docs/publicar-en-google-play.md)). Una captura sin barra de direcciones suele
+   ser de la app.
 
 Si se publica en otro dominio, hay que añadirlo en *Authentication › Configuración › Dominios autorizados*.
 

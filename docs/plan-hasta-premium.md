@@ -22,7 +22,7 @@ por escrito, y no sobre la marcha.
 | Firebase | Plan Blaze, alerta de presupuesto de 5 €, avisos push desplegados |
 | Cuenta de Google Play | Verificada; falta crear la app y subir el primer `.aab` (firmado con la clave de subida) |
 | Denunciar y ocultar mensajes | Hecho y publicado; el aviso a quien modera, sin configurar |
-| Premium | Marcado en la app (etiquetas «Premium»). En el servidor, la herencia, las cuentas atrás y el cierre automático están hechos y **apagados** (`config/plan.freeForAll`). Faltan los límites en las reglas, el pase y el cobro |
+| Premium | Marcado en la app (la estrella de premium). En el servidor, la herencia, las cuentas atrás y el cierre automático están hechos y **apagados** (`config/plan.freeForAll`). Faltan los límites en las reglas, el pase y el cobro |
 | Medir el uso | No hay nada: no se sabe cuánta gente usa la app ni qué usa |
 | Usuarios | Solo pruebas propias |
 
@@ -36,7 +36,7 @@ primer día.
 | # | Trabajo | Quién |
 | --- | --- | --- |
 | 1.1 | **Medir el uso** (ver «Qué se mide») ✔: totales diarios y mensuales que calcula el servidor cada noche en `stats/`, sin herramientas de analítica ni cookies. Se miran en la consola de Firebase. | Hecho |
-| 1.2 | **Marca de premium**: las funciones que serán de pago llevan una etiqueta «Premium» con el aviso «Gratis durante el lanzamiento». Siguen funcionando igual. ✔ | Hecho |
+| 1.2 | **Marca de premium**: las funciones que serán de pago llevan la estrella de premium; al tocarla explica la función y que ahora es gratis (una nota al final de «Mis votaciones» explica la estrella). Siguen funcionando igual. ✔ | Hecho |
 | 1.3 | **Denunciar a una persona**, además de un mensaje: su perfil se abre al pulsar en su nombre en «Participantes». ✔ | Hecho |
 | 1.4 | **Aviso de cada denuncia** ✔: por correo a hilemos.app@gmail.com (Brevo). El panel de moderación en la app queda para más adelante (planes de futuro, §11 de funcionalidades-y-planes.md). | Hecho |
 | 1.5 | **App Check** en modo «solo medir» ✔: Android (Play Integrity, va en el primer `.aab`) y web (reCAPTCHA Enterprise) registrados el 25 de noviembre de 2026. | Hecho |

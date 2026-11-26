@@ -427,11 +427,40 @@ Firebase Authentication.
   La protección de verdad es **App Check** (reCAPTCHA Enterprise en la web y Play Integrity en Android) aplicado a
   Authentication y Firestore; está pendiente de configurar en la consola.
 
+## «Mis votaciones» (`pages/Home.tsx`)
+
+- Cada tarjeta: icono del tipo (con su nombre en el tooltip), título, el **bocadillo de mensajes sin leer** junto al
+  título (`hasUnreadChat`, ver «Chat de la votación») y debajo solo cuántas casillas tiene (`pollMeta`: «19 días»,
+  «5 opciones») y «de Ana» si no es tuya. A la derecha, el **candado rojo** si está cerrada (antes, la etiqueta
+  «Cerrada») y «Tuya» o «Admin». En el menú ⋯, «Duplicar» lleva la estrella de premium dentro del botón.
+- Las votaciones se vuelven a leer cada vez que se entra en la pantalla (una lectura por votación): se pinta antes lo
+  leído en la sesión y se actualiza al llegar.
+- «Nueva votación» es solo un «+» morado: con pantalla táctil, botón flotante (`fab`) abajo a la derecha, con hueco al
+  final de la lista para que no tape nada; con ratón, junto al título.
+- Sin subtítulo ni pista de deslizar. Al final, `PremiumNote`: la única nota que explica la estrella.
+
+## Pantalla de una votación (`pages/poll/PollPage.tsx`)
+
+- **Cabecera**: las etiquetas que cambian cómo se vota (anónima, solo invitados, con aprobación, plazo, cuenta
+  atrás), el título, el botón ⓘ (`PollAbout`, con `components/InfoButton.tsx`) y el menú ⋯. «Sobre esta votación»
+  lleva la descripción (que antes iba bajo el título y podía ocupar mucho), el tipo, quién la creó, participantes (y el
+  máximo), las fechas, si los votos se ven y cómo se entra.
+- **Cómo se vota** (`instructions`): una frase corta que sale solo hasta que votas.
+- **Tablero**: en las de días, con menos de 6 días votables (`DAY_LIST_MAX`), una lista (`BoardDayList`); si no, el
+  calendario, donde los días que no se votan solo llevan su número y los días de la semana sin ninguno votable van a
+  media anchura (`weekdaysWith`). Al votar, `navigator.vibrate` y el contador da un salto (`count--bump`).
+- **Participantes**: dos columnas (quién y «Votos», o «Sin votar»); con varias opciones por día, el reparto (icono y
+  cuántos) sale al desplegar la fila.
+- **Esqueleto** (`PollSkeleton`) mientras carga, y el contenido entra fundiéndose (`.appear`).
+- **Botón flotante del chat** (`ChatFab`), ver «Chat de la votación».
+- La pantalla de espera (`Access.tsx`: pendiente, rechazado o expulsado) sigue con la línea de datos y la descripción
+  bajo el título.
+
 ## Pestañas bajo el calendario
 
 Para que la pantalla de una votación no se haga eterna, el calendario queda siempre arriba y debajo hay tres
 pestañas: «Más votadas» (la que sale al entrar), «Participantes» (con su número) y «Chat» (con los
-mensajes sin leer). Las tres
+mensajes sin leer). La pestaña que se abre entra con una transición. Las tres
 siguen montadas aunque no se vean, así que el chat no pierde lo que estabas escribiendo al cambiar de pestaña. Se
 puede cambiar con las flechas ← → del teclado.
 

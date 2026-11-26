@@ -88,6 +88,9 @@ En las tablas:
 | 2.3.2 | Cambiar el voto | Hasta que se cierre o se acabe el plazo. | Gratis | No | Gratis |
 | 2.3.3 | Votar sin cuenta | En las votaciones abiertas, con solo un nombre. | Gratis | No | Gratis |
 | 2.3.4 | Ver qué votó cada uno | Salvo en las anónimas. | Gratis | No | Gratis |
+| 2.3.5 | Lista para votar con pocos días | En las de días con menos de 6 días votables, una fila por día con un botón grande por opción, en vez de un mes casi entero apagado. | Gratis | No | Gratis |
+| 2.3.6 | Respuesta al votar | El móvil vibra un instante y el número de la casilla da un salto. | Gratis | No | Gratis |
+| 2.3.7 | Sobre esta votación (ⓘ) | Descripción, tipo, quién la creó, participantes, fechas, si los votos se ven y cómo se entra, en una ventana junto al título. | Gratis | No | Gratis |
 
 ### 2.4 Resultados
 
@@ -157,6 +160,35 @@ compara con lo último que has visto (`chatSeenAt`, en tu lista).
 **Coste.** Una escritura más por mensaje (en la votación, la hace el servidor sin leer nada) y, al entrar en «Mis
 votaciones», una lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
 persona conectada, que ya recibía el mensaje).
+
+### 2.7 Organizar «Mis votaciones»
+
+| N.º | Funcionalidad | Qué hace | Propuesta | ¿Para premium? | Decisión |
+| --- | --- | --- | --- | --- | --- |
+| 2.7.1 | Grupos | Crear, renombrar, eliminar y plegar grupos (Familia, Trabajo…). | Gratis | No | Gratis |
+| 2.7.2 | Mover de grupo | Con el menú ⋯ o arrastrando en el menú lateral. | Gratis | No | Gratis |
+| 2.7.3 | Archivar | Saca la votación del panel y del menú sin salir de ella; se puede deshacer. | Gratis | No | Gratis (archivar no es cerrar: no libera hueco en §9) |
+| 2.7.4 | Menú lateral | Todas las votaciones a mano, con buscador. | Gratis | No | Gratis |
+| 2.7.5 | Deslizar en el móvil | → archivar, ← salir. | Gratis | No | Gratis |
+| 2.7.6 | De un vistazo | En cada tarjeta, el bocadillo de mensajes sin leer junto al título, el candado rojo si está cerrada y cuántas casillas tiene. | Gratis | No | Gratis |
+| 2.7.7 | «+» para crear | Flotante abajo a la derecha en el móvil; junto al título con ratón. | Gratis | No | Gratis |
+
+### 2.8 Compartir
+
+| N.º | Funcionalidad | Qué hace | Propuesta | ¿Para premium? | Decisión |
+| --- | --- | --- | --- | --- | --- |
+| 2.8.1 | Enlace | Copiar o compartir con el menú del sistema. | Gratis | No | Gratis |
+| 2.8.2 | Código QR | Para enseñarlo en persona o descargarlo. | Gratis | No | Gratis |
+
+### 2.9 Plataformas y avisos
+
+| N.º | Funcionalidad | Qué hace | Propuesta | ¿Para premium? | Decisión |
+| --- | --- | --- | --- | --- | --- |
+| 2.9.1 | Web y Android | La misma app, también instalable. | Gratis | No | Gratis |
+| 2.9.2 | Mala conexión | Guarda una copia local: abre más rápido y aguanta cortes. | Gratis | No | Gratis |
+| 2.9.3 | Avisos push | Alguien vota; cierre, desempate o fin del plazo; solicitudes (al creador y a los administradores), aceptado o readmitido. Del chat no hay avisos (ver «Mensajes sin leer», en 2.6). Cada uno se activa o desactiva en el perfil. En la web y en la app de Android. Las funciones que los envían están desplegadas desde el 22 de noviembre de 2026 (plan Blaze); falta probar un aviso real. | Gratis los esenciales; premium los recordatorios (ver 6.4 y 7.7) | ★ (los recordatorios, ★★★) | Esenciales gratis; recordatorios premium, solo si el gestor actual tiene premium (§10) |
+| 2.9.4 | Privacidad y condiciones | Política de privacidad y condiciones de uso, enlazadas desde la entrada y el perfil. | Gratis (obligatorio) | No | Gratis |
+| 2.9.5 | Transiciones y esqueletos | Las pantallas y pestañas entran con una transición, lo que carga aparece fundiéndose y, mientras llega, un esqueleto con su forma. Con «reducir movimiento», solo se funde. | Gratis | No | Gratis |
 
 ---
 
