@@ -68,10 +68,10 @@ service cloud.firestore {
         && request.resource.data.closed == false;
 
       // Campos que solo escribe el servidor: desde cuándo la gestiona quien la gestiona y las cuentas atrás que la
-      // cierran sola (functions/plan.js), y la hora del último mensaje del chat (onChatMessage). La app no puede
-      // crearlos (arriba) ni cambiarlos (no están en ownerUpdate).
+      // cierran sola (functions/plan.js), y la hora y el autor del último mensaje del chat (onChatMessage). La app no
+      // puede crearlos (arriba) ni cambiarlos (no están en ownerUpdate).
       function serverKeys() {
-        return ['ownerSince', 'autoCloseAt', 'autoCloseWhy', 'autoCloseWarned', 'autoClosedAt', 'chatAt'];
+        return ['ownerSince', 'autoCloseAt', 'autoCloseWhy', 'autoCloseWarned', 'autoClosedAt', 'chatAt', 'chatBy'];
       }
 
       allow update: if signedIn() && (ownerUpdate() || leaveAdmins() || joinCount() || leaveCount());

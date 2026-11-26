@@ -58,7 +58,7 @@ export function openManaged(polls: (PollData | null | undefined)[], uid: string)
 }
 
 /** Campos de la votación que solo escribe el servidor (functions/plan.js): las reglas no dejan crearlos ni cambiarlos. */
-export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCloseWarned", "autoClosedAt", "chatAt"] as const;
+export const SERVER_KEYS = ["ownerSince", "autoCloseAt", "autoCloseWhy", "autoCloseWarned", "autoClosedAt", "chatAt", "chatBy"] as const;
 
 /**
  * La cuenta atrás que cerrará sola la votación, si sigue abierta: cuándo y por qué (el primer motivo que llega). La
@@ -175,10 +175,11 @@ export const chatSince = (p: PollData, uid: string, vote: Vote | null | undefine
   p.ownerUid === uid ? 0 : vote?.joinedAt || 0;
 /**
  * Tiene mensajes sin leer en el chat de esa votación (el icono de «Mis votaciones»): el último mensaje (`chatAt` de la
- * votación) es posterior a lo que ha visto y a cuando la añadió a su lista (lo de antes de entrar no es para él).
+ * votación) no es suyo (`chatBy`: también los avisos de lo que edita) y es posterior a lo que ha visto y a cuando la
+ * añadió a su lista (lo de antes de entrar no es para él).
  */
-export const hasUnreadChat = (e: LibraryEntry, p: PollData) =>
-  (p.chatAt || 0) > Math.max(e.chatSeenAt || 0, e.addedAt || 0);
+export const hasUnreadChat = (e: LibraryEntry, p: PollData, uid: string) =>
+  p.chatBy !== uid && (p.chatAt || 0) > Math.max(e.chatSeenAt || 0, e.addedAt || 0);
 /** Un administrador le expulsó de la votación (ya estaba dentro): no puede volver a entrar ni votar. */
 export const isRemoved = (v?: Vote | null) => v?.status === "rejected" && !!v.removed;
 

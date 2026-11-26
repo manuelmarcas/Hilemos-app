@@ -15,18 +15,6 @@
   .poll-head__action{min-width:0;white-space:normal}
 }
 /* Título con ⓘ (información) y el menú ⋯ (solo administradores) a la derecha */
-.info-btn{
-  flex:none;
-  width:40px;height:40px;
-  display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--line);
-  border-radius:var(--radius-md);
-  background:var(--card);
-  color:var(--muted);
-  font-size:1.25rem;
-  cursor:pointer;
-}
-.info-btn:hover{background:var(--hover);color:var(--ink)}
 /* Ventana «Sobre esta votación» (PollAbout.tsx) */
 .about-dialog__desc{margin:10px 0 0;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
 .about-dialog__list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}

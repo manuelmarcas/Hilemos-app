@@ -50,6 +50,8 @@
 .poll-card__meta{font-size:.8rem;color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
 .poll-card__badges{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;flex:none;max-width:40%}
 /* Mensajes sin leer en el chat: el bocadillo en lila con un punto, como el contador de la pestaña «Chat». */
+/* Cerrada: un candado rojo en vez de la etiqueta «Cerrada» (ocupa menos). */
+.poll-card__closed{display:flex;align-items:center;padding:0 4px;font-size:1.1rem;--icon-color:var(--danger)}
 .poll-card__chat{position:relative;flex:none;display:flex;align-items:center;padding:0 4px;font-size:1.1rem;--icon-color:var(--brand)}
 .poll-card__chat::after{
   content:"";
@@ -138,3 +140,5 @@
 .archived-row__go{transform:rotate(180deg);color:var(--muted)}
 .archived-head{margin-bottom:14px}
 .archived-head__title{margin:6px 0 0;font-size:1.2rem;color:var(--brand-strong)}
+/* La nota de la estrella de premium, al final de la lista. */
+.library__premium{margin-top:20px}

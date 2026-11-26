@@ -108,13 +108,17 @@ await login(ana, "Ana");
 await check("Banner del modo demo con su enlace", async () => {
   expect(await ana.locator(".demo-banner__link").count() === 1, "falta el enlace");
 });
-await check("Crear: etiqueta «Premium» en plazo, aprobación, solo correos y más de 20 personas", async () => {
+await check("Crear: estrella de premium en plazo, aprobación, solo correos y, con más de 20 personas, en el máximo", async () => {
   await go(ana, "#/nueva");
   const n = await ana.locator(".premium-tag").count();
-  const t = (await ana.locator("#sec-access").innerText()).replace(/\s+/g, " ");
-  expect(n >= 5 && /Lo marcado así será de pago/.test(t), `etiquetas: ${n}`);
+  expect(n >= 3, `estrellas: ${n}`);
   expect(await ana.locator("#sec-deadline .premium-tag").count() === 1, "falta en el plazo");
-  return `${n} etiquetas`;
+  const max = ana.locator(".create__access-max");
+  expect(await max.locator(".premium-tag").count() === 0, "estrella sin pasar de 20");
+  await ana.fill("#f-max", "25");
+  expect(await max.locator(".premium-tag").count() === 1, "falta la estrella con 25");
+  await ana.fill("#f-max", "");
+  return `${n} estrellas`;
 });
 await check("Premium: tocar la etiqueta explica esa función (y no elige la tarjeta)", async () => {
   await ana.locator("#sec-access .type-card", { hasText: "Con tu aprobación" }).locator(".premium-tag").click();
@@ -123,6 +127,8 @@ await check("Premium: tocar la etiqueta explica esa función (y no elige la tarj
   await btn(ana, "Entendido").click();
   await ana.waitForSelector("dialog[open]", { state: "detached" });
   expect(await ana.locator("#sec-access .type-card--on", { hasText: "Cualquiera con el enlace" }).count() === 1, "ha elegido la tarjeta");
+  // La nota de la estrella, que abre todas las funciones, está al final de «Mis votaciones».
+  await go(ana, "#/");
   await ana.getByRole("button", { name: "Qué es premium" }).click();
   const all = await dialogText(ana);
   expect(all.includes("Funciones premium") && all.includes("es temporal"), "la nota no abre todas: " + all);

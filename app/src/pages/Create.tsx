@@ -18,7 +18,8 @@ import { useOpenManaged } from "../state/openManaged";
 import { GroupSelect } from "../components/GroupSelect";
 import { EmojiButton } from "../components/EmojiButton";
 import { Icon, type IconName } from "../components/Icon";
-import { PremiumNote, PremiumTag } from "../components/Premium";
+import { PremiumTag } from "../components/Premium";
+import { InfoButton } from "../components/InfoButton";
 import { CharCount } from "../components/CharCount";
 import type { PremiumFeature } from "../lib/premium";
 import { useDismiss } from "../hooks/useDismiss";
@@ -727,7 +728,7 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
         <section className="step" id="sec-opts" hidden={!visible.opts}>
           <h2 className="step__title"><span className="step__num">{numbers.opts}</span>Opciones de cada día</h2>
           <p className="hint">
-            Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena). El icono se verá en el calendario y el nombre en la leyenda.
+            Cada día puede tener hasta 4 opciones (por ejemplo, comida y cena).
             {lockedOpts.size > 0 && type === "days" && " Las que ya tienen votos (en rojo) se pueden renombrar, pero no quitar."}
           </p>
           <div>
@@ -946,15 +947,18 @@ export function Create({ edit }: { edit?: EditTarget } = {}) {
             </div>
           )}
           <div className="create__access-max">
-            <label className="field-label" htmlFor="f-max">Máximo de personas <span className="muted">(contándote a ti)</span></label>
+            {/* La explicación, en ⓘ; la estrella, solo cuando el número pasa de lo gratuito. */}
+            <label className="field-label" htmlFor="f-max">
+              Máximo de personas <span className="muted">(contándote a ti)</span>{" "}
+              <InfoButton small label="Sobre el máximo de personas" title="Máximo de personas">
+                <p className="dialog__msg">Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación.</p>
+                <p className="dialog__msg">Más de {FREE_PEOPLE} personas será premium. Durante el lanzamiento es gratis para todos.</p>
+              </InfoButton>
+              {Number(maxText) > FREE_PEOPLE && <> <PremiumTag feature="people" /></>}
+            </label>
             <input id="f-max" className="input input--small create__max-input" type="number" inputMode="numeric" min={2} max={MAX_PEOPLE}
               value={maxText} onChange={e => setMaxText(e.target.value)} placeholder={String(MAX_PEOPLE)} />
-            <p className="hint create__access-hint">
-              Si lo dejas vacío, pueden unirse hasta {MAX_PEOPLE} personas, el límite de cualquier votación. Más
-              de {FREE_PEOPLE} personas: <PremiumTag feature="people" />
-            </p>
           </div>
-          <PremiumNote />
         </section>
 
         <div className="create-bar">

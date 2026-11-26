@@ -9,7 +9,7 @@ import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
 import { SwipeRow } from "../components/SwipeRow";
 import { Icon } from "../components/Icon";
-import { PremiumTag } from "../components/Premium";
+import { PremiumNote, PremiumTag } from "../components/Premium";
 import { useListActions } from "../state/listActions";
 import { usePendingLeaves } from "../state/pendingLeave";
 import { useDuplicate } from "../state/duplicate";
@@ -114,7 +114,7 @@ export function Home() {
       owner ? "" : `de ${p?.ownerName || e.ownerName || "alguien"}`,
       e.archived && groupName ? `grupo «${groupName}»` : "",
     ].filter(Boolean).join(" · ");
-    const unread = !gone && !!p && hasUnreadChat(e, p);
+    const unread = !gone && !!p && hasUnreadChat(e, p, user.uid);
     const open = expanded === e.id;
     // Cuenta atrás del servidor (heredada por encima del límite, le sobra o premium): se ve sin entrar en ella.
     const closing = p ? autoClose(p) : null;
@@ -148,7 +148,9 @@ export function Home() {
             </span>
             <span className="poll-card__badges">
               {gone && <span className="badge badge--gone">Eliminada</span>}
-              {p?.closed && <span className="badge">Cerrada</span>}
+              {p?.closed && (
+                <span className="poll-card__closed" role="img" aria-label="Cerrada" data-tip="Cerrada"><Icon name="lock" /></span>
+              )}
               {closing && (
                 <span className="badge badge--closing" data-tip={autoCloseNote(closing.reason, closing.at, owner)}>
                   {closingLabel(closing.at)}
@@ -169,8 +171,11 @@ export function Home() {
             {!gone && (
               <button className="btn btn--small" onClick={() => share({ url: pollUrl(e.id), title: p?.title || e.title || "Votación" })}><Icon name="link" /> Compartir</button>
             )}
-            {p && <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}><Icon name="copy" /> Duplicar</button>}
-            {p && <PremiumTag feature="duplicate" />}
+            {p && (
+              <button className="btn btn--small" onClick={() => { setExpanded(null); duplicate(p); }}>
+                <Icon name="copy" /> Duplicar <PremiumTag feature="duplicate" nested />
+              </button>
+            )}
             <button className="btn btn--small" onClick={() => { setExpanded(null); toggleArchive(); }}>
               {e.archived ? <><Icon name="unarchive" /> Desarchivar</> : <><Icon name="archive" /> Archivar</>}
             </button>
@@ -267,6 +272,7 @@ export function Home() {
             <Icon name="back" className="archived-row__go" />
           </button>
         )}
+        <PremiumNote className="library__premium" />
       </div>
     </>
   );

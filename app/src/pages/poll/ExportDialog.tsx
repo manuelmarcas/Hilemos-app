@@ -7,7 +7,7 @@ import type { Poll } from "../../lib/types";
 import { errMsg } from "../../lib/util";
 import { Dialog } from "../../components/Dialog";
 import { Icon, type IconName } from "../../components/Icon";
-import { PremiumNote, PremiumTag } from "../../components/Premium";
+import { PremiumTag } from "../../components/Premium";
 import { useSession } from "../../state/session";
 
 const FORMATS: { id: ExportFormat; icon: IconName; title: string; text: string; premium?: boolean }[] = [
@@ -53,7 +53,6 @@ export function ExportDialog({ poll, T, TB, onClose, toast }: {
           </button>
         ))}
       </div>
-      <PremiumNote />
       <div className="status" role="alert">{err}</div>
     </Dialog>
   );

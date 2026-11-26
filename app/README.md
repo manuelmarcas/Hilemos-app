@@ -450,8 +450,9 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
   desaparece al abrir la pestaña. «Visto hasta» se guarda como `chatSeenAt` en tu biblioteca
   (`users/{uid}/polls/{id}`), así que lo que leas en el móvil también cuenta como leído en el ordenador. Solo se da
   por leído con la pestaña abierta **y la app a la vista** (`usePageVisible`): en segundo plano, no.
-- **Mensajes sin leer en «Mis votaciones»**: con cada mensaje, el servidor apunta en la votación la hora del último
-  (`chatAt`, con `onChatMessage`: una escritura y ninguna lectura). Lo hace el servidor y no la app para que funcione
+- **Mensajes sin leer en «Mis votaciones»**: con cada mensaje, el servidor apunta en la votación la hora y el autor del
+  último (`chatAt` y `chatBy`, con `onChatMessage`: una escritura y ninguna lectura; lo tuyo, también los avisos de lo
+  que editas, no cuenta). Lo hace el servidor y no la app para que funcione
   también con versiones de Android que no lo saben; las reglas no dejan que la app lo escriba. La tarjeta lleva un bocadillo junto al título cuando es posterior a `chatSeenAt` y a cuando la añadiste a
   tu lista (`hasUnreadChat`). «Mis votaciones» vuelve a leer las votaciones cada vez que entras (una lectura por
   votación), así que el icono está al día sin una escucha abierta por cada una. Al abrir el chat se marca como visto

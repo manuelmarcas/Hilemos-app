@@ -95,6 +95,8 @@ export interface PollData {
    * antes de guardarla).
    */
   chatAt?: number;
+  /** Quién escribió el último mensaje del chat (uid; lo apunta el servidor con chatAt): lo tuyo no cuenta como sin leer. */
+  chatBy?: string;
 }
 
 /** Lo que se cuenta desde el dispositivo para las estadísticas (Store.track). La misma lista, en las reglas (pings). */

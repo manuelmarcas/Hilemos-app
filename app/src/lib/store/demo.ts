@@ -317,7 +317,8 @@ export function createDemoStore(): Store {
       const text = msg.text.trim();
       if (!text || text.length > MAX_CHAT) throw fail("invalid-argument");
       ((db.chat ||= {})[id] ||= {})[rid()] = { ...clone(msg), text };
-      db.polls[id].chatAt = msg.at; // lo que hace el servidor (onChatMessage): la hora del último mensaje
+      // Lo que hace el servidor (onChatMessage): la hora y el autor del último mensaje.
+      Object.assign(db.polls[id], { chatAt: msg.at, chatBy: msg.uid });
       write(db);
     },
     // Como las reglas: una por persona y mensaje, de un mensaje ajeno (no un aviso) y con su texto tal cual.

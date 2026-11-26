@@ -1,8 +1,8 @@
 // Marca de las funciones que serán de pago (docs/funcionalidades-y-planes.md, §3, §8 y §9; textos en lib/premium.ts).
 // De momento funcionan para todos, pero se ven marcadas para que nadie se sienta engañado cuando empiece el cobro.
-// - PremiumTag: la etiqueta «Premium» con la estrella. Al tocarla se abre la explicación de esa función: qué hace,
-//   por qué será premium y que ahora es gratis.
-// - PremiumNote: una línea que explica la etiqueta (una por pantalla); su etiqueta abre todas las funciones.
+// - PremiumTag: la estrella de premium, sin texto (ocupa poco). Al tocarla se abre la explicación de esa función:
+//   qué hace, por qué será premium y que ahora es gratis.
+// - PremiumNote: una línea que explica la estrella, al final de «Mis votaciones»; su estrella abre todas las funciones.
 // - PremiumHost: la ventana de la explicación, una sola para toda la app (en Shell). Va aparte de la etiqueta porque
 //   la etiqueta puede estar en un menú que se cierra al pulsar fuera, y se llevaría la ventana con él.
 import { useEffect, useRef, useState, type MouseEvent } from "react";
@@ -18,13 +18,13 @@ const EVENT = "hilemos-premium";
 const openPremium = (feature: PremiumFeature | "all") => window.dispatchEvent(new CustomEvent(EVENT, { detail: feature }));
 
 /**
- * Etiqueta «Premium». Fuera de un botón es un botón. Dentro de uno (`nested`: tarjeta, «Hacer admin», un elemento
+ * Estrella de premium. Fuera de un botón es un botón. Dentro de uno (`nested`: tarjeta, «Hacer admin», un elemento
  * de menú) es una etiqueta que, al pulsarla, abre la explicación en vez de hacer lo del botón; no cambia el nombre
  * del botón para los lectores de pantalla (para ellos está PremiumNote). Sin `feature`, explica todas.
  */
 export function PremiumTag({ feature, nested, className }: { feature?: PremiumFeature; nested?: boolean; className?: string }) {
   const show = (e: MouseEvent) => { e.preventDefault(); e.stopPropagation(); openPremium(feature || "all"); };
-  const body = <><Icon name="premium" /><span aria-hidden="true">Premium</span></>;
+  const body = <Icon name="premium" />;
   return nested
     ? <span className={cls("premium-tag", className)} data-tip={TIP} aria-hidden="true" onClick={show}>{body}</span>
     : (
@@ -46,12 +46,11 @@ export function PremiumStar() {
 /** El tooltip de un botón con PremiumStar. */
 export const PREMIUM_STAR_TIP = "Premium: gratis durante el lanzamiento";
 
-/** Explica la etiqueta: lo marcado será de pago, pero ahora es gratis. Su etiqueta abre todas las funciones. */
+/** Explica la estrella: lo marcado será de pago, pero ahora es gratis. Su estrella abre todas las funciones. */
 export function PremiumNote({ className }: { className?: string }) {
   return (
     <p className={cls("premium-note", className)}>
-      <PremiumTag /> Lo marcado así será de pago más adelante. Durante el lanzamiento es gratis para todos, de forma
-      temporal. Pulsa la etiqueta para saber más.
+      <PremiumTag /> Premium: será de pago más adelante; ahora, gratis para todos. Toca la estrella para saber más.
     </p>
   );
 }

@@ -147,12 +147,12 @@ compara con lo último que has visto (`chatSeenAt`, en tu lista).
 | Luis tiene «Mis votaciones» abierta mientras Ana escribe | El bocadillo sale al volver a entrar en la pantalla: se leen las votaciones cada vez que se entra, no en directo. |
 | Luis abre el chat | Se marca como visto hasta el último mensaje y el bocadillo desaparece, también en sus otros dispositivos. |
 | Luis tiene el chat abierto y a la vista mientras Ana escribe | Se da por leído al momento. Con la app en segundo plano, no: se marca al volver. |
-| Escribe Luis | Lo suyo nunca le cuenta como sin leer. |
+| Escribe Luis, o edita la votación y deja un aviso en el chat | Lo suyo nunca le cuenta como sin leer: la votación guarda también quién escribió el último mensaje (`chatBy`). Si antes había un mensaje de otro sin leer, el icono se apaga hasta el siguiente mensaje de otro (el contador de dentro de la votación sí lo cuenta). |
 | Un administrador edita la votación y deja un aviso en el chat | Cuenta como mensaje sin leer, igual que en el contador de la pestaña. |
 | Luis entró después del último mensaje | No le sale: lo de antes de añadirla a su lista no es para él. |
 | Luis está pendiente de aprobación, rechazado o expulsado | No ve el chat: al abrir la votación se marca como visto y el bocadillo no se queda encendido. |
 | Alguien escribe con el reloj del móvil adelantado | El bocadillo puede quedarse encendido hasta que Luis abra el chat, que lo marca visto hasta esa hora. |
-| Los mensajes de antes de este cambio | No encienden el bocadillo; el primero que llegue después, sí. |
+| Los mensajes de antes de este cambio | Se rellenaron una vez desde el último mensaje de cada votación (26 de noviembre de 2026). |
 
 **Coste.** Una escritura más por mensaje (en la votación, la hace el servidor sin leer nada) y, al entrar en «Mis
 votaciones», una lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
@@ -203,14 +203,14 @@ o cerradas, con un aviso 30 días antes en la app y por push. El aviso ofrece de
 | 4.1 | Suscripción de quien organiza | 2,99 €/mes o 24,99 €/año | Quien organiza a menudo: grupos de amigos, familia, deporte | ★★★ (la base) | 1,49 €/mes y 9,99 €/año. El mensual sirve para los picos (un diciembre, un julio); el anual ahorra un 44 % frente a 12 meses sueltos (17,88 €). |
 | 4.2 | Pase para una votación | 1,99 € desbloquea premium en una sola votación | Eventos puntuales: una boda, un viaje, una cena de empresa | ★★★ (junto a 4.1) | 0,60 €. Da a esa votación todo lo de premium, para un solo uso: hasta su primer cierre, y si sigue abierta a los 60 días, se cierra sola. Es de la votación, no de la persona: si la hereda alguien sin premium, sigue siendo premium (§8). Cuenta en las «abiertas a la vez» (§9). |
 | 4.3 | Plan para organizaciones | Precio por organizador, con facturación | Asociaciones, clubes, academias, empresas | ★★ (más adelante) | Más adelante: más personas aún y funciones propias por definir |
-| 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Sí: una vez por cuenta, solo con Google o correo, y con las opciones de premium visibles al crear (etiqueta «Premium», ya puesta: al pulsarla explica la función y que ahora es gratis). |
+| 4.4 | Primera votación premium gratis | Cada cuenta con Google o correo tiene, una vez, un pase (4.2) regalado | Quien aún no sabe qué da premium: lo prueba en una votación de verdad | ★★★ | Sí: una vez por cuenta, solo con Google o correo, y con las opciones de premium visibles al crear (la estrella de premium, ya puesta: al pulsarla explica la función y que ahora es gratis). |
 | 4.5 | Condiciones de pago y contacto | Sin devolución una vez usado; un correo de contacto | Obligatorio antes de cobrar | — | Decidido: sin devolución si ya se ha usado. Correo creado: hilemos.app@gmail.com, ya en la política de privacidad y en las condiciones |
 
 **Primera votación premium gratis (4.4).** Decidido. Es un pase de 0,60 € regalado: no pasa por Google Play ni por
 ningún cobro. Enseña lo que da premium justo cuando alguien lo usa (más gente, aprobación, plazo, recordatorios,
 imagen sin marca, Excel y PDF). Solo para cuentas con Google o correo y una vez por cuenta. Quien borre la cuenta y
 vuelva a crearla podría repetirlo, pero solo ganaría otra votación de 0,60 €. Las opciones de premium se ven al crear
-una votación, con la etiqueta «Premium», en vez de esconderlas.
+una votación, con la estrella de premium, en vez de esconderlas.
 
 **Devoluciones y contacto (4.5).** Lo decidido es no devolver el dinero cuando ya se ha usado. En la UE hay 14
 días para desistir de una compra digital, pero se pierden si la persona pide empezar a usarla ya y acepta que
@@ -649,7 +649,7 @@ no da:
 - Solo fechas, sin horas.
 - Se vota el intervalo entero, como ahora la semana entera. Votar solo una parte («me vale del 1 al 5») queda fuera,
   al menos al principio, porque complica mucho el recuento.
-- Premium o con pase, con la etiqueta «Premium» visible al crear, como el resto.
+- Premium o con pase, con la estrella de premium visible al crear, como el resto.
 
 **Trabajo:** parecido a lo que costaron las opciones libres. Hay que tocar el modelo y las reglas, crear y editar (sin
 dejar quitar un intervalo con votos), los avisos del chat, los tableros, el calendario `.ics`, las exportaciones y

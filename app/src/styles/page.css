@@ -4,6 +4,8 @@
 .page-head{margin-bottom:16px}
 .page-head__back{font-size:.9rem;text-decoration:none;color:var(--muted)}
 .page-head__back:hover{color:var(--brand)}
+/* En el móvil (pantalla táctil) se vuelve con el gesto o el botón atrás del sistema: el enlace sobra y ocupa sitio. */
+@media (hover:none) and (pointer:coarse){.page-head__back{display:none}}
 .page-head__title{margin:6px 0 0;font-size:1.75rem;color:var(--brand-strong)}
 .step{
   background:var(--card);

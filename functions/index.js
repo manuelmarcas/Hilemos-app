@@ -112,13 +112,15 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   }
 });
 
-// Mensaje nuevo en el chat: apunta en la votación la hora del último mensaje (chatAt), para el icono de mensajes sin
-// leer de «Mis votaciones». Lo hace el servidor y no la app para que funcione con cualquier versión (también las de
-// Android que aún no lo saben). Una escritura por mensaje y ninguna lectura; sin avisos push del chat.
+// Mensaje nuevo en el chat: apunta en la votación la hora del último mensaje (chatAt) y quién lo escribió (chatBy),
+// para el icono de mensajes sin leer de «Mis votaciones» (lo tuyo no cuenta). Lo hace el servidor y no la app para que
+// funcione con cualquier versión (también las de Android que aún no lo saben). Una escritura por mensaje y ninguna
+// lectura; sin avisos push del chat.
 export const onChatMessage = onDocumentCreated("polls/{pollId}/chat/{msgId}", async event => {
   const at = event.data?.get("at");
   if (typeof at !== "number") return;
-  await db.doc(`polls/${event.params.pollId}`).update({ chatAt: at }).catch(() => { /* la votación ya no existe */ });
+  await db.doc(`polls/${event.params.pollId}`).update({ chatAt: at, chatBy: String(event.data.get("uid") || "") })
+    .catch(() => { /* la votación ya no existe */ });
 });
 
 // Cambios de estado de la votación que interesan a todos los participantes (menos a quien los hace: el creador).

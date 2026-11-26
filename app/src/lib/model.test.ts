@@ -563,18 +563,21 @@ describe("sysTextFor (avisos del chat en segunda persona)", () => {
 });
 
 describe("hasUnreadChat (icono de mensajes sin leer en «Mis votaciones»)", () => {
-  const p = (chatAt?: number) => ({ ...days(), chatAt });
+  const p = (chatAt?: number, chatBy = "otro") => ({ ...days(), chatAt, chatBy });
   it("sin mensajes o con todo visto, no", () => {
-    expect(hasUnreadChat({}, p())).toBe(false);
-    expect(hasUnreadChat({ chatSeenAt: 100 }, p(100))).toBe(false);
-    expect(hasUnreadChat({ chatSeenAt: 150 }, p(100))).toBe(false);
+    expect(hasUnreadChat({}, p(), "yo")).toBe(false);
+    expect(hasUnreadChat({ chatSeenAt: 100 }, p(100), "yo")).toBe(false);
+    expect(hasUnreadChat({ chatSeenAt: 150 }, p(100), "yo")).toBe(false);
   });
-  it("un mensaje posterior a lo visto, sí", () => {
-    expect(hasUnreadChat({ chatSeenAt: 50 }, p(100))).toBe(true);
-    expect(hasUnreadChat({}, p(100))).toBe(true);
+  it("un mensaje de otro posterior a lo visto, sí", () => {
+    expect(hasUnreadChat({ chatSeenAt: 50 }, p(100), "yo")).toBe(true);
+    expect(hasUnreadChat({}, p(100), "yo")).toBe(true);
+  });
+  it("el último mensaje es tuyo (o el aviso de algo que has editado), no", () => {
+    expect(hasUnreadChat({ chatSeenAt: 50 }, p(100, "yo"), "yo")).toBe(false);
   });
   it("lo de antes de añadirla a su lista no cuenta", () => {
-    expect(hasUnreadChat({ addedAt: 200 }, p(100))).toBe(false);
-    expect(hasUnreadChat({ addedAt: 50 }, p(100))).toBe(true);
+    expect(hasUnreadChat({ addedAt: 200 }, p(100), "yo")).toBe(false);
+    expect(hasUnreadChat({ addedAt: 50 }, p(100), "yo")).toBe(true);
   });
 });

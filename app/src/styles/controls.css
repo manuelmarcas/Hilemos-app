@@ -221,13 +221,29 @@ select.input:hover{background-color:var(--hover)}
 .avatar-stack__item{box-shadow:0 0 0 2px var(--card)}
 .avatar-stack__item + .avatar-stack__item{margin-left:-7px}
 .avatar-stack__more{font-size:.72rem;font-weight:700;color:var(--muted);margin-left:4px}
-/* Etiqueta «Premium» (components/Premium.tsx): las funciones que serán de pago, que de momento son gratis.
-   Pequeña y en su propio color (premium), para que se distinga de las etiquetas de papel y de estado. */
+/* Botón ⓘ (components/InfoButton.tsx): abre una ventana con información. Del tamaño de los botones de la cabecera
+   de una votación; --small, del tamaño del texto, para ir junto a una etiqueta. */
+.info-btn{
+  flex:none;
+  width:40px;height:40px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  background:var(--card);
+  color:var(--muted);
+  font-size:1.25rem;
+  cursor:pointer;
+}
+.info-btn:hover{background:var(--hover);color:var(--ink)}
+.info-btn--small{width:22px;height:22px;border:none;border-radius:var(--radius-pill);background:none;font-size:1.05rem;vertical-align:middle}
+/* Estrella de premium (components/Premium.tsx): las funciones que serán de pago, que de momento son gratis.
+   Solo la estrella, en un círculo de su propio color (premium), para que ocupe poco y no se confunda con las
+   etiquetas de papel y de estado. */
 .premium-tag{
-  --icon-size:11px;--icon-color:var(--premium);
-  display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 6px;border-radius:var(--radius-pill);
-  background:var(--premium-soft);color:var(--premium);
-  font-family:inherit;font-size:.66rem;font-weight:700;letter-spacing:.02em;line-height:1.55;white-space:nowrap;vertical-align:.12em;
+  --icon-size:13px;--icon-color:var(--premium);
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:22px;height:22px;padding:0;border-radius:var(--radius-pill);
+  background:var(--premium-soft);color:var(--premium);vertical-align:middle;
   border:none;cursor:help;
 }
 .premium-tag:hover{background:color-mix(in srgb, var(--premium) 18%, var(--premium-soft))}
