@@ -34,6 +34,7 @@ redirige). Esta skill es el orden seguro para hacerlo y los tropiezos que ya han
    - `app/design-system/README.md` y `app/design-system/components/*.md` (una ficha por componente; si nace uno,
      ficha nueva y fila en su `README.md`); valores nuevos, en `tokens.json`.
    - `docs/funcionalidades-y-planes.md`: la fila del inventario (§2) y, si es una regla, su casuística caso por caso.
+   - `docs/optimizacion-lecturas.md` si cambia lo que se lee (una escucha, una consulta, una función que lee).
    - `docs/plan-hasta-premium.md`, `docs/pruebas-app-android.md`, `docs/publicar-en-google-play.md` (si cambia, vuelve
      a generar su `.pdf`) y `docs/ficha-google-play/textos.md` si el cambio se ve en la ficha.
    - Las skills de `.claude/skills/` y sus scripts de prueba (`recorrido.mjs`, `recorrido-android.mjs`…) si buscan

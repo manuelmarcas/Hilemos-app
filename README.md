@@ -15,7 +15,8 @@ El código está en [`app/`](app/) (React + Vite + TypeScript, preparado para la
 ver [`app/README.md`](app/README.md). La primera versión, sin React, sigue en el historial de git.
 
 Inventario de funcionalidades y propuesta de planes (gratis y premium):
-[`docs/funcionalidades-y-planes.md`](docs/funcionalidades-y-planes.md).
+[`docs/funcionalidades-y-planes.md`](docs/funcionalidades-y-planes.md). Plan para cuando haya que gastar menos
+lecturas de Firestore: [`docs/optimizacion-lecturas.md`](docs/optimizacion-lecturas.md).
 
 ## Qué se puede hacer
 

@@ -578,11 +578,16 @@ para leer lo mínimo:
   cada participante. Al cambiar el perfil se actualiza la copia en las votaciones del menú del usuario (pocas
   escrituras, y es algo raro). En el voto va una miniatura de 64 px (`thumb`), no la imagen de perfil completa.
 - **Caché local (IndexedDB)**: al volver a una votación en menos de 30 min solo se cobran los documentos cambiados.
-- **"Mis votaciones"** lee cada votación una vez por sesión (`pollCache`); la pantalla de la votación la mantiene al día.
+- **«Mis votaciones»** pinta al momento lo leído en la sesión (`pollCache`) y vuelve a leer cada votación al entrar en
+  la pantalla (una lectura por votación), para el icono de sin leer y el candado; la pantalla de la votación la
+  mantiene al día en directo.
 - **Abrir una votación no escribe nada** en el menú del usuario, salvo la primera vez o si cambia su título.
 - **Borrar una votación** se hace en lotes (`writeBatch`).
 
 Límite conocido: si alguien quita una votación de su menú y luego cambia su nombre, en esa votación seguirá el anterior.
+
+Qué lee hoy cada parte de la app y del servidor, cuándo merece la pena optimizar y qué hacer, en orden:
+[`docs/optimizacion-lecturas.md`](../docs/optimizacion-lecturas.md).
 
 ## App de Android (Capacitor)
 

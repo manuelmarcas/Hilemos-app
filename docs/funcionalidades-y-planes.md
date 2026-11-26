@@ -706,6 +706,7 @@ duplicar.
 | Recordatorios por correo | Además de push, para quien no tiene la app (necesita un servicio de envío, 6.5) | Premium |
 | Entrar con Apple y app de iPhone (7.14) | Obligatorio para la App Store si se ofrece entrar con Google | Todos |
 | Otros idiomas (7.15) | Inglés y catalán, por ejemplo | Todos |
+| Optimizar las lecturas de Firestore | Plan por fases, con cuándo actuar y qué ahorra cada paso: [optimizacion-lecturas.md](optimizacion-lecturas.md). Hoy no hace falta (muy por debajo del margen gratuito) | — |
 | Dominio propio | Correo de contacto y dirección de la web propios (hola@…) | — |
 
 ---
