@@ -1,10 +1,12 @@
 # Ficha de Google Play (español de España)
 
 Lo que se copia en Play Console → Aumentar usuarios → Presencia en Play Store → Fichas de Play Store → ficha principal
-(cómo cambiarla, en el apartado 5.1 de `docs/publicar-en-google-play.md`). Las imágenes están en
-esta misma carpeta. Las capturas (1080 × 1920 en proporción 2:1, es decir 1080 × 2160, con pantalla de 412 × 824) y la imagen destacada se rehacen con datos de ejemplo en el modo demo, sin el banner
-de la demo: desde la carpeta de Playwright de la skill `probar-en-navegador`, con el servidor de desarrollo en el
-puerto 5199, `node ficha.mjs <carpeta> <ruta de icono-512.png>`.
+(cómo cambiarla, en el apartado 5.1 de `docs/publicar-en-google-play.md`). El icono y la imagen destacada están en
+esta carpeta. Las capturas van en una carpeta por tanda: las actuales en `v2/` (versión 1.1) y las de la primera
+versión en `v1/`. Las capturas (1080 × 2160, con pantalla de 412 × 824) y la imagen destacada se rehacen con datos
+de ejemplo en el modo demo, sin el banner de la demo: desde la carpeta de Playwright de la skill
+`probar-en-navegador`, con el servidor de desarrollo en el puerto 5199,
+`node ficha.mjs <carpeta> <ruta de icono-512.png>`.
 
 ## Nombre de la aplicación (30 caracteres como mucho)
 
@@ -52,7 +54,7 @@ Sin anuncios. Votar, ver el resultado y el chat son gratis. También funciona de
 | --- | --- | --- |
 | Icono de la aplicación | `icono-512.png` | 512 × 512, PNG de 32 bits |
 | Gráfico de funciones (imagen destacada) | `imagen-destacada-1024x500.png` | 1024 × 500 |
-| Capturas de pantalla del teléfono | `1-votacion.png` … `7-mis-votaciones.png`, en ese orden (primero lo que ve quien recibe el enlace: la votación, votar, el resultado y el chat; después cómo se crea una, y al final tus votaciones) | 1080 × 2160 (2:1, el máximo que admite Play) |
+| Capturas de pantalla del teléfono | `v2/1-votacion.png` … `v2/7-mis-votaciones.png`, en ese orden (primero lo que ve quien recibe el enlace: la votación, votar, el resultado y el chat; después cómo se crea una, y al final tus votaciones) | 1080 × 2160 (2:1, el máximo que admite Play) |
 
 No hacen falta capturas de tableta ni vídeo.
 

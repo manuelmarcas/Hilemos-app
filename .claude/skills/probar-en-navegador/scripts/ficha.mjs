@@ -1,5 +1,5 @@
-// Ficha de Google Play: imagen destacada (1024×500) y capturas del móvil (1080×1920, 9:16), en el modo demo con
-// datos de ejemplo y sin el banner de la demo. Uso: node ficha.mjs <carpeta de salida>
+// Ficha de Google Play: imagen destacada (1024×500) y capturas del móvil (1080×2160), en el modo demo con datos de
+// ejemplo y sin el banner de la demo. Uso: node ficha.mjs <carpeta de salida> <icono-512.png>
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 const OUT = process.argv[2];
@@ -47,6 +47,19 @@ const viaje = {
   ownerUid: uid("Carlos"), ownerName: "Carlos", createdAt: day(15), closed: false, anonymous: false,
 };
 const viajeVotes = { Carlos: ["2027-07|x", "2027-08|x"], Ana: ["2027-07|x"], Bea: ["2027-07|x", "2027-09|x"], Fran: ["2027-08|x"] };
+// Con un mensaje de otra persona que Ana no ha visto: en «Mis votaciones» sale el aviso de sin leer.
+Object.assign(viaje, { chatAt: day(23, 12), chatBy: uid("Carlos") });
+// Con 5 días o menos se vota en lista.
+const barbacoa = {
+  title: "Barbacoa del grupo 🍔", type: "days", months: ["2026-11", "2026-12"],
+  slots: ["2026-11-28", "2026-11-29", "2026-12-05", "2026-12-06"], options: navidad.options,
+  ownerUid: uid("Diego"), ownerName: "Diego", createdAt: day(21), closed: false, anonymous: false,
+};
+const barbacoaVotes = {
+  Diego: ["2026-11-28|c", "2026-12-05|c", "2026-12-05|n"], Ana: ["2026-12-05|c", "2026-12-06|c"],
+  Bea: ["2026-12-05|c", "2026-11-29|c"], Carlos: ["2026-12-05|c", "2026-11-28|n"], Elena: ["2026-12-05|n", "2026-12-06|c"],
+  Fran: ["2026-12-05|c", "2026-11-28|c"],
+};
 const club = {
   title: "Reunión del club de lectura", type: "hours", months: ["2026-11", "2026-12"],
   slots: ["2026-11-30", "2026-12-01", "2026-12-02"], hours: ["18:00", "19:00", "20:00"], hourStep: 60, options: [{ id: "x", name: "Me viene bien", icon: "✅" }],
@@ -60,19 +73,21 @@ const msgs = [
   ["Fran", "Pues el 19 cena. ¿Reservo en el de siempre?", day(23, 13)],
   ["Ana", "¡Sí! Reserva para 8, que Marta aún no ha votado", day(23, 13)],
 ];
-const chat = { p1: Object.fromEntries(msgs.map(([n, text, at], i) => [`m${i}`, { uid: uid(n), name: n, text, at }])) };
+const chatOf = list => Object.fromEntries(list.map(([n, text, at], i) => [`m${i}`, { uid: uid(n), name: n, text, at }]));
+const chat = { p1: chatOf(msgs), p3: chatOf([["Carlos", "He visto vuelos baratos para julio ✈️", viaje.chatAt]]) };
 const lib = {
   polls: {
     p1: { title: navidad.title, type: "days", role: "owner", groupId: "fam", addedAt: day(20), chatSeenAt: day(23, 14) },
     p2: { title: cumple.title, type: "options", role: "participant", ownerName: "Bea", groupId: "ami", addedAt: day(22) },
     p3: { title: viaje.title, type: "months", role: "participant", ownerName: "Carlos", groupId: "ami", addedAt: day(15) },
     p4: { title: club.title, type: "hours", role: "owner", groupId: "tra", addedAt: day(18) },
+    p5: { title: barbacoa.title, type: "days", role: "participant", ownerName: "Diego", groupId: "ami", addedAt: day(21) },
   },
   groups: { fam: { name: "Familia", createdAt: 1 }, ami: { name: "Amigos", createdAt: 2 }, tra: { name: "Club", createdAt: 3 } },
 };
 const db = {
-  polls: { p1: navidad, p2: cumple, p3: viaje, p4: club },
-  votes: { p1: votesOf(navidadVotes), p2: votesOf(cumpleVotes), p3: votesOf(viajeVotes), p4: votesOf({ Ana: ["2026-12-01|x"], Bea: ["2026-12-01|x"] }) },
+  polls: { p1: navidad, p2: cumple, p3: viaje, p4: club, p5: barbacoa },
+  votes: { p1: votesOf(navidadVotes), p2: votesOf(cumpleVotes), p3: votesOf(viajeVotes), p4: votesOf({ Ana: ["2026-12-01|x"], Bea: ["2026-12-01|x"] }), p5: votesOf(barbacoaVotes) },
   users: { [uid("Ana")]: lib },
   chat,
 };
@@ -100,18 +115,13 @@ async function shot(p, hash, name, before) {
 }
 
 const p = await phone();
-// La votación desde arriba del todo: título, descripción y botones de compartir.
+// La votación desde arriba del todo: título, botones de compartir y calendario.
 await shot(p, "#/v/p1", "1-votacion");
-await shot(p, "#/v/p1", "2-votar", async q => {
-  await q.getByText(/^diciembre 2026$/i).first()
-    .evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 76));
-});
+await shot(p, "#/v/p5", "2-votar");
 await shot(p, "#/v/p1", "3-resultado", async q => {
   await q.getByRole("tab", { name: /Más votadas/ }).evaluate(el => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 66));
 });
-await shot(p, "#/v/p2", "6-opciones", async q => {
-  await q.evaluate(() => { const h = [...document.querySelectorAll("p")].find(e => e.textContent.startsWith("Pulsa en las opciones")); window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - 90); });
-});
+await shot(p, "#/v/p2", "6-opciones");
 await shot(p, "#/", "7-mis-votaciones");
 await shot(p, "#/v/p1", "4-chat", async q => {
   await q.getByRole("tab", { name: /Chat/ }).click();

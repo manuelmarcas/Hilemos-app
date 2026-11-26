@@ -211,7 +211,7 @@ aparece. Todo está en `docs/ficha-google-play/`
 | Descripción completa (4.000) | La de `textos.md`: cada párrafo en una línea, se pega tal cual |
 | Icono | `icono-512.png` (512 × 512, PNG de 32 bits) |
 | Gráfico de funciones | `imagen-destacada-1024x500.png` |
-| Capturas del teléfono | `1-votacion.png` … `7-mis-votaciones.png`, en ese orden (1080 × 2160) |
+| Capturas del teléfono | `v2/1-votacion.png` … `v2/7-mis-votaciones.png`, en ese orden (1080 × 2160) |
 | Tableta y vídeo | Vacíos (opcionales) |
 
 Otros ajustes de la ficha:
