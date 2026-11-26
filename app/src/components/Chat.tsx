@@ -18,6 +18,10 @@ import { Spinner } from "./Loading";
 /** Alto máximo del campo de escribir (unas 5 líneas); con más texto, se desplaza dentro. */
 const CHAT_FIELD_MAX = 140;
 
+/** Reintentos al cargar el chat si las reglas aún no te ven dentro (acabas de entrar), y cada cuánto. */
+const CHAT_RETRIES = 3;
+const CHAT_RETRY_MS = 1500;
+
 /** Cuánto hay que mantener pulsado un mensaje (en el móvil) para denunciarlo. */
 const LONG_PRESS_MS = 550;
 
@@ -74,8 +78,23 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
   useAutoGrow(field, text, CHAT_FIELD_MAX, active);
 
   // Los mensajes de antes de que entraras no se ven (salvo si creaste la votación).
+  // Solo se piden estando dentro (canWrite: creador o participante aceptado, como en las reglas) y, si no la creaste,
+  // con tu voto ya cargado: sin él, «desde» sería 0 y las reglas rechazarían la consulta. Al entrar por primera vez, tu
+  // voto está en el móvil antes que en el servidor y las reglas aún no te ven dentro: se reintenta unas veces antes de
+  // dar el error (que se borra en cuanto cargan los mensajes).
   const since = chatSince(poll, user.uid, votes[user.uid]);
-  useEffect(() => store.watchChat(id, since, setMsgs, e => setStatus("No se pudo cargar el chat. " + errMsg(e))), [store, id, since]);
+  const canRead = canWrite && (poll.ownerUid === user.uid || !!votes[user.uid]);
+  const [loadErr, setLoadErr] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (!canRead) { setMsgs(null); return; }
+    let retry = 0;
+    const off = store.watchChat(id, since, m => { setLoadErr(""); setMsgs(m); }, e => {
+      if (attempt < CHAT_RETRIES) retry = window.setTimeout(() => setAttempt(a => a + 1), CHAT_RETRY_MS);
+      else setLoadErr("No se pudo cargar el chat. " + errMsg(e));
+    });
+    return () => { off(); clearTimeout(retry); };
+  }, [store, id, since, canRead, attempt]);
 
   // Las denuncias solo las ve quien administra la votación.
   useEffect(() => {
@@ -150,7 +169,9 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
           const el = list.current;
           if (el) pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
         }}>
-          {msgs === null
+          {!canWrite
+            ? <p className="muted chat__empty">Entra en la votación para ver el chat.</p>
+            : msgs === null
             ? <p className="muted chat__empty" role="status"><Spinner /> Cargando mensajes…</p>
             : !msgs.length
               ? <p className="muted chat__empty">Todavía no hay mensajes. Escribe el primero.</p>
@@ -224,7 +245,7 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
                 );
               })}
         </div>
-        {canWrite ? (
+        {canWrite && (
           <form className="chat__form" onSubmit={send}>
             <div className="emoji-field emoji-field--area chat__field">
               {/* Con ratón y teclado (ordenador), Intro envía y Mayúsculas + Intro hace el salto de línea, como en
@@ -241,11 +262,9 @@ export function Chat({ poll, id, votes, canWrite, admin, reportedByMe, active, s
             <button className="btn chat__send" type="submit" disabled={busy || !text.trim()}
               onPointerDown={e => e.preventDefault()} onMouseDown={e => e.preventDefault()}>{busy ? "Enviando…" : "Enviar"}</button>
           </form>
-        ) : (
-          <p className="chat__note chat__closed">Entra en la votación para escribir en el chat.</p>
         )}
       </div>
-      <div className="status" role="alert">{status}</div>
+      <div className="status" role="alert">{loadErr || status}</div>
       {reporting && (
         <ReportDialog title="Denunciar mensaje" quote={<><strong>{reporting.name}:</strong> {reporting.msg.text}</>}
           question="¿Qué pasa con este mensaje?" already="Ya habías denunciado este mensaje."
