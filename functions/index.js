@@ -18,6 +18,7 @@ import {
 import { dailyStats } from "./stats.js";
 import { DAY, fmtWhen } from "./time.js";
 import { reportMail } from "./reportMail.js";
+import { firstUnread } from "./chat.js";
 
 initializeApp();
 const db = getFirestore();
@@ -26,7 +27,10 @@ setGlobalOptions({ region: "europe-west1", maxInstances: 5 });
 const SITE = "https://hilemos.web.app";
 const pollUrl = id => `${SITE}/#/v/${id}`;
 const DEAD_TOKEN = new Set(["messaging/registration-token-not-registered", "messaging/invalid-registration-token"]);
+const chatUrl = id => `${pollUrl(id)}/chat`;
 const DEADLINE_EVERY_MIN = 15;
+/** Lo que se espera antes de mirar quién ha leído un mensaje del chat (ver onChatMessage). */
+const CHAT_GRACE_MS = 8000;
 const ANDROID_CHANNEL = "avisos";
 
 /** Manda el aviso a los dispositivos de `uids` que no hayan apagado ese tipo (`pref`) y limpia los caducados. */
@@ -112,15 +116,36 @@ export const onVoteWritten = onDocumentWritten("polls/{pollId}/votes/{uid}", asy
   }
 });
 
-// Mensaje nuevo en el chat: apunta en la votación la hora del último mensaje (chatAt) y quién lo escribió (chatBy),
-// para el icono de mensajes sin leer de «Mis votaciones» (lo tuyo no cuenta). Lo hace el servidor y no la app para que
-// funcione con cualquier versión (también las de Android que aún no lo saben). Una escritura por mensaje y ninguna
-// lectura; sin avisos push del chat.
+// Mensaje nuevo en el chat.
+// 1. Apunta en la votación la hora del último mensaje (chatAt) y quién lo escribió (chatBy), para el icono de mensajes
+//    sin leer de «Mis votaciones» (lo tuyo no cuenta). Lo hace el servidor y no la app para que funcione con cualquier
+//    versión (también las de Android que aún no lo saben).
+// 2. Avisa a cada participante solo del primer mensaje que no ha visto (functions/chat.js): los siguientes no avisan
+//    hasta que vuelva a abrir el chat. Antes espera unos segundos, porque quien tiene el chat abierto lo marca como
+//    visto al momento (chatSeenAt) y así no recibe el aviso de lo que está leyendo. Al avisar apunta chatNotifiedAt en
+//    su biblioteca.
+// Coste por mensaje: una escritura (chatAt) y, para los avisos, los votos y una entrada de biblioteca por participante
+// (lecturas); solo escribe y avisa a quien pasa de tenerlo todo leído a tener algo sin leer.
 export const onChatMessage = onDocumentCreated("polls/{pollId}/chat/{msgId}", async event => {
-  const at = event.data?.get("at");
-  if (typeof at !== "number") return;
-  await db.doc(`polls/${event.params.pollId}`).update({ chatAt: at, chatBy: String(event.data.get("uid") || "") })
-    .catch(() => { /* la votación ya no existe */ });
+  const m = event.data?.data();
+  if (!m || typeof m.at !== "number") return;
+  const { pollId } = event.params;
+  const pollRef = db.doc(`polls/${pollId}`);
+  try { await pollRef.update({ chatAt: m.at, chatBy: String(m.uid || "") }); } catch { return; } // ya no existe
+  await new Promise(r => setTimeout(r, CHAT_GRACE_MS));
+  const [poll, members] = await Promise.all([pollRef.get(), participants(pollId)]);
+  if (!poll.exists) return;
+  const others = [...new Set([poll.get("ownerUid"), ...members])].filter(u => u && u !== m.uid);
+  if (!others.length) return;
+  const entries = await db.getAll(...others.map(u => db.doc(`users/${u}/polls/${pollId}`)));
+  const fresh = entries.filter(e => e.exists && firstUnread(e.data(), m.at));
+  if (!fresh.length) return;
+  const batch = db.batch();
+  fresh.forEach(e => batch.update(e.ref, { chatNotifiedAt: m.at }));
+  await batch.commit();
+  await notify(fresh.map(e => e.ref.parent.parent.id), {
+    title: poll.get("title") || "Votación", body: "Tienes mensajes sin leer en el chat", url: chatUrl(pollId), tag: `chat-${pollId}`,
+  }, "chat");
 });
 
 // Cambios de estado de la votación que interesan a todos los participantes (menos a quien los hace: el creador).

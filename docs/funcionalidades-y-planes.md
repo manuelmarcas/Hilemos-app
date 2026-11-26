@@ -136,20 +136,25 @@ En las tablas:
 | 2.6.2 | Mensajes sin leer | Contador en la pestaña, sincronizado entre dispositivos, y un bocadillo con un punto en la tarjeta de «Mis votaciones». | Gratis | No | Gratis |
 | 2.6.3 | Emojis | Selector propio en el ordenador; en el móvil, el del teclado. | Gratis | No | Gratis |
 | 2.6.4 | Botón flotante del chat | Mientras miras el calendario, un botón redondo abajo a la derecha, con los mensajes sin leer, te lleva al chat. | Gratis | No | Gratis |
+| 2.6.5 | Aviso de mensajes sin leer | Un aviso push «Tienes mensajes sin leer en el chat» con el primer mensaje que no has visto; los siguientes no avisan hasta que vuelvas a abrir el chat. Lleva directo al chat. Se puede apagar en el perfil. | Gratis | No (es esencial: lo provoca algo que acaba de pasar, §10) | Gratis |
 
 Se ven los últimos 200 mensajes y cada mensaje tiene como mucho 500 caracteres.
 
-**Mensajes sin leer (2.6.2), caso por caso.** Sin avisos push: se probaron y se quitaron, porque cada mensaje costaba
-una lectura por participante. Ahora el servidor apunta en la votación la hora del último mensaje (`chatAt`, una
-escritura sin lecturas, también para los mensajes que llegan desde versiones viejas de la app), y «Mis votaciones» la
-compara con lo último que has visto (`chatSeenAt`, en tu lista).
+**Mensajes sin leer (2.6.2 y 2.6.5), caso por caso.** El servidor apunta en la votación la hora y el autor del último
+mensaje (`chatAt` y `chatBy`, también para los mensajes que llegan desde versiones viejas de la app), y «Mis votaciones»
+lo compara con lo último que has visto (`chatSeenAt`, en tu lista). El aviso push sale solo con el primer mensaje que
+no has visto (`chatNotifiedAt`, en tu lista, apunta de cuál se te avisó): los siguientes no avisan hasta que abras el
+chat. Se quitó un día (2026-11-25) por el gasto y se recuperó al siguiente porque el usuario lo echaba en falta.
 
 | Caso | Qué pasa |
 | --- | --- |
-| Ana escribe y Luis no tiene el chat abierto | En «Mis votaciones» de Luis sale el bocadillo junto al título. En la votación, el contador de la pestaña y del botón flotante. |
+| Ana escribe y Luis no tiene el chat abierto | A Luis le llega «Tienes mensajes sin leer en el chat» (pulsándolo, se abre el chat). En «Mis votaciones» sale el bocadillo junto al título; en la votación, el contador de la pestaña y del botón flotante. |
+| Ana escribe tres mensajes seguidos | A Luis solo le llega un aviso, con el primero; con los otros, nada, hasta que abra el chat. |
+| Luis abre el chat y después Ana escribe otro | Vuelve a llegarle un aviso: ya lo había leído todo. |
+| Luis tiene apagado «Mensajes sin leer en el chat» en su perfil, o no tiene los avisos activados | No le llega el aviso, pero el bocadillo de «Mis votaciones» sí se enciende. |
 | Luis tiene «Mis votaciones» abierta mientras Ana escribe | El bocadillo sale al volver a entrar en la pantalla: se leen las votaciones cada vez que se entra, no en directo. |
 | Luis abre el chat | Se marca como visto hasta el último mensaje y el bocadillo desaparece, también en sus otros dispositivos. |
-| Luis tiene el chat abierto y a la vista mientras Ana escribe | Se da por leído al momento. Con la app en segundo plano, no: se marca al volver. |
+| Luis tiene el chat abierto y a la vista mientras Ana escribe | Se da por leído al momento y no le llega aviso: el servidor espera 8 segundos antes de mirarlo. Con la app en segundo plano, no se da por leído y le llega el aviso. |
 | Escribe Luis, o edita la votación y deja un aviso en el chat | Lo suyo nunca le cuenta como sin leer: la votación guarda también quién escribió el último mensaje (`chatBy`). Si antes había un mensaje de otro sin leer, el icono se apaga hasta el siguiente mensaje de otro (el contador de dentro de la votación sí lo cuenta). |
 | Un administrador edita la votación y deja un aviso en el chat | Cuenta como mensaje sin leer, igual que en el contador de la pestaña. |
 | Luis entró después del último mensaje | No le sale: lo de antes de añadirla a su lista no es para él. |
@@ -157,8 +162,11 @@ compara con lo último que has visto (`chatSeenAt`, en tu lista).
 | Alguien escribe con el reloj del móvil adelantado | El bocadillo puede quedarse encendido hasta que Luis abra el chat, que lo marca visto hasta esa hora. |
 | Los mensajes de antes de este cambio | Se rellenaron una vez desde el último mensaje de cada votación (26 de noviembre de 2026). |
 
-**Coste.** Una escritura más por mensaje (en la votación, la hace el servidor sin leer nada) y, al entrar en «Mis
-votaciones», una lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
+**Coste.** Por mensaje: una escritura en la votación (`chatAt`) y, para los avisos, los votos y la entrada de la lista
+de cada participante (con 20 personas, unas 41 lecturas); solo escribe y avisa a quien pasa de tenerlo todo leído a
+tener algo sin leer. Con 100 mensajes al día en grupos de 20, unas 4.100 lecturas: menos de una décima parte del margen
+gratuito diario (50.000). Los 8 segundos de espera cuentan como tiempo de cálculo, dentro de la cuota gratuita. Al
+entrar en «Mis votaciones», una lectura por votación de la lista. Quien tiene la votación abierta recibe el cambio (una lectura más por mensaje y
 persona conectada, que ya recibía el mensaje).
 
 ### 2.7 Organizar «Mis votaciones»
@@ -186,7 +194,7 @@ persona conectada, que ya recibía el mensaje).
 | --- | --- | --- | --- | --- | --- |
 | 2.9.1 | Web y Android | La misma app, también instalable. | Gratis | No | Gratis |
 | 2.9.2 | Mala conexión | Guarda una copia local: abre más rápido y aguanta cortes. | Gratis | No | Gratis |
-| 2.9.3 | Avisos push | Alguien vota; cierre, desempate o fin del plazo; solicitudes (al creador y a los administradores), aceptado o readmitido. Del chat no hay avisos (ver «Mensajes sin leer», en 2.6). Cada uno se activa o desactiva en el perfil. En la web y en la app de Android. Las funciones que los envían están desplegadas desde el 22 de noviembre de 2026 (plan Blaze); falta probar un aviso real. | Gratis los esenciales; premium los recordatorios (ver 6.4 y 7.7) | ★ (los recordatorios, ★★★) | Esenciales gratis; recordatorios premium, solo si el gestor actual tiene premium (§10) |
+| 2.9.3 | Avisos push | Alguien vota; cierre, desempate o fin del plazo; solicitudes (al creador y a los administradores), aceptado o readmitido; mensajes sin leer en el chat, solo el primero hasta abrirlo (2.6.5). Cada uno se activa o desactiva en el perfil. En la web y en la app de Android. Las funciones que los envían están desplegadas desde el 22 de noviembre de 2026 (plan Blaze); falta probar un aviso real. | Gratis los esenciales; premium los recordatorios (ver 6.4 y 7.7) | ★ (los recordatorios, ★★★) | Esenciales gratis; recordatorios premium, solo si el gestor actual tiene premium (§10) |
 | 2.9.4 | Privacidad y condiciones | Política de privacidad y condiciones de uso, enlazadas desde la entrada y el perfil. | Gratis (obligatorio) | No | Gratis |
 | 2.9.5 | Transiciones y esqueletos | Las pantallas y pestañas entran con una transición, lo que carga aparece fundiéndose y, mientras llega, un esqueleto con su forma. Con «reducir movimiento», solo se funde. | Gratis | No | Gratis |
 
@@ -625,6 +633,7 @@ cuenta, porque pasa el tiempo.**
 | «Ana quiere entrar en la votación» | Gestor y administradores | Esencial (gratis) |
 | «Te han aceptado: ya puedes votar» | Quien pidió entrar | Esencial (gratis) |
 | «Te han vuelto a admitir: ya puedes votar» | Quien estaba rechazado o expulsado | Esencial (gratis) |
+| «Tienes mensajes sin leer en el chat» (solo el primero hasta que lo abra, 2.6.5) | Participantes, menos quien escribe | Esencial (gratis) |
 | «Ana ha votado» (solo la primera vez) | Gestor | Esencial (gratis) |
 | Se ha cerrado o se ha vuelto a abrir | Participantes | Esencial (gratis) |
 | Hay un desempate; resultado definitivo o desempate sin ganadora | Participantes | Esencial (gratis) |

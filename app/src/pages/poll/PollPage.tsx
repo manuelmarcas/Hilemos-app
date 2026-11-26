@@ -38,8 +38,11 @@ import { PollSkeleton } from "../../components/Loading";
 /** Votaciones de tu lista en las que se mira si coincides con alguien («Votaciones en común» de su perfil). */
 const SHARED_LOOKUP = 40;
 
-/** Una votación: cabecera, tablero para votar y, debajo, las pestañas (más votadas, participantes y chat). */
-export function PollPage({ id }: { id: string }) {
+/**
+ * Una votación: cabecera, tablero para votar y, debajo, las pestañas (más votadas, participantes y chat). `chat`: se
+ * abre en el chat (#/v/<id>/chat, el enlace de los avisos del chat).
+ */
+export function PollPage({ id, chat = false }: { id: string; chat?: boolean }) {
   const { store, user, library, pollCache } = useSession();
   const { toast, confirm, share } = useUi();
   const duplicate = useDuplicate();
@@ -75,6 +78,14 @@ export function PollPage({ id }: { id: string }) {
   const [chatUnread, setChatUnread] = useState(0);
   const joined = useRef(false);
   const lib = library.data;
+
+  // Abierta desde un aviso del chat: en cuanto están las pestañas (con los votos ya cargados), va al chat. Una vez.
+  const chatOpened = useRef(false);
+  useEffect(() => {
+    if (!chat || chatOpened.current || !tabsEl || !votesLoaded) return;
+    chatOpened.current = true;
+    requestAnimationFrame(() => goToChat());
+  });
 
   // Botón flotante del chat: abre la pestaña y baja hasta las pestañas, sin que las tape la barra superior.
   const goToChat = () => {

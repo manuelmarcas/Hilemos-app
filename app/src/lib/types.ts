@@ -239,6 +239,11 @@ export interface LibraryEntry {
   archived?: boolean; // archivada: sale del panel principal y del menú lateral, pero conserva su grupo
   /** Fecha (`at`) del último mensaje del chat que ha visto: lo posterior de otros cuenta como no leído. */
   chatSeenAt?: number;
+  /**
+   * Hora del mensaje del chat del que se le avisó la última vez (lo apunta el servidor, onChatMessage). No se le vuelve
+   * a avisar hasta que abra el chat (chatSeenAt llega a esa hora). Falta si nunca se le ha avisado.
+   */
+  chatNotifiedAt?: number;
 }
 
 export interface Group {
@@ -259,6 +264,8 @@ export interface NotifyPrefs {
   state?: boolean;
   /** Le han aceptado (o readmitido), o alguien quiere entrar en una votación que administra. */
   members?: boolean;
+  /** Hay mensajes sin leer en el chat de una votación (solo el primero, hasta que lo abra). */
+  chat?: boolean;
 }
 
 /** Documento `users/{uid}` (privado). */

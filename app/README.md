@@ -489,7 +489,8 @@ autor. Se traen solo los últimos 200 (`CHAT_LIMIT`) y cada mensaje admite 500 c
   votación, porque no ve el chat.
 - **Botón flotante del chat** (`ChatFab`): mientras las pestañas quedan por debajo de la pantalla, un botón redondo
   abajo a la derecha, con los mensajes sin leer, abre el chat y baja hasta él.
-- No hay avisos push del chat: se quitaron para no gastar lecturas por cada mensaje.
+- **Aviso de mensajes sin leer**: ver «Avisos». Lleva a `#/v/<id>/chat`, que abre la votación en el chat y baja hasta
+  él en cuanto están las pestañas.
 - **Sin texto fijo**: no se explica cómo denunciar (mantener pulsado en el móvil, la bandera con ratón): se descubre
   solo. El chat solo avisa, si es anónima, de que en él se ve tu nombre.
 - Al eliminar una votación, sus mensajes quedan huérfanos e inaccesibles, igual que ya pasa con los votos.
@@ -506,6 +507,10 @@ Qué avisa y a quién (cada persona puede apagar cada tipo en «Tu perfil → Pr
   desde que volvió.
 - **Al creador y a los administradores**: alguien pide entrar en una votación con aprobación.
 - **A quien pidió entrar**: le han aceptado. **A quien estaba rechazado o expulsado**: le han vuelto a admitir.
+- **A cada participante (y al creador), menos a quien escribe**: «Tienes mensajes sin leer en el chat». Solo del primer
+  mensaje que no ha visto: los siguientes no avisan hasta que vuelva a abrir el chat (`onChatMessage`, regla en
+  `functions/chat.js`; apunta `chatNotifiedAt` en su lista). El servidor espera 8 segundos antes de mirarlo: quien
+  tiene el chat abierto y a la vista lo marca como visto al momento y no recibe el aviso de lo que está leyendo.
 - **A los participantes**: la votación se cierra o se reabre, se abre un desempate, el desempate termina («Ya hay
   resultado definitivo» si tiene ganadora) y se acaba el plazo para votar.
 
@@ -542,7 +547,7 @@ Para activarlos:
    sus índices están en `firestore.indexes.json` y se publican con `firebase deploy --only firestore:indexes`.
    Para probar las functions y las reglas en local: `firebase emulators:exec --only auth,firestore,functions
    --project demo-hilemos "<script>"` (el emulador necesita Java 11 o más; vale el de Android Studio) y
-   `cd functions && npm test` para la lógica de `plan.js`, `stats.js` y `time.js`.
+   `cd functions && npm test` para la lógica de `plan.js`, `chat.js`, `stats.js` y `time.js`.
 4. **App de Android**: con la clave ya en `config.ts`, `npm run android` y subir la versión nueva.
 5. Cada persona los activa en su dispositivo desde «Tu perfil → Preferencias → Avisos».
 
@@ -550,8 +555,11 @@ Qué es gratis con Blaze (cuotas de cada mes): los envíos de Firebase Cloud Mes
 2 millones de invocaciones y su tiempo de cálculo; Cloud Scheduler, 3 tareas; Artifact Registry (donde se guardan las
 functions desplegadas), 0,5 GB. Las lecturas que hacen las functions cuentan en el margen diario de Firestore (50.000
 lecturas). `onVoteWritten` no lee nada salvo cuando hay que avisar, porque salta con cada casilla que se pulsa.
-`onChatMessage` no lee nada: solo escribe `chatAt` en la votación. Ese cambio hace que `onPollUpdated` y `onPollPlan`
-se ejecuten una vez por mensaje, pero salen sin leer nada.
+`onChatMessage` escribe `chatAt` en la votación y, para el aviso, lee los votos y la entrada de la lista de cada
+participante (con 20 personas, unas 41 lecturas por mensaje); solo escribe en la de quien pasa a tener algo sin leer.
+Con 100 mensajes al día en grupos de 20, unas 4.100 lecturas: dentro del margen gratuito. Los 8 segundos de espera
+cuentan como tiempo de cálculo, también dentro de la cuota gratuita. El cambio de `chatAt` hace que `onPollUpdated` y
+`onPollPlan` se ejecuten una vez por mensaje, pero salen sin leer nada.
 
 **iPhone y iPad**: los avisos web solo existen si la web está **añadida a la pantalla de inicio** (Safari →
 Compartir → «Añadir a pantalla de inicio», iOS 16.4 o posterior) y se abre desde ese icono. Desde una pestaña de

@@ -79,7 +79,7 @@ export function Shell() {
     case "home": page = <Home />; break;
     case "create": page = <Create />; break;
     case "profile": page = <Profile />; break;
-    case "poll": page = <PollPage key={route.id} id={route.id} />; break;
+    case "poll": page = <PollPage key={route.id} id={route.id} chat={route.chat} />; break;
     case "edit": page = <EditPoll key={route.id} id={route.id} />; break;
     case "legal": page = <Legal doc={route.doc} />; break;
   }

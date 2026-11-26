@@ -24,6 +24,7 @@ const NOTIFY: [keyof NotifyPrefs, string][] = [
   ["votes", "Alguien vota por primera vez en una votación en la que estás"],
   ["state", "Se cierra, hay desempate o se acaba el plazo"],
   ["members", "Te aceptan, o alguien quiere entrar en una que administras"],
+  ["chat", "Hay mensajes sin leer en el chat (solo el primero, hasta que lo abras)"],
 ];
 
 export function Profile() {
