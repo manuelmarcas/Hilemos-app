@@ -27,7 +27,11 @@ function PersonVotes({ poll, T, picks }: { poll: Poll; T: Tally; picks: string[]
       }
       return (
         <div key={o.id} className="person-votes__line">
-          {poll.type === "days" && <span className="person-votes__opt" data-tip={o.name} role="img" aria-label={o.name}><span className={`swatch swatch--c${idx}`}></span>{o.icon}</span>}
+          {poll.type === "days" && (
+            <span className="person-votes__opt" data-tip={o.name} role="img" aria-label={`${o.name}: ${slots.length}`}>
+              <span className={`swatch swatch--c${idx}`}></span>{o.icon}<span className="person-votes__n">{slots.length}</span>
+            </span>
+          )}
           <div className="person-votes__chips">{chips}</div>
         </div>
       );
@@ -48,8 +52,9 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
   reported?: Set<string>;
 }) {
   const anon = !!poll.anonymous;
-  const multi = poll.type === "days" && !anon;
-  const cols = anon ? 2 : multi ? T.opts.length + 1 : 2;
+  // Dos columnas siempre: quién y cuántos votos (o si ha votado, en las anónimas). Con varias opciones por día, el
+  // reparto se ve al desplegar la fila: una columna por opción no cabía en el móvil.
+  const cols = 2;
   /** Nombre que abre el perfil (si lo hay); `who` es lo que se ve. */
   const profileBtn = (p: Person, who: ReactNode) => onProfile
     ? <button type="button" className="person person__btn" aria-label={`Ver el perfil de ${p.name}`} onClick={() => onProfile(p)}>{who}</button>
@@ -59,9 +64,7 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
       <thead>
         <tr>
           <th>Participante</th>
-          {anon ? <th className="people-table__num">¿Ha votado?</th>
-            : multi ? T.opts.map(o => <th key={o.id} className="people-table__num">{o.icon} {o.name}</th>)
-            : <th className="people-table__num">Votos</th>}
+          <th className="people-table__num">{anon ? "¿Ha votado?" : "Votos"}</th>
         </tr>
       </thead>
       <tbody>
@@ -73,7 +76,6 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
               {p.uid === me && <> <span className="muted">(tú)</span></>}
               <RoleTag poll={poll} uid={p.uid} />
               {reported?.has(p.uid) && <> <span className="people-table__flag" role="img" aria-label="Denunciado" data-tip={p.uid === me ? "Te han denunciado" : "Le han denunciado"}><Icon name="flag" /></span></>}
-              {!anon && !p.total && <> <span className="muted">· {p.uid === me ? "aún no has votado" : "aún no ha votado"}</span></>}
             </span>
           </>;
           if (anon) {
@@ -85,9 +87,7 @@ export function PeopleTable({ poll, T, people, empty = "Todavía no ha entrado n
             );
           }
           const open = openPeople.has(p.uid) && p.total > 0;
-          const nums = multi
-            ? T.opts.map(o => <td key={o.id} className="people-table__num">{p.perOpt[o.id]}</td>)
-            : <td className="people-table__num">{p.total}</td>;
+          const nums = <td className="people-table__num">{p.total || <span className="muted">Sin votar</span>}</td>;
           if (!onProfile) {
             return (
               <Fragment key={p.uid}>

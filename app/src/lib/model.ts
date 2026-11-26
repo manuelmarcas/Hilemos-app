@@ -357,7 +357,6 @@ export interface Person {
   uid: string;
   name: string;
   photo: string;
-  perOpt: Record<string, number>;
   total: number;
   picks: string[];
   /** Se fue y sus votos se quedan con un nombre sin dueño (Vote.gone): va en «Se fueron». */
@@ -424,16 +423,14 @@ export function tally(poll: PollData, votes: Votes): Tally {
   const people: Person[] = [];
   for (const uid in votes) {
     const v = votes[uid] || {};
-    const perOpt: Record<string, number> = Object.fromEntries(opts.map(o => [o.id, 0]));
     const picks: string[] = [];
     for (const p of new Set(v.picks || [])) {
       if (!valid.has(p)) continue;
       counts[p] = (counts[p] || 0) + 1;
       (voters[p] ||= []).push(uid);
-      perOpt[p.slice(p.lastIndexOf("|") + 1)]++;
       picks.push(p);
     }
-    people.push({ uid, name: v.name || "Alguien", photo: v.photo || "", perOpt, total: picks.length, picks: picks.sort(), gone: !!v.gone });
+    people.push({ uid, name: v.name || "Alguien", photo: v.photo || "", total: picks.length, picks: picks.sort(), gone: !!v.gone });
   }
   people.sort((a, b) => a.name.localeCompare(b.name, "es"));
 

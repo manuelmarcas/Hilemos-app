@@ -65,6 +65,8 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
   sistema.
 - Premium es solo la estrella (`premium-tag`), en un círculo `premium-soft`; al tocarla explica esa función. Dentro de
   un botón (Duplicar) va junto a su nombre. Una sola nota explica la estrella, al final de «Mis votaciones».
+- La tabla de «Participantes» tiene siempre dos columnas (quién y «Votos»): con varias opciones por día, el reparto
+  por opción sale al desplegar la fila (icono y cuántos). Una columna por opción no cabía en el móvil.
 - Lo que se puede explicar aparte va en un botón ⓘ (`InfoButton`, `info-btn`; `--small` junto a una etiqueta), no en
   un párrafo fijo: «Sobre esta votación», el máximo de personas al crear.
 - Poco texto fijo: la pantalla de una votación empieza por las etiquetas que cambian cómo se vota (anónima, solo

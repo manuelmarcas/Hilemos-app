@@ -67,11 +67,11 @@ describe("tally (recuento)", () => {
     expect(T.top).toHaveLength(TOP_N);
   });
 
-  it("resume cada persona por opción, ordenadas por nombre en castellano", () => {
+  it("resume los votos de cada persona, ordenadas por nombre en castellano", () => {
     const T = tally(days(), { ...votes, nadie: {}, zoe: vote("Álvaro", []) });
     expect(T.people.map(p => p.name)).toEqual(["Alguien", "Álvaro", "Ana", "Bea", "Carlos"]);
     const ana = T.people.find(p => p.uid === "ana")!;
-    expect(ana.perOpt).toEqual({ c: 2, n: 1 });
+    expect(ana.total).toBe(3);
     expect(ana.picks).toEqual(["2025-12-15|c", "2025-12-16|c", "2025-12-16|n"]);
   });
 

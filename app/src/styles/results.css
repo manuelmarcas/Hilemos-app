@@ -113,6 +113,7 @@
 .person-votes__line{display:flex;align-items:flex-start;gap:8px;padding-top:4px}
 .person-votes__line + .person-votes__line{padding-top:6px}
 .person-votes__opt{display:inline-flex;align-items:center;gap:4px;flex:none;padding-top:2px}
+.person-votes__n{font-size:.78rem;font-weight:700;color:var(--muted);min-width:1.4em}
 .person-votes__chips{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 /* Una etiqueta de horas («lun 22 dic 18:00, 18:30…») puede ser más larga que la pantalla: entonces parte. */
 .person-votes__chip{font-size:.78rem;background:var(--soft);border-radius:99px;padding:3px 9px;white-space:nowrap;max-width:100%}
