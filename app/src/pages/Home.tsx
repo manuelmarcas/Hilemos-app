@@ -282,7 +282,8 @@ function HomeHead() {
   return (
     <div className="home__head">
       <h1 className="home__title">Mis votaciones</h1>
-      <a className="btn btn--primary btn--big" href="#/nueva"><Icon name="plus" /> Nueva votación</a>
+      {/* Solo el «+»: el botón grande con texto ocupaba una fila entera en el móvil. */}
+      <a className="btn btn--primary home__new" href="#/nueva" aria-label="Nueva votación" data-tip="Nueva votación"><Icon name="plus" /></a>
     </div>
   );
 }

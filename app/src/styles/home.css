@@ -1,15 +1,16 @@
 /* «Mis votaciones»: grupos, tarjetas de votación (con su menú ⋯ y el deslizar del móvil) y archivadas. */
 
+/* El título y, a su derecha, el «+» de «Nueva votación». */
 .home__head{
   display:flex;
-  flex-wrap:wrap;
   gap:16px;
-  align-items:flex-end;
+  align-items:center;
   justify-content:space-between;
   margin-bottom:18px;
 }
 .home__head > *{min-width:0}
 .home__title{margin:0;font-size:1.75rem;color:var(--brand-strong);overflow-wrap:anywhere}
+.home__new{flex:none;width:46px;height:46px;padding:0;font-size:1.5rem}
 .subtitle{color:var(--muted);font-size:.95rem;margin:4px 0 0;line-height:1.5}
 .groups{margin-bottom:14px;display:grid;gap:10px}
 .groups__chips{display:flex;flex-wrap:wrap;gap:6px}
