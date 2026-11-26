@@ -71,11 +71,13 @@ npm test              # todas las pruebas en verde
 En `app/android/app/build.gradle`:
 
 ```gradle
-versionCode 1        // entero; cada subida a Play tiene que ser mayor que la anterior
-versionName "1.0"    // el que ve la gente
+versionCode 4        // entero; cada subida a Play tiene que ser mayor que la anterior
+versionName "1.1"    // el que ve la gente
 ```
 
-La primera subida fue `versionCode 1`, `versionName "1.0"`. Para la siguiente: `2` y `"1.1"` (o lo que toque).
+La primera versión salió como `1.0` con `versionCode 3`, porque Play ya daba por usados el 1 y el 2: un código
+subido no se puede repetir. La siguiente es la `1.1`, con `versionCode 4`. Antes de compilar otra, mirar en
+`build.gradle` el último y sumar uno.
 
 ### 2.3 Compilar la web para Android y sincronizar
 
@@ -575,7 +577,7 @@ Comprobar los cupos actuales en sus páginas de precios antes de crecer.
 | Canal de prueba | Prueba cerrada – Alpha |
 | Grupo de testers | `hilemos-testers@googlegroups.com` (https://groups.google.com/g/hilemos-testers) |
 | Clave de reCAPTCHA Enterprise (web, pública) | `6LcSWTIuAAAAAJ3q3bZqk4pHXhRSotZCQN6jq4NH` |
-| Primera versión | `versionCode 1`, `1.0`, enviada el 24/11/2026, publicada en prueba cerrada el 25/11/2026 |
+| Primera versión | `versionCode 3`, `1.0`, enviada el 24/11/2026, publicada en prueba cerrada el 25/11/2026 |
 
 Huellas registradas en Firebase (públicas):
 
