@@ -58,8 +58,9 @@ Los valores de esta guía están en [`tokens.json`](tokens.json), y la app los t
   cambia; al cargar no salta.
 - Esperas: la lista de votaciones y una votación muestran un esqueleto con su forma (`skeleton`, con el brillo que
   pasa); el círculo de «Cargando» queda para lo pequeño.
-- Botón flotante (`chat-fab`): solo el del chat, abajo a la derecha, relleno `brand` con `shadow-pop`; aparece y
-  desaparece con `motion-enter` y, oculto, no se puede pulsar.
+- Botón flotante (`fab`): abajo a la derecha, relleno `brand` con `shadow-pop`. Hay dos: el del chat dentro de una
+  votación (aparece y desaparece con `motion-enter`, `fab--hidden`; oculto no se puede pulsar) y «Nueva votación» en
+  «Mis votaciones» con pantalla táctil (con ratón, el «+» va junto al título).
 - Cerrar sesión está en «Tu perfil», no en la barra superior: se usa poco y, sin cuenta, es peligroso.
 - En el móvil (pantalla táctil) no hay «Volver» arriba (`page-head__back`): se vuelve con el gesto o el botón atrás del
   sistema.

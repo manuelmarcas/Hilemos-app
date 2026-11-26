@@ -18,10 +18,10 @@ export function ChatFab({ tabs, unread, onOpen }: { tabs: HTMLElement | null; un
   }, [tabs]);
   const label = unread ? `Ir al chat: ${plural(unread, ["mensaje sin leer", "mensajes sin leer"])}` : "Ir al chat";
   return (
-    <button type="button" className={bem("chat-fab", { shown })} aria-label={label} data-tip="Ir al chat"
+    <button type="button" className={bem("fab", { hidden: !shown })} aria-label={label} data-tip="Ir al chat"
       aria-hidden={!shown} tabIndex={shown ? 0 : -1} onClick={onOpen}>
       <Icon name="chat" />
-      {unread > 0 && <span className="chat-fab__badge">{unread > 99 ? "99+" : unread}</span>}
+      {unread > 0 && <span className="fab__badge">{unread > 99 ? "99+" : unread}</span>}
     </button>
   );
 }

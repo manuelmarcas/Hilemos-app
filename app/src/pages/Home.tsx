@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { TYPE, pollMeta, isAdmin, autoClose, autoCloseNote, closingLabel, hasUnreadChat } from "../lib/model";
 import type { LibraryEntry, Poll } from "../lib/types";
-import { errMsg, pollUrl, sortedGroups } from "../lib/util";
+import { bem, errMsg, hasMouse, pollUrl, sortedGroups } from "../lib/util";
 import { useSession } from "../state/session";
 import { useUi } from "../state/ui";
 import { GroupSelect } from "../components/GroupSelect";
@@ -272,18 +272,24 @@ export function Home() {
             <Icon name="back" className="archived-row__go" />
           </button>
         )}
-        <PremiumNote className="library__premium" />
+        {/* Con el «+» flotante, hueco al final para que no tape la nota ni el ⋯ de la última votación. */}
+        <PremiumNote className={bem("library__premium", { fab: !hasMouse() })} />
       </div>
     </>
   );
 }
 
+/**
+ * Título y «Nueva votación» (solo el «+»). Con pantalla táctil, el «+» flota abajo a la derecha, donde llega el pulgar
+ * y sigue a mano al bajar por la lista; con ratón, junto al título.
+ */
 function HomeHead() {
+  const touch = !hasMouse();
   return (
     <div className="home__head">
       <h1 className="home__title">Mis votaciones</h1>
-      {/* Solo el «+»: el botón grande con texto ocupaba una fila entera en el móvil. */}
-      <a className="btn btn--primary home__new" href="#/nueva" aria-label="Nueva votación" data-tip="Nueva votación"><Icon name="plus" /></a>
+      <a className={touch ? "fab" : "btn btn--primary home__new"} href="#/nueva" aria-label="Nueva votación"
+        data-tip="Nueva votación"><Icon name="plus" /></a>
     </div>
   );
 }

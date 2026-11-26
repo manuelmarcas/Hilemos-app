@@ -143,3 +143,4 @@
 .archived-head__title{margin:6px 0 0;font-size:1.2rem;color:var(--brand-strong)}
 /* La nota de la estrella de premium, al final de la lista. */
 .library__premium{margin-top:20px}
+.library__premium--fab{margin-bottom:calc(76px + var(--safe-bottom))}
